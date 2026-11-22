@@ -121,7 +121,7 @@ public final class SharedProjectionModel {
         switch error {
         case .offline: "You're offline. Shared expenses update when you're back online."
         case .unauthorized: "Sign in again to include shared expenses."
-        default: "Shared expenses couldn't be updated. Pull to refresh to try again."
+        default: "Penny couldn't load your households. Your own entries are up to date."
         }
     }
 }

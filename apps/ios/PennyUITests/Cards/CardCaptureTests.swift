@@ -447,8 +447,8 @@ final class CardCaptureTests: CardTestCase {
         ) { card in
             try card.penny.tap(AccessibilityID.Auth.switchMode)
             try card.penny.wait(for: AccessibilityID.Auth.createAccount)
-            // The card's filled form. The password is typed too, but screenshots leave out a secure
-            // field's bullets, and the native form has no strength meter.
+            // The card's filled form, with the strength meter for the typed password. Screenshots leave
+            // out a secure field's bullets, so the password itself doesn't show.
             try card.penny.type("max@example.test", into: AccessibilityID.Auth.email)
             try card.penny.type("penny-card-pass", into: AccessibilityID.Auth.password)
             card.penny.hideKeyboard()
@@ -478,6 +478,29 @@ final class CardCaptureTests: CardTestCase {
             try await card.makeTwoPendingChanges(nil)
             try card.penny.openHome()
             try card.penny.waitAfterRefresh(for: AccessibilityID.Feedback.syncBanner, on: AccessibilityID.Screen.home)
+        }
+    }
+
+    @MainActor
+    func test_whenTheServerStopsAnswering_IphoneSyncFailed_ShouldBeCaptured() async throws {
+        try await card("iphone-sync-failed", freshSeedPerAppearance: true) { card in
+            // Two changes wait while the ledger answers 503: the amber "Couldn't sync" banner with
+            // Retry over Home, and the rows waiting to sync.
+            try await card.makeTwoPendingChanges(nil)
+            try card.penny.openHome()
+            try card.penny.waitAfterRefresh(for: AccessibilityID.Feedback.syncBanner, on: AccessibilityID.Screen.home)
+        }
+    }
+
+    @MainActor
+    func test_whenHouseholdsFailToLoad_IphoneSharedMissing_ShouldBeCaptured() async throws {
+        try await card("iphone-shared-missing") { card in
+            // The household projection answers 503: Home shows the amber "Shared expenses may be
+            // missing" banner with Retry; the person's own entries still load.
+            try await card.applyFault()
+            try card.penny.openHome()
+            try card.penny.waitAfterRefresh(
+                for: AccessibilityID.Home.sharedNotice, on: AccessibilityID.Screen.home)
         }
     }
 

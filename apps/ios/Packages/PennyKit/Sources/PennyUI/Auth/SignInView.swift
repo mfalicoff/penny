@@ -38,41 +38,22 @@ struct SignInView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(alignment: mode == .signIn ? .center : .leading, spacing: 0) {
+                if mode == .createAccount {
+                    GlassIconButton("Back", systemImage: "chevron.backward", action: back)
+                        .disabled(busy)
+                        .accessibilityIdentifier("auth.back")
+                }
                 ServerChip(server: auth.server, onChange: mode == .signIn ? onChangeServer : nil)
                     .disabled(busy)
-                BrandHeader()
-                VStack(spacing: 6) {
-                    Text(mode == .signIn ? "Welcome back." : "Make yourself at home.")
-                        .font(PennyFont.style(.title2))
-                        .foregroundStyle(PennyColor.label)
-                        .accessibilityAddTraits(.isHeader)
-                    Text(
-                        mode == .signIn
-                            ? "Sign in to see your month."
-                            : "Your account lives on this server. Penny never connects to your bank."
-                    )
-                    .font(PennyFont.style(.subhead))
-                    .foregroundStyle(PennyColor.secondaryLabel)
-                    .multilineTextAlignment(.center)
-                }
-                if let expiredEmail, mode == .signIn {
-                    AuthMessage(
-                        text: "Your session for \(expiredEmail) ended. Sign in again to keep syncing; "
-                            + "changes on this device are kept.", tone: .notice)
-                }
-                if let leftover = auth.unremovedLocalData, mode == .signIn {
-                    VStack(alignment: .leading, spacing: 8) {
-                        AuthMessage(text: Self.unremovedMessage(email: leftover.email))
-                        Button("Remove them now") { Task { await auth.removeUnremovedLocalData() } }
-                            .font(PennyFont.style(.subhead).weight(.semibold))
-                            .frame(minHeight: Metrics.minTouchTarget)
-                            .accessibilityIdentifier("auth.removeLeftoverData")
-                    }
-                }
-                fields
-                if let failure { AuthMessage(text: failure) }
-                if let notice { AuthMessage(text: notice, tone: .notice) }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, mode == .signIn ? 0 : 14)
+                header
+                notices
+                fields.padding(.top, 28)
+                if mode == .createAccount { PasswordStrengthView(password: password) }
+                if let failure { AuthMessage(text: failure).padding(.top, 14) }
+                if let notice { AuthMessage(text: notice, tone: .notice).padding(.top, 14) }
                 PrimaryButton(
                     title: busy && auth.state == .signingIn(mode == .signIn ? .password : .registration)
                         ? "One moment…" : (mode == .signIn ? "Sign in" : "Create account"),
@@ -80,26 +61,26 @@ struct SignInView: View {
                 )
                 .disabled(busy || auth.server == nil)
                 .accessibilityIdentifier(mode == .signIn ? "auth.signIn" : "auth.createAccount")
+                .padding(.top, mode == .signIn ? 18 : 26)
                 if mode == .signIn { singleSignOn }
-                Button(mode == .signIn ? "New here? Create an account" : "Already have an account? Sign in") {
-                    failure = nil
-                    notice = nil
-                    onSwitchMode()
-                }
-                .font(PennyFont.style(.subhead))
-                .frame(minHeight: Metrics.minTouchTarget)
+                AuthLink(
+                    lead: mode == .signIn ? "New here?" : "Already have an account?",
+                    action: mode == .signIn ? "Create an account" : "Sign in",
+                    perform: mode == .signIn ? switchMode : back
+                )
+                .frame(maxWidth: .infinity)
+                .padding(.top, 10)
                 .disabled(busy)
                 .accessibilityIdentifier("auth.switchMode")
             }
             .padding(Metrics.gutter)
             .frame(maxWidth: 440)
             .frame(maxWidth: .infinity)
-            // Create account has the tinted glow behind its header (`create-account` card, MAZ-180);
-            // sign-in has none.
-            .heroGlow(opacity: mode == .signIn ? 0 : 1, top: -60)
+            // Both cards have the tinted glow behind their header (`sign-in`, `create-account`).
+            .heroGlow(top: -60)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(PennyColor.background)
+        .signedOutBackground()
         .hiddenNavigationBar()
         .task(id: auth.server) {
             if mode == .signIn { await auth.refreshSingleSignOn() }
@@ -109,13 +90,75 @@ struct SignInView: View {
         }
     }
 
+    /// Sign-in leads with the leaf and a centered "Welcome back."; create account has no leaf and
+    /// a left-aligned two-line headline, as on the cards.
+    @ViewBuilder
+    private var header: some View {
+        if mode == .signIn {
+            BrandHeader().padding(.top, 44)
+            Text("Welcome back.")
+                .font(PennyFont.style(.largeTitle))
+                .foregroundStyle(PennyColor.label)
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, 18)
+            Text("Sign in to see your month.")
+                .font(.callout)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .multilineTextAlignment(.center)
+                .padding(.top, 6)
+        } else {
+            Text("Make yourself\nat home.")
+                .font(PennyFont.style(.largeTitle))
+                .foregroundStyle(PennyColor.label)
+                .accessibilityLabel("Make yourself at home.")
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, 28)
+            Text("Your account lives on this server. Penny never connects to your bank.")
+                .font(.callout)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
+        }
+    }
+
+    @ViewBuilder
+    private var notices: some View {
+        if let expiredEmail, mode == .signIn {
+            AuthMessage(
+                text: "Your session for \(expiredEmail) ended. Sign in again to keep syncing; "
+                    + "changes on this device are kept.", tone: .notice
+            )
+            .padding(.top, 20)
+        }
+        if let leftover = auth.unremovedLocalData, mode == .signIn {
+            VStack(alignment: .leading, spacing: 8) {
+                AuthMessage(text: Self.unremovedMessage(email: leftover.email))
+                Button("Remove them now") { Task { await auth.removeUnremovedLocalData() } }
+                    .font(PennyFont.style(.subhead).weight(.semibold))
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .accessibilityIdentifier("auth.removeLeftoverData")
+            }
+            .padding(.top, 20)
+        }
+    }
+
+    private func switchMode() {
+        failure = nil
+        notice = nil
+        onSwitchMode()
+    }
+
+    /// Create account's back button and its "Sign in" link both return to sign-in.
+    private func back() { switchMode() }
+
     static func unremovedMessage(email: String) -> String {
         "You're signed out, but entries for \(email) couldn't be removed from this device."
     }
 
     private var fields: some View {
-        VStack(spacing: 14) {
-            AuthField(label: "Email") {
+        AuthFieldGroup {
+            AuthFieldRow(label: "Email") {
                 TextField("Email", text: $email, prompt: Text(verbatim: "you@example.com"))
                     .emailEntry()
                     .submitLabel(.next)
@@ -123,7 +166,7 @@ struct SignInView: View {
                     .onSubmit { focus = .password }
                     .accessibilityIdentifier("auth.email")
             }
-            AuthField(label: "Password", footnote: mode == .createAccount ? "At least 10 characters" : nil) {
+            AuthFieldRow(label: "Password") {
                 SecureField(
                     "Password", text: $password,
                     prompt: Text(mode == .signIn ? "Your password" : "At least 10 characters")
@@ -138,35 +181,46 @@ struct SignInView: View {
         .disabled(busy)
     }
 
+    /// The cards' neutral glass capsule with a key: "Continue with SSO". VoiceOver also hears
+    /// the provider the server names.
     @ViewBuilder
     private var singleSignOn: some View {
         switch auth.singleSignOn {
         case .available(let label):
-            VStack(spacing: 12) {
-                Text("or").font(PennyFont.style(.footnote)).foregroundStyle(PennyColor.tertiaryLabel)
+            VStack(spacing: 18) {
+                OrDivider()
                 Button(action: startSingleSignOn) {
                     HStack(spacing: 8) {
-                        if auth.state == .signingIn(.singleSignOn) { ProgressView() }
-                        Text(
-                            auth.state == .signingIn(.singleSignOn)
-                                ? "Waiting for \(label)…" : "Continue with \(label)")
+                        if auth.state == .signingIn(.singleSignOn) {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "key").accessibilityHidden(true)
+                        }
+                        Text(auth.state == .signingIn(.singleSignOn) ? "Waiting for \(label)…" : "Continue with SSO")
                     }
                     .font(PennyFont.style(.headline))
-                    .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget + 6)
+                    .foregroundStyle(PennyColor.label)
+                    .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget + 8)
+                    .contentShape(Capsule())
                 }
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.capsule)
+                .buttonStyle(.plain)
+                .pennyGlass(in: Capsule())
                 .disabled(busy)
+                .accessibilityLabel(
+                    auth.state == .signingIn(.singleSignOn) ? "Waiting for \(label)" : "Continue with SSO, \(label)"
+                )
                 .accessibilityIdentifier("auth.singleSignOn")
             }
+            .padding(.top, 18)
         case .failed:
             Button("Couldn't check single sign-on. Retry") { Task { await auth.refreshSingleSignOn() } }
                 .font(PennyFont.style(.subhead))
                 .frame(minHeight: Metrics.minTouchTarget)
                 .disabled(busy)
                 .accessibilityIdentifier("auth.singleSignOnRetry")
+                .padding(.top, 10)
         case .checking:
-            ProgressView().accessibilityLabel("Checking single sign-on")
+            ProgressView().accessibilityLabel("Checking single sign-on").padding(.top, 18)
         case .unknown, .unavailable:
             EmptyView()
         }

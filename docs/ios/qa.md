@@ -140,8 +140,8 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-trip-share` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-schedule-form` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-currency` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `iphone-sync-failed` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `iphone-shared-missing` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-sync-failed` | `CardCaptureTests` | The amber "Couldn't sync · N changes waiting" banner with Retry while the ledger answers 503; the changes stay on the device | Partly: captured on its card; no journey test taps Retry while the server fails |
+| `iphone-shared-missing` | `CardCaptureTests` | The amber "Shared expenses may be missing" banner with Retry while the household projection answers 503 | Partly: captured on its card; no journey test taps Retry |
 | `iphone-demo` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `ipad-home-portrait` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `web-households` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-shared-list`; the browser journeys are MAZ-96 | Not applicable to native |

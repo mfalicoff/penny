@@ -188,14 +188,18 @@ extension OverviewHeader where Trailing == EmptyView {
     }
 }
 
-/// Says when shared expenses may be missing from the month's totals.
+/// Says when shared expenses may be missing from the month's totals (`shared-missing` card): an
+/// amber banner with Retry, which reads the household totals again.
 struct SharedProjectionNotice: View {
     @Environment(ShellModel.self) private var shell
 
     var body: some View {
         if case .failed(let message) = shell.shared.status(for: shell.month) {
-            StatusBanner(tone: .info, title: "Shared expenses may be missing", message: message)
-                .accessibilityIdentifier("home.sharedNotice")
+            StatusBanner(tone: .warning, title: "Shared expenses may be missing", message: message) {
+                InlineActionButton("Retry") { Task { await shell.refreshShared() } }
+                    .accessibilityIdentifier("home.sharedNoticeRetry")
+            }
+            .accessibilityIdentifier("home.sharedNotice")
         }
     }
 }
