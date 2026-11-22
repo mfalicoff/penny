@@ -377,7 +377,7 @@
     {
       "id": "iphone-create-account-providers",
       "source": "docs/design/penny-ios/iphone/create-account-providers.html",
-      "sourceSha256": "8bf9fd4841e7175a2956ba076f5f98f8eaab853e8875d9fc795139aa49812735",
+      "sourceSha256": "67f1e8d31634c688caabd674df6051945dec3caf3d334007604c9361913cc5b9",
       "viewport": {
         "w": 482,
         "h": 954
@@ -386,12 +386,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-create-account-providers.light.png",
-          "sha256": "c46a808621617d1fa863f6266e36dd1f4146165e698386b7301e103ffa141208"
+          "sha256": "3fcc78691891efcae4d2f73953ff9ca0586eed3dbd6494775a59ee6a8a486927"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-create-account-providers.dark.png",
-          "sha256": "37d75545d902e1a3d45d2df5551f79be16d2e6a2041cbeb21134d58bc49afa3d"
+          "sha256": "901b81a60c5ef289b4ce09c29b888d5ad096ecd7a4b4643a13fe715cefa9ae15"
         }
       ]
     },
@@ -1606,7 +1606,7 @@
     {
       "id": "iphone-sign-in-providers",
       "source": "docs/design/penny-ios/iphone/sign-in-providers.html",
-      "sourceSha256": "a4e2ca130823c5357dd1b2940be1de5bc423b73094d0221317cdca43b95895f0",
+      "sourceSha256": "8bf4cec69bde9cc5e556ef8a0147a1611a7dbd99abc2c5b4176c300438b6429f",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1615,12 +1615,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-in-providers.light.png",
-          "sha256": "fd212073ac0fafd53594723024ab61d0565cfee334e616e5046982d5c964f5f6"
+          "sha256": "b263b4ae670226657a4a5e1fe768fa9ee5d8bd6c63d141e642acf3342c313ecf"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-in-providers.dark.png",
-          "sha256": "1abbde29bae13ecca13be3809004d307b8f8a4504d11f69c515f6244251fcd60"
+          "sha256": "8e956f21e9f0b8173c0fb29d707f3896939642b33fd57a2459d3cb3ee08b2b66"
         }
       ]
     },
