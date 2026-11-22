@@ -133,7 +133,8 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   }, [listedKey, month, search.month, expenseId, householdId, navigate]);
   const monthName = monthLabel(month).split(" ")[0] ?? month;
   const monthTotal = recap.data?.expenses.reduce((sum, expense) => sum + expense.totalCents, 0);
-  const glow = <div className={cx("glow", balance !== undefined && balance > 0 && "glow--green")} aria-hidden="true" />;
+  // Shared pages wear the green shared tint whatever the balance (`web-household`, `web-shared-expense`).
+  const glow = <div className="glow glow--green" aria-hidden="true" />;
   const balanceLine = (className: string) => (
     <p className={className} aria-live="polite">
       <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
@@ -246,6 +247,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
         <ExpensesTab
           view={view}
           recap={recap}
+          selectedId={expenseId}
           search={linkSearch({})}
           lead={
             split ? (
@@ -280,7 +282,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
             ) : wide ? (
               <>
                 {expenseDetail}
-                <BalancesTab view={view} recap={recap} compact />
+                <BalancesTab view={view} recap={recap} compact brief={Boolean(expenseDetail)} />
               </>
             ) : undefined
           }

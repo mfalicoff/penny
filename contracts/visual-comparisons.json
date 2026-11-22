@@ -3218,19 +3218,9 @@
         ],
         "deviations": [
           {
-            "summary": "The add button is an icon-only + beside search, not beside the Shared title",
+            "summary": "Members are shown by email, with initials from the email, and the sidebar footer names the account by its email",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No “Start sharing” header, and Join with a code and New household are copper titles, not label-colour rows",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The page backdrop is copper; the card's Shared page uses the green shared tint",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3253,29 +3243,9 @@
         ],
         "deviations": [
           {
-            "summary": "The detail title is a small upper-case eyebrow without the category tile, not a large title with the tile",
+            "summary": "Members are shown by email, with initials from the email, and the sidebar footer names the account by its email",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Values sit beside their labels without row dividers, and Your share is a copper strip with a regular-size amount, not a neutral strip with a large amount",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Share rows have no monograms, and the payer reads “Paid the expense”, not the payer tag with a green Paid",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Edit is filled copper, Change history a copper link and Delete red-tinted on its own row; the card has outlined Edit and Change history with a red Delete on one row",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The selected row isn't highlighted, and the page backdrop is copper, not the green shared tint",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3298,29 +3268,9 @@
         ],
         "deviations": [
           {
-            "summary": "No back button beside the title, and Invite is icon-only instead of labelled",
+            "summary": "Members are shown by email, with initials from the email, and the sidebar footer names the account by its email",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No hero surface with the countdown chip, name, dates, totals and People; the countdown is amber upper-case text",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Tabs are a full-width segmented control, not left-aligned pills",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "One Expenses list (“3 shared · 1 private”) replaces the “Shared with everyone” table and the separate “Only you” section with its note",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "People rows read “owes” or “gets back” without “Paid $X”, and the category card adds a sentence about balances",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3553,14 +3503,9 @@
         ],
         "deviations": [
           {
-            "summary": "The invite code is in the regular font, not the card's spaced code font",
+            "summary": "The sidebar footer names the account by its email, not the person’s name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No tinted footer bar above Cancel and Join household, and Cancel is a copper text link, not a bordered button",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }

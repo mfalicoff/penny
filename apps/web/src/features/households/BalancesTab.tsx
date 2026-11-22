@@ -22,9 +22,11 @@ const NO_MONEY_NOTE = "Penny records payments made outside the app. It never mov
  * recap. On phones and tablets each part is a labelled list; `compact` is the `web-household`
  * side pane: a Balances card and a card per overdue month. On a touch tablet the compact Balances
  * card is `ipad-shared`'s: each member's suggested payment on their row ("pays you $110.40"),
- * "gets back" or "owes" under the amount, and when Record paid opens.
+ * "gets back" or "owes" under the amount, and when Record paid opens. `brief`: the side pane under an
+ * open expense (`web-shared-expense`) shows the balances without the suggested payments and the
+ * note; closing the expense brings them back (`web-household`).
  */
-export function BalancesTab({ view, recap, compact = false }: { view: HouseholdView; recap: UseQueryResult<MonthRecap>; compact?: boolean }) {
+export function BalancesTab({ view, recap, compact = false, brief = false }: { view: HouseholdView; recap: UseQueryResult<MonthRecap>; compact?: boolean; brief?: boolean }) {
   const email = useAccountEmail();
   const [recording, setRecording] = useState<{ month: string; transfer: Transfer } | null>(null);
   const overdue = (recap.data?.overdueMonths ?? []).filter((month) => month !== view.month);
@@ -57,7 +59,7 @@ export function BalancesTab({ view, recap, compact = false }: { view: HouseholdV
       {compact && touch ? (
         <TabletBalances view={view} recap={recap.data} onRecord={record(view.month)} />
       ) : (
-        <CurrentMonth view={view} recap={recap.data} onRecord={record(view.month)} compact={compact} note={compact && overdue.length === 0} />
+        <CurrentMonth view={view} recap={recap.data} onRecord={record(view.month)} compact={compact} note={compact && !brief && overdue.length === 0} brief={compact && brief} />
       )}
       {olderMonths}
       {recording ? <RecordMonthlyDialog view={view} month={recording.month} transfer={recording.transfer} onClose={() => { setRecording(null); }} /> : null}
@@ -111,7 +113,7 @@ function Section({ title, status, compact, children }: { title: string; status?:
 }
 
 /** `note`: the side pane's last card ends with what recording a payment means (`web-household`). */
-function CurrentMonth({ view, recap, onRecord, compact, note }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; note: boolean }) {
+function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; note: boolean; brief: boolean }) {
   const totals = new Map<string, { paid: number; share: number; repaid: number }>();
   const sums = (userId: string) => {
     let found = totals.get(userId);
@@ -188,9 +190,9 @@ function CurrentMonth({ view, recap, onRecord, compact, note }: { view: Househol
     return (
       <Section title="Balances" status={monthStatus(recap)} compact>
         {balances}
-        {recap.suggestions.length ? <h3 className="card__title">Suggested payments</h3> : null}
-        {suggestions}
-        {waiting}
+        {!brief && recap.suggestions.length ? <h3 className="card__title">Suggested payments</h3> : null}
+        {brief ? null : suggestions}
+        {brief ? null : waiting}
         {recorded ? <h3 className="card__title">Recorded payments</h3> : null}
         {recorded}
         {note ? <p className="note">{NO_MONEY_NOTE}</p> : null}

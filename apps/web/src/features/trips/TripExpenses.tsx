@@ -11,7 +11,7 @@ import type { HouseholdView } from "../households/context";
 import { describeLoadError } from "../households/errors";
 import { ExpenseLink, type GroupSearch } from "../households/links";
 import { shareOf, shortDate } from "../households/model";
-import { expenseCount, paidWords } from "./model";
+import { expenseCount, paidByCell, paidWords } from "./model";
 
 interface Props {
   view: HouseholdView;
@@ -27,6 +27,11 @@ interface Props {
    * shared rows, then a lock-labelled ONLY YOU "from before sharing" over the private ones.
    */
   combined: boolean;
+  /**
+   * On the desktop (card `web-trip`): a Shared with everyone table (expense and date, paid by,
+   * total, your share), then Only you, with your private expenses and what they count in.
+   */
+  tables?: boolean;
 }
 
 /**
@@ -34,7 +39,7 @@ interface Props {
  * tile, the title, "Oct 2 · Sam paid · split 4 ways", the total and your part ("$206.00 yours").
  * The whole trip is listed, oldest first, whatever the month; balances still settle month by month.
  */
-export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPrivate, combined }: Props) {
+export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPrivate, combined, tables }: Props) {
   if (expenses.isPending) return <LoadingState label="Loading expenses…" />;
   if (!expenses.data) {
     return (
@@ -52,6 +57,16 @@ export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPriva
       <p>{view.canWrite ? "Add one with Trip expense. Everyone sees the full total; your reports count only your share." : "Nothing was shared with you here."}</p>
     </EmptyState>
   );
+
+  if (tables) {
+    if (!shared.length && !privateRows.length) return empty;
+    return (
+      <div className="page trip-tables">
+        {shared.length ? <SharedTable view={view} expenses={shared} search={search} /> : null}
+        {ledger && privateRows.length ? <PrivateTable entries={privateRows} ledger={ledger} onOpen={onOpenPrivate} /> : null}
+      </div>
+    );
+  }
 
   if (combined) {
     if (!shared.length && !privateRows.length) return empty;
@@ -114,6 +129,112 @@ export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPriva
         </section>
       ) : null}
     </div>
+  );
+}
+
+/** `web-trip`'s Shared with everyone: the expense with its date, who paid, the total and your share. */
+function SharedTable({ view, expenses, search }: { view: HouseholdView; expenses: SharedExpense[]; search: GroupSearch }) {
+  const me = view.who.meId;
+  return (
+    <section className="card expense-table trip-table" aria-labelledby="trip-shared-heading">
+      <div className="trip-table__head">
+        <h2 id="trip-shared-heading">Shared with everyone</h2>
+        <span>{expenseCount(expenses.length)}</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Expense</th>
+            <th scope="col">Paid by</th>
+            <th scope="col" className="num">
+              Total
+            </th>
+            <th scope="col" className="num">
+              Your share
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {expenses.map((expense) => {
+            const yours = shareOf(expense, me);
+            return (
+              <tr key={expense.id}>
+                <th scope="row">
+                  <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="expense-table__title">
+                    <span className="category-dot" style={tileStyle(expense.category)} aria-hidden="true">
+                      <Icon name={categoryIcon(expense.category.icon)} size={18} />
+                    </span>
+                    <span className="trip-table__name">
+                      <span>{expense.title}</span>
+                      <time dateTime={expense.date}>{shortDate(expense.date)}</time>
+                    </span>
+                  </ExpenseLink>
+                </th>
+                <td className="muted">{paidByCell(expense, me, view.who.name(expense.payerUserId))}</td>
+                <td className="num">
+                  <Money cents={expense.totalCents} currency={view.currency} />
+                </td>
+                <td className="num">
+                  {yours > 0 ? (
+                    view.money(yours)
+                  ) : (
+                    <>
+                      <span aria-hidden="true">—</span>
+                      <span className="visually-hidden">Not part of your share</span>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/** `web-trip`'s Only you: your private trip expenses, "Sep 28 · Visa", and what they count in. */
+function PrivateTable({ entries, ledger, onOpen }: { entries: Transaction[]; ledger: Ledger; onOpen: (entry: Transaction) => void }) {
+  return (
+    <section className="card expense-table trip-table" aria-labelledby="trip-private-heading">
+      <div className="trip-table__head">
+        <h2 id="trip-private-heading">
+          <Icon name="lock-closed" size={14} />
+          Only you
+        </h2>
+        <span>{expenseCount(entries.length)}</span>
+      </div>
+      <table>
+        <tbody>
+          {entries.map((entry) => {
+            const category = ledger.categories.find((item) => item.id === entry.categoryId);
+            const account = entry.accountId ? ledger.accounts.find((item) => item.id === entry.accountId) : undefined;
+            return (
+              <tr key={entry.id}>
+                <th scope="row">
+                  <button type="button" className="expense-table__title trip-table__open" onClick={() => { onOpen(entry); }}>
+                    <span className="category-dot" style={tileStyle(category)} aria-hidden="true">
+                      <Icon name={categoryIcon(category?.icon)} size={18} />
+                    </span>
+                    <span className="trip-table__name">
+                      <span>{entry.title}</span>
+                      <span>
+                        <time dateTime={entry.date}>{shortDate(entry.date)}</time>
+                        {account ? ` · ${account.name}` : ""}
+                      </span>
+                    </span>
+                  </button>
+                </th>
+                <td className="num">
+                  <Money cents={entry.share} currency={ledger.currency} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="note trip-table__note">Only you see these. They count in your spending, not in the trip's total or anyone's balance.</p>
+    </section>
   );
 }
 

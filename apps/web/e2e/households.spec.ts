@@ -171,7 +171,9 @@ test("invite expiry, joining, equal/exact/percent splits and a share payment acr
   await expect(detail.getByText(/it doesn't send money/)).toBeVisible();
   await detail.getByRole("button", { name: "Mark $45.00 as paid" }).click();
   await expect(bea.page.getByText("Share marked as paid")).toBeVisible();
-  await expect(detail.getByText("Repaid", { exact: true })).toBeVisible();
+  // Her share now reads Repaid (the phone dialog) or Paid in green (the desktop pane, `web-shared-expense`).
+  await expect(detail.getByRole("button", { name: "Mark your share as paid" })).toHaveCount(0);
+  await expect(detail.getByText(/^(Repaid|Paid)$/).last()).toBeVisible();
 
   await alex.page.reload();
   await alex.page.getByRole("link", { name: "Balances" }).click();

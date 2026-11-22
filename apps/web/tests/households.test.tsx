@@ -146,10 +146,20 @@ describe("household layout (MAZ-229)", () => {
       expect(within(panel).getByRole("heading", { name: "Hydro" })).toHaveFocus();
     });
     expect(within(panel).getByText("Shares")).toBeInTheDocument();
+    // `web-shared-expense`: the open row is marked, the payer is tagged and Paid, and the actions are one row.
+    await waitFor(() => {
+      expect(within(screen.getByRole("region", { name: "Expenses in October 2026" })).getByRole("link", { name: /^Hydro/ }).closest("tr")).toHaveClass("expense-table__open");
+    });
+    expect(within(panel).getByText("payer")).toBeInTheDocument();
+    expect(within(panel).getByText("Paid")).toBeInTheDocument();
+    for (const name of ["Edit", "Change history", "Delete"]) expect(within(panel).getByRole("button", { name })).toBeInTheDocument();
+    // Balances under the open expense leaves out the suggested payments and the note; closing brings them back.
+    expect(screen.queryByText(/Penny records payments made outside the app/)).not.toBeInTheDocument();
     await user.click(within(panel).getByRole("button", { name: "Close Hydro" }));
     await waitFor(() => {
       expect(screen.queryByRole("region", { name: "Hydro" })).not.toBeInTheDocument();
     });
+    expect(await screen.findByText(/Penny records payments made outside the app/)).toBeInTheDocument();
   });
 });
 

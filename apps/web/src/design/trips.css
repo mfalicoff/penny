@@ -775,3 +775,272 @@ button.trip-expense-row:hover {
   min-height: 60px;
   padding: 10px 0;
 }
+
+/* ---------- a shared trip on the desktop (card `web-trip`) ---------- */
+/* The iPad trip (`ipad-trip`) has no Back: the sidebar has All trips. */
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+  .app:has(.page.trips) .topbar--back-wide .topbar__back {
+    display: none;
+  }
+}
+
+/* One surface: the trip on its blue and peach glow at the left, People at the right. */
+.trip-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: 18px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.trip-feature__main {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  padding: 24px 26px;
+}
+
+.trip-feature__main::before {
+  position: absolute;
+  inset: -60px;
+  z-index: -1;
+  background:
+    radial-gradient(45% 55% at 25% 40%, rgb(59 130 246 / 0.3), transparent 70%),
+    radial-gradient(40% 50% at 70% 60%, rgb(255 160 90 / 0.3), transparent 70%);
+  filter: blur(30px);
+  content: "";
+  pointer-events: none;
+}
+
+.trip-feature__when {
+  padding: 2px 8px;
+  border-radius: 7px;
+  background: var(--pk-surface);
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.trip-feature__name {
+  margin: 6px 0 0;
+  font-size: 2.125rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.trip-feature__meta {
+  margin: 2px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.trip-feature__nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin: 20px 0 0;
+}
+
+.trip-feature__nums dt {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.trip-feature__nums dd {
+  margin: 2px 0 0;
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.trip-feature__main > .note {
+  margin-top: 12px;
+}
+
+.trip-feature__people {
+  padding: 20px 22px 18px 0;
+}
+
+.trip-feature__people-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.trip-feature__people-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.trip-feature__people-head span {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.trip-feature__people-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trip-feature__person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.875rem;
+}
+
+.trip-feature__person + .trip-feature__person {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.trip-feature__who {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trip-feature__who > span + span {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.trip-feature__balance {
+  text-align: end;
+}
+
+.trip-feature__balance .money {
+  font-weight: 600;
+}
+
+.trip-feature__balance--mine {
+  display: grid;
+  justify-items: end;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.trip-feature__balance--mine .money {
+  font-size: 0.875rem;
+}
+
+/* The sections as chips at the start, the current one filled with the label color. */
+.section-tabs--chips {
+  justify-self: start;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  overflow: visible;
+}
+
+.section-tabs--chips a {
+  flex: none;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 17px;
+  background: var(--pk-fill);
+  font-size: 0.9375rem;
+}
+
+.section-tabs--chips a[aria-current="page"] {
+  background: var(--pk-label);
+  color: var(--pk-bg);
+  box-shadow: none;
+}
+
+.trip-tables {
+  gap: 18px;
+}
+
+.trip-table {
+  padding: 14px 8px 8px;
+}
+
+.trip-table__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 12px 10px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.trip-table__head h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--pk-label);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.trip-table__head h2 .icon {
+  color: var(--pk-label-2);
+}
+
+.trip-table .expense-table__title {
+  align-items: center;
+}
+
+.trip-table__name {
+  display: grid;
+  min-width: 0;
+}
+
+.trip-table__name > :last-child {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.trip-table__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.trip-table__open:hover > .trip-table__name > :first-child {
+  text-decoration: underline;
+}
+
+.trip-table__note {
+  margin: 0;
+  padding: 8px 12px 6px;
+  font-size: 0.8125rem;
+}
+
+.trip-table .expense-table__title:hover span:last-child {
+  text-decoration: none;
+}
+
+.trip-table .expense-table__title:hover .trip-table__name > :first-child {
+  text-decoration: underline;
+}
+
+/* The total, and a private expense's amount, in bold as the card's. */
+.trip-table tbody td.num:nth-child(3) .money,
+.trip-table tbody td.num:nth-child(2) .money {
+  font-weight: 600;
+}
+
+.trip-table thead th {
+  padding-top: 0;
+}
+
+.trip-table__name > :first-child {
+  font-weight: 600;
+}

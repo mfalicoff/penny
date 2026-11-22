@@ -117,8 +117,8 @@ test("two people: share a personal trip, join after an expense, split, repay and
     await form.getByRole("button", { name: SAVE }).click();
     await expect(form).toBeHidden();
   }
-  // Phones list it under Only you; from 1100px it sits in the one Expenses panel, marked Only you.
-  await expect(alex.page.getByRole("list", { name: /^(Private expenses|Trip expenses)$/ })).toContainText("Airport train");
+  // Phones list it under Only you and the iPad in the one Expenses panel; the desktop has an Only you table (`web-trip`).
+  await expect(alex.page.getByRole("list", { name: /^(Private expenses|Trip expenses)$/ }).or(alex.page.getByRole("region", { name: "Only you" })).first()).toContainText("Airport train");
 
   await bea.page.goto("/trips");
   await bea.page.getByRole("button", { name: "Join a trip" }).click();
@@ -126,8 +126,9 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await join.getByLabel("Invite code").fill(code);
   await join.getByRole("button", { name: "Join trip" }).click();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Lisbon" })).toBeVisible();
-  const list = bea.page.getByRole("list", { name: /^(Shared expenses|Trip expenses)$/ });
-  await expect(list.getByRole("link", { name: /Flights/ })).toContainText("Not part of your share");
+  // An expense is a row in the desktop table (`web-trip`), or a link in the list.
+  const row = (name: RegExp) => bea.page.getByRole("row", { name }).or(bea.page.getByRole("list", { name: /^(Shared expenses|Trip expenses)$/ }).getByRole("link", { name }));
+  await expect(row(/Flights/)).toContainText("Not part of your share");
 
   // After Bea joined: split with her. She refreshes and repays her share.
   await tripExpense(alex.page);
@@ -139,8 +140,8 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await expect(form).toBeHidden();
 
   await bea.page.reload();
-  await expect(list.getByRole("link", { name: /Apartment/ })).toContainText("$184.00 yours");
-  await list.getByRole("link", { name: /Apartment/ }).click();
+  await expect(row(/Apartment/)).toContainText("$184.00");
+  await bea.page.getByRole("main").getByRole("link", { name: /^Apartment/ }).click();
   await expect(bea.page).toHaveURL(/expense=/);
   const apartment = bea.page.getByRole("dialog", { name: /^(Apartment|Record payment)$/ });
   await apartment.getByRole("button", { name: "Mark your share as paid" }).click();
