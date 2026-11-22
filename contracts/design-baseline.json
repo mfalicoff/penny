@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "f3f4dade063d185e40f65b1f72cb0200fd2acf20be41f670855266b267c2fec8"
+      "sha256": "539cbecefc77ea8f214ad9071c0bcb77162319a7e20130bc527c79c2fe7b3c31"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -2723,7 +2723,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/categories.html",
-      "sha256": "f909f940fb4161ac872bdee34bcd3a22267bbf2fb941a9cfe2620dcbcd013c32",
+      "sha256": "906a7ec27f5f705d6523dc69de6b3a4d123d76a460bc6edd67b3e65b548b6d9d",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "route": "/categories",

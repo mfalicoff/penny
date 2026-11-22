@@ -1,7 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { householdDetailQuery, householdsQuery, recurringQuery } from "../../api/households";
 import type { Household, HouseholdDetail, SharedRecurring } from "../../api/schemas";
-import { useIsDemo } from "../../demo/demo";
 import { eligibleMembers, equalSplit, findMe, percentSplit } from "../households/model";
 
 /**
@@ -66,10 +65,9 @@ export function sharedSchedules(
   return list;
 }
 
-/** Loads the account's households, their members and their rules. Not in the demo, which has none. */
+/** Loads the account's households, their members and their rules (the demo's household has none). */
 export function useSharedSchedules(email: string): SharedSchedule[] {
-  const demo = useIsDemo();
-  const households = useQuery({ ...householdsQuery(email), enabled: !demo });
+  const households = useQuery(householdsQuery(email));
   const list = households.data ?? [];
   const details = useQueries({ queries: list.map((household) => householdDetailQuery(email, household.id)) });
   const rules = useQueries({ queries: list.map((household) => recurringQuery(email, household.id)) });

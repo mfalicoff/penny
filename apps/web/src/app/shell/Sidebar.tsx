@@ -180,9 +180,9 @@ const short = (cents: number, currency: string) =>
 
 function Together() {
   const email = useAccountEmail();
-  const demo = useIsDemo();
   const workspace = useLedgerWorkspace();
-  const households = useQuery({ ...householdsQuery(email), enabled: !demo });
+  // The demo answers with its sample household (MAZ-283).
+  const households = useQuery(householdsQuery(email));
   const homes = useMemo(() => (households.data ?? []).filter((household) => !household.trip), [households.data]);
   const trips = useMemo(() => {
     const today = localDate();

@@ -3383,11 +3383,6 @@
         ],
         "deviations": [
           {
-            "summary": "No “Drag to reorder” hint and no drag handles: Penny keeps no category order (the owner's decision on MAZ-257), so the card is to drop them",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          },
-          {
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -3572,11 +3567,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The demo has no sample household, so Together lists “Shared” instead of a household and All households",
-            "kind": "follow-up",
-            "ref": "MAZ-283"
-          },
           {
             "summary": "The sidebar footer keeps the Settings button beside Demo and Sample data; the card draws none, and without it the demo can't reach Settings",
             "kind": "follow-up",

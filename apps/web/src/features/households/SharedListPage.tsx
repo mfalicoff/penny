@@ -23,7 +23,8 @@ import { OnlineNotice } from "./OnlineNotice";
 export function SharedListPage() {
   const email = useAccountEmail();
   const demo = useIsDemo();
-  const households = useQuery({ ...householdsQuery(email), enabled: !demo });
+  // The demo lists its read-only sample household (MAZ-283), with no way to create or join one.
+  const households = useQuery(householdsQuery(email));
   const [dialog, setDialog] = useState<"create" | "join" | null>(null);
   const all = households.data ?? [];
   const month = currentMonth();
@@ -64,13 +65,7 @@ export function SharedListPage() {
   );
 
   let body;
-  if (demo) {
-    body = (
-      <EmptyState icon="people" title="The demo has no shared households">
-        <p>Sign in to your own Penny server to share one. Nothing was changed.</p>
-      </EmptyState>
-    );
-  } else if (households.isPending) body = <LoadingState label="Loading your households…" />;
+  if (households.isPending) body = <LoadingState label="Loading your households…" />;
   else if (households.isError && !households.data) {
     body = (
       <ErrorState title="Penny couldn't load your households" onRetry={() => void households.refetch()} retrying={households.isFetching}>
@@ -103,7 +98,7 @@ export function SharedListPage() {
       )}
       <OnlineNotice />
       {body}
-      {households.isPending ? null : start}
+      {households.isPending || demo ? null : start}
       {dialog === "create" ? <CreateHouseholdDialog onClose={() => { setDialog(null); }} /> : null}
       {dialog === "join" ? <JoinHouseholdDialog onClose={() => { setDialog(null); }} /> : null}
     </div>

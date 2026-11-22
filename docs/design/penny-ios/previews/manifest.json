@@ -1942,7 +1942,7 @@
     {
       "id": "web-categories",
       "source": "docs/design/penny-ios/web/categories.html",
-      "sourceSha256": "f909f940fb4161ac872bdee34bcd3a22267bbf2fb941a9cfe2620dcbcd013c32",
+      "sourceSha256": "906a7ec27f5f705d6523dc69de6b3a4d123d76a460bc6edd67b3e65b548b6d9d",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1951,12 +1951,12 @@
         {
           "appearance": "light",
           "file": "previews/web-categories.light.png",
-          "sha256": "5df3cb3bb31147a59191dc43aaeac35cde795ec3a4977da03f4c27673a86c696"
+          "sha256": "78a5061f991d5b2fae2705647168f6b9456d916acf4ce672f22f100ee80fbd92"
         },
         {
           "appearance": "dark",
           "file": "previews/web-categories.dark.png",
-          "sha256": "de0405ba50898d58e0243191dccee56fc6a0d5f19f9b0339fe2d3a54a9e8d1e8"
+          "sha256": "82a52049a0c0f04441687c895d7997ea90301112e99c778b894759d76d59619b"
         }
       ]
     },

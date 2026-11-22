@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { createDemoServer, DEMO_EMAIL, sampleEntries } from "../src/demo/demoServer";
+import { createDemoServer, DEMO_EMAIL, DEMO_HOUSEHOLD_ID, sampleEntries, sampleHousehold } from "../src/demo/demoServer";
 import { json, renderApp, stubServer, wasCalled } from "./render";
 
 const signedOut = () => stubServer((url) => (url === "/api/auth/me" ? json({ error: "Please sign in to continue." }, 401) : undefined));
@@ -122,6 +122,21 @@ describe("demo server", () => {
     await call(one, "PUT", "/api/ledger", { ...ledger, ledger: { ...(ledger.ledger as object), transactions: [] } });
     const two = createDemoServer();
     expect(((await call(two, "GET", "/api/ledger")).body.ledger as { transactions: unknown[] }).transactions).toHaveLength(sampleEntries().length);
-    expect((await call(two, "GET", "/api/households")).status).toBe(404);
+    expect((await call(two, "GET", "/api/households/demo-household/invites")).status).toBe(404);
+    expect((await call(two, "POST", "/api/households", { name: "Mine", currency: "CAD" })).status).toBe(404);
+  });
+
+  it("serves the sample household: its list, detail, this month's recap and your shares", async () => {
+    const today = new Date(2026, 9, 15);
+    const server = createDemoServer(today);
+    const { household, members, balance } = sampleHousehold(today);
+    expect((await call(server, "GET", "/api/households")).body.households).toEqual([household]);
+    expect((await call(server, "GET", `/api/households/${DEMO_HOUSEHOLD_ID}`)).body.members).toEqual(members);
+    const recap = (await call(server, "GET", `/api/households/${DEMO_HOUSEHOLD_ID}/months/2026-10`)).body;
+    expect(recap.balances).toContainEqual({ userId: "demo-user", balanceCents: balance });
+    expect(balance).toBe(1200);
+    const projection = (await call(server, "GET", "/api/households/projection?month=2026-10")).body;
+    expect((projection.transactions as { shareCents: number }[]).map((row) => row.shareCents)).toEqual([4200, 3000]);
+    expect(((await call(server, "GET", "/api/households/projection?month=2026-09")).body.transactions as unknown[])).toHaveLength(0);
   });
 });
