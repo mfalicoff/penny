@@ -35,7 +35,7 @@ import {
 } from "./model";
 import { addLabel, AmountHero, CategoryChips, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, KindControl, repeatText, useEntryLayout } from "./EntryParts";
 import { CategoryPickerDialog, NewAccountDialog } from "./pickers";
-import { HouseholdField, type EntrySeed, type HouseholdScope } from "./scope";
+import { HouseholdField, HouseholdRowList, type EntrySeed, type HouseholdScope, type ScopeChoice } from "./scope";
 import { useLedgerWriter, type LedgerWriter } from "./writer";
 
 /** `tripId` starts a new expense on that trip (MAZ-93: Trip expense), apart from any kept draft. */
@@ -368,19 +368,19 @@ function EntryForm({
     />
   );
 
-  const household = householdScope ? (
-    <HouseholdField
-      scope={{
-        ...householdScope,
-        onChoose: (choice, next) => {
-          // The shared form takes over what was typed, so the kept draft can't come back as a duplicate.
-          draftStore.clear(email);
-          householdScope.onChoose(choice, next);
+  const householdProps = householdScope
+    ? {
+        scope: {
+          ...householdScope,
+          onChoose: (choice: ScopeChoice, next: EntrySeed) => {
+            // The shared form takes over what was typed, so the kept draft can't come back as a duplicate.
+            draftStore.clear(email);
+            householdScope.onChoose(choice, next);
+          },
         },
-      }}
-      seed={() => seedFrom(draft, ledger)}
-    />
-  ) : null;
+        seed: () => seedFrom(draft, ledger),
+      }
+    : null;
 
   const rows = (
     <DetailList>
@@ -433,6 +433,7 @@ function EntryForm({
               {tripSelect}
             </DetailRow>
           ) : null}
+          {householdProps ? <HouseholdField {...householdProps} variant="row" {...(layout === "tablet" ? { chevron: "forward" as const } : {})} /> : null}
           {expense && layout === "tablet" ? (
             <button type="button" className="entry-row entry-row--button" aria-expanded={receiptOpen} aria-controls={ids.receipt} onClick={() => { setReceiptOpen((open) => !open); }}>
               <Icon name="receipt" size={18} />
@@ -542,6 +543,7 @@ function EntryForm({
           </div>
           {errorText("trip")}
         </fieldset>
+        {householdProps ? <HouseholdRowList {...householdProps} /> : null}
         <section className="entry-section">
           <label htmlFor={ids.note} className="entry-label">
             Note
@@ -549,7 +551,6 @@ function EntryForm({
           {noteField("Anything you'd like to remember")}
           {errorText("note")}
         </section>
-        {household ? <section className="entry-section">{household}</section> : null}
       </div>
     ) : null;
 
@@ -606,7 +607,6 @@ function EntryForm({
           {noteField("Anything you'd like to remember")}
           {errorText("note")}
         </section>
-        {household ? <section className="entry-section">{household}</section> : null}
       </>
     );
 
