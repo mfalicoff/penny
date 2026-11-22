@@ -269,8 +269,8 @@
           },
           {
             "summary": "The search field sits above the tab bar, which stays; the card's search replaces the tab bar with a Back button",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "Shared rows read Shared · household and your share, not who paid (Jo paid, you paid $2,900)",
@@ -310,8 +310,8 @@
         "deviations": [
           {
             "summary": "The search field sits above the tab bar, which stays; the card's search replaces the tab bar with a Back button",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -404,6 +404,11 @@
             "summary": "Shared trips are listed below personal trips with \"Shared · N people\", and picking one opens the shared expense form",
             "kind": "follow-up",
             "ref": "MAZ-255"
+          },
+          {
+            "summary": "The card's Household row after Trip (added in MAZ-277) isn't in the iOS More details sheet yet",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
           }
         ]
       },
@@ -420,11 +425,6 @@
             "summary": "More details expands inside the form instead of a pushed sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "A Household choice follows Note (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -2575,28 +2575,16 @@
             "summary": "Search in the toolbar with a month menu and the totals line, not the card's large title, search field and chips",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "The detail subtitle has the date only (Sunday, Sep 27), not the time (Today, 8:42 AM): entries store no time",
-            "kind": "follow-up",
-            "ref": "MAZ-246"
           }
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-88",
         "capture": "1194x834",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The subtitle has the date only (Sunday, Sep 27), not the time (Today, 8:42 AM): entries store no time",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          }
         ]
       }
     },
@@ -2613,7 +2601,7 @@
         ],
         "deviations": [
           {
-            "summary": "The details add a Household row before Date (MAZ-255 moves it into More details)",
+            "summary": "The details put a Household row before Date; the card has it after Trip (MAZ-277)",
             "kind": "follow-up",
             "ref": "MAZ-255"
           }
@@ -2632,11 +2620,6 @@
             "summary": "Add entry is a dialog with keyboard entry",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "A Household choice follows Note (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -3048,11 +3031,6 @@
             "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
             "kind": "follow-up",
             "ref": "MAZ-225"
-          },
-          {
-            "summary": "The panel's subtitle has the date only, not the time (Today, 8:42 AM): entries store no time",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
           }
         ]
       }
@@ -3188,11 +3166,6 @@
             "summary": "Add entry is a dialog with keyboard entry",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Note and a Household choice follow the receipt drop zone; the card draws neither (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -3555,19 +3528,9 @@
         ],
         "deviations": [
           {
-            "summary": "The Split value shows its amount in copper (“$16.00 yours”); the card's value is secondary text",
+            "summary": "A Note field follows the receipt drop zone, as on Add entry; the card draws none (design decision)",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The form adds a Note field under the receipt drop zone",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The entry's detail panel stays open behind the dialog; the card shows Activity with nothing selected",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-226"
           }
         ]
       }
@@ -3620,24 +3583,9 @@
         ],
         "deviations": [
           {
-            "summary": "Only the month chip shows while searching, not the All / Expenses / Income / Investments chips",
+            "summary": "No export button beside the chips",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "“Searching…” is plain text at the top left with no spinner, not centred in the table with its headers",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The month's entry, spent and in summary shows while the search runs; the card shows none",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The search field sits beside the month switcher, not at the right beside Add entry",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-225"
           }
         ]
       }

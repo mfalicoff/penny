@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { configure, screen, waitFor, within } from "@testing-library/react";
+import { act, configure, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { entry, ledgerServer, personalHit, setOnline, sharedHit, sharedRow } from "./fakes/ledgerServer";
@@ -306,6 +306,56 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("complementary", { name: "Dinner out" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the type chips and Filters while searching, with the period beside the title (web-activity-searching, MAZ-273)", async () => {
+    stubDesktop();
+    server();
+    renderApp("/transactions?month=2026-11&q=salary");
+    expect(await within(await screen.findByRole("region", { name: "Search results" })).findByText("Monthly salary")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Expenses" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Remove filter/ })).not.toBeInTheDocument();
+  });
+
+  it("sets the panel aside while Edit is open, with no row selected (web-edit-entry, MAZ-273)", async () => {
+    stubDesktop();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    ledgerServer({ transactions: [dinner, rent] }, { shared: [], search: () => [personalHit(dinner), personalHit(rent)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    await user.click(within(table).getByRole("button", { name: /^Dinner out/ }));
+    const panel = screen.getByRole("complementary", { name: "Dinner out" });
+    await user.click(within(panel).getByRole("button", { name: "Edit" }));
+    expect(await screen.findByRole("form", { name: "Edit entry" })).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "Dinner out" })).not.toBeInTheDocument();
+    expect(within(table).getByRole("button", { name: /^Dinner out/ })).not.toHaveAttribute("aria-current");
+
+    // Cancel brings the entry back beside the list.
+    await user.keyboard("{Escape}");
+    expect(await screen.findByRole("complementary", { name: "Dinner out" })).toBeInTheDocument();
+    expect(within(table).getByRole("button", { name: /^Dinner out/ })).toHaveAttribute("aria-current", "true");
+  });
+
+  it("brings the set-aside panel back, saying so, when another device deletes the entry being edited", async () => {
+    stubDesktop();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    const { otherDevice } = ledgerServer({ transactions: [dinner, rent] }, { shared: [], search: () => [personalHit(dinner), personalHit(rent)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    await user.click(within(table).getByRole("button", { name: /^Dinner out/ }));
+    await user.click(within(screen.getByRole("complementary", { name: "Dinner out" })).getByRole("button", { name: "Edit" }));
+    expect(await screen.findByRole("form", { name: "Edit entry" })).toBeInTheDocument();
+
+    otherDevice((ledger) => ({ ...ledger, transactions: ledger.transactions.filter((item) => item.id !== "din") }));
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    const panel = await screen.findByRole("complementary", { name: "Dinner out" });
+    expect(panel).toHaveTextContent("It was deleted on another device or in another tab.");
+    expect(screen.queryByRole("form", { name: "Edit entry" })).not.toBeInTheDocument();
   });
 
   it("moves through the table with the arrow keys, edits with E and deletes with ⌫", async () => {

@@ -22,6 +22,7 @@
   .drow [data-i] { width: 17px; height: 17px; color: var(--label-2); }
   .drow .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 4px; }
   .drow .v b { color: var(--tint-text); }
+  .note { height: 64px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 .5px var(--separator); padding: 10px 12px; font-size: 14.5px; color: var(--label-3); }
   .drop { margin-top: 12px; height: 74px; border-radius: 12px; border: 1.5px dashed var(--label-3); display: grid; place-items: center; font-size: 13px; color: var(--label-2); }
 </style></head>
 <body class="canvas">
@@ -50,7 +51,10 @@
         <div class="drow"><i data-i="people"></i>Split<span class="v">3 people · <b class="num">$24.80</b> yours</span></div>
         <div class="drow"><i data-i="repeat"></i>Repeat<span class="v">Never</span></div>
         <div class="drow"><i data-i="airplane"></i>Trip<span class="v">None</span></div>
+        <div class="drow"><i data-i="home"></i>Household<span class="v">Personal</span></div>
         <div class="drop"><span style="display:flex;gap:6px;align-items:center"><i data-i="receipt" style="width:16px;height:16px"></i>Drop a receipt or <b style="color:var(--tint-text)">browse</b></span></div>
+        <div class="lab">Note</div>
+        <div class="note">Anything you'd like to remember</div>
       </div>
     </div>
     <div class="mf"><span class="hint"><kbd>Tab</kbd> next field · <kbd>⌘↵</kbd> save · <kbd>Esc</kbd> cancel</span><span style="flex:1"></span><span class="btn">Cancel</span><span class="btn primary">Add expense <kbd>⌘↵</kbd></span></div>

@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "883f40898ad396e76427a8f13f1ec71500826409557cdff4c6dcf0b9b870e745"
+      "sha256": "f3f4dade063d185e40f65b1f72cb0200fd2acf20be41f670855266b267c2fec8"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "ce1df1dd10446a708cdb7bb28676cdaa38a2ceaa4026bc746f429d093d52cd7d"
+      "sha256": "1f3b901ce69352b5fe27a333b4eda038842f57233696a600fc881dac8f8a5e63"
     }
   ],
   "tokens": {
@@ -667,7 +667,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/entry-extras.html",
-      "sha256": "53802bf53ab3203dc705e7b8d2c3edb5207ed73788317d64b395cbd08444ac70",
+      "sha256": "86956d1ac9466c9b0f840d8e415f7b9fc3f92d68323ed969e75c27a4f4d4b923",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/entries/new",
@@ -2119,7 +2119,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/activity.html",
-      "sha256": "9a87af30666314fc75ef5bca635f42da5d3f910371ffd43d72baebb84e1c7c11",
+      "sha256": "62d9f1d6e395070674362abd62035c453e730482ead4d84b23884be517adc682",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
@@ -2142,7 +2142,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/add-entry.html",
-      "sha256": "63f739da730f8282570b13a64e9433a73ec6c2a872e212828f17ce5e0e597971",
+      "sha256": "ee1f3b2dff09ad1906d62aae2ed0f87092d5f97ae3c977b215ac705a52084f18",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/entries/new",
@@ -2444,7 +2444,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/activity.html",
-      "sha256": "0f81e00619ae7aee0fe1582311f055acaaf172964ad9fdc25f0de3e98fe83213",
+      "sha256": "cae71657abf0c3e88a22c538d3fbe05ad5228ec20087bafc0e14c9a6f5f8d5a0",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
@@ -2559,7 +2559,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/add-entry.html",
-      "sha256": "11eb4f70c432ea5fa0dcf1e2683ece9328164f135af29fc6422d6283f7d2fe49",
+      "sha256": "6b36266db802a968eda5aeb14e7b9c050bb8588e479cee3c37583106772865c7",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/entries/new",

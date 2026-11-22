@@ -135,7 +135,8 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   market.share = 4800;
   await sync(native, sameBase, sameLocal);
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-  await expect(detailOf(page, "Market")).toContainText("$48.00");
+  // The list behind the form shows the synced amount (on a desktop the detail panel steps aside while editing).
+  await expect(results(page)).toContainText("48.00");
   await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   const banner = edit.getByRole("alert");
   await expect(banner).toContainText("This entry changed on another device");

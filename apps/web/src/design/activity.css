@@ -804,9 +804,15 @@
   padding-bottom: calc(128px + 64px + env(safe-area-inset-bottom));
 }
 
-/* Desktops (web-activity): in the top bar, at the end beside Add entry. */
+/* Desktops (web-activity): in the top bar, at the end beside Add entry. The tools take the
+   spacer's place, so the period stays beside the title and the field ends next to Add entry. */
 .topbar__tools:has(.activity-search--top) {
   flex: 1;
+  margin-inline-end: 0;
+}
+
+.topbar:has(.activity-search--top) .topbar__spacer {
+  display: none;
 }
 
 .activity-search--top {
@@ -829,6 +835,41 @@
 }
 
 /* ---------- desktop table (web-activity) ---------- */
+/* While the search runs (web-activity-searching): one panel with the headers and the spinner centred under them. */
+.activity-pending {
+  overflow: hidden;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+/* The period's summary waits for the results, as the card shows none while searching. */
+.activity:has(.activity-pending) .activity-summary {
+  display: none;
+}
+
+.activity-pending .activity-table {
+  border-bottom: 0.5px solid var(--pk-separator);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.activity-pending .state--loading {
+  align-items: center;
+  flex-direction: column;
+  max-width: none;
+  height: 360px;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.activity-pending .state__spinner {
+  width: 22px;
+  height: 22px;
+  border-width: 3px;
+}
+
 .activity-table {
   width: 100%;
   border-collapse: separate;

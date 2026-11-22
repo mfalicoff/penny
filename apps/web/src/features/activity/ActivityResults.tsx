@@ -11,7 +11,7 @@ import { Badge, Button, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
-import { EmptyState, useOnline } from "../../design/states";
+import { EmptyState, LoadingState, useOnline } from "../../design/states";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { useLedgerCurrency } from "../../offline/useLedgerCurrency";
 import { dayLabel } from "../households/model";
@@ -109,10 +109,17 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
   }
 
   if (serverSearch.isPending) {
-    return (
-      <p role="status" aria-live="polite">
-        Searching…
-      </p>
+    // `web-activity-searching`: the table keeps its headers, with the spinner centred in it.
+    return layout === "table" ? (
+      <section aria-label="Search results" className="activity-results activity-pending">
+        {/* Only the headers' look: the status below says what's happening. */}
+        <table className="activity-table" aria-hidden="true">
+          <TableHead />
+        </table>
+        <LoadingState label="Searching…" />
+      </section>
+    ) : (
+      <LoadingState label="Searching…" />
     );
   }
   if (serverSearch.data === undefined) {
@@ -424,6 +431,25 @@ const EDITABLE = "[data-row-key]";
  * that day's entries. ↑ and ↓ move between entries, ↵ opens one, E edits it and ⌫ deletes it; the
  * same Edit and Delete show on the hovered, focused or selected row.
  */
+/** The desktop table's column headers (`web-activity`). */
+function TableHead() {
+  return (
+      <thead>
+        <tr>
+          <th scope="col">Entry</th>
+          <th scope="col">Account</th>
+          <th scope="col">Split</th>
+          <th scope="col" className="activity-table__num">
+            Amount
+          </th>
+          <th scope="col">
+            <span className="visually-hidden">Actions</span>
+          </th>
+        </tr>
+      </thead>
+  );
+}
+
 function RowTable({
   groups,
   context,
@@ -463,19 +489,7 @@ function RowTable({
   return (
     <>
       <table className="activity-table" aria-describedby={hintId} onKeyDown={onKeyDown}>
-        <thead>
-          <tr>
-            <th scope="col">Entry</th>
-            <th scope="col">Account</th>
-            <th scope="col">Split</th>
-            <th scope="col" className="activity-table__num">
-              Amount
-            </th>
-            <th scope="col">
-              <span className="visually-hidden">Actions</span>
-            </th>
-          </tr>
-        </thead>
+        <TableHead />
         {groups.map((group, index) => (
           <tbody key={group.date || "results"}>
             {group.date ? (
