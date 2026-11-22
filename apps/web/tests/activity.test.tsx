@@ -446,7 +446,10 @@ describe("Activity on a touch tablet (ipad-activity, MAZ-274)", () => {
     const toolbar = within(pane).getByRole("button", { name: "Edit" }).parentElement;
     expect([...(toolbar?.children ?? [])].map((button) => button.getAttribute("aria-label") ?? button.textContent)).toEqual(["Delete", "Edit", "Add entry"]);
     await user.click(add);
-    expect(await screen.findByRole("dialog", { name: "New entry" })).toBeInTheDocument();
+    // The dialog swaps "Loading your ledger…" for the form, so query it afresh rather than hold a node.
+    await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "New entry" })).toBeInTheDocument();
+    });
   });
 
   it("selects the first listed entry when the filters hide the selected one", async () => {
