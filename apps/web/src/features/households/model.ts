@@ -70,6 +70,22 @@ export function localDate(now = new Date()): string {
   return `${String(now.getFullYear())}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
+/**
+ * `ipad-shared`'s groups: This week (the last seven days, today included, and anything dated
+ * later) and Earlier. A month with nothing this week keeps a single Earlier group.
+ */
+export function byWeek(expenses: readonly SharedExpense[], now = new Date()): { key: string; label: string; expenses: SharedExpense[] }[] {
+  const start = new Date(now);
+  start.setDate(start.getDate() - 6);
+  const weekStart = localDate(start);
+  const recent = expenses.filter((expense) => expense.date.slice(0, 10) >= weekStart);
+  const earlier = expenses.filter((expense) => expense.date.slice(0, 10) < weekStart);
+  return [
+    ...(recent.length ? [{ key: "this-week", label: "This week", expenses: recent }] : []),
+    ...(earlier.length ? [{ key: "earlier", label: "Earlier", expenses: earlier }] : []),
+  ];
+}
+
 export const currentMonth = (now = new Date()) => localDate(now).slice(0, 7);
 
 export function shiftMonth(month: string, delta: number): string {
