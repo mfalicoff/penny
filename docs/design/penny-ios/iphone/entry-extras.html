@@ -29,6 +29,7 @@
   .opt + .opt::before { content: ""; position: absolute; top: 0; left: 48px; right: 0; border-top: .5px solid var(--separator); }
   .opt [data-i] { width: 20px; height: 20px; color: var(--label-2); }
   .opt .ck { margin-left: auto; color: var(--tint); --sw: 48px; }
+  .opt .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 4px; }
   .note { margin: 0 14px; border-radius: var(--r-card); background: var(--surface); padding: 14px 16px; height: 84px; font-size: 16px; color: var(--label-3); }
 </style></head>
 <body class="canvas">
@@ -61,6 +62,9 @@
       <div class="opt"><i data-i="close"></i>No trip<i data-i="checkmark" class="ck"></i></div>
       <div class="opt"><i data-i="airplane"></i>Lisbon trip</div>
       <div class="opt"><i data-i="airplane"></i>Montréal weekend</div>
+    </div>
+    <div class="list" style="margin-top:14px">
+      <div class="opt"><i data-i="home"></i>Household<span class="v">Personal <i data-i="chevron-forward" class="chev"></i></span></div>
     </div>
 
     <div class="grp-h">Note</div>

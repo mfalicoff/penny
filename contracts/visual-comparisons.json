@@ -404,6 +404,11 @@
             "summary": "Shared trips are listed below personal trips with \"Shared · N people\", and picking one opens the shared expense form",
             "kind": "follow-up",
             "ref": "MAZ-255"
+          },
+          {
+            "summary": "The card's Household row after Trip (added in MAZ-277) isn't in the iOS More details sheet yet",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
           }
         ]
       },
@@ -420,11 +425,6 @@
             "summary": "More details expands inside the form instead of a pushed sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "A Household choice follows Note (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -2601,7 +2601,7 @@
         ],
         "deviations": [
           {
-            "summary": "The details add a Household row before Date (MAZ-255 moves it into More details)",
+            "summary": "The details put a Household row before Date; the card has it after Trip (MAZ-277)",
             "kind": "follow-up",
             "ref": "MAZ-255"
           }
@@ -2620,11 +2620,6 @@
             "summary": "Add entry is a dialog with keyboard entry",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "A Household choice follows Note (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -3171,11 +3166,6 @@
             "summary": "Add entry is a dialog with keyboard entry",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Note and a Household choice follow the receipt drop zone; the card draws neither (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }

@@ -602,6 +602,23 @@ describe("Add entry with a household", () => {
     await user.selectOptions(within(form).getByLabelText("Household"), await within(form).findByRole("option", { name }));
   }
 
+  it("draws Household as a row between Trip and Note, as iphone-entry-extras does", async () => {
+    seed();
+    serve();
+    const user = userEvent.setup();
+    renderApp("/");
+    const form = await openAdd(user);
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
+    const household = await within(form).findByRole("combobox", { name: "Household" });
+    expect(household).toHaveValue("");
+    expect(within(household).getByRole("option", { name: "Personal" })).toBeInTheDocument();
+    expect(household).toHaveAccessibleDescription("Choose a household to split this expense with its members.");
+    const trip = within(form).getByRole("group", { name: "Trip" });
+    const note = within(form).getByLabelText("Note");
+    expect(trip.compareDocumentPosition(household) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(household.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("sends a new expense to a household from Add entry, keeping what was typed", async () => {
     const id = seed();
     const fetchMock = serve();
@@ -639,7 +656,7 @@ describe("Add entry with a household", () => {
     const shared = await screen.findByRole("form", { name: "New expense" });
     await within(shared).findByRole("group", { name: "Paid by" });
 
-    await user.selectOptions(within(shared).getByLabelText("Household"), "Personal (just me)");
+    await user.selectOptions(within(shared).getByLabelText("Household"), "Personal");
     const personal = await screen.findByRole("form", { name: "New entry" });
     expect(within(personal).queryByRole("group", { name: "Paid by" })).not.toBeInTheDocument();
     expect(within(personal).getByLabelText("Amount (CAD)")).toHaveValue("12");
