@@ -1,6 +1,6 @@
 import type { Kind, Transaction } from "@domain/ledger.ts";
 import { useNavigate } from "@tanstack/react-router";
-import { useId, useRef, useState, type ReactNode, type RefObject, type SyntheticEvent } from "react";
+import { useCallback, useId, useRef, useState, type ReactNode, type RefObject, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTopbarSlot } from "../../app/shell/pageTitle";
 import { SEARCH_SHORTCUT } from "../../app/shell/AppShell";
@@ -38,8 +38,9 @@ interface Open {
  *
  * - Phones: the type chips and the period chip, then the day-grouped list, and the search field
  *   at the bottom above the tab bar. The period chip opens Filters (period, category, day).
- * - Touch tablets from 1100px (`ipad-activity`): search, the chips and the list, with the open
- *   entry in a pane beside it.
+ * - Touch tablets from 1100px (`ipad-activity`): search, the chips and the list, with the selected
+ *   entry in a pane beside it. The pane always shows one: the first listed entry until another
+ *   is chosen, and again when the selected one is deleted or filtered out.
  * - Desktops (`web-activity`): the period beside the title and search in the top bar; the chips,
  *   Filters and the period's summary over a table, and the open entry in a panel beside it.
  *
@@ -66,6 +67,17 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   const desktop = tablet && !touch;
   // From 1100px the open entry sits beside the list; below it, it is a dialog (MAZ-227).
   const beside = wide;
+  // `ipad-activity`: on a touch tablet the pane always shows an entry, so the first listed one is
+  // selected when Activity opens and whenever the selected one leaves the list.
+  const pane = beside && touch;
+  const autoSelect = useCallback((pick: { entry: Transaction; row: HTMLElement } | null) => {
+    if (!pick) {
+      setOpen(null);
+      return;
+    }
+    nonce.current += 1;
+    setOpen({ entry: pick.entry, opener: pick.row, action: "detail", nonce: nonce.current });
+  }, []);
 
   function close() {
     if (!open) return;
@@ -108,6 +120,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       shared={shared}
       layout={desktop ? "table" : "list"}
       selectedKey={beside ? selectedKey : undefined}
+      autoSelect={pane ? autoSelect : undefined}
       onClear={(...keys) => {
         navigate((previous) => without(previous, ...keys));
       }}
