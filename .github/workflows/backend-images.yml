@@ -17,10 +17,8 @@ on:
       - 'scripts/grafana-dashboards.mjs'
       - '.dockerignore'
       - '.github/workflows/backend-images.yml'
-  # A merge to master builds and smoke tests the images (and saves master's caches) without
-  # publishing; version tags and manual runs publish.
   push:
-    branches: [master]
+    branches: [v2]
     tags: ['v*.*.*']
   workflow_dispatch:
 
@@ -115,7 +113,7 @@ jobs:
   publish:
     name: Publish multi-platform images
     needs: smoke
-    if: github.event_name != 'pull_request' && !(github.event_name == 'push' && github.ref == 'refs/heads/master')
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-26.04
     timeout-minutes: 45
     permissions:
