@@ -69,7 +69,7 @@ export function Sidebar() {
             <span className="sidebar__email">Demo</span>
             <p className="sync-line">Sample data</p>
           </div>
-          {/* Not on the card, which draws no button here: without it the demo has no way to Settings. */}
+          {/* As on the account footer: on the web this is the only way into Settings. */}
           <Link to="/settings" className="iconlink" aria-label="Settings" activeOptions={{ includeSearch: false }}>
             <Icon name="settings" size={18} />
           </Link>

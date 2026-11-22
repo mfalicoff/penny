@@ -3514,19 +3514,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-84",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer keeps the Settings button beside Demo and Sample data; the card draws none, and without it the demo can't reach Settings",
-            "kind": "follow-up",
-            "ref": "MAZ-283"
-          }
         ]
       }
     },

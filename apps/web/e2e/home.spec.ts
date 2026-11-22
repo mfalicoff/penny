@@ -52,14 +52,14 @@ const regionOrder = (page: Page) => page.locator("main section[aria-labelledby]"
 
 test("Home shows the cards' sections and nothing more (MAZ-174, MAZ-224)", async ({ page, isMobile }) => {
   await startDemo(page);
-  const order = await regionOrder(page);
+  // Home renders its sections as the demo ledger loads, so poll rather than read the order once.
   if (isMobile) {
     // iphone-home: the hero alone (no tiles), the flow card, Recent.
-    expect(order).toEqual(["Left to spend", "Follow your money", "Recent"]);
+    await expect.poll(() => regionOrder(page)).toEqual(["Left to spend", "Follow your money", "Recent"]);
     await expect(hero(page).getByText("Came in")).toHaveCount(0);
   } else {
     // web-home: the hero and its tiles beside Coming up, then the Sankey beside By category.
-    expect(order).toEqual(["Left to spend", "Coming up", "Follow your money", "By category"]);
+    await expect.poll(() => regionOrder(page)).toEqual(["Left to spend", "Coming up", "Follow your money", "By category"]);
     await expect(page.getByRole("banner").getByRole("button", { name: "Previous month" })).toBeVisible();
   }
 });
