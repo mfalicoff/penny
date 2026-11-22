@@ -94,6 +94,7 @@ struct ActivityFiltersSheet: View {
                         .accessibilityIdentifier("filters.done")
                 }
             }
+            .pennySolidBars()
         }
         .presentationDetents([.medium, .large])
         .accessibilityIdentifier("screen.activityFilters")

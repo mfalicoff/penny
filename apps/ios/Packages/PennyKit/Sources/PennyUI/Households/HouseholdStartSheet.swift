@@ -105,6 +105,7 @@ struct HouseholdStartSheet: View {
                         focused = true
                     })
             }
+            .pennySolidBars()
         }
         .onAppear {
             // On screen: the invite that asked for this sheet is used up (`InviteHandoff`).

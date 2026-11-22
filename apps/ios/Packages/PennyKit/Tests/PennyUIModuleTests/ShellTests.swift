@@ -72,6 +72,7 @@ struct ShellTests {
         let used = DemoLedger.make(today: today)
         #expect(CurrencyPolicy.lockReason(ledger: used) == "Currency can only be changed before adding entries.")
         #expect(CurrencyPolicy.options.map(\.rawValue) == ["CAD", "USD", "EUR", "GBP"])
+        #expect(CurrencyPolicy.settingsFootnote == "Currency is locked once your ledger has entries.")
     }
 
     @Test("whenEntriesAreGrouped_ActivityDay_ShouldKeepOrderAndTotalEachDaysNet")
@@ -191,6 +192,18 @@ struct ShellTests {
         model.set(.dark)
         #expect(model.colorScheme == .dark)
         #expect(AppearanceModel(preferences: preferences).preference == .dark, "kept for the next launch")
+    }
+
+    @Test("whenDisplaySettingsChange_AppearanceModel_ShouldPersistThem")
+    func display() {
+        let preferences = EphemeralDevicePreferences()
+        let model = AppearanceModel(preferences: preferences)
+        #expect(model.showsCents && !model.reducesTransparency && model.weekStart == .monday)
+        model.setShowsCents(false)
+        model.setReducesTransparency(true)
+        model.setWeekStart(.sunday)
+        let next = AppearanceModel(preferences: preferences)
+        #expect(!next.showsCents && next.reducesTransparency && next.weekStart == .sunday)
     }
 
     @Test("whenTheDayChangesWhileOpen_ShellModel_ShouldMoveFutureIncomeFromExpectedToRecorded")

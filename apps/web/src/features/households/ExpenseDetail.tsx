@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useId, useRef, useState, type RefObject } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useState, type RefObject } from "react";
 import { ApiError } from "../../api/client";
 import { deleteExpense, expenseQuery, refreshHousehold } from "../../api/households";
 import type { SharedExpense } from "../../api/schemas";
@@ -14,7 +14,8 @@ import type { HouseholdView } from "./context";
 import { useLedgerChoices } from "./choices";
 import { describeLoadError, describeSharedError } from "./errors";
 import { HistoryPanel } from "./HistoryPanel";
-import { canRecordShare, dayLabel, isPaid, possessive, SHARE_STATUS_LABEL, shareOf, shareStatus, splitLabel } from "./model";
+import { canRecordShare, dayLabel, isPaid, possessive, SHARE_STATUS_LABEL, shareOf, shareStatus, shortDate, splitLabel } from "./model";
+import { MoreMenu, type MoreItem } from "./GroupTools";
 import { ReceiptLink } from "../receipts/ReceiptLink";
 import { ConfirmDeleteDialog, shortDay } from "../entries/EntryDetail";
 import { categoryIcon } from "../entries/model";
@@ -34,6 +35,14 @@ interface DetailProps {
    * `web-household`), instead of a dialog over the page.
    */
   variant?: "dialog" | "panel";
+  /**
+   * The touch tablet's pane (`ipad-shared`): a short card, with the title and "Jo paid $184.20 ·
+   * Nov 4", then each member's share with Paid or Mark as paid. Edit, Change history, Repeating
+   * expense and Delete are in its … menu. The pane always shows an expense, so it has no Close.
+   */
+  compact?: boolean;
+  /** Whether opening this expense moves focus to it: not when the page picked it, only when someone did. */
+  focusOnOpen?: (expenseId: string) => boolean;
 }
 
 /**
@@ -42,7 +51,7 @@ interface DetailProps {
  * and repayment, and its change history. Recording a share payment and deleting happen in the
  * same place.
  */
-export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, variant = "dialog" }: DetailProps) {
+export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, variant = "dialog", compact = false, focusOnOpen }: DetailProps) {
   const email = useAccountEmail();
   const expense = useQuery(expenseQuery(email, view.householdId, expenseId));
   const [pane, setPane] = useState<Pane>({ kind: "detail" });
@@ -53,8 +62,9 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
   const panelHeading = useRef<HTMLHeadingElement>(null);
 
   // In the side pane, opening an expense moves focus to it, as opening the dialog does.
+  const shouldFocus = useEffectEvent((id: string) => focusOnOpen?.(id) ?? true);
   useEffect(() => {
-    if (variant === "panel") panelHeading.current?.focus();
+    if (variant === "panel" && shouldFocus(expenseId)) panelHeading.current?.focus();
   }, [variant, expenseId]);
 
   // Switching panes replaces the focused control, so move focus to the new pane's heading (or its
@@ -139,6 +149,33 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
     }
   }
 
+  const short = variant === "panel" && compact && expense.data && (pane.kind === "detail" || pane.kind === "delete") ? expense.data : undefined;
+  if (short) {
+    const actions: MoreItem[] = [
+      ...(view.canWrite ? [{ label: "Edit", icon: "create" as const, onSelect: () => { onEdit(short); } }] : []),
+      { label: "Change history", icon: "time" as const, onSelect: () => { setPane({ kind: "history" }); } },
+      ...(onRule && short.recurringId ? [{ label: "Repeating expense", icon: "repeat" as const, onSelect: () => { onRule(short.recurringId ?? ""); } }] : []),
+      ...(view.canWrite && !isPaid(short) ? [{ label: "Delete", icon: "trash" as const, onSelect: () => { setPane({ kind: "delete" }); } }] : []),
+    ];
+    return (
+      <section className="card expense-panel expense-panel--compact" aria-labelledby={panelTitleId}>
+        <div className="expense-panel__head">
+          <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className="card__title">
+            {title}
+          </h2>
+          <span className="expense-panel__sub">
+            {view.who.name(short.payerUserId)} paid {view.money(short.totalCents)} · {shortDate(short.date)}
+          </span>
+          <MoreMenu items={actions} label={`${title} actions`} />
+        </div>
+        <div ref={bodyRef}>
+          <CompactShares view={view} expense={short} onRecord={(fromUserId) => { setPane({ kind: "record", expense: short, fromUserId }); }} />
+          {pane.kind === "delete" ? <DeleteSharedDialog view={view} expense={short} onCancel={() => { setPane({ kind: "detail" }); }} onDeleted={onClose} /> : null}
+        </div>
+      </section>
+    );
+  }
+
   if (variant === "panel") {
     return (
       <section className="card expense-panel" aria-labelledby={panelTitleId}>
@@ -146,9 +183,11 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
           <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className="card__title">
             {title}
           </h2>
-          <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={close}>
-            <Icon name="close" size={16} weight={44} />
-          </button>
+          {!compact || recording ? (
+            <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={close}>
+              <Icon name="close" size={16} weight={44} />
+            </button>
+          ) : null}
         </div>
         <div ref={bodyRef} className="form">
           {body}
@@ -299,6 +338,52 @@ function DetailPane({
       </div>
       {view.canWrite && isPaid(expense) ? <p className="note">A share of this expense is already repaid, so it can't be deleted, and its payer, total, month and shares are fixed.</p> : null}
     </div>
+  );
+}
+
+/**
+ * `ipad-shared`'s selected expense: one row per member with their share, and Paid (green), Mark as
+ * paid (copper, where you can record it) or how it stands; the payer is "· payer".
+ */
+function CompactShares({ view, expense, onRecord }: { view: HouseholdView; expense: SharedExpense; onRecord: (fromUserId: string) => void }) {
+  return (
+    <>
+      <h3 className="visually-hidden">Shares</h3>
+      <ul className="row-list expense-shares" aria-label={`Shares of ${expense.title}`}>
+        {expense.splits.map((split) => {
+          const payer = split.userId === expense.payerUserId;
+          const status = shareStatus(expense, split.userId, split.amountCents);
+          let state = null;
+          if (!payer && status === "paid") {
+            state = (
+              <Badge tone="income" icon="checkmark">
+                {SHARE_STATUS_LABEL[status]}
+              </Badge>
+            );
+          } else if (!payer && canRecordShare(expense, split.userId, view.who, view.archived)) {
+            state = (
+              <button type="button" className="pay-pill pay-pill--on" onClick={() => { onRecord(split.userId); }} aria-label={`Mark ${possessive(view.who.name(split.userId))} share as paid`}>
+                Mark as paid
+              </button>
+            );
+          } else if (!payer) {
+            state = <span className="row__meta">{SHARE_STATUS_LABEL[status]}</span>;
+          }
+          return (
+            <li key={split.userId} className="row expense-share">
+              <Avatar name={view.who.avatar(split.userId)} size={30} />
+              <span className="expense-share__name">
+                {view.who.name(split.userId)}
+                {payer ? " · payer" : ""}
+              </span>
+              <Money cents={split.amountCents} currency={view.currency} />
+              {state}
+            </li>
+          );
+        })}
+      </ul>
+      {expense.paymentsClosed ? <p className="note">This month has a monthly payment, so the remaining shares settle from Balances.</p> : null}
+    </>
   );
 }
 

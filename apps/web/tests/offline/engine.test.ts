@@ -199,6 +199,55 @@ describe("conflicts with other devices", () => {
     expect(tab.engine.getState().pending.count).toBe(0);
   });
 
+  it("doesn't download again for a server ledger heard of while a sync reads the same one", async () => {
+    const server = new FakeServer(ledger({ transactions: [entry("a", "Rent")] }));
+    let release: () => void = () => undefined;
+    server.getGate = new Promise((resolve) => {
+      release = resolve;
+    });
+    const tab = openTab({ server });
+    // The boot sync waits on GET; meanwhile a Query read of the same revision lands.
+    await vi.waitFor(() => {
+      expect(server.gets).toBe(1);
+    });
+    tab.engine.noteServerRevision(server.revision);
+    server.getGate = null;
+    release();
+    await vi.waitFor(() => {
+      expect(tab.engine.getState().phase).toBe("upToDate");
+    });
+    await Promise.resolve();
+    expect(server.gets).toBe(1);
+    // Idle, the same revision changes nothing; a newer one syncs.
+    tab.engine.noteServerRevision(server.revision);
+    expect(server.gets).toBe(1);
+    server.otherDevice(add(entry("b", "Coffee")));
+    tab.engine.noteServerRevision(server.revision);
+    await settled(tab);
+    expect(titles(tab.engine.getState().ledger)).toEqual(["Coffee", "Rent"]);
+  });
+
+  it("syncs again when a newer server ledger landed after a running sync read an older one", async () => {
+    const server = new FakeServer(ledger({ transactions: [entry("a", "Rent")] }));
+    const tab = openTab({ server });
+    await settled(tab);
+    const read = server.api.get.bind(server.api);
+    server.api.get = async () => {
+      const answer = await read();
+      // Right after this GET answered, Currency settings wrote a newer ledger and Query holds it.
+      server.api.get = read;
+      server.otherDevice((value) => ({ ...value, currency: "EUR" }));
+      tab.engine.noteServerRevision(server.revision);
+      return answer;
+    };
+    await tab.engine.sync();
+    // No further call: the engine itself syncs again, since the GET it ran read an older revision.
+    await vi.waitFor(() => {
+      expect(tab.engine.getState().ledger?.currency).toBe("EUR");
+    });
+    expect(tab.engine.baseRevision).toBe(server.revision);
+  });
+
   it("schedules a retry when saves keep landing during every pass", async () => {
     const server = new FakeServer(ledger());
     const db = new MemoryLedgerDatabase();

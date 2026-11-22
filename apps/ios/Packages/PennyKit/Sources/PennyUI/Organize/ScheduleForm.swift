@@ -83,6 +83,7 @@ struct ScheduleFormSheet: View {
                 CategoryFormSheet(kind: model.draft.kind, lockKind: true) { model.categoryCreated($0) }.environment(
                     shell)
             }
+            .pennySolidBars()
         }
         .tint(PennyColor.tint)
         .interactiveDismissDisabled(model.isSaving)

@@ -3,6 +3,7 @@ import { useId, useState, type ReactNode } from "react";
 import { monthRecapQuery } from "../../api/households";
 import type { MonthRecap, Transfer } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
+import { TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { Avatar, Badge, Card, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
@@ -19,13 +20,16 @@ const NO_MONEY_NOTE = "Penny records payments made outside the app. It never mov
  * month, the full suggested payments that settle it, payments already recorded, and older months
  * that are still unpaid, each kept separate. Every number here comes from the server's month
  * recap. On phones and tablets each part is a labelled list; `compact` is the `web-household`
- * side pane: a Balances card and a card per overdue month.
+ * side pane: a Balances card and a card per overdue month. On a touch tablet the compact Balances
+ * card is `ipad-shared`'s: each member's suggested payment on their row ("pays you $110.40"),
+ * "gets back" or "owes" under the amount, and when Record paid opens.
  */
 export function BalancesTab({ view, recap, compact = false }: { view: HouseholdView; recap: UseQueryResult<MonthRecap>; compact?: boolean }) {
   const email = useAccountEmail();
   const [recording, setRecording] = useState<{ month: string; transfer: Transfer } | null>(null);
   const overdue = (recap.data?.overdueMonths ?? []).filter((month) => month !== view.month);
   const older = useQueries({ queries: overdue.map((month) => monthRecapQuery(email, view.householdId, month)) });
+  const touch = useMediaQuery(TOUCH_TABLET);
 
   if (recap.isPending) return <LoadingState label="Loading balances…" />;
   if (!recap.data) {
@@ -50,7 +54,11 @@ export function BalancesTab({ view, recap, compact = false }: { view: HouseholdV
 
   return (
     <div className="page balances">
-      <CurrentMonth view={view} recap={recap.data} onRecord={record(view.month)} compact={compact} note={compact && overdue.length === 0} />
+      {compact && touch ? (
+        <TabletBalances view={view} recap={recap.data} onRecord={record(view.month)} />
+      ) : (
+        <CurrentMonth view={view} recap={recap.data} onRecord={record(view.month)} compact={compact} note={compact && overdue.length === 0} />
+      )}
       {olderMonths}
       {recording ? <RecordMonthlyDialog view={view} month={recording.month} transfer={recording.transfer} onClose={() => { setRecording(null); }} /> : null}
     </div>
@@ -208,6 +216,81 @@ function CurrentMonth({ view, recap, onRecord, compact, note }: { view: Househol
         </Section>
       ) : null}
     </>
+  );
+}
+
+/**
+ * `ipad-shared`'s Balances card: each member with the payment that settles their part beside
+ * their name ("pays you $110.40"), the balance with "gets back" or "owes" under it, and Record paid
+ * on the row once the month's payments open. Before then, a hint says when they open.
+ */
+function TabletBalances({ view, recap, onRecord }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void }) {
+  const me = view.who.meId;
+  const open = monthlyPaymentsOpen(recap.month);
+  const person = (userId: string) => (userId === me ? "you" : view.who.name(userId));
+  const recorded = recap.reimbursements.length ? (
+    <ul className="row-list" aria-label={`Recorded payments for ${monthLabel(recap.month)}`}>
+      {recap.reimbursements.map((item) => (
+        <li key={item.id} className="row row--plain">
+          <span className="row__main">
+            <span>
+              {view.who.name(item.fromUserId)} paid {view.who.name(item.toUserId)}
+            </span>
+            <span className="row__meta">
+              {item.expenseId ? "One expense share" : "Monthly payment"} · recorded by {view.who.name(item.createdBy)}
+            </span>
+          </span>
+          <Money cents={item.amountCents} currency={view.currency} />
+        </li>
+      ))}
+    </ul>
+  ) : null;
+  return (
+    <Section title="Balances" status={monthStatus(recap)} compact>
+      {recap.balances.length ? (
+        <ul className="row-list balance-rows" aria-label={`Balances for ${monthLabel(recap.month)}`}>
+          {recap.balances.map((row) => {
+            const pays = recap.suggestions.filter((transfer) => transfer.fromUserId === row.userId);
+            return (
+              <li key={row.userId} className="row balance-row">
+                <Avatar name={view.who.avatar(row.userId)} size={30} />
+                <span className="balance-row__name">{view.who.name(row.userId)}</span>
+                {pays.length ? (
+                  <span className="balance-row__pays">
+                    {pays.map((transfer) => `${row.userId === me ? "pay" : "pays"} ${person(transfer.toUserId)} ${view.money(transfer.amountCents)}`).join(", ")}
+                  </span>
+                ) : null}
+                {open && view.canWrite
+                  ? pays
+                      .filter((transfer) => transfer.fromUserId === me || transfer.toUserId === me)
+                      .map((transfer) => (
+                        <button
+                          key={transfer.toUserId}
+                          type="button"
+                          className="pay-pill pay-pill--on"
+                          onClick={() => { onRecord(transfer); }}
+                          aria-label={`Record that ${view.who.name(transfer.fromUserId)} paid ${view.who.name(transfer.toUserId)} ${view.money(transfer.amountCents)}`}
+                        >
+                          Record paid
+                        </button>
+                      ))
+                  : null}
+                <span className="row__end">
+                  <Money cents={row.balanceCents} currency={view.currency} tone={row.balanceCents > 0 ? "income" : "expense"} signed />
+                  <span className="row__meta">{row.balanceCents > 0 ? "gets back" : row.balanceCents < 0 ? "owes" : "settled"}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="muted">No shared expenses this month.</p>
+      )}
+      {recap.suggestions.length && !open ? <p className="balance-hint">Record paid opens on the last day of the month. Repay a single expense any time with Mark as paid.</p> : null}
+      {recap.balances.length && !recap.suggestions.length ? <p className="muted">Everyone is settled for {monthLabel(recap.month)}.</p> : null}
+      {recorded ? <h3 className="card__title">Recorded payments</h3> : null}
+      {recorded}
+    </Section>
   );
 }
 

@@ -233,17 +233,28 @@ public enum AccessibilityID {
         public static let done = "settings.done"
         public static let server = "settings.server"
         public static let syncStatus = "settings.syncStatus"
+        /// The large title of the page beside the iPad's Settings list (MAZ-250).
+        public static let pageTitle = "settings.pageTitle"
+        public static let account = "settings.account"
         public static let leaveDemo = "settings.leaveDemo"
         /// `Currency` raw values (`CAD`, `EUR`, ...).
         public static func currency(_ code: String) -> String { "currency.\(code)" }
         /// `AppearancePreference` raw values.
         public static func appearance(_ rawValue: String) -> String { "appearance.\(rawValue)" }
+        /// The Display section (MAZ-250).
+        public static let showCents = "appearance.showCents"
+        public static let reduceTransparency = "appearance.reduceTransparency"
+        public static let weekStart = "appearance.weekStart"
         public static let appLockToggle = "appLock.toggle"
         public static let appLockMessage = "appLock.message"
+        public static let appLockHeader = "appLock.header"
         /// `AppLockDelay` raw values (`immediately`, `oneMinute`, `fiveMinutes`).
         public static func appLockDelay(_ rawValue: String) -> String { "appLock.delay.\(rawValue)" }
 
-        static let all = [done, server, syncStatus, leaveDemo, appLockToggle, appLockMessage]
+        static let all = [
+            done, server, syncStatus, pageTitle, account, leaveDemo, appLockToggle, appLockMessage, appLockHeader,
+            showCents, reduceTransparency, weekStart,
+        ]
         static let prefixes = ["settings.", "currency.", "appearance.", "appLock.delay."]
     }
 

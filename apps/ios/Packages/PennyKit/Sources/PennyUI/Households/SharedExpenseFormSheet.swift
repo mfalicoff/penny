@@ -223,6 +223,7 @@ private struct SharedExpenseForm: View {
             } message: {
                 Text("A kept draft comes back the next time you add or edit this expense, until Penny closes.")
             }
+            .pennySolidBars()
         }
         .interactiveDismissDisabled(form.hasChanges || form.isSaving)
         .sensoryFeedback(.error, trigger: form.refusedCount)
@@ -653,6 +654,7 @@ private struct SharedSplitSheet: View {
                     Button("Done", systemImage: "checkmark") { dismiss() }
                 }
             }
+            .pennySolidBars()
         }
         .presentationDetents([.large])
     }

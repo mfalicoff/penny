@@ -12,7 +12,7 @@ import { EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { categoryIcon } from "../entries/model";
 import type { HouseholdView } from "./context";
 import { describeLoadError } from "./errors";
-import { monthEnd, monthLabel, shareOf, sharePaid, shortDate } from "./model";
+import { byWeek, monthEnd, monthLabel, shareOf, sharePaid, shortDate } from "./model";
 import { ExpenseLink, type GroupSearch } from "./links";
 
 interface Props {
@@ -25,6 +25,11 @@ interface Props {
    * the expenses they add (MAZ-229).
    */
   side?: ReactNode;
+  /**
+   * The top of the expenses pane on a touch tablet (`ipad-shared`): the name, the members and the
+   * month's total. With it, the expenses are grouped under This week and Earlier.
+   */
+  lead?: ReactNode;
 }
 
 const FREQUENCY: Record<SharedRecurring["frequency"], string> = { weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
@@ -35,7 +40,7 @@ const FREQUENCY: Record<SharedRecurring["frequency"], string> = { weekly: "Weekl
  * the payer's avatar, "<payer> paid · split equally" and the viewer's position; from 1100px a
  * household shows them as a table with the payer, split, total, your share and status.
  */
-export function ExpensesTab({ view, recap, search, side }: Props) {
+export function ExpensesTab({ view, recap, search, side, lead }: Props) {
   const email = useAccountEmail();
   // The table is the desktop's (`web-household`); a touch tablet keeps the card's list (`ipad-shared`).
   const tablet = useMediaQuery(TOUCH_TABLET);
@@ -61,6 +66,15 @@ export function ExpensesTab({ view, recap, search, side }: Props) {
     );
   } else if (table) {
     list = <ExpenseTable view={view} expenses={expenses} search={search} rules={rules.data} />;
+  } else if (lead) {
+    list = byWeek(expenses).map((group) => (
+      <section key={group.label} className="shared-group" aria-labelledby={`expenses-${group.key}`}>
+        <div className="shared-group__head">
+          <h2 id={`expenses-${group.key}`}>{group.label}</h2>
+        </div>
+        <ExpenseRows view={view} expenses={group.expenses} search={search} label={group.label} />
+      </section>
+    ));
   } else {
     const total = expenses.reduce((sum, expense) => sum + expense.totalCents, 0);
     list = (
@@ -69,27 +83,7 @@ export function ExpensesTab({ view, recap, search, side }: Props) {
           <h2 id="expenses-heading">{heading}</h2>
           <span>{view.money(total)} total</span>
         </div>
-        <ul className="shared-group__rows" aria-label="Expenses">
-          {expenses.map((expense) => (
-            <li key={expense.id}>
-              <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="row">
-                <Avatar name={view.who.avatar(expense.payerUserId)} size={36} />
-                <span className="row__main">
-                  <span className="row__title">{expense.title}</span>
-                  <span className="row__meta">
-                    {view.who.name(expense.payerUserId)} paid · {splitWords(expense)}
-                  </span>
-                  {settledForMe(expense, view) ? (
-                    <Badge tone="income" icon="checkmark">
-                      Settled
-                    </Badge>
-                  ) : null}
-                </span>
-                <ExpenseAmounts expense={expense} view={view} />
-              </ExpenseLink>
-            </li>
-          ))}
-        </ul>
+        <ExpenseRows view={view} expenses={expenses} search={search} label="Expenses" />
       </section>
     );
   }
@@ -103,9 +97,39 @@ export function ExpensesTab({ view, recap, search, side }: Props) {
   }
   return (
     <div className="household-columns">
-      <div className="page">{list}</div>
+      <div className="page">
+        {lead}
+        {list}
+      </div>
       <div className="page">{side}</div>
     </div>
+  );
+}
+
+/** The rows of one list: the payer's avatar, "<payer> paid · split equally" and the viewer's position. */
+function ExpenseRows({ view, expenses, search, label }: { view: HouseholdView; expenses: SharedExpense[]; search: GroupSearch; label: string }) {
+  return (
+    <ul className="shared-group__rows" aria-label={label}>
+      {expenses.map((expense) => (
+        <li key={expense.id}>
+          <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="row">
+            <Avatar name={view.who.avatar(expense.payerUserId)} size={36} />
+            <span className="row__main">
+              <span className="row__title">{expense.title}</span>
+              <span className="row__meta">
+                {view.who.name(expense.payerUserId)} paid · {splitWords(expense)}
+              </span>
+              {settledForMe(expense, view) ? (
+                <Badge tone="income" icon="checkmark">
+                  Settled
+                </Badge>
+              ) : null}
+            </span>
+            <ExpenseAmounts expense={expense} view={view} />
+          </ExpenseLink>
+        </li>
+      ))}
+    </ul>
   );
 }
 

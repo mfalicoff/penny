@@ -55,6 +55,7 @@ struct InviteSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .pennySolidBars()
         }
         .task {
             model.expireInvite()

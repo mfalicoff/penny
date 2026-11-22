@@ -108,7 +108,7 @@ function AccountLedger({ email, children }: { email: string; children: ReactNode
       if (event.type !== "updated" || event.action.type !== "success") return;
       if (event.query.queryHash !== ledgerHash) return;
       const data = event.query.state.data as LedgerSnapshot | undefined;
-      if (data && data.revision > (engine.baseRevision ?? -1)) void engine.sync();
+      if (data) engine.noteServerRevision(data.revision);
     });
     return () => {
       unsubscribe();

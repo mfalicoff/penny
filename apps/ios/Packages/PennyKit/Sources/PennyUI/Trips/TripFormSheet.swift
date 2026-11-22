@@ -39,6 +39,7 @@ struct TripFormSheet: View {
             .scrollContentBackground(.hidden)
             .background(PennyColor.background)
             .inlineNavigationTitle()
+            .pennySolidBars()
         }
         .onAppear { if model == nil { model = TripFormModel(target: target, today: shell.today) } }
         .interactiveDismissDisabled(model?.isSaving ?? false)
@@ -303,6 +304,7 @@ struct ShareTripSheet: View {
                         .accessibilityIdentifier("shareTrip.close")
                 }
             }
+            .pennySolidBars()
         }
         .interactiveDismissDisabled(working)
         .accessibilityIdentifier("screen.shareTrip")

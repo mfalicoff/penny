@@ -1127,14 +1127,14 @@
         ],
         "deviations": [
           {
-            "summary": "The account row has no chevron and a grey sync icon; Currency has a chevron and the footer gives the entries reason, not \"locked while you're in a household\"",
+            "summary": "The account row names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-250"
+            "ref": "MAZ-171"
           },
           {
-            "summary": "Settings pages use a large left-aligned title; the card uses a centered inline title",
+            "summary": "The account's monogram is a neutral fill with initials from the email, not the cards' grey gradient with white initials (follow-up recorded on MAZ-250)",
             "kind": "follow-up",
-            "ref": "MAZ-254"
+            "ref": "MAZ-250"
           },
           {
             "summary": "No Notifications row (notifications follow the system permission), and Categories shows its count",
@@ -1142,9 +1142,9 @@
             "ref": "MAZ-257"
           },
           {
-            "summary": "Notifications, Server and Sign out are below the fold; the card fits the sheet on one screen (follow-up from MAZ-253)",
+            "summary": "Server and Sign out are below the fold, under the Notifications row and its footer; the card fits the sheet on one screen (follow-up from MAZ-253)",
             "kind": "follow-up",
-            "ref": "MAZ-253"
+            "ref": "MAZ-257"
           }
         ]
       },
@@ -1164,11 +1164,6 @@
           },
           {
             "summary": "Settings has no Notifications row: the web has no notifications (design decision recorded on MAZ-231)",
-            "kind": "follow-up",
-            "ref": "MAZ-231"
-          },
-          {
-            "summary": "The currency footnote gives the real reason (“locked while your ledger has entries in CAD”), not “while you’re in a household” (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
@@ -1432,12 +1427,7 @@
         ],
         "deviations": [
           {
-            "summary": "Settings pages use a large left-aligned title; the card uses a centered inline title",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "The Text size row has no chevron",
+            "summary": "The Text size row has no chevron: nothing in Penny for it to open (design decision recorded on MAZ-250)",
             "kind": "follow-up",
             "ref": "MAZ-250"
           },
@@ -1447,9 +1437,9 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "No Display section (Show cents on Home, Reduce transparency, Week starts on), which the card adds (follow-up recorded on MAZ-234)",
+            "summary": "Reduce transparency's description says the device's own setting covers the tab bar and the bars' buttons, which iOS keeps as system glass; the card says the switch covers the navigation and toolbars (design decision recorded on MAZ-250)",
             "kind": "follow-up",
-            "ref": "MAZ-234"
+            "ref": "MAZ-250"
           }
         ]
       },
@@ -1497,11 +1487,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The header is a large left-aligned title with the description as a section header, not a centered lock tile and title",
-            "kind": "follow-up",
-            "ref": "MAZ-250"
-          },
           {
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
@@ -2193,9 +2178,9 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "One hero spans both panes; the card puts the month's amount at the top of the right pane and the name with the month total on the left, groups the expenses under THIS WEEK and EARLIER, and its button reads + Expense",
+            "summary": "The month is chosen in the bar (previous, month, next) over both panes; the card has no month control and its toolbar sits over the right pane (design decision)",
             "kind": "follow-up",
-            "ref": "MAZ-229"
+            "ref": "MAZ-279"
           }
         ]
       }
@@ -2289,12 +2274,17 @@
             "ref": "MAZ-257"
           },
           {
-            "summary": "The page beside the list has no title: its navigation bar shows no Appearance (follow-up recorded on MAZ-182)",
+            "summary": "The account's monogram is a neutral fill with initials from the email, not the cards' grey gradient with white initials (follow-up recorded on MAZ-250)",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-250"
           },
           {
-            "summary": "Repeats the Manage section, and the account row and Currency differ as on iPhone",
+            "summary": "Preferences has no Notifications row; the app shows Notifications as its own group with a footer (follow-up recorded on MAZ-257)",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "Reduce transparency's description says the device's own setting covers the tab bar and the bars' buttons, which iOS keeps as system glass; the card says the switch covers the navigation and toolbars (design decision recorded on MAZ-250)",
             "kind": "follow-up",
             "ref": "MAZ-250"
           }

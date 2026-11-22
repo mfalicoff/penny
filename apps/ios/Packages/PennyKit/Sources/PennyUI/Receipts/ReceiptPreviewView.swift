@@ -53,6 +53,7 @@ struct ReceiptPreviewView: View {
                     .toolbarColorScheme(.dark, for: .navigationBar)
                     .toolbarBackground(.hidden, for: .navigationBar)
                 #endif
+                .pennySolidBars()
         }
         .environment(\.colorScheme, .dark)
         .onAppear { model.load() }
