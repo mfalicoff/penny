@@ -1,0 +1,75 @@
+<!-- @dsCard group="iPhone" name="Check your email" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Check your email</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .glow { top: -60px; }
+  .wrap { position: relative; z-index: 1; padding: 0 24px; }
+  .srv { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 20; height: 36px; font-size: 14px; font-weight: 500; padding: 0 14px; white-space: nowrap; }
+  .srv [data-i] { width: 16px; height: 16px; color: var(--label-2); --sw: 40px; }
+  .srv em { font-style: normal; color: var(--tint-text); font-weight: 600; margin-left: 4px; }
+  .logo { width: 56px; height: 56px; border-radius: 17px; background: var(--tint); color: #fff; display: grid; place-items: center; margin: 0 auto; box-shadow: 0 10px 30px color-mix(in srgb, var(--tint) 35%, transparent); }
+  .logo [data-i] { width: 30px; height: 30px; --sw: 36px; }
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; text-align: center; margin-top: 14px; }
+  .lede { font-size: 16px; color: var(--label-2); text-align: center; margin-top: 6px; line-height: 1.35; }
+  .fields { background: var(--surface); border-radius: 18px; margin-top: 22px; }
+  .f { padding: 9px 16px; position: relative; }
+  .f + .f::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .f label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--label-2); }
+  .f label a { color: var(--tint-text); }
+  .f div { font-size: 17px; margin-top: 2px; height: 24px; }
+  .f .ph { color: var(--label-3); }
+  .hint { font-size: 13px; color: var(--label-2); margin: 8px 4px 0; display: flex; align-items: center; gap: 6px; }
+  .cta { width: 100%; height: 50px; border-radius: 25px; justify-content: center; font-size: 17px; margin-top: 16px; display: flex; }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--label-3); font-size: 13px; margin: 14px 0; }
+  .or::before, .or::after { content: ""; flex: 1; border-top: .5px solid var(--separator); }
+  .prov { display: flex; flex-direction: column; gap: 10px; }
+  .pb { height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; }
+  .pb .lg { width: 19px; height: 19px; }
+  .pb.apple { background: #000; color: #fff; }
+  .dark .pb.apple { background: #fff; color: #000; }
+  .pb.google { background: #fff; color: #1F1F1F; box-shadow: inset 0 0 0 1px #747775; }
+  .dark .pb.google { background: #131314; color: #E3E3E3; box-shadow: inset 0 0 0 1px #8E918F; }
+  .pb.sso { margin-top: 0; }
+  .pb.sso [data-i] { width: 19px; height: 19px; }
+  .link { text-align: center; font-size: 15px; color: var(--label-2); margin-top: 16px; }
+  .link b { color: var(--tint-text); font-weight: 600; }
+  .legal { position: absolute; bottom: 40px; left: 40px; right: 40px; text-align: center; font-size: 13px; color: var(--label-2); line-height: 1.4; z-index: 1; }
+  .legal a { color: var(--label); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .demo { position: absolute; bottom: 74px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--label); z-index: 1; display: flex; justify-content: center; }
+  .demo span { display: inline-flex; align-items: center; gap: 6px; }
+  .demo [data-i] { width: 18px; height: 18px; color: var(--tint); }
+  .big { width: 84px; height: 84px; border-radius: 26px; background: var(--surface); box-shadow: 0 10px 30px rgba(40,30,20,.10); display: grid; place-items: center; margin: 0 auto; color: var(--tint); }
+  .big .mail { width: 44px; height: 44px; --sw: 28px; }
+  .addr { font-weight: 600; color: var(--label); }
+  .steps { background: var(--surface); border-radius: 18px; margin-top: 26px; padding: 4px 0; }
+  .st { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; font-size: 15px; line-height: 1.4; position: relative; }
+  .st + .st::before { content: ""; position: absolute; top: 0; left: 50px; right: 0; border-top: .5px solid var(--separator); }
+  .st .n { width: 22px; height: 22px; border-radius: 50%; background: var(--fill); font-size: 12px; font-weight: 700; display: grid; place-items: center; flex: none; margin-top: 1px; }
+  .st small { display: block; font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .resend { display: flex; justify-content: center; gap: 6px; font-size: 15px; color: var(--label-2); margin-top: 16px; }
+  .resend b { color: var(--label-3); font-weight: 600; }
+  .quiet { text-align: center; font-size: 16px; font-weight: 600; color: var(--tint-text); margin-top: 12px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="wrap" style="padding-top:150px">
+      <div class="big"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div>
+      <h1>Check your email.</h1>
+      <p class="lede">We sent a link to <span class="addr">max@example.com</span>. Open it on any device to verify your address.</p>
+      <div class="steps">
+        <div class="st"><span class="n">1</span><div>Use Penny on your own right away<small>Your entries, accounts and schedules work now.</small></div></div>
+        <div class="st"><span class="n">2</span><div>Verify to share<small>Households, trips and invites open once your email is verified.</small></div></div>
+      </div>
+      <div class="glass gcap tinted cta" style="margin-top:24px">Continue to Penny</div>
+      <div class="resend">Didn't get it? <b>Resend in <span class="num">0:42</span></b></div>
+      <div class="quiet">Change email</div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

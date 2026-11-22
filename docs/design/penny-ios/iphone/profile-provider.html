@@ -1,0 +1,77 @@
+<!-- @dsCard group="iPhone" name="Profile from Google" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Profile from Google</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .behind { position: absolute; inset: 0; background: var(--bg); }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 62px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; height: 56px; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .bar .side { width: 96px; display: flex; gap: 8px; } .bar .side.r { justify-content: flex-end; width: auto; min-width: 96px; }
+  .gh { padding: 18px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .gf a { color: var(--tint-text); font-weight: 600; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 8px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 58px; right: 0; border-top: .5px solid var(--separator); }
+  .sr.noi + .sr::before, .sr.noi::before { left: 16px; }
+  .si { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; color: var(--label); flex: none; }
+  .si [data-i] { width: 18px; height: 18px; --sw: 40px; }
+  .si svg { width: 18px; height: 18px; }
+  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .sr .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; font-size: 16px; white-space: nowrap; }
+  .sr .v [data-i] { width: 15px; height: 15px; }
+  .sw { width: 51px; height: 31px; border-radius: 16px; background: var(--fill); position: relative; flex: none; margin-left: auto; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .sw.on { background: var(--tint); } .sw.on::after { left: 22px; }
+  .danger { color: var(--danger); }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: var(--fill); color: var(--label-2); }
+  .tag [data-i] { width: 11px; height: 11px; --sw: 60px; }
+  .field { margin: 0 16px; background: var(--surface); border-radius: 16px; height: 52px; display: flex; align-items: center; padding: 0 16px; font-size: 17px; }
+  .field .cur { width: 2px; height: 22px; background: var(--tint); margin-left: 1px; border-radius: 1px; }
+  .pic { background: radial-gradient(circle at 50% 39%, #E9B98F 0 17%, transparent 17.5%), radial-gradient(ellipse 40% 30% at 50% 100%, #3F5E7A 0 99%, transparent 100%), linear-gradient(160deg, #A9C9D6, #E6D3B3); border: 0; }
+  .lg { flex: none; width: 18px; height: 18px; }
+  .me { text-align: center; padding: 6px 0 2px; }
+  .me .avatar { width: 96px; height: 96px; margin: 0 auto; }
+  .me b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 12px; }
+  .me .from { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 14px; color: var(--label-2); }
+  .me .from .lg { width: 15px; height: 15px; }
+  .ro { color: var(--label-2); }
+  .ro [data-i] { width: 14px; height: 14px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="behind"><div class="glow"></div></div>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar"><div class="side"><div class="glass gbtn"><i data-i="chevron-back"></i></div></div><h2>Profile</h2><div class="side r"></div></div>
+    <div class="me">
+      <div class="avatar pic"></div>
+      <b>Max Falicoff</b>
+      <div class="from"><svg class="lg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Name and picture from Google</div>
+    </div>
+    <div class="gh">Name</div>
+    <div class="glist">
+      <div class="sr noi"><div class="tx">Max Falicoff</div><span class="v ro"><i data-i="lock-closed"></i></span></div>
+    </div>
+    <div class="gf">Google manages your name and picture. Penny updates them each time you sign in; change them in your Google account.</div>
+    <div class="gh">Sign-in</div>
+    <div class="glist">
+      <div class="sr"><div class="si"><svg class="lg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></div><div class="tx">Google<small>max.falicoff@gmail.com</small></div><span class="v ro"><i data-i="checkmark-circle"></i>Verified</span></div>
+    </div>
+    <div class="gf">You sign in to Penny with Google. Your account has no password.</div>
+    <div class="gh">Your data</div>
+    <div class="glist">
+      <div class="sr"><div class="si"><i data-i="arrow-down"></i></div><div class="tx">Export all your data<small>Entries, receipts and shared expenses</small></div><span class="v"><i data-i="chevron-forward" class="chev"></i></span></div>
+      <div class="sr"><div class="si" style="background:color-mix(in srgb, var(--danger) 14%, transparent);color:var(--danger)"><i data-i="trash"></i></div><div class="tx danger">Delete account</div><span class="v"><i data-i="chevron-forward" class="chev"></i></span></div>
+    </div>
+    <div class="gf">Your account lives on penny.example.com. <a>Privacy Policy</a></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

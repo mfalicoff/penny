@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
-The 119 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 145 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (236 images: 117 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (288 images: 143 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -222,6 +222,40 @@ Screens from the audits that follow an existing card instead of getting their ow
 - **A personal trip on the web:** `iphone-trip-personal`'s content in `web-trip`'s layout.
 
 Two drafts are new designs rather than drawings of a shipped screen, because neither app has the flow: `web-export` (Export data, which `web-settings` already lists) and `web-password-reset`. The server takes an operator-issued reset code (`POST /api/auth/password-reset`) and sends no email, so the card draws only "Set a new password" with that code. The audit's "request" and "email sent" steps need email sending, which is a product decision. Both are `not-built` on the web.
+
+## Drafted cards: account and profile (MAZ-267, 2026-11-22)
+
+Seven planned account features had no cards: profiles with a name and picture (MAZ-171), Google and Apple sign-in (MAZ-170), email verification (MAZ-172), emailed resets and invites (MAZ-124), account deletion and full export (MAZ-152), privacy policy links (MAZ-169) and opt-in monitoring (MAZ-129). MAZ-267 drafts 26 cards for them in the kit's styles, light and dark, for the owner to review before any of them is built. None of the flows exists yet, so every new card is `not-built` on both platforms (`not-applicable` for the `web-*` cards on iOS), with its feature issue as owner and follow-up; `cards.real.spec.ts` records them as not built.
+
+| Feature | Drafted cards |
+| --- | --- |
+| Profile (MAZ-171) | `iphone-profile` (password account), `iphone-profile-provider` (Google account, read only), `iphone-profile-photo` (move and scale), `iphone-name-prompt` (an account with no name), `ipad-profile`, `web-profile` |
+| Google and Apple sign-in, privacy policy links (MAZ-170, MAZ-169) | `iphone-sign-in-providers`, `iphone-create-account-providers`, `web-sign-in-providers`, `web-create-account` |
+| Email verification (MAZ-172) | `iphone-verify-email`, `iphone-unverified`, `web-verify-email`, `web-email-verified` |
+| Emailed resets and invites (MAZ-124) | `iphone-forgot-password`, `web-forgot-password`, `iphone-invite-email`, `web-invite-email` |
+| Deletion and full export (MAZ-152) | `iphone-delete-account`, `web-delete-account`, `iphone-export-all`, `web-export-all` |
+| Monitoring opt-in (MAZ-129) | `iphone-monitoring-prompt`, `iphone-privacy`, `web-monitoring-prompt`, `web-privacy` |
+
+Rules the drafts follow:
+
+- **One sign-in method per account.** MAZ-170 has no linking, so Profile shows the account's one method (email and password, or the provider with its email) instead of a "link a provider" action. A provider's name and picture are read only, with the provider named (`iphone-profile-provider`); Apple sends no picture, so an Apple account gets `iphone-profile`'s Change picture.
+- **Provider buttons** follow Apple's and Google's button rules: Sign in with Apple is black (white in dark), Google is white with its outline (dark gray in dark), and both come before the server's SSO and email. The logos are drawn in the cards; they are the providers' marks, not kit icons.
+- **The privacy policy** is linked from sign-in, create account ("By creating an account you agree to the Privacy Policy."), Profile, Delete account, Privacy and both monitoring prompts. It opens in the browser.
+- **Without email on the server**, the existing cards apply: sign-in has no Forgot password (`iphone-sign-in`), invites use a code (`iphone-invite`), the operator's reset code uses `web-password-reset`, and nothing asks to verify.
+- **Unverified accounts** keep their personal ledger and can't create, join or be invited to households and trips (MAZ-172's recommendation), which `iphone-unverified` draws on the Shared tab.
+- **Reset and verification messages** never say whether an email is registered ("If max@example.com has a Penny account…").
+- **Monitoring** is off until the person chooses, and the prompt says what is never sent. Session replay is a web-only switch (`web-privacy`), since iOS replay stays in Embrace (MAZ-129).
+
+Screens that follow an existing card instead of getting their own:
+
+- **Names and pictures in households, trips, balances and history:** the cards already draw names and gray monograms (`iphone-shared`, `iphone-shared-people`, `iphone-shared-balances`, `iphone-history`, `ipad-shared`, `web-household`, the trip cards). A picture fills the same circle; with no picture the monogram uses the name's initials, and with no name the email is shown, as today.
+- **Choosing a picture:** the photo menu (Take photo, Choose photo, Remove picture), the photo picker and the web's file chooser are platform chrome; then `iphone-profile-photo` (in a dialog on the web).
+- **Setting a new password from the emailed link:** `web-password-reset` without the Reset code field, since the link carries the token. The link opens the web app on any device.
+- **Opening the verification link:** `web-email-verified` in the browser. The apps pick up the verified state at their next sync and drop `iphone-unverified`'s banner.
+- **Change email:** a one-field page in `iphone-profile`'s style. A changed email is unverified again and gets `iphone-verify-email`.
+- **The Settings entries:** `iphone-settings`'s profile card opens `iphone-profile`; Privacy is an extra row in Preferences, as `ipad-profile` draws it, and an extra section on the web, as `web-profile` draws it.
+- **iPad and phone-width web:** iPad sign-in, create account, verification, reset, invite, deletion, export, privacy and the monitoring prompt use the iPhone cards as form sheets, as iPad sign-in does today; the web at phone width uses the iPhone cards.
+- **An Apple account that hid its name:** `iphone-name-prompt`.
 
 ## Review scenarios
 

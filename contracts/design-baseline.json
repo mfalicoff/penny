@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "3d0ce9c76dace2dbebea7b9696f9ac9d9c90c3655e98f565fa0df94a4fd23169"
+      "sha256": "9762d0352f9b8b176071163317a52ecec985c17a5675ae0298757de9ee7f82d4"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "c4f7dc91c62cb31ce4c376cff0b0a93f883498efcc158f485afbece904372366"
+      "sha256": "95094923ea6e32311437151e9d6f7c755e47eb40319229ca253c477fe0a51da7"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "8f6333652658712bc25d12d73bf4aa7fa916791c0f33022b464cd38edeed47d7"
+      "sha256": "8926b85da7d5b6de5a50b316d3dd3887f37a3e03060ff90682afbbeef0cd0eaa"
     }
   ],
   "tokens": {
@@ -2108,6 +2108,328 @@
       "status": "planned"
     },
     {
+      "id": "iphone-profile",
+      "name": "Profile",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/profile.html",
+      "sha256": "43061bfb330d3080b315d7da6787be3bd1ac20b5ba113735213be3c77efa6dbf",
+      "nativeIssue": "MAZ-171",
+      "webIssue": "MAZ-171",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-profile-provider",
+      "name": "Profile from Google",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/profile-provider.html",
+      "sha256": "b4ff0f53c37b0ca9e0323820e044ad4fc3e8b67025b4f8ecf6a773c99c37079d",
+      "nativeIssue": "MAZ-171",
+      "webIssue": "MAZ-171",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-profile-photo",
+      "name": "Profile picture crop",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/profile-photo.html",
+      "sha256": "862f2ee73ea7bd19b2d03d39cf7854adbb7d9c7b074bd3d164c58b41310c6dc8",
+      "nativeIssue": "MAZ-171",
+      "webIssue": "MAZ-171",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-name-prompt",
+      "name": "Add your name",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/name-prompt.html",
+      "sha256": "d3bd254239303e897d7304863da89ce85c610a1db50a3c8c2d6ccfa7e494be47",
+      "nativeIssue": "MAZ-171",
+      "webIssue": "MAZ-171",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-sign-in-providers",
+      "name": "Sign in with Apple, Google or email",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/sign-in-providers.html",
+      "sha256": "a4e2ca130823c5357dd1b2940be1de5bc423b73094d0221317cdca43b95895f0",
+      "nativeIssue": "MAZ-170",
+      "webIssue": "MAZ-170",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-create-account-providers",
+      "name": "Create account with Apple, Google or email",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/create-account-providers.html",
+      "sha256": "8bf9fd4841e7175a2956ba076f5f98f8eaab853e8875d9fc795139aa49812735",
+      "nativeIssue": "MAZ-170",
+      "webIssue": "MAZ-170",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-verify-email",
+      "name": "Check your email",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/verify-email.html",
+      "sha256": "3243c110fea48b158c68e3879022f875a3976570d6788060439c015fc85dcc07",
+      "nativeIssue": "MAZ-172",
+      "webIssue": "MAZ-172",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-unverified",
+      "name": "Verify your email to share",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/unverified.html",
+      "sha256": "ff43837a1522588f995ee9f6be8a58856835c11cd0f51d2c723efed809e554f2",
+      "nativeIssue": "MAZ-172",
+      "webIssue": "MAZ-172",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-forgot-password",
+      "name": "Reset your password",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/forgot-password.html",
+      "sha256": "2c0990bd624882a384071e5168a0adc775a2fd56e48e5a1a9df8165540743182",
+      "nativeIssue": "MAZ-124",
+      "webIssue": "MAZ-124",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-invite-email",
+      "name": "Invite by email",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/invite-email.html",
+      "sha256": "f073f82fde360e20630304a7e02c46acc73d6d817b7ee29c6eefa6d7eb89a9d6",
+      "nativeIssue": "MAZ-124",
+      "webIssue": "MAZ-124",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-delete-account",
+      "name": "Delete account",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/delete-account.html",
+      "sha256": "eb6543378c1949354bd6aff71a88c095d689420437213d0e8696c16db2db7013",
+      "nativeIssue": "MAZ-152",
+      "webIssue": "MAZ-152",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-export-all",
+      "name": "Export all your data",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/export-all.html",
+      "sha256": "74f21f583f8cfe911379e76eeaf24f80d212ef6e1a189b6b23f14e4d085c210c",
+      "nativeIssue": "MAZ-152",
+      "webIssue": "MAZ-152",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-monitoring-prompt",
+      "name": "Share crash reports",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/monitoring-prompt.html",
+      "sha256": "e2fe8b7b355f92e250879cbcb89c289c001b0e8fa7ac30c6a0def9ed04324458",
+      "nativeIssue": "MAZ-129",
+      "webIssue": "MAZ-129",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-privacy",
+      "name": "Privacy",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/privacy.html",
+      "sha256": "c45cdaa163cfddab7a0aef505d379d7f92c170df285f3e40069bdc8459c3c2e4",
+      "nativeIssue": "MAZ-129",
+      "webIssue": "MAZ-129",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
       "id": "ipad-home",
       "name": "Home",
       "group": "iPad",
@@ -2429,6 +2751,29 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "private address with copy and share, extend, new address and turn off with confirmation, allowed senders"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-profile",
+      "name": "Profile",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/profile.html",
+      "sha256": "263660537ce1e613bcb4398a1a78b5fca50f45924f98edb99d3f3ec2dc64f261",
+      "nativeIssue": "MAZ-171",
+      "webIssue": "MAZ-171",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
       },
       "status": "planned"
     },
@@ -3145,6 +3490,259 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "private address with copy and share, extend, new address and turn off with confirmation, allowed senders"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-profile",
+      "name": "Profile",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/profile.html",
+      "sha256": "15c780bd88eca21869b53cedbea5fe0f2758c826f5f5c04f0e681d913df89c4a",
+      "nativeIssue": "MAZ-171",
+      "webIssue": "MAZ-171",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-sign-in-providers",
+      "name": "Sign in with Apple, Google or email",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/sign-in-providers.html",
+      "sha256": "5a456a8e39a8d3af31fa85b84dfe01437953e0bf74847c4477682cd68e7f6547",
+      "nativeIssue": "MAZ-170",
+      "webIssue": "MAZ-170",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-create-account",
+      "name": "Create account",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/create-account.html",
+      "sha256": "f8887d09a6d09512c3e3dc3e8b79dc1b1743bb126a89fea8d2f135d7edd92693",
+      "nativeIssue": "MAZ-170",
+      "webIssue": "MAZ-170",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-verify-email",
+      "name": "Check your email",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/verify-email.html",
+      "sha256": "99f10b2ac214329bd9322835f4cb7c36552c7fdf64f3239c90d5b47de5261e70",
+      "nativeIssue": "MAZ-172",
+      "webIssue": "MAZ-172",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-email-verified",
+      "name": "Email verified",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/email-verified.html",
+      "sha256": "61c5cd86c2dcb0d2021dca7bc8e8e68572b44add1e2b7acd12564f9c10d8eb3a",
+      "nativeIssue": "MAZ-172",
+      "webIssue": "MAZ-172",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-forgot-password",
+      "name": "Reset your password",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/forgot-password.html",
+      "sha256": "d1a364d1d04901764fdaa7a6529c596f1a7beb3211e3af10d3897f200a708a69",
+      "nativeIssue": "MAZ-124",
+      "webIssue": "MAZ-124",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-invite-email",
+      "name": "Invite by email",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/invite-email.html",
+      "sha256": "ea99e0758191252c9bc19cc671e6004bc6c59e0a230d09c98ad42f1810cf5214",
+      "nativeIssue": "MAZ-124",
+      "webIssue": "MAZ-124",
+      "route": "/households/[id]",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-delete-account",
+      "name": "Delete account",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/delete-account.html",
+      "sha256": "69c0adb620ece9f8fa7fc59d384218020978fdeeb554403184b9885378f9f6b2",
+      "nativeIssue": "MAZ-152",
+      "webIssue": "MAZ-152",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-export-all",
+      "name": "Export all your data",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/export-all.html",
+      "sha256": "a7e75f69e1103a9efa00427207b0133cf6dc01732a5b3cd7ea2718e19bb67e53",
+      "nativeIssue": "MAZ-152",
+      "webIssue": "MAZ-152",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-privacy",
+      "name": "Privacy",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/privacy.html",
+      "sha256": "6d2c69ce76a375486f0145acf1c9526d5ad66ad233f8b0e11f76d0f9befb47a9",
+      "nativeIssue": "MAZ-129",
+      "webIssue": "MAZ-129",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-monitoring-prompt",
+      "name": "Share error reports",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/monitoring-prompt.html",
+      "sha256": "6a4971eb5e53bdfd53662435c1b32f80cdfa5620440fcaa1ca2fb36eeefaaea4",
+      "nativeIssue": "MAZ-129",
+      "webIssue": "MAZ-129",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
       },
       "status": "planned"
     }

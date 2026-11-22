@@ -1,0 +1,70 @@
+<!-- @dsCard group="Web" name="Privacy" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Privacy</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .sx { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 28px; }
+  .snav { display: flex; flex-direction: column; gap: 2px; }
+  .snav .wnav [data-i] { color: var(--label-2); }
+  .pane { max-width: 680px; }
+  .sec { margin-bottom: 18px; }
+  .sec h3 { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .lead { font-size: 14.5px; color: var(--label-2); margin: -2px 0 14px; line-height: 1.45; }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .srow:first-of-type { border-top: 0; }
+  .srow .t { flex: 1; } .srow .t span { display: block; font-size: 12.5px; color: var(--label-2); margin-top: 1px; }
+  .srow .v { color: var(--label-2); display: flex; gap: 6px; align-items: center; }
+  .srow .v [data-i] { width: 15px; height: 15px; }
+  .srow .ri { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; flex: none; }
+  .srow .ri [data-i], .srow .ri svg { width: 17px; height: 17px; }
+  .switch { width: 42px; height: 25px; border-radius: 13px; background: var(--tint); position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; right: 2px; width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .switch.off { background: var(--fill); } .switch.off::after { right: auto; left: 2px; }
+  .foot { font-size: 12.5px; color: var(--label-2); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+  .foot [data-i] { width: 14px; height: 14px; }
+  .foot a { color: var(--tint-text); font-weight: 600; }
+  .pic { background: radial-gradient(circle at 50% 39%, #E9B98F 0 17%, transparent 17.5%), radial-gradient(ellipse 40% 30% at 50% 100%, #3F5E7A 0 99%, transparent 100%), linear-gradient(160deg, #A9C9D6, #E6D3B3); border: 0; }
+  .wfld { border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); padding: 9px 12px; font-size: 14.5px; }
+  .wfld.focus { box-shadow: inset 0 0 0 1.5px var(--tint), 0 0 0 4px var(--tint-soft); background: var(--surface); }
+  .wfld .caret { display: inline-block; width: 2px; height: 17px; background: var(--tint); vertical-align: -3px; margin-left: 1px; border-radius: 1px; }
+  .lbl { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+  .btn.danger { color: var(--danger); }
+  .btn.dangerfill { background: var(--danger); color: #fff; box-shadow: none; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="" data-url="penny.example.com/settings/privacy">
+  <main class="wmain">
+    <div class="wtop"><h1>Settings</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="sx">
+        <div class="snav">
+          <div class="wnav"><i data-i="people"></i>Profile</div>
+          <div class="wnav"><i data-i="sunny"></i>Appearance</div>
+          <div class="wnav"><i data-i="cash"></i>Currency</div>
+          <div class="wnav"><i data-i="server"></i>Server &amp; sync</div>
+          <div class="wnav on"><i data-i="lock-closed"></i>Privacy</div>
+          <div class="wnav"><i data-i="document-text"></i>Export data</div>
+          <div class="wnav" style="color:var(--danger)"><i data-i="log-out" style="color:var(--danger)"></i>Sign out</div>
+        </div>
+        <div class="pane">
+          <div class="panel sec">
+            <div class="ph"><h4>Reports to penny.example.com</h4></div>
+            <div class="lead">Help the server's operator find and fix problems. Reports never include your entries, amounts, titles, notes, names, emails or searches.</div>
+            <div class="srow"><div class="t">Share error reports<span>Errors in this browser, with the browser and app version</span></div><div class="switch"></div></div>
+            <div class="srow"><div class="t">Share performance data<span>How long pages and requests take</span></div><div class="switch off"></div></div>
+            <div class="srow"><div class="t">Record sessions<span>A replay of clicks and page changes with every text and field masked. Kept for 30 days.</span></div><div class="switch off"></div></div>
+          </div>
+          <div class="panel sec">
+            <h3>Policies</h3>
+            <div class="srow"><div class="ri"><i data-i="document-text"></i></div><div class="t">Privacy Policy<span>Published by your server's operator</span></div><div class="v">Opens in a new tab <i data-i="arrow-up" style="transform:rotate(45deg)"></i></div></div>
+          </div>
+          <div class="foot"><i data-i="lock-closed"></i>These choices are saved for this browser. The sample data never sends reports.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>
