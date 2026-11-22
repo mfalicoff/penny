@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-21",
+  "reviewedAt": "2026-11-22",
   "cards": [
     {
       "id": "system-foundations",
@@ -647,7 +647,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
+            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next), not with the card's month pill in the navigation bar",
             "kind": "follow-up",
             "ref": "MAZ-256"
           },
@@ -681,11 +681,6 @@
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The month pill sits in the navigation bar, where the card shows no month control. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }
@@ -711,6 +706,11 @@
             "summary": "An overdue month is a separate Overdue list of month names, not its own section with a red Overdue tag and its payments (follow-up recorded on MAZ-248)",
             "kind": "follow-up",
             "ref": "MAZ-248"
+          },
+          {
+            "summary": "The month is chosen in the Balances section header (previous and next), not with the card's month pill in the navigation bar",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -732,11 +732,6 @@
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The month pill sits in the navigation bar, where the card shows no month control, so the household name takes its own small centered row under it. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }
@@ -1323,11 +1318,6 @@
             "summary": "A dialog with a Cancel / Add account footer, not a sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "An account in use offers Move them to and Move and remove instead of the card's locked Remove account row. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
           }
         ]
       }
@@ -1405,11 +1395,6 @@
             "summary": "A dialog with a Cancel / Add category footer, not a sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Eight colors (on two rows) and 26 icons instead of the card's five and 18, as iOS offers more too. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
           }
         ]
       }
@@ -2142,7 +2127,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
+            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next), not with the card's previous, month and next in the toolbar over both panes",
             "kind": "follow-up",
             "ref": "MAZ-256"
           },
@@ -2176,11 +2161,6 @@
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The month is chosen in the bar (previous, month, next) over both panes; the card has no month control and its toolbar sits over the right pane (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-279"
           }
         ]
       }
