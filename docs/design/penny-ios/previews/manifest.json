@@ -14,7 +14,7 @@
     },
     {
       "path": "assets/icons.js",
-      "sha256": "e7526a8c1d4cb70ed2a38039040a0a4d5183840f3c8cb7224faf2678cf344d67"
+      "sha256": "d988762acabdcdee90c9c4a6e993589862b48c512864060961cc48538f9a5901"
     },
     {
       "path": "assets/ipad.css",
@@ -386,12 +386,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-create-account.light.png",
-          "sha256": "7b69b9f8888c6a0010a051c8904191696dd9d47c9d5bf15660539f8aa418080f"
+          "sha256": "aff08583aa9e2fd58f7c7e9df8bdb0c5aed9ef8ab29b534d77c96d0d64b2c59c"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-create-account.dark.png",
-          "sha256": "e592804f94782d052cfd3d396384444ee015ca6c971ff98230e7e47dbf7641d0"
+          "sha256": "4471860100858ff831932ea3e4a49cfedba2292260e2c0a41d755aec8c17b59e"
         }
       ]
     },
@@ -1195,12 +1195,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-settings.light.png",
-          "sha256": "63e7a467f0e702facb020a6499772386f6bbebbf53338bff9c91e071e31c8778"
+          "sha256": "50354a4111eee0834f25178f244b3825294ea9817afc698cd05315492596f9a5"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-settings.dark.png",
-          "sha256": "bd99378ba2811cf77c20c71ca2ca6232a11ee232b25b8b5bd9bb329d535f0455"
+          "sha256": "7962555bd61768b643ed1de5195536db2360b99aaa37ac074637660c0ac708bd"
         }
       ]
     },
@@ -1363,12 +1363,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-in.light.png",
-          "sha256": "f973d104b9251b95ece60510c62bc44c9cfe08d7da3fc68b230e87c84cc171db"
+          "sha256": "6636abd01410fd7a8e89dd4866be9567ec68c8beef1a8593e0180414c0258a7a"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-in.dark.png",
-          "sha256": "dda5ee83d2ffd45c89cb6e1f71ca985fb79902a9e6b4dd619e420db4be64b1c7"
+          "sha256": "141cfa1381dd22e73ff2242f6e0a1aa4ac2db91a37c3668da983d0de1c5c5611"
         }
       ]
     },
@@ -1384,12 +1384,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out-plain.light.png",
-          "sha256": "212be0396e5b26196f7104a9c3a27404dbf1ee1a42cabc96385ace29188c5cd6"
+          "sha256": "10a20c70937f793913544e01f6d1009262ec70bd17d15c297955eb9e5e56b934"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-out-plain.dark.png",
-          "sha256": "ffe492b6fbd75246eabe4f4e88a16f39d7f20c17ea411499498d7ecce7fef738"
+          "sha256": "8ae2fca53bb979ea52c5e92c3dcd9f0afd6316edff7568b5974b742e2a8a8598"
         }
       ]
     },
@@ -1405,12 +1405,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out.light.png",
-          "sha256": "a67df468ac43fa91689f2da9a9f7dbebf8543314909b223df5d6e7bb154da1fc"
+          "sha256": "018b3ef18ec4a9d5a9166c7d0bb8a66792ce31670d6654bcc850f4fcac1f18c4"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-out.dark.png",
-          "sha256": "605cad64889771b50ed2636549cba4bab578f3364ad3f2b8ce1bd3fdd7029f32"
+          "sha256": "0ea6a5fae2cd099389be3db0756d691078e152362ba6a99980fc1eea777a3368"
         }
       ]
     },
@@ -1741,12 +1741,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-email-settings.light.png",
-          "sha256": "477174a1362451f1b0604aa92a5ea96b12af0064bb9c41fdf9171ff11f5302b7"
+          "sha256": "5c669f23d0bd608d7884337ee3ab3da70117a494c2b15e01f2d7ddeb2f965659"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-email-settings.dark.png",
-          "sha256": "53189c3be37a9dea91858101361672d733db1ddffb8cf2c1663e73383363f9da"
+          "sha256": "842604ade368edb3443f660d8de88915e7f094deb5d5de131bc09d52af188ad4"
         }
       ]
     },
@@ -1804,12 +1804,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-settings.light.png",
-          "sha256": "b055a9a2a6f01b997a46fba76edc6ee55e03bc17e313aa0741b2597db616ef1f"
+          "sha256": "f6f981cca6c88fb68bc8c0e33378c6b7a167760d3022a587433433bbe9178aab"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-settings.dark.png",
-          "sha256": "bfa444bd0cdea248348a59de4f0442204505bdac2ca462dc3b146cab96106fc4"
+          "sha256": "84fe52dfc1ffd1a4eebac0c3ef0176700c1d414f7f906640ed0a29168454a0ad"
         }
       ]
     },
@@ -1972,12 +1972,12 @@
         {
           "appearance": "light",
           "file": "previews/web-currency.light.png",
-          "sha256": "4d15fba345b1901f0b0522335b0175b538fd0fb9ceba43e9627e725d3cdaec4e"
+          "sha256": "f23fe3205f88fdd8c7dc030c968648064eb67e4f5759a4b421e0fec1f0fea5af"
         },
         {
           "appearance": "dark",
           "file": "previews/web-currency.dark.png",
-          "sha256": "29c0a084e34b6c138853a2a8cdb4fca3c0ae8f682500d84ff2f8f785e9ea5d7e"
+          "sha256": "2532c1c128995175b9e4a1e5dee1fed4b2ffb03dfe50a379028f15a7c43c9929"
         }
       ]
     },
@@ -2035,12 +2035,12 @@
         {
           "appearance": "light",
           "file": "previews/web-export.light.png",
-          "sha256": "0691f7db307b94d377ada9bf381f7cde6fcddace303cf30b9cf095a724a6740f"
+          "sha256": "eb933281c7b712a4d96ab345c705696f2947aa92609b7f5ea7197dbec314ef1a"
         },
         {
           "appearance": "dark",
           "file": "previews/web-export.dark.png",
-          "sha256": "a2c18d7adef52cb7cca7c000f06e5a52655f5d4fd2b0d81951e2b689b2e15c37"
+          "sha256": "0aea6472183d1290ed48ce83b0005ecf7ec4877bbb50f1542d583d3d0005116f"
         }
       ]
     },
@@ -2161,12 +2161,12 @@
         {
           "appearance": "light",
           "file": "previews/web-password-reset.light.png",
-          "sha256": "b73056ebb547e4bd4c60455eafc098757d6734d7d75d1abc8d48227b6b9314ba"
+          "sha256": "594c2cb147468ec1cd6db661ffc48ea376dc40c4c6ae9b4406b1c3e229f34a8b"
         },
         {
           "appearance": "dark",
           "file": "previews/web-password-reset.dark.png",
-          "sha256": "fb01e526cdccc751b35f1c4e648730b4db9b2fca3e3d990399fe72bdc5b87237"
+          "sha256": "d683993c29f59ac5fc70046ae7086226f95dd3bdef72ec09d34d7f39948a7804"
         }
       ]
     },
@@ -2266,12 +2266,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-email-settings.light.png",
-          "sha256": "d7fe05c2b3b466b624b535e3de5b3c0a5bba909d247449d0816ecd9cf664d3d0"
+          "sha256": "989ec9b5182c3f27817b9a21cd8922fb856cb8b7ee9beb6c54839116542ff4f4"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-email-settings.dark.png",
-          "sha256": "accbbe3787d638b17e6035f57b5c4e38401541532d8e4a0e9735f154460f9900"
+          "sha256": "4d04b3eef0bc15357b50615c954c75f79e378818a9686a703936fd368b397c22"
         }
       ]
     },
@@ -2392,12 +2392,12 @@
         {
           "appearance": "light",
           "file": "previews/web-settings.light.png",
-          "sha256": "3b033a9deed6b9e33bba6fa8bb3f35bd370c42c75fc4fcba89219f36c162d7a3"
+          "sha256": "4620cd38307cf8775a978ccb4f272eb7c62bcab3824bbe669232140742f612d9"
         },
         {
           "appearance": "dark",
           "file": "previews/web-settings.dark.png",
-          "sha256": "8d573a768b115c2c654f9b330ef9e1090b8cea48eca22f8b23a9273dfaeeafa7"
+          "sha256": "239722da3df7aa09680f133555c7aefd33082a79a00375b13939a6990172d912"
         }
       ]
     },
@@ -2434,12 +2434,12 @@
         {
           "appearance": "light",
           "file": "previews/web-sign-in.light.png",
-          "sha256": "172381d2f4b650c0143d9340b856f7b943a0203863d7108edb9b3f4fb805c265"
+          "sha256": "7427bd508a72a358253eba32c74b45a8e754b86c4b53729f0e7aff5e52146553"
         },
         {
           "appearance": "dark",
           "file": "previews/web-sign-in.dark.png",
-          "sha256": "3e671f6e8884686cf185baeb0474e2dbe111fff7b1f73a4dc73ac31b4ad47def"
+          "sha256": "1c50b4de677324cdb95cb31462fcbfec2f055aaeee99a24997a8124a15e68ede"
         }
       ]
     },

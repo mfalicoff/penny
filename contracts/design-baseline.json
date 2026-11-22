@@ -95,7 +95,7 @@
     },
     {
       "path": "docs/design/penny-ios/assets/icons.js",
-      "sha256": "e7526a8c1d4cb70ed2a38039040a0a4d5183840f3c8cb7224faf2678cf344d67"
+      "sha256": "d988762acabdcdee90c9c4a6e993589862b48c512864060961cc48538f9a5901"
     },
     {
       "path": "docs/design/penny-ios/assets/sankey.js",
@@ -115,7 +115,7 @@
     },
     {
       "path": "design-kit/src/icons.ts",
-      "sha256": "525110886021bbdcd1af82ba91ad820fcc5dde0c0893533160cc0b59029b253a"
+      "sha256": "fdfe7873eae2408293facbab26708c77a41a558cd62697d2a58f45c337903f87"
     },
     {
       "path": "design-kit/src/index.ts",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "5d545d2bca1444b3be34222a76ed7e5b9e5790d6ef2ac733ee201aa97a7f9f1b"
+      "sha256": "883f40898ad396e76427a8f13f1ec71500826409557cdff4c6dcf0b9b870e745"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "77ce3adaed2cf27db0df7180c9849e1e6397324c5ad0db420e1557d790a5b618"
+      "sha256": "ce1df1dd10446a708cdb7bb28676cdaa38a2ceaa4026bc746f429d093d52cd7d"
     }
   ],
   "tokens": {
