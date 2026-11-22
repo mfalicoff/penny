@@ -73,12 +73,18 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
   const serverSearch = useInfiniteQuery(
     searchTransactionsQuery(email, { ...(filters.query ? { query: filters.query } : {}), ...range, ...(filters.kind ? { kind: filters.kind } : {}) }),
   );
-  const currency = useQuery(ledgerCurrencyQuery(email));
   const sync = useLedgerSync();
   const online = useOnline();
   const [limit, setLimit] = useState(PAGE);
 
   const localLedger = sync?.ledger ?? null;
+  // Personal amounts are in the ledger's currency. It comes from the ledger Activity already has
+  // (this browser's copy, or the demo's snapshot): each `GET /api/ledger` sends every entry, and the
+  // offline store's own sync is already downloading it (MAZ-242). Query reads it only when there is
+  // no ledger here and none on its way (the store couldn't read or download one).
+  const ledgerOnItsWay = sync !== null && (sync.phase === "loading" || sync.phase === "syncing");
+  const currencyRead = useQuery({ ...ledgerCurrencyQuery(email), enabled: !localLedger && !ledger && !ledgerOnItsWay });
+  const currency = (localLedger ?? ledger)?.currency ?? currencyRead.data;
   if (sync && localLedger) {
     const stale = serverSearch.data !== undefined && serverSearch.dataUpdatedAt < sync.changedAt;
     const unreachable = serverSearch.data === undefined && serverSearch.error instanceof ApiError && serverSearch.error.status === 0;
@@ -155,7 +161,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
       </p>
       {total === 0 && !serverSearch.hasNextPage ? <NoResults search={search} onClear={onClear} /> : null}
       {/* A search with words is ranked by relevance, not date, so only browsing is grouped by day. */}
-      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency.data} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
+      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
       {pageFailed || refreshFailed ? (
         <div role="alert">
           <p>{describeSearchError(serverSearch.error)}</p>
