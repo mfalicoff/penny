@@ -231,7 +231,10 @@ describe("Activity", () => {
     const days = within(list).getAllByRole("heading", { level: 2 });
     expect(days.map((day) => day.textContent)).toEqual([expect.stringMatching(/^Saturday, Nov\.? 7$/), expect.stringMatching(/^Friday, Nov\.? 6$/), expect.stringMatching(/^Thursday, Nov\.? 5$/), expect.stringMatching(/^Tuesday, Nov\.? 3$/), expect.stringMatching(/^Sunday, Nov\.? 1$/)]);
     const totalOf = (day: HTMLElement) => day.closest(".day-group__head")?.querySelector(".day-group__total")?.textContent;
-    expect(days.map(totalOf)).toEqual(["Day total −$200.00", "Day total −$72.35", "Day total +$4,800.00 income", "Day total −$30.00", "Day total −$1,450.00"]);
+    // Day totals need the ledger's currency, which comes with the ledger the offline store is downloading.
+    await waitFor(() => {
+      expect(within(list).getAllByRole("heading", { level: 2 }).map(totalOf)).toEqual(["Day total −$200.00", "Day total −$72.35", "Day total +$4,800.00 income", "Day total −$30.00", "Day total −$1,450.00"]);
+    });
     // jsdom has no matchMedia, so this is the phone layout: the chips, the list, then the search field at the bottom.
     const search = screen.getByRole("searchbox", { name: "Search transactions" });
     expect(search).toHaveAttribute("placeholder", "Search activity");
@@ -281,7 +284,10 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
     expect(within(table).getByRole("columnheader", { name: /Monday, Nov\.? 9/ })).toBeInTheDocument();
     const row = within(table).getByRole("row", { name: /Dinner out/ });
     expect(row).toHaveTextContent("2 people");
-    expect(row).toHaveTextContent("−$6.40");
+    // Categories and the currency come with the ledger the offline store is downloading.
+    await waitFor(() => {
+      expect(row).toHaveTextContent("−$6.40");
+    });
 
     await user.click(within(row).getByRole("button", { name: /^Dinner out/ }));
     const panel = screen.getByRole("complementary", { name: "Dinner out" });

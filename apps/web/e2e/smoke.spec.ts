@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
 import { expect, test } from "./test";
 import { openSettings } from "./shell";
 
@@ -73,6 +73,24 @@ test("the layout fits a 320px window without horizontal scrolling", async ({ pag
   await expect(page.getByRole("heading", { level: 1, name: "Activity" })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("Activity downloads the ledger once when it opens, as Home does", async ({ page }) => {
+  // Each GET /api/ledger sends every entry: the offline store's sync is the only reader on these
+  // pages (Activity's currency comes from that ledger, not from a second Query download).
+  for (const path of ["/", "/transactions"]) {
+    const reads: string[] = [];
+    const count = (request: Request) => {
+      if (request.method() === "GET" && new URL(request.url()).pathname === "/api/ledger") reads.push(request.url());
+    };
+    page.on("request", count);
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1, name: path === "/" ? "Home" : "Activity", exact: true })).toBeVisible();
+    // Nothing in flight for half a second: a follow-up sync or a late Query read would have started.
+    await page.waitForLoadState("networkidle");
+    page.off("request", count);
+    expect(reads, path).toHaveLength(1);
+  }
 });
 
 test("an unavailable server is reported without breaking the page", async ({ page }) => {
