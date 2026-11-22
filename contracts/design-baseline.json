@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "21418fdb44f1350600e5eefbc127bb0790beab861e0133e05ca06c0014a24ef0"
+      "sha256": "754e4beaf7681de6815d60d0115de66401ee2bb80fc0813de407eb16679b58da"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -1081,7 +1081,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/settings.html",
-      "sha256": "dad7b83d8d3165b24049ea91d5ecd7a0450c15e5625e9b2ea21980f7e8e3e87b",
+      "sha256": "a867d1a328329d12cdd91e15cbd234ae2c39065048e396a2dd78eead1334dcf0",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",

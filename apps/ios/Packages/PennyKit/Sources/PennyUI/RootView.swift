@@ -40,6 +40,7 @@ public struct RootView: View {
         }
         .tint(PennyColor.tint)
         .preferredColorScheme(appearance.colorScheme)
+        .environment(\.pennyReducesTransparency, appearance.reducesTransparency)
         .environment(appearance)
         .environment(invites)
         .environment(services.lock)

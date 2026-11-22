@@ -3,11 +3,13 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// Appearance (`appearance` card): Light, Dark and System as three previews (MAZ-180); text
-/// size follows the device.
+/// Appearance (`appearance` card, and the page beside the list on `ipad-settings`): Light, Dark and
+/// System as three previews (MAZ-180); Display (MAZ-250: Show cents on Home, Reduce transparency,
+/// Week starts on, as on the web); text size follows the device. All stay on this device.
 struct AppearanceSettingsView: View {
     @Environment(AppearanceModel.self) private var appearance
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     /// The card's order: Light, Dark, System.
     static let options: [AppearancePreference] = [.light, .dark, .system]
@@ -26,22 +28,75 @@ struct AppearanceSettingsView: View {
             } header: {
                 Text("Theme").cardSectionHeader()
             } footer: {
+                // The iPad card's shorter footnote, as on the web's tablet layout.
                 Text(
-                    "System follows your device's Light and Dark setting, including scheduled switching. "
-                        + "Dark mode uses true black. This setting stays on this device.")
+                    sizeClass == .regular
+                        ? "System follows your device's Light and Dark setting. Dark mode uses true black."
+                        : "System follows your device's Light and Dark setting, including scheduled switching. "
+                            + "Dark mode uses true black.")
+            }
+            Section {
+                switchRow(
+                    "Show cents on Home",
+                    detail: "Left to spend shows \(Self.centsExample) instead of \(Self.wholeExample).",
+                    isOn: Binding(get: { appearance.showsCents }, set: { appearance.setShowsCents($0) })
+                )
+                .accessibilityIdentifier("appearance.showCents")
+                switchRow(
+                    "Reduce transparency",
+                    detail:
+                        "Use solid surfaces instead of glass for the navigation and toolbars. "
+                        + "Your device's own setting also applies.",
+                    isOn: Binding(
+                        get: { appearance.reducesTransparency }, set: { appearance.setReducesTransparency($0) })
+                )
+                .accessibilityIdentifier("appearance.reduceTransparency")
+                Picker(
+                    "Week starts on",
+                    selection: Binding(get: { appearance.weekStart }, set: { appearance.setWeekStart($0) })
+                ) {
+                    ForEach(WeekStart.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.menu)
+                .tint(PennyColor.secondaryLabel)
+                .cardSettingsRow()
+                .accessibilityIdentifier("appearance.weekStart")
+            } header: {
+                Text("Display").cardSectionHeader()
             }
             Section {
                 LabeledContent("Text size", value: "Follows your device")
             } header: {
                 Text("Text").cardSectionHeader()
             } footer: {
-                Text("Penny supports Dynamic Type. Change text size in Settings › Display & Brightness.")
+                // The iPad card has no footnote here.
+                if sizeClass != .regular {
+                    Text("Penny supports Dynamic Type. Change text size in Settings › Display & Brightness.")
+                }
             }
         }
         .insetGroupedList()
         .background(PennyColor.background)
         .navigationTitle("Appearance")
         .accessibilityIdentifier("screen.appearance")
+    }
+
+    /// The card's example amounts, in the device's currency format.
+    static var centsExample: String { MoneyFormat.amount(111_665, currency: exampleCurrency) }
+    static var wholeExample: String { MoneyFormat.whole(111_665, currency: exampleCurrency) }
+    private static var exampleCurrency: String { Locale.current.currency?.identifier ?? "USD" }
+
+    /// A switch with a title and a line under it (the card's `.sr` with `small`).
+    private func switchRow(_ title: String, detail: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: isOn) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .tint(PennyColor.tint)
+        .cardSettingsRow()
     }
 
     private func choice(_ option: AppearancePreference) -> some View {
@@ -199,7 +254,34 @@ struct AppLockSettingsView: View {
 
     var body: some View {
         let name = lock.biometry == .none ? "Face ID" : lock.biometry.name
+        let title = SettingsView.lockTitle(lock.biometry)
         List {
+            // The card's header: a copper lock on a tile, the title and what the lock does, centered
+            // under an empty navigation bar.
+            Section {
+                VStack(spacing: 4) {
+                    Image(systemName: "lock.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(PennyColor.tint)
+                        .frame(width: 72, height: 72)
+                        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .padding(.bottom, 8)
+                        .accessibilityHidden(true)
+                    Text(title).font(.title2.weight(.bold))
+                        .accessibilityAddTraits(.isHeader)
+                    Text("Ask for \(name) when Penny opens or comes back from the background.")
+                        .font(.subheadline)
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 14)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("appLock.header")
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             Section {
                 Toggle(
                     "Require \(name)",
@@ -208,14 +290,12 @@ struct AppLockSettingsView: View {
                 .tint(PennyColor.tint)
                 .disabled(lock.isBusy)
                 .frame(minHeight: Metrics.minTouchTarget)
+                .listRowInsets(Self.rowInsets)
                 .accessibilityIdentifier("appLock.toggle")
                 if let message = lock.message {
                     Text(message).font(.footnote).foregroundStyle(PennyColor.danger)
                         .accessibilityIdentifier("appLock.message")
                 }
-            } header: {
-                Text("Ask for \(name) when Penny opens or comes back from the background.")
-                    .textCase(nil)
             } footer: {
                 if !lock.isEnabled { footer }
             }
@@ -238,6 +318,7 @@ struct AppLockSettingsView: View {
                         .buttonStyle(.plain)
                         .disabled(lock.isBusy)
                         .accessibilityAddTraits(lock.delay == option ? .isSelected : [])
+                        .listRowInsets(Self.rowInsets)
                         .accessibilityIdentifier("appLock.delay.\(option.rawValue)")
                     }
                 } header: {
@@ -248,10 +329,18 @@ struct AppLockSettingsView: View {
             }
         }
         .insetGroupedList()
+        // The header sits right under the empty bar, as on the card.
+        .contentMargins(.top, 4, for: .scrollContent)
         .background(PennyColor.background)
-        .navigationTitle(SettingsView.lockTitle(lock.biometry))
+        .navigationTitle(title)
+        .toolbarTitleDisplayModeInline()
+        // The header names the page, so the bar stays empty, as on the card.
+        .toolbar(removing: .title)
         .accessibilityIdentifier("screen.appLock")
     }
+
+    /// The card's 50-point rows: a 44-point touch target with 3 points above and below.
+    private static let rowInsets = EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16)
 
     /// Under the last section: the passcode fallback, where the setting lives, and what the
     /// lock doesn't cover.

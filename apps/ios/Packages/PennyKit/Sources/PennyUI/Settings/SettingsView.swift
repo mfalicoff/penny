@@ -3,9 +3,10 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// Settings (`settings` card): the account and its sync status; Manage (Recurring, Accounts,
-/// Categories: the old More tab); Preferences (Appearance, Currency, the lock); the read-only
-/// server; and Sign out, or Leave demo. A sheet from Home on iPhone, the detail column on iPad.
+/// Settings (`settings` card): the account and its sync status, which opens the server's details;
+/// Manage (Recurring, Accounts, Categories: the old More tab, iPhone only, as on iPad they are in
+/// the sidebar); Preferences (Appearance, Currency, the lock); the read-only server; and Sign out,
+/// or Leave demo. A sheet from Home on iPhone, the detail column on iPad.
 struct SettingsView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(AppearanceModel.self) private var appearance
@@ -20,27 +21,37 @@ struct SettingsView: View {
 
     var body: some View {
         let ledger = shell.workspace.load.ledger
+        let currencyLocked = ledger.map { CurrencyPolicy.lockReason(ledger: $0) != nil } ?? false
         List {
             Section {
-                AccountHeader()
+                // The account opens its details (server, email, status); the demo has none.
+                if shell.account != nil {
+                    pageLink(.server) { _ in AccountHeader() }
+                        .accessibilityIdentifier("settings.account")
+                } else {
+                    AccountHeader()
+                }
             }
-            CardSection("Manage") {
-                manageRow(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
-                manageRow(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
-                manageRow(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
+            // On iPad, Manage is in the sidebar (`ipad-settings`), so the list leaves it out.
+            if !shell.route.settingsIsColumn {
+                CardSection("Manage") {
+                    row(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
+                    row(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
+                    row(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
+                }
             }
             Section {
                 row(.appearance, symbol: "sun.max", value: appearance.preference.title)
-                row(
-                    .currency, symbol: "banknote", value: ledger?.currency.rawValue,
-                    locked: ledger.map { CurrencyPolicy.lockReason(ledger: $0) != nil } ?? false)
+                // Locked: the value and a lock, with no chevron (the page still shows the choices).
+                row(.currency, symbol: "banknote", value: ledger?.currency.rawValue, locked: currencyLocked)
                 row(
                     .appLock, symbol: "lock", value: lock.isEnabled ? "On" : "Off", title: Self.lockTitle(lock.biometry)
                 )
             } header: {
                 Text("Preferences").cardSectionHeader()
             } footer: {
-                if let ledger, let reason = CurrencyPolicy.lockReason(ledger: ledger) { Text(reason) }
+                // The iPad card has no footnote here (the web's tablet layout leaves it out too).
+                if currencyLocked, !shell.route.settingsIsColumn { Text(CurrencyPolicy.settingsFootnote) }
             }
             if let account = shell.account {
                 // MAZ-184: emailed receipts, only when the server takes them.
@@ -83,24 +94,34 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    pageLink(.server) { _ in
+                    // Read-only, as on the card: the host, why it can't change, and a lock. The
+                    // account row above opens the server's details.
+                    HStack {
                         Label {
-                            Text(ServerText.host(account.server))
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(ServerText.host(account.server)).lineLimit(1)
+                                Text("Sign out to change servers").font(.footnote)
+                                    .foregroundStyle(PennyColor.secondaryLabel)
+                            }
                         } icon: {
                             Image(systemName: "server.rack")
                         }
+                        Spacer()
+                        Self.lockMark(false)
                     }
+                    .cardSettingsRow()
+                    .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("settings.server")
                 } header: {
                     Text("Server").cardSectionHeader()
-                } footer: {
-                    Text("Sign out to change servers.")
                 }
                 if let auth = shell.auth { Section { SignOutButton(auth: auth) } }
             } else if let leave = shell.leaveDemo {
                 Section {
-                    Button("Leave demo", role: .destructive, action: leave)
-                        .accessibilityIdentifier("settings.leaveDemo")
+                    Button(role: .destructive, action: leave) {
+                        Text("Leave demo").fontWeight(.medium).frame(maxWidth: .infinity)
+                    }
+                    .accessibilityIdentifier("settings.leaveDemo")
                 } footer: {
                     Text("Everything you changed in the demo is discarded.")
                 }
@@ -108,8 +129,13 @@ struct SettingsView: View {
         }
         .labelStyle(.settingsRow)
         .insetGroupedList()
+        // The card's tighter gaps between groups, so the iPhone sheet fits on one screen.
+        .settingsGroupSpacing()
+        // The account sits right under the bar, as on the card (a list leaves a header-sized gap).
+        .contentMargins(.top, 8, for: .scrollContent)
         .background(PennyColor.background)
         .navigationTitle("Settings")
+        .modifier(SheetTitle(isSheet: onDone != nil))
         .task { await shell.receiptInbox.refresh() }
         .toolbar {
             if let onDone {
@@ -126,45 +152,16 @@ struct SettingsView: View {
         biometry == .none ? "App lock" : "\(biometry.name) lock"
     }
 
-    /// A Manage page. On iPad, where Settings is the detail column and these pages are sidebar
-    /// rows of their own, the row selects the sidebar item instead of pushing onto the bound
-    /// Settings path: a push there made the column swap stacks in the same update, and SwiftUI
-    /// crashed (`NavigationColumnState.boundPathChange`, found by MAZ-82's iPad journeys).
-    @ViewBuilder
-    private func manageRow(_ route: SettingsRoute, symbol: String, value: String?) -> some View {
-        if shell.route.settingsIsColumn {
-            Button {
-                shell.route.sidebarSelection = .manage(route)
-            } label: {
-                HStack {
-                    Label(route.title, systemImage: symbol)
-                    Spacer()
-                    if let value { Text(value).foregroundStyle(PennyColor.secondaryLabel) }
-                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
-                        .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .cardSettingsRow()
-            .accessibilityIdentifier("settings.\(route.rawValue)")
-        } else {
-            row(route, symbol: symbol, value: value)
-        }
-    }
-
+    /// A row that opens its page. A locked one shows its value and a lock instead of the chevron.
     private func row(
         _ route: SettingsRoute, symbol: String, value: String?, locked: Bool = false, title: String? = nil
     ) -> some View {
-        pageLink(route) { selected in
+        pageLink(route, chevron: !locked) { selected in
             HStack {
                 Label(title ?? route.title, systemImage: symbol)
                 Spacer()
                 if let value { Text(value).foregroundStyle(Self.valueStyle(selected)) }
-                if locked {
-                    Image(systemName: "lock.fill").font(.footnote).foregroundStyle(Self.valueStyle(selected))
-                        .accessibilityLabel("Locked")
-                }
+                if locked { Self.lockMark(selected) }
             }
         }
         .accessibilityIdentifier("settings.\(route.rawValue)")
@@ -174,10 +171,20 @@ struct SettingsView: View {
         selected ? Color.white.opacity(0.85) : PennyColor.secondaryLabel
     }
 
+    /// The cards' small lock where a row's value can't change (Currency, Server).
+    static func lockMark(_ selected: Bool) -> some View {
+        Image(systemName: "lock.fill").font(.footnote).foregroundStyle(valueStyle(selected))
+            .accessibilityLabel("Locked")
+    }
+
     /// A row that opens a Settings page: pushed onto the stack, or, on iPad with the page beside
     /// the list (`ipad-settings`, MAZ-182), selected there (a copper row with white text).
+    /// `chevron` false leaves out the chevron (a locked row), which a navigation link always
+    /// draws, so that row pushes onto the Settings path itself.
     @ViewBuilder
-    private func pageLink<Content: View>(_ route: SettingsRoute, @ViewBuilder label: (Bool) -> Content) -> some View {
+    private func pageLink<Content: View>(
+        _ route: SettingsRoute, chevron: Bool = true, @ViewBuilder label: (Bool) -> Content
+    ) -> some View {
         if let select {
             let selected = selection == route
             Button {
@@ -185,9 +192,7 @@ struct SettingsView: View {
             } label: {
                 HStack {
                     label(selected)
-                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
-                        .foregroundStyle(selected ? Color.white.opacity(0.85) : PennyColor.tertiaryLabel)
-                        .accessibilityHidden(true)
+                    if chevron { Self.chevron(selected) }
                 }
                 .contentShape(Rectangle())
             }
@@ -198,41 +203,66 @@ struct SettingsView: View {
             .cardSettingsRow()
             .environment(\.settingsRowSelected, selected)
             .accessibilityAddTraits(selected ? .isSelected : [])
-        } else {
+        } else if chevron {
             NavigationLink(value: route) { label(false) }.cardSettingsRow()
+        } else {
+            Button {
+                shell.route.settingsPath.append(route)
+            } label: {
+                label(false).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(PennyColor.label)
+            .cardSettingsRow()
         }
+    }
+
+    private static func chevron(_ selected: Bool) -> some View {
+        Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+            .foregroundStyle(selected ? Color.white.opacity(0.85) : PennyColor.tertiaryLabel)
+            .accessibilityHidden(true)
     }
 }
 
-/// The account (or demo) with its sync status.
+/// The account (or demo) with its sync status: a monogram, the account and, when synced, a
+/// green cloud (`settings` card).
 private struct AccountHeader: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.settingsRowSelected) private var selected
 
     var body: some View {
-        HStack(spacing: 12) {
-            Text(Self.monogram(shell.account?.email))
-                .font(.headline)
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .frame(width: 48, height: 48)
-                .background(PennyColor.fill, in: Circle())
-                .accessibilityHidden(true)
+        let sync = shell.workspace.sync
+        HStack(spacing: 14) {
+            Monogram(initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "D", size: 52)
             VStack(alignment: .leading, spacing: 2) {
-                Text(shell.account?.email ?? "Demo account").font(.headline).lineLimit(1)
-                Label(SyncText.line(shell.workspace.sync), systemImage: SyncText.symbol(shell.workspace.sync))
-                    .font(.footnote)
-                    .foregroundStyle(
-                        shell.workspace.sync.needsAttention ? PennyColor.pending : PennyColor.secondaryLabel
-                    )
-                    .labelStyle(.titleAndIcon)
-                    .accessibilityIdentifier("settings.syncStatus")
+                Text(shell.account?.email ?? "Demo account").font(.title3.weight(.bold)).lineLimit(1)
+                HStack(spacing: 5) {
+                    Image(systemName: SyncText.symbol(sync))
+                        .foregroundStyle(Self.symbolStyle(sync, selected: selected))
+                        .accessibilityHidden(true)
+                    Text(SyncText.line(sync))
+                }
+                .font(.subheadline)
+                .foregroundStyle(
+                    selected
+                        ? Color.white.opacity(0.85)
+                        : sync.needsAttention ? PennyColor.pending : PennyColor.secondaryLabel
+                )
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("settings.syncStatus")
             }
+            Spacer(minLength: 0)
         }
+        .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
     }
 
-    static func monogram(_ email: String?) -> String {
-        guard let first = email?.first else { return "D" }
-        return String(first).uppercased()
+    /// Green once synced, as on the card; amber when something needs attention.
+    static func symbolStyle(_ sync: SyncStatus, selected: Bool) -> Color {
+        if selected { return Color.white }
+        if sync.needsAttention { return PennyColor.pending }
+        if case .upToDate = sync { return PennyColor.income }
+        return PennyColor.secondaryLabel
     }
 }
 
@@ -272,6 +302,10 @@ private struct ServerPage: View {
 enum CurrencyPolicy {
     /// The currencies the API accepts (contracts/openapi.json `Ledger.currency`).
     static let options = Currency.allCases
+
+    /// Under Preferences in Settings while the currency is locked, the same sentence on iOS and the
+    /// web (MAZ-250): the apps lock it once the ledger has entries or schedules.
+    static let settingsFootnote = "Currency is locked once your ledger has entries."
 
     /// The server refuses a ledger currency that differs from an active household's
     /// (`Your ledger currency must match your active households.`), and the ledger rule
@@ -320,4 +354,25 @@ extension EnvironmentValues {
 
 extension LabelStyle where Self == SettingsRowLabelStyle {
     static var settingsRow: SettingsRowLabelStyle { SettingsRowLabelStyle() }
+}
+
+/// The iPhone sheet's centered inline title (`settings` card); the iPad column keeps its large
+/// title, as `ipad-settings` shows.
+private struct SheetTitle: ViewModifier {
+    let isSheet: Bool
+
+    func body(content: Content) -> some View {
+        if isSheet { content.toolbarTitleDisplayModeInline() } else { content }
+    }
+}
+
+extension View {
+    /// The list's compact gaps between sections (iOS only; the host tests build for macOS).
+    fileprivate func settingsGroupSpacing() -> some View {
+        #if os(iOS)
+            listSectionSpacing(.compact)
+        #else
+            self
+        #endif
+    }
 }

@@ -28,6 +28,13 @@ nonisolated public enum MoneyFormat {
                 rule: .toNearestOrAwayFromZero))
     }
 
+    /// A signed total rounded to whole units: "−$1,117", "$1,117" (Home's Left to spend with
+    /// Show cents on Home off, MAZ-250). An amount that rounds to zero has no minus.
+    public static func signedWhole(_ cents: Int64, currency: String, locale: Locale = .current) -> String {
+        let text = whole(cents, currency: currency, locale: locale)
+        return cents < 0 && cents.magnitude >= 50 ? minus + text : text
+    }
+
     /// The amount with the sign its meaning takes: "−$48.90", "+$3,200.00", "$200.00".
     /// A negative `cents` with `.neutral` (a signed total such as Left to spend) keeps its minus.
     public static func signed(
@@ -123,19 +130,22 @@ public struct HeroAmount<Detail: View>: View {
     private let currency: String
     private let tone: MoneyMeaning
     private let dimmed: Bool
+    private let showsCents: Bool
     private let detail: Detail
 
     /// `dimmed` draws a whole amount in the secondary label color with no cents, for a month
-    /// with nothing in it yet (the `empty-home` card's "$0").
+    /// with nothing in it yet (the `empty-home` card's "$0"). `showsCents` false rounds the amount
+    /// to whole units (Show cents on Home, MAZ-250); VoiceOver still reads the exact amount.
     public init(
         _ label: String, cents: Int64, currency: String, tone: MoneyMeaning = .neutral, dimmed: Bool = false,
-        @ViewBuilder detail: () -> Detail
+        showsCents: Bool = true, @ViewBuilder detail: () -> Detail
     ) {
         self.label = label
         self.cents = cents
         self.currency = currency
         self.tone = tone
         self.dimmed = dimmed
+        self.showsCents = showsCents
         self.detail = detail()
     }
 
@@ -143,8 +153,10 @@ public struct HeroAmount<Detail: View>: View {
         let text =
             dimmed
             ? MoneyFormat.whole(cents, currency: currency)
-            : MoneyFormat.signed(cents, meaning: .neutral, currency: currency)
-        let parts = dimmed ? (whole: text, fraction: "") : MoneyFormat.heroParts(text)
+            : showsCents
+                ? MoneyFormat.signed(cents, meaning: .neutral, currency: currency)
+                : MoneyFormat.signedWhole(cents, currency: currency)
+        let parts = dimmed || !showsCents ? (whole: text, fraction: "") : MoneyFormat.heroParts(text)
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
                 .font(PennyFont.style(.footnote))

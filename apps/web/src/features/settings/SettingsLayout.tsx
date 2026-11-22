@@ -107,7 +107,7 @@ function SectionList({ layout }: { layout: SettingsLayoutKind }) {
       {layout === "phone" ? <ManageGroup /> : null}
       <nav aria-label="Settings sections" className="settings__nav">
         {/* The iPad card has no footnote under Preferences; the iPhone card does. */}
-        <Group title="Preferences" footer={layout === "phone" && locked && currency ? `Currency is locked while your ledger has entries in ${currency}.` : undefined}>
+        <Group title="Preferences" footer={layout === "phone" && locked && currency ? "Currency is locked once your ledger has entries." : undefined}>
           <Row to="/settings/appearance" icon="sunny" label="Appearance" value={THEME_NAMES[theme]} />
           <Row to="/settings/currency" icon="cash" label="Currency" value={currency} trailing={locked ? "lock-closed" : "chevron-forward"} />
           {receiptEmail ? <Row to="/settings/receipt-email" icon="receipt" label="Receipt email" /> : null}

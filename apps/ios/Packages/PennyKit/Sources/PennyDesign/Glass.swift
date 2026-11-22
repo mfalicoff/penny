@@ -4,10 +4,12 @@ public import SwiftUI
 /// search and floating buttons. Money and lists stay on solid surfaces.
 ///
 /// The system tab bar and toolbars are already glass on iOS 26 and need nothing. Use this
-/// for custom floating controls. With Reduce Transparency on, it draws an opaque surface
-/// with a separator edge instead, as the redesign requires.
+/// for custom floating controls. With Reduce Transparency on, in the system's settings or in
+/// Penny's own (Settings › Appearance, MAZ-250: `pennyReducesTransparency`), it draws an
+/// opaque surface with a separator edge instead, as the redesign requires.
 public struct PennyGlass<S: Shape>: ViewModifier {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceTransparency) private var systemReducesTransparency
+    @Environment(\.pennyReducesTransparency) private var appReducesTransparency
     private let shape: S
     private let tinted: Bool
 
@@ -17,7 +19,7 @@ public struct PennyGlass<S: Shape>: ViewModifier {
     }
 
     public func body(content: Content) -> some View {
-        if reduceTransparency {
+        if systemReducesTransparency || appReducesTransparency {
             content
                 .background(tinted ? PennyColor.tint : PennyColor.surface, in: shape)
                 .overlay(shape.stroke(PennyColor.separator, lineWidth: 1))
@@ -26,6 +28,12 @@ public struct PennyGlass<S: Shape>: ViewModifier {
                 tinted ? .regular.tint(PennyColor.tint).interactive() : .regular.interactive(), in: shape)
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Penny's own Reduce transparency (Settings › Appearance), set at the root. The system's
+    /// setting applies as well, whatever this says.
+    @Entry public var pennyReducesTransparency = false
 }
 
 extension View {

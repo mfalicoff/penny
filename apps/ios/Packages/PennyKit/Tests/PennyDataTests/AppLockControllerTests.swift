@@ -328,4 +328,21 @@ struct DevicePreferencesTests {
         UserDefaultsDevicePreferences(suiteName: suite).setAppearance(.dark)
         #expect(UserDefaultsDevicePreferences(suiteName: suite).appearance == .dark)
     }
+
+    @Test("whenDisplaySettingsAreSaved_UserDefaultsDevicePreferences_ShouldKeepThemAndDefaultToTheWebs")
+    func display() throws {
+        let suite = "penny.tests.preferences.\(UUID().uuidString)"
+        defer { UserDefaults.standard.removePersistentDomain(forName: suite) }
+        let fresh = UserDefaultsDevicePreferences(suiteName: suite)
+        #expect(fresh.showsCents && !fresh.reducesTransparency && fresh.weekStart == .monday)
+        fresh.setShowsCents(false)
+        fresh.setReducesTransparency(true)
+        fresh.setWeekStart(.sunday)
+        let next = UserDefaultsDevicePreferences(suiteName: suite)
+        #expect(!next.showsCents && next.reducesTransparency && next.weekStart == .sunday)
+        try #require(UserDefaults(suiteName: suite)).set("tuesday", forKey: UserDefaultsDevicePreferences.weekStartKey)
+        #expect(
+            UserDefaultsDevicePreferences(suiteName: suite).weekStart == .monday,
+            "an unknown value reads as the default")
+    }
 }
