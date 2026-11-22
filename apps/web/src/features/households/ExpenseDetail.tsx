@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useId, useRef, useState, type RefObject } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useState, type RefObject } from "react";
 import { ApiError } from "../../api/client";
 import { deleteExpense, expenseQuery, refreshHousehold } from "../../api/households";
 import type { SharedExpense } from "../../api/schemas";
@@ -34,6 +34,10 @@ interface DetailProps {
    * `web-household`), instead of a dialog over the page.
    */
   variant?: "dialog" | "panel";
+  /** The panel's Close button; the touch tablet's pane always shows an expense, so it has none (`ipad-shared`). */
+  closable?: boolean;
+  /** Whether opening this expense moves focus to it: not when the page picked it, only when someone did. */
+  focusOnOpen?: (expenseId: string) => boolean;
 }
 
 /**
@@ -42,7 +46,7 @@ interface DetailProps {
  * and repayment, and its change history. Recording a share payment and deleting happen in the
  * same place.
  */
-export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, variant = "dialog" }: DetailProps) {
+export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, variant = "dialog", closable = true, focusOnOpen }: DetailProps) {
   const email = useAccountEmail();
   const expense = useQuery(expenseQuery(email, view.householdId, expenseId));
   const [pane, setPane] = useState<Pane>({ kind: "detail" });
@@ -53,8 +57,9 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
   const panelHeading = useRef<HTMLHeadingElement>(null);
 
   // In the side pane, opening an expense moves focus to it, as opening the dialog does.
+  const shouldFocus = useEffectEvent((id: string) => focusOnOpen?.(id) ?? true);
   useEffect(() => {
-    if (variant === "panel") panelHeading.current?.focus();
+    if (variant === "panel" && shouldFocus(expenseId)) panelHeading.current?.focus();
   }, [variant, expenseId]);
 
   // Switching panes replaces the focused control, so move focus to the new pane's heading (or its
@@ -146,9 +151,11 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
           <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className="card__title">
             {title}
           </h2>
-          <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={close}>
-            <Icon name="close" size={16} weight={44} />
-          </button>
+          {closable || recording ? (
+            <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={close}>
+              <Icon name="close" size={16} weight={44} />
+            </button>
+          ) : null}
         </div>
         <div ref={bodyRef} className="form">
           {body}

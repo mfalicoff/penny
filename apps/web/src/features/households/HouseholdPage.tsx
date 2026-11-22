@@ -1,7 +1,7 @@
 import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import type { HouseholdDetail, MonthRecap } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
@@ -20,11 +20,17 @@ import { ExpenseFormDialog, type FormTarget } from "./ExpenseForm";
 import { ExpensesTab } from "./ExpensesTab";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "./GroupTools";
 import { HistoryPanel } from "./HistoryPanel";
-import { currentMonth, isCurrent, monthLabel, people } from "./model";
+import { byWeek, currentMonth, isCurrent, monthLabel, people } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab, useManageActions } from "./PeopleTab";
 import { RuleDialog } from "./RuleDialog";
 import type { HouseholdSearch, HouseholdTab } from "./search";
+
+/**
+ * The expense the touch-tablet pane last picked by itself (`ipad-shared`). Picking one changes the
+ * route, which mounts the page again, so it lives here: that expense opens without taking focus.
+ */
+let autoPicked: string | undefined;
 
 const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: "Expenses", balances: "Balances", people: "People" };
 
@@ -102,6 +108,29 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   const inlineExpense = wide && tab === "expenses";
   // `ipad-shared`: a touch tablet splits the hero across the two panes instead of one above both.
   const split = inlineExpense && touch;
+  // The pane always shows an expense, as `ipad-activity` always shows an entry: the first listed
+  // one when the household opens, and again when the selected one leaves the list (deleted, or
+  // another month chosen). An expense opened from elsewhere (Activity, Home) stays open even when
+  // it's from another month.
+  const listed = split && recap.data?.month === month ? byWeek(recap.data.expenses).flatMap((group) => group.expenses.map((expense) => expense.id)) : undefined;
+  const listedKey = listed?.join(",");
+  const previousList = useRef<{ month: string; ids: string[] } | null>(null);
+  useEffect(() => {
+    if (listedKey === undefined) return;
+    const ids = listedKey ? listedKey.split(",") : [];
+    const before = previousList.current;
+    previousList.current = { month, ids };
+    if (expenseId !== undefined) {
+      if (ids.includes(expenseId)) return;
+      const left = before !== null && (before.month !== month || before.ids.includes(expenseId));
+      if (!left) return;
+    }
+    const first = ids[0];
+    autoPicked = first;
+    const keep = { month: search.month };
+    if (first) void navigate({ to: "/households/$id/expenses/$expenseId", params: { id: householdId, expenseId: first }, search: keep, replace: true });
+    else if (expenseId !== undefined) void navigate({ to: "/households/$id", params: { id: householdId }, search: keep, replace: true });
+  }, [listedKey, month, search.month, expenseId, householdId, navigate]);
   const monthName = monthLabel(month).split(" ")[0] ?? month;
   const monthTotal = recap.data?.expenses.reduce((sum, expense) => sum + expense.totalCents, 0);
   const glow = <div className={cx("glow", balance !== undefined && balance > 0 && "glow--green")} aria-hidden="true" />;
@@ -115,6 +144,8 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
       view={view}
       expenseId={expenseId}
       variant={inlineExpense ? "panel" : "dialog"}
+      closable={!split}
+      focusOnOpen={(id) => id !== autoPicked}
       onEdit={(expense) => { setForm({ kind: "edit", expense }); }}
       onRule={(rule) => { go({ rule }); }}
       onClose={() => { go({}); }}

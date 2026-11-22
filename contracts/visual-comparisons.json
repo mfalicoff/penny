@@ -2198,7 +2198,7 @@
             "ref": "MAZ-279"
           },
           {
-            "summary": "Balances is the web-household panel (Paid and share on each row, then Suggested payments with Record paid and the longer note), not the card's rows with \"pays you\" and gets back or owes; the selected expense shows only once one is chosen",
+            "summary": "The selected expense is the web's full detail panel (a Total, Date, Category, Paid by and Split grid, then the shares and actions), not the card's short card with the payer line and one row per share",
             "kind": "follow-up",
             "ref": "MAZ-279"
           }
