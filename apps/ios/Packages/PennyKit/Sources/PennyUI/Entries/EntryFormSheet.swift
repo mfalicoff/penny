@@ -1041,7 +1041,8 @@ struct EntryFieldRow: View {
                 .foregroundStyle(PennyColor.secondaryLabel)
                 .frame(width: 20)
                 .accessibilityHidden(true)
-            Text(title).foregroundStyle(PennyColor.label)
+            // The title takes its width first; a long value truncates instead (`iphone-edit-entry`).
+            Text(title).foregroundStyle(PennyColor.label).layoutPriority(1)
             Spacer(minLength: 8)
             Text(Self.styled(value, emphasis: emphasis))
                 .foregroundStyle(PennyColor.secondaryLabel)
