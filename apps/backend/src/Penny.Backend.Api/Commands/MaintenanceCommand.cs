@@ -50,8 +50,12 @@ internal static class MaintenanceCommand
                         or Microsoft.EntityFrameworkCore.DbUpdateException
             )
         {
+            // The reason without credentials, SQL or row values (MigrationFailure).
             Console.Error.WriteLine(
-                "Database migration failed. Check connectivity, PostgreSQL 18, the search extensions, schema compatibility, the database user's privileges and the migration lock. No credentials or row values are logged."
+                $"Database migration failed: {MigrationFailure.Describe(error)}"
+            );
+            Console.Error.WriteLine(
+                "Check connectivity, PostgreSQL 18, the search extensions, schema compatibility, the database user's privileges and the migration lock. No credentials or row values are logged."
             );
             return 1;
         }

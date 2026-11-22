@@ -343,7 +343,7 @@ public static class BackendServices
             "Receipts:MinFreeMegabytes",
             100,
             0,
-            1_000_000
+            100_000_000
         );
         services.AddSingleton<IStorageReadiness>(
             new ReceiptStorageReadiness(receipts, minimumFreeMegabytes * 1024L * 1024L)

@@ -1,4 +1,5 @@
 using Npgsql;
+using Penny.Backend.Persistence.Migrations;
 
 namespace Penny.Backend.Persistence.Schema;
 
@@ -40,10 +41,10 @@ public static class SearchExtensions
                         or PostgresErrorCodes.FeatureNotSupported
             )
         {
-            throw new InvalidOperationException(Missing);
+            throw new DatabaseSetupException(Missing);
         }
         if (!await AvailableAsync(connection, cancellationToken))
-            throw new InvalidOperationException(Missing);
+            throw new DatabaseSetupException(Missing);
     }
 
     public static async Task<bool> AvailableAsync(

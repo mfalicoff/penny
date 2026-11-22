@@ -2,8 +2,8 @@
 // Production container smoke test (MAZ-63). Starts deploy/compose.yaml with the
 // given images under a throwaway project, then checks: same-origin web and API,
 // readiness, correlation ids, cookies/CORS through the proxy, restart and volume
-// durability, receipt-volume permission and PostgreSQL loss/recovery, runtime-grant
-// repair, backup and restore into a clean environment, search after an index rebuild
+// durability, receipt-volume permission and PostgreSQL loss/recovery, migration on startup
+// and on restart, backup and restore into a clean environment, search after an index rebuild
 // and the missing-extension guard. Everything is synthetic and removed afterwards.
 //
 //   PENNY_SMOKE_API_IMAGE=localhost/penny-api:dev PENNY_SMOKE_WEB_IMAGE=localhost/penny-web:dev \

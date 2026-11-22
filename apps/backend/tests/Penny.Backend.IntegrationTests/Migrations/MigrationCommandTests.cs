@@ -44,13 +44,113 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
             }.ConnectionString;
             var result = await RunAsync(connection, "migrate");
             result.ExitCode.ShouldBe(1);
-            result.Error.ShouldContain("privileges");
+            result.Error.ShouldContain(
+                "Database migration failed: PostgresException: SQLSTATE 42501 (insufficient_privilege)"
+            );
             result.Error.ShouldNotContain(password);
             result.Error.ShouldNotContain("Password=");
         }
         finally
         {
             await Fixture.SqlAsync($"DROP ROLE {role}", Ct);
+        }
+    }
+
+    [Fact]
+    public async Task whenPasswordWrong_MigrationCommand_ShouldReportSqlStateWithoutPassword()
+    {
+        var wrong = Guid.NewGuid().ToString("N");
+        var connection = new NpgsqlConnectionStringBuilder(Fixture.Connection)
+        {
+            Password = wrong,
+        }.ConnectionString;
+        var result = await RunAsync(connection, "migrate");
+        result.ExitCode.ShouldBe(1);
+        result.Error.ShouldContain(
+            "Database migration failed: PostgresException: SQLSTATE 28P01 (invalid_password)"
+        );
+        result.Error.ShouldNotContain(wrong);
+        result.Error.ShouldNotContain("Password=");
+    }
+
+    [Fact]
+    public async Task whenSchemaNewer_MigrationCommand_ShouldSaySo()
+    {
+        await Fixture.SqlAsync(
+            """INSERT INTO penny."__EFMigrationsHistory" VALUES ('29990101000000_Future', '10.0.14')""",
+            Ct
+        );
+        try
+        {
+            var result = await RunAsync(Fixture.Connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                "Database migration failed: DatabaseSetupException: Database schema is newer than this build. No migration was applied."
+            );
+        }
+        finally
+        {
+            await Fixture.SqlAsync(
+                """DELETE FROM penny."__EFMigrationsHistory" WHERE "MigrationId" = '29990101000000_Future'""",
+                Ct
+            );
+        }
+    }
+
+    [Fact]
+    public async Task whenAnotherMigrationHoldsLock_MigrationCommand_ShouldNameTheLock()
+    {
+        await using var holder = await Fixture.Admin.OpenConnectionAsync(Ct);
+        await using (var take = new NpgsqlCommand("SELECT pg_advisory_lock($1)", holder))
+        {
+            take.Parameters.Add(
+                new NpgsqlParameter<long> { TypedValue = DatabaseSchema.MigrationLock }
+            );
+            await take.ExecuteNonQueryAsync(Ct);
+        }
+        try
+        {
+            var result = await RunAsync(Fixture.Connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                "Database migration failed: MigrationLockedException: Another database migration holds the lock."
+            );
+        }
+        finally
+        {
+            // A pooled connection would keep the session lock until its next use.
+            await using var release = new NpgsqlCommand("SELECT pg_advisory_unlock_all()", holder);
+            await release.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+    }
+
+    [Fact]
+    public async Task whenExtensionsMissingAndUserCannotCreateThem_MigrationCommand_ShouldSaySo()
+    {
+        // A database without the search extensions, where the application user may create
+        // pg_trgm (a trusted extension) but not vector.
+        var database = "noext_" + Guid.NewGuid().ToString("N")[..12];
+        // Only a generated hexadecimal name is interpolated.
+        await Fixture.SqlAsync($"CREATE DATABASE {database}", Ct);
+        try
+        {
+            await Fixture.SqlAsync(
+                $"GRANT CONNECT, CREATE ON DATABASE {database} TO penny_app",
+                Ct
+            );
+            var connection = new NpgsqlConnectionStringBuilder(Fixture.Connection)
+            {
+                Database = database,
+            }.ConnectionString;
+            var result = await RunAsync(connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                $"Database migration failed: DatabaseSetupException: {SearchExtensions.Missing}"
+            );
+        }
+        finally
+        {
+            await Fixture.SqlAsync($"DROP DATABASE {database} WITH (FORCE)", Ct);
         }
     }
 

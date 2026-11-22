@@ -38,7 +38,7 @@ public static class PreSquashUpgrade
         {
             check.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = History });
             if (await check.ExecuteScalarAsync(ct) is not true)
-                throw new InvalidOperationException(
+                throw new DatabaseSetupException(
                     "Migration history changed during the upgrade. No migration was applied."
                 );
         }

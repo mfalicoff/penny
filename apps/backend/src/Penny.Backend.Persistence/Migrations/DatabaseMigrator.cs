@@ -17,7 +17,7 @@ public static class DatabaseMigrator
     {
         await using var guard = await source.OpenConnectionAsync(cancellationToken);
         if (guard.PostgreSqlVersion.Major != DatabaseSchema.PostgresMajor)
-            throw new InvalidOperationException(
+            throw new DatabaseSetupException(
                 "PostgreSQL 18 is required. No migration was applied."
             );
         await AcquireLockAsync(guard, cancellationToken);
@@ -36,7 +36,7 @@ public static class DatabaseMigrator
                 applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
             }
             if (applied.Any(migration => !known.Contains(migration)))
-                throw new InvalidOperationException(
+                throw new DatabaseSetupException(
                     "Database schema is newer than this build. No migration was applied."
                 );
             await context.Database.MigrateAsync(cancellationToken);

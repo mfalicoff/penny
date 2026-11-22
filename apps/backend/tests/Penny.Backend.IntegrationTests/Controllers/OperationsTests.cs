@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.IntegrationTests.Infrastructure;
@@ -170,8 +173,15 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         var root = Path.Combine(Path.GetTempPath(), "penny-ready-" + Guid.NewGuid().ToString("N"));
         try
         {
-            // 1,000,000 MiB (~1 TiB) exceeds any test runner's free space.
-            await using var factory = ReceiptHost(root, minFreeMegabytes: "1000000");
+            // More than the volume's free space, whatever its size (a workstation may have
+            // more than a terabyte free).
+            var free = new DriveInfo(Path.GetTempPath()).AvailableFreeSpace / (1024 * 1024);
+            await using var factory = ReceiptHost(
+                root,
+                minFreeMegabytes: (free + 1024).ToString(
+                    System.Globalization.CultureInfo.InvariantCulture
+                )
+            );
             using var client = CreateClient(factory);
             using var ready = await client.GetAsync("/api/ready", Ct);
             ready.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
@@ -222,6 +232,120 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         using var response = await client.GetAsync("/api/ready", Ct);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
+
+    [Fact]
+    public async Task whenPasswordWrong_Startup_ShouldLogSqlStateWithoutPasswordAndStop()
+    {
+        var wrong = Guid.NewGuid().ToString("N");
+        var connection = new NpgsqlConnectionStringBuilder(Fixture.Connection)
+        {
+            Password = wrong,
+        }.ConnectionString;
+        var logs = new CapturingLoggerProvider();
+        await using var factory = StartupFactory(connection, logs);
+        Should.Throw<InvalidOperationException>(() => factory.CreateClient());
+        logs.Messages.ShouldContain(message =>
+            message.Contains(
+                "Database migration failed on startup: PostgresException: SQLSTATE 28P01 (invalid_password)",
+                StringComparison.Ordinal
+            )
+        );
+        logs.Messages.ShouldAllBe(message =>
+            !message.Contains(wrong, StringComparison.Ordinal)
+            && !message.Contains("Password=", StringComparison.Ordinal)
+        );
+    }
+
+    [Fact]
+    public async Task whenSchemaNewer_Startup_ShouldLogReasonAndStop()
+    {
+        await Fixture.SqlAsync(
+            """INSERT INTO penny."__EFMigrationsHistory" VALUES ('29990101000000_Future', '10.0.14')""",
+            Ct
+        );
+        try
+        {
+            var logs = new CapturingLoggerProvider();
+            await using var factory = StartupFactory(Fixture.Connection, logs);
+            Should.Throw<InvalidOperationException>(() => factory.CreateClient());
+            logs.Messages.ShouldContain(message =>
+                message.Contains(
+                    "Database migration failed on startup: DatabaseSetupException: Database schema is newer than this build.",
+                    StringComparison.Ordinal
+                )
+            );
+        }
+        finally
+        {
+            await Fixture.SqlAsync(
+                """DELETE FROM penny."__EFMigrationsHistory" WHERE "MigrationId" = '29990101000000_Future'""",
+                Ct
+            );
+        }
+    }
+
+    [Fact]
+    public async Task whenAnotherMigrationHoldsLock_Startup_ShouldLogWaitingThenMigrate()
+    {
+        await using var holder = await Fixture.Admin.OpenConnectionAsync(Ct);
+        await using (var take = new NpgsqlCommand("SELECT pg_advisory_lock($1)", holder))
+        {
+            take.Parameters.Add(
+                new NpgsqlParameter<long>
+                {
+                    TypedValue = Penny.Backend.Persistence.Schema.DatabaseSchema.MigrationLock,
+                }
+            );
+            await take.ExecuteNonQueryAsync(Ct);
+        }
+        var logs = new CapturingLoggerProvider();
+        await using var factory = StartupFactory(Fixture.Connection, logs);
+        Task<HttpClient> starting;
+        try
+        {
+            starting = Task.Run(factory.CreateClient, Ct);
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            while (
+                !logs.Messages.Any(message =>
+                    message.Contains(
+                        "Waiting to migrate the database (migration-lock): MigrationLockedException: Another database migration holds the lock.",
+                        StringComparison.Ordinal
+                    )
+                )
+            )
+            {
+                DateTime.UtcNow.ShouldBeLessThan(deadline, "the startup migration never waited");
+                await Task.Delay(100, Ct);
+            }
+            starting.IsCompleted.ShouldBeFalse();
+        }
+        finally
+        {
+            await using var release = new NpgsqlCommand("SELECT pg_advisory_unlock_all()", holder);
+            await release.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+        using var client = await starting.WaitAsync(TimeSpan.FromSeconds(30), Ct);
+        using var response = await client.GetAsync("/api/ready", Ct);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        logs.Messages.ShouldContain(message =>
+            message.Contains("Database migrated.", StringComparison.Ordinal)
+        );
+    }
+
+    private static TestApiFactory StartupFactory(string connection, CapturingLoggerProvider logs) =>
+        new(
+            connection,
+            new Dictionary<string, string>
+            {
+                ["Database:MigrateOnStartup"] = "true",
+                ["Logging:LogLevel:Default"] = "Information",
+            },
+            services =>
+            {
+                services.RemoveAll<ILoggerProvider>();
+                services.AddSingleton<ILoggerProvider>(logs);
+            }
+        );
 
     [Fact]
     public async Task whenMigrateOnStartupInvalid_CreateHost_ShouldIdentifySetting()

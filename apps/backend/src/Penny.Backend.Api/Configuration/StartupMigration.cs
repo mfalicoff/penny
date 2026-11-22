@@ -8,7 +8,8 @@ namespace Penny.Backend.Api.Configuration;
 // (ConnectionStrings__Postgres), as self-hosted apps do. Registered before every other
 // hosted service, so workers and Kestrel start only on a migrated schema. Waits for a
 // database that is still starting and for another replica's migration; any other failure
-// stops the host. Logs carry no credentials, SQL or exception details.
+// stops the host. Logs name the reason (MigrationFailure: the exception type, Penny's own
+// message, the SQLSTATE) but no credentials, SQL or row values.
 // Database__MigrateOnStartup=false turns it off (then run the `migrate` command).
 internal sealed partial class StartupMigration(
     DatabaseSettings settings,
@@ -41,20 +42,19 @@ internal sealed partial class StartupMigration(
             {
                 LogWaiting(
                     logger,
-                    error is MigrationLockedException ? "migration-lock" : "database"
+                    error is MigrationLockedException ? "migration-lock" : "database",
+                    MigrationFailure.Describe(error)
                 );
                 await Task.Delay(Pause, time, cancellationToken);
             }
-            catch (Exception error) when (Reportable(error))
+            catch (Exception error)
+                when (error is not OperationCanceledException
+                    || !cancellationToken.IsCancellationRequested
+                )
             {
-                // Our own messages (PostgreSQL version, extensions, newer schema) are safe;
-                // database errors are reduced to their SQLSTATE.
-                LogFailed(
-                    logger,
-                    error is PostgresException postgres ? postgres.SqlState
-                        : error is InvalidOperationException ? error.Message
-                        : error.GetType().Name
-                );
+                // The original exception stays out of the host's own failure log, which
+                // would print its message and stack.
+                LogFailed(logger, MigrationFailure.Describe(error));
                 throw new InvalidOperationException(
                     "Database migration failed on startup. See the preceding log entry."
                 );
@@ -68,21 +68,14 @@ internal sealed partial class StartupMigration(
         error is MigrationLockedException or TimeoutException
         || (error is NpgsqlException database && database.IsTransient);
 
-    private static bool Reportable(Exception error) =>
-        error
-            is NpgsqlException
-                or TimeoutException
-                or InvalidOperationException
-                or Microsoft.EntityFrameworkCore.DbUpdateException;
-
     [LoggerMessage(Level = LogLevel.Information, Message = "Database migrated.")]
     private static partial void LogMigrated(ILogger logger);
 
     [LoggerMessage(
         Level = LogLevel.Warning,
-        Message = "Waiting to migrate the database ({Reason})."
+        Message = "Waiting to migrate the database ({Reason}): {Failure}"
     )]
-    private static partial void LogWaiting(ILogger logger, string reason);
+    private static partial void LogWaiting(ILogger logger, string reason, string failure);
 
     [LoggerMessage(
         Level = LogLevel.Critical,
