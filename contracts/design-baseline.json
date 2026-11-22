@@ -667,7 +667,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/entry-extras.html",
-      "sha256": "86956d1ac9466c9b0f840d8e415f7b9fc3f92d68323ed969e75c27a4f4d4b923",
+      "sha256": "1e4df686b45f83e43dc6122dae87ee0724c61863b9675c5930e47fd575bd962d",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/entries/new",

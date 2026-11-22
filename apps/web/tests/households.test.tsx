@@ -629,6 +629,31 @@ describe("Add entry with a household", () => {
     expect(household.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("lists shared trips below your own trips and moves the expense to the one picked", async () => {
+    seed();
+    const created = server.handle(ALEX, "POST", "/api/households/trips", { name: "Tokyo spring", currency: "CAD", startDate: "2026-11-01", endDate: "2026-11-09" }).body as { household: { id: string } };
+    serve();
+    const user = userEvent.setup();
+    renderApp("/");
+    const form = await openAdd(user);
+    await user.type(within(form).getByLabelText("Amount (CAD)"), "30");
+    await user.type(within(form).getByLabelText("Title"), "Ramen");
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
+    const trips = within(form).getByRole("group", { name: "Trip" });
+    const shared = await within(trips).findByRole("radio", { name: /Tokyo spring/ });
+    // As on iphone-entry-extras: after the personal trips, with "Shared · N people", never checked.
+    expect(shared.closest("label")).toHaveTextContent("Shared · 1 person");
+    expect(shared).not.toBeChecked();
+    const options = within(trips).getAllByRole("radio");
+    expect(options[options.length - 1]).toBe(shared);
+
+    await user.click(shared);
+    const sharedForm = await screen.findByRole("form", { name: "New expense" });
+    expect(within(sharedForm).getByLabelText("Household")).toHaveValue(created.household.id);
+    expect(within(sharedForm).getByLabelText("Title")).toHaveValue("Ramen");
+    expect(within(sharedForm).getByLabelText("Amount (CAD)")).toHaveValue("30");
+  });
+
   it("sends a new expense to a household from Add entry, keeping what was typed", async () => {
     const id = seed();
     const fetchMock = serve();

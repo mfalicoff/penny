@@ -99,6 +99,7 @@ struct ActivityFiltersSheet: View {
                         shell.activityFilters.clearNarrowing()
                         shell.activityFilters.period = .month(shell.month)
                     }
+                    .foregroundStyle(PennyColor.label)
                     .accessibilityIdentifier("filters.clear")
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -111,7 +112,9 @@ struct ActivityFiltersSheet: View {
             }
             .pennySolidBars()
         }
-        .presentationDetents([.medium, .large])
+        // Full height on a solid background, as on `iphone-activity-filters`.
+        .presentationDetents([.large])
+        .presentationBackground(PennyColor.background)
         .accessibilityIdentifier("screen.activityFilters")
     }
 

@@ -170,7 +170,9 @@ private struct ActivityList: View {
         let local = cache.result(ledger, filters, today: shell.today, shared: sharedRows)
         let server = Self.showsServer(search, filters: filters) ? search.rows(in: ledger) : nil
         let report = server?.report ?? cache.report
-        let rows = server?.rows ?? local.entries
+        // While the server searches, the list waits for its answer (`activity-searching`) instead of
+        // showing this device's word matches first and replacing them.
+        let rows = Self.waitsForServer(search, filters: filters) ? [] : (server?.rows ?? local.entries)
         let shown = server == nil ? Array(rows.prefix(visibleLimit)) : rows
         let days = ActivityDay.group(shown)
         let currency = ledger.currency.rawValue
@@ -227,6 +229,8 @@ private struct ActivityList: View {
             footer(rows: rows, shown: shown, search: search, server: server != nil)
         }
         .insetGroupedList()
+        // The spoken-only rows (totals, the server results line) are one point tall, not a row's height.
+        .environment(\.defaultMinListRowHeight, 1)
         .overlay { emptyState(rows: rows, filters: filters) }
         .refreshable {
             await shell.workspace.reload()
@@ -241,6 +245,10 @@ private struct ActivityList: View {
         .task(id: filters.period) { await shell.activityShared.refresh(filters.period) }
         .deleteEntryConfirmation($deleting)
         .sharedDeleteConfirmation($deletingShared)
+    }
+
+    static func waitsForServer(_ search: ActivitySearchModel, filters: ActivityFilters) -> Bool {
+        filters.hasQuery && search.source == .server && search.status == .searching
     }
 
     static func showsServer(_ search: ActivitySearchModel, filters: ActivityFilters) -> Bool {

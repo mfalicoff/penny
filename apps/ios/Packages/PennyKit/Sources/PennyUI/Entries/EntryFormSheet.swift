@@ -274,7 +274,7 @@ private struct EntryForm: View {
     private func futureDateNote(_ draft: EntryDraft) -> some View {
         if let date = CalendarDate.ledgerDate(draft.date), date > shell.today {
             let note = EntryText.futureDate(draft.kind, date: date, today: shell.today)
-            StatusBanner(tone: .info, title: note.title, message: note.message)
+            StatusBanner(tone: .info, title: note.title, message: note.message, symbol: "clock")
                 .accessibilityIdentifier("entryForm.futureDate")
         }
     }

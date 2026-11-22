@@ -124,6 +124,7 @@ struct EntryHouseholdSheet: View {
                 }
             }
             .insetGroupedList()
+            .contentMargins(.top, 4, for: .scrollContent)
             .background(PennyColor.background)
             .navigationTitle("Household")
             .toolbarTitleDisplayModeInline()
@@ -136,6 +137,7 @@ struct EntryHouseholdSheet: View {
             .pennySolidBars()
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(PennyColor.background)
         .accessibilityIdentifier("screen.householdPicker")
     }
 

@@ -214,7 +214,7 @@ final class CardCaptureTests: CardTestCase {
         try await card("iphone-edit-entry") { card in
             try card.penny.openSeptemberEntry("p-party")
             try card.penny.tap(AccessibilityID.Journeys.detailEdit)
-            try card.penny.wait(for: AccessibilityID.Screen.addEntry)
+            try card.penny.wait(for: AccessibilityID.Screen.editEntry)
         }
     }
 

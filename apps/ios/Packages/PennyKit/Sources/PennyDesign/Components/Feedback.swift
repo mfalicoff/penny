@@ -13,13 +13,18 @@ public struct StatusBanner<Action: View>: View {
     private let tone: Tone
     private let title: String
     private let message: String?
+    /// Replaces the tone's icon (the future-date callout's clock, `add-income`).
+    private let symbol: String?
     private let action: Action
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    public init(tone: Tone, title: String, message: String? = nil, @ViewBuilder action: () -> Action) {
+    public init(
+        tone: Tone, title: String, message: String? = nil, symbol: String? = nil, @ViewBuilder action: () -> Action
+    ) {
         self.tone = tone
         self.title = title
         self.message = message
+        self.symbol = symbol
         self.action = action()
     }
 
@@ -80,6 +85,7 @@ public struct StatusBanner<Action: View>: View {
     }
 
     private var icon: String {
+        if let symbol { return symbol }
         switch tone {
         case .offline: "icloud.slash"
         case .error: "exclamationmark.circle.fill"
@@ -108,8 +114,8 @@ public struct StatusBanner<Action: View>: View {
 }
 
 extension StatusBanner where Action == EmptyView {
-    public init(tone: Tone, title: String, message: String? = nil) {
-        self.init(tone: tone, title: title, message: message) { EmptyView() }
+    public init(tone: Tone, title: String, message: String? = nil, symbol: String? = nil) {
+        self.init(tone: tone, title: title, message: message, symbol: symbol) { EmptyView() }
     }
 }
 

@@ -49,6 +49,8 @@ public enum AccessibilityID {
         public static let entryExtras = "screen.entryExtras"
         /// Add entry's Household: personal, or a household to split with.
         public static let householdPicker = "screen.householdPicker"
+        /// The delete confirmation sheet (`delete-confirm` card, MAZ-255).
+        public static let deleteConfirm = "screen.deleteConfirm"
         // Accounts, categories and schedules (MAZ-74).
         public static let accountForm = "screen.accountForm"
         public static let categoryForm = "screen.categoryForm"
@@ -64,7 +66,7 @@ public enum AccessibilityID {
             home, activity, shared, household, householdExpense, trips, trip, addEntry, settings, appearance, currency,
             appLock, recurring, accounts, categories, lock,
             editEntry, entryDetail, activityFilters, categoryPicker, accountPicker, datePicker, split, entryExtras,
-            householdPicker,
+            householdPicker, deleteConfirm,
             accountForm, categoryForm, schedule, scheduleForm,
             moneyFlow, insights, calendar, categorySpending,
         ]

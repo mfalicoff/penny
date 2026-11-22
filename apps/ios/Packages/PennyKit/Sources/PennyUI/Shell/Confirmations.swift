@@ -289,6 +289,8 @@ struct DeleteConfirmationSheet: View {
         .presentationDetents([.height(height)])
         .presentationDragIndicator(.hidden)
         .presentationBackground(PennyColor.surface)
+        // A container, so the screen identifier doesn't replace the buttons' own.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("screen.deleteConfirm")
     }
 }

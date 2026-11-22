@@ -540,6 +540,20 @@ function EntryForm({
                 {draft.tripId === trip.id ? <Icon name="checkmark" size={18} weight={48} /> : null}
               </label>
             ))}
+            {/* The shared trips a new expense can go to, below your own (`iphone-entry-extras`): picking one
+                moves what was typed to that trip's shared form, as the Household row does. */}
+            {householdProps
+              ? sharedTripsOf(householdProps.scope.households).map((trip) => (
+                  <label key={trip.id} className="entry-trip entry-trip--shared">
+                    <input type="radio" name="entry-trip" value={trip.id} checked={false} onChange={() => { householdProps.scope.onChoose({ householdId: trip.id }, householdProps.seed()); }} />
+                    <Icon name="airplane" size={18} />
+                    <span className="entry-trip__name">
+                      {trip.name}
+                      <span className="entry-trip__sub">Shared · {trip.memberCount} {trip.memberCount === 1 ? "person" : "people"}</span>
+                    </span>
+                  </label>
+                ))
+              : null}
           </div>
           {errorText("trip")}
         </fieldset>
@@ -794,6 +808,13 @@ function seededDraft(ledger: Ledger, seed: EntrySeed, kind: Kind = "expense"): E
     receipt: kind === "expense" ? seed.receipt : null,
     ...(category ? { categoryId: category.id } : {}),
   };
+}
+
+/** The shared trips among `households`, the latest start first (More details › Trip, as on iOS). */
+function sharedTripsOf<T extends { name: string; trip?: { startDate: string } | undefined }>(households: T[]): T[] {
+  return households
+    .filter((household) => household.trip)
+    .sort((a, b) => (b.trip?.startDate ?? "").localeCompare(a.trip?.startDate ?? "") || a.name.localeCompare(b.name));
 }
 
 /** What the phone's "Receipt, repeat, trip" row holds, as on iOS: "Receipt · Monthly · Lisbon trip · Note". */
