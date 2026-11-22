@@ -213,12 +213,18 @@ struct SignedOutFlow: View {
             .safeAreaInset(edge: .bottom) {
                 if let onTryDemo, showsTryDemo {
                     Button(action: onTryDemo) {
-                        Label("Take a look around with sample data", systemImage: "play.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minHeight: Metrics.minTouchTarget)
+                        // The card: label-colored text after an outlined copper play icon.
+                        Label {
+                            Text("Take a look around with sample data")
+                                .foregroundStyle(PennyColor.label)
+                        } icon: {
+                            Image(systemName: "play")
+                                .foregroundStyle(PennyColor.tintText)
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: Metrics.minTouchTarget)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(PennyColor.tintText)
                     .padding(.bottom, 8)
                     .accessibilityHint("Opens a temporary demo. Nothing is saved.")
                     .accessibilityIdentifier("auth.tryDemo")

@@ -1707,6 +1707,11 @@
             "summary": "The toast appears on the local save, before the upload",
             "kind": "follow-up",
             "ref": "MAZ-257"
+          },
+          {
+            "summary": "Home doesn't tint the new entry's row in its category color while the toast shows",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
           }
         ]
       },

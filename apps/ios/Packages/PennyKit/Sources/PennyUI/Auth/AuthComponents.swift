@@ -30,7 +30,7 @@ struct ServerChip: View {
             // The server is one element and the button another, so VoiceOver reads the
             // server and can still reach and activate "Change".
             HStack(spacing: 8) {
-                Image(systemName: server?.server.url.scheme == "https" ? "lock.fill" : "server.rack")
+                Image(systemName: "server.rack")
                     .foregroundStyle(PennyColor.secondaryLabel)
                 Text(server.map { ServerText.host($0.server) } ?? "No server chosen")
                     .font(PennyFont.style(.subhead))
