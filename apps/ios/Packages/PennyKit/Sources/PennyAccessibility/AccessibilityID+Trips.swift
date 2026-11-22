@@ -17,7 +17,6 @@ extension AccessibilityID {
         public static let new = "trips.new"
         public static let join = "trips.join"
         public static let featured = "trips.featured"
-        public static let featuredAdd = "trips.featuredAdd"
         public static let featuredShare = "trips.featuredShare"
         public static let notice = "trips.notice"
 
@@ -58,7 +57,7 @@ extension AccessibilityID {
 
         static let all =
             Screen.all + [
-                new, join, featured, featuredAdd, featuredShare, notice, phase, dates, yourSpending, total, outside,
+                new, join, featured, featuredShare, notice, phase, dates, yourSpending, total, outside,
                 addExpense, share,
                 edit, sharedAs, openShared, privateNote, onlyYou, sharedExpenses, formName, formStart, formEnd,
                 formShare, formSave, formClose, formDelete, formDeleteNote, formError, formNameProblem,

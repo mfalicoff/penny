@@ -467,13 +467,4 @@ struct TripModelTests {
         await empty.refresh()
         #expect(empty.loadedExpenses == [], "a trip read with no expenses totals $0.00")
     }
-
-    @Test("whenATripIsPendingAdd_TripDirectory_ShouldHandItOutOnce")
-    func pendingAdd() {
-        let trips = TripFixtures.trips(FakeHouseholds())
-        trips.pendingAdd = "a"
-        #expect(!trips.takePendingAdd(for: "b"))
-        #expect(trips.takePendingAdd(for: "a"))
-        #expect(!trips.takePendingAdd(for: "a"))
-    }
 }

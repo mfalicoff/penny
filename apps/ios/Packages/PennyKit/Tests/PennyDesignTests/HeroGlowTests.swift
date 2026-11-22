@@ -37,4 +37,25 @@ struct HeroGlowTests {
             #expect(color == expected)
         }
     }
+
+    @Test("whenComparedWithTheTripsCard_TripGlow_ShouldUseItsSkyAmberAndRoseInLightAndDark")
+    func matchesTripsCard() throws {
+        let html = try String(
+            contentsOf: Repository.root.appendingPathComponent("docs/design/penny-ios/iphone/trips.html"),
+            encoding: .utf8)
+        let line = try #require(html.split(separator: "\n").first { $0.contains(".glow {") })
+        let pattern = try Regex(#"--glow-\d: rgba\(([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\)"#)
+        let colors = line.matches(of: pattern).map { match in
+            (1...4).compactMap { index in match.output[index].substring.flatMap { Double($0) } }
+        }
+        try #require(colors.count == GlowBlob.trip.count)
+        for (index, (blob, rgba)) in zip(GlowBlob.trip, colors).enumerated() {
+            let copper = GlowBlob.copper[index]
+            #expect(
+                [blob.x, blob.y, blob.radiusX, blob.radiusY] == [copper.x, copper.y, copper.radiusX, copper.radiusY])
+            let expected = RGBA(red: UInt8(rgba[0]), green: UInt8(rgba[1]), blue: UInt8(rgba[2]), alpha: rgba[3])
+            #expect(blob.color.light == expected)
+            #expect(blob.color.dark == expected, "the card sets the trip glow for both appearances")
+        }
+    }
 }
