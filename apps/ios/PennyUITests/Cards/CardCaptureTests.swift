@@ -346,9 +346,10 @@ final class CardCaptureTests: CardTestCase {
     func test_whenSeeded_IphoneAccountForm_ShouldBeCaptured() async throws {
         try await card("iphone-account-form") { card in
             try card.penny.openSettingsPage("accounts", screen: AccessibilityID.Screen.accounts)
-            // The card edits Visa, which entries use, so Remove is locked.
+            // The card edits Visa, which entries and schedules use, so it offers Move and remove.
             try card.penny.tap(AccessibilityID.Organize.account("card"), opening: AccessibilityID.Screen.accountForm)
             try card.penny.wait(for: "accountForm.removeReason")
+            try card.penny.wait(for: "accountForm.moveAndRemove")
         }
     }
 
@@ -362,19 +363,20 @@ final class CardCaptureTests: CardTestCase {
 
     @MainActor
     func test_whenSeeded_IphoneCategoryForm_ShouldBeCaptured() async throws {
-        try await card(
-            "iphone-category-form",
-            note:
-                "The keyboard stays up over part of Icon: Return saves the category, and the form can't scroll it away"
-        ) { card in
+        try await card("iphone-category-form") { card in
             try card.penny.openSettingsPage("categories", screen: AccessibilityID.Screen.categories)
             try card.penny.tap(AccessibilityID.Organize.addCategory, opening: AccessibilityID.Screen.categoryForm)
-            // The card's draft: Coffee, pink, with the cup icon. The name goes last, so the form
-            // shows it: Return would save the category, and the form is too short to scroll the
-            // keyboard away, so the keyboard stays up over part of Icon.
+            // The card's draft: Coffee, with the cup icon in the food color, and no keyboard:
+            // Return puts the keyboard away without saving.
             try card.penny.tap("categoryForm.color.food")
             try card.penny.tap("categoryForm.icon.cafe-outline")
-            try card.penny.type("Coffee", into: AccessibilityID.Organize.categoryName)
+            try card.penny.type("Coffee\n", into: AccessibilityID.Organize.categoryName)
+            guard card.penny.app.keyboards.firstMatch.waitForNonExistence(timeout: 3) else {
+                throw UIExpectationFailed(description: "Return did not put the keyboard away")
+            }
+            // Back to the top, where the card shows the preview over the name.
+            card.penny.app.collectionViews.firstMatch.swipeDown()
+            try card.penny.wait(for: AccessibilityID.Screen.categoryForm)
         }
     }
 

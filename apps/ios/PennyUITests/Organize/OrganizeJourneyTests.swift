@@ -71,6 +71,39 @@ final class OrganizeJourneyTests: PennyUITestCase {
         XCTAssertTrue(again.label.contains("Ceramics"), again.label)
     }
 
+    /// A category in use is removed by moving what uses it first (`account-form`'s Move and
+    /// remove, on the category form): the server gets the entry in the chosen category and no
+    /// removed category, in one change.
+    @MainActor
+    func test_whenACategoryInUseIsMovedAndRemoved_Server_ShouldKeepTheEntryInTheChosenCategory() async throws {
+        let stack = try await stack()
+        let (penny, account) = try await signIn("category-move")
+        let entryID = "move-entry-\(stack.configuration.runID)-\(Device.name)"
+        try await stack.addTransactions(
+            token: account.token,
+            [Stack.Transaction(id: entryID, title: "Paint", cents: 2400, categoryID: "home")])
+        try penny.openActivity()
+        _ = try penny.waitForEntry(entryID)
+
+        try penny.openSettingsPage("categories", screen: AccessibilityID.Screen.categories)
+        try penny.tap(AccessibilityID.Organize.category("home"))
+        try penny.wait(for: AccessibilityID.Screen.categoryForm)
+        try penny.tap("categoryForm.moveTo")
+        let groceries = penny.app.buttons["Groceries"]
+        XCTAssertTrue(groceries.waitForExistence(timeout: Penny.timeout))
+        groceries.tap()
+        try penny.tap("categoryForm.moveAndRemove")
+        try penny.tap("categoryForm.removeConfirm")
+        try penny.waitForAbsence(of: AccessibilityID.Screen.categoryForm)
+        try penny.waitForAbsence(of: AccessibilityID.Organize.category("home"))
+
+        let ledger = try await stack.waitForLedger(token: account.token, timeout: 30) { ledger in
+            !LedgerJSON.categories(ledger).contains { $0["id"] as? String == "home" }
+        }
+        XCTAssertEqual(LedgerJSON.transaction(ledger, id: entryID)?["categoryId"] as? String, "groceries")
+        screenshot("category-moved-and-removed")
+    }
+
     /// A new label-only account reaches the server with its name and default type.
     @MainActor
     func test_whenAnAccountIsCreated_Accounts_ShouldSaveItOnTheServer() async throws {
