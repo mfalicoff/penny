@@ -55,6 +55,8 @@ struct CategoriesListView: View {
         }
         .background(PennyColor.background)
         .navigationTitle("Categories")
+        // The card's large title; Settings' sheet root is inline, and a pushed page would inherit it.
+        .toolbarTitleDisplayModeLarge()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add category", systemImage: "plus") { form = CategoryFormRequest(category: nil, kind: kind) }
@@ -109,8 +111,10 @@ private struct CategoryRow: View {
 /// }
 /// ```
 ///
-/// A failed save keeps the sheet and the draft. Editing offers Remove, unavailable with the
-/// reason while entries or schedules use the category; their kind is locked for the same reason.
+/// A failed save keeps the sheet and the draft. Editing offers Remove; while entries or
+/// schedules use the category, it offers "Move them to" another category of its kind and "Move
+/// and remove" instead (`MoveAndRemoveSection`), and the kind is locked. Return puts the
+/// keyboard away rather than saving, so the color and icon stay in view.
 struct CategoryFormSheet: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
@@ -139,11 +143,12 @@ struct CategoryFormSheet: View {
                         .listRowBackground(Color.clear)
                 }
                 failureSection
-                CardSection("Name") {
+                // `category-form`: the name field has no header; the preview above names it.
+                Section {
                     TextField("Coffee, Rent, Side gig", text: $model.name)
                         .focused($nameFocused)
                         .submitLabel(.done)
-                        .onSubmit(save)
+                        .onSubmit { nameFocused = false }
                         .frame(minHeight: Metrics.minTouchTarget)
                         .accessibilityLabel("Category name")
                         .accessibilityIdentifier("categoryForm.name")
@@ -164,28 +169,36 @@ struct CategoryFormSheet: View {
                     }
                 }
                 CardSection("Color") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 48), spacing: 10)], spacing: 10) {
+                    // `category-form`: the eight colors on two rows of four, the icons six to a row.
+                    LazyVGrid(columns: Self.columns(4), spacing: 10) {
                         ForEach(CategoryStyle.pickerColors, id: \.self) { color in
-                            ColorSwatch(color: color, selected: model.paletteColor == color) { model.choose(color) }
+                            ColorSwatch(color: color, selected: model.paletteColor == color) {
+                                nameFocused = false
+                                model.choose(color)
+                            }
                         }
                     }
                     .padding(.vertical, 6)
                 }
                 CardSection("Icon") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 10)], spacing: 10) {
+                    LazyVGrid(columns: Self.columns(6), spacing: 8) {
                         ForEach(CategoryStyle.pickerIcons, id: \.self) { icon in
                             IconChoice(
                                 icon: icon, tint: tint, selected: CategoryStyle.sameIcon(model.icon, icon)
-                            ) { model.icon = icon }
+                            ) {
+                                nameFocused = false
+                                model.icon = icon
+                            }
                         }
                     }
                     .padding(.vertical, 6)
                 }
                 if !model.isNew {
-                    removeSection(usage: usage)
+                    removeSection(usage: usage, ledger: ledger)
                 }
             }
             .insetGroupedList()
+            .scrollDismissesKeyboard(.interactively)
             .background(PennyColor.background)
             .disabled(model.isSaving)
             .navigationTitle(model.title)
@@ -206,10 +219,20 @@ struct CategoryFormSheet: View {
                 "Remove \(model.original?.name ?? "category")?", isPresented: $confirmingRemoval,
                 titleVisibility: .visible
             ) {
-                Button("Remove category", role: .destructive, action: remove)
-                    .accessibilityIdentifier("categoryForm.removeConfirm")
+                if usage.isInUse {
+                    Button("Move and remove", role: .destructive) { moveAndRemove(ledger) }
+                        .accessibilityIdentifier("categoryForm.removeConfirm")
+                } else {
+                    Button("Remove category", role: .destructive, action: remove)
+                        .accessibilityIdentifier("categoryForm.removeConfirm")
+                }
             } message: {
-                Text("Nothing uses this category, so no entry changes.")
+                if usage.isInUse, let target = model.moveTo.flatMap(ledger.category(id:)) {
+                    let name = model.original?.name ?? "this category"
+                    Text("\(OrganizeText.uses(usage)) move to \(target.name), then \(name) is removed.")
+                } else {
+                    Text("Nothing uses this category, so no entry changes.")
+                }
             }
             .pennySolidBars()
         }
@@ -217,6 +240,10 @@ struct CategoryFormSheet: View {
         .interactiveDismissDisabled(model.isSaving)
         .onAppear { if model.isNew { nameFocused = true } }
         .accessibilityIdentifier("screen.categoryForm")
+    }
+
+    private static func columns(_ count: Int) -> [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: count == 6 ? 8 : 10), count: count)
     }
 
     @ViewBuilder
@@ -230,23 +257,17 @@ struct CategoryFormSheet: View {
         }
     }
 
-    private func removeSection(usage: RecordUsage) -> some View {
-        let note = CategoryFormModel.removalNote(name: model.original?.name ?? "", usage: usage)
-        return Section {
-            Button(role: .destructive) {
-                confirmingRemoval = true
-            } label: {
-                Label("Remove category", systemImage: note == nil ? "trash" : "lock")
-                    .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
-            }
-            .disabled(note != nil)
-            .accessibilityHint(note ?? "")
-            .accessibilityIdentifier("categoryForm.remove")
-        } footer: {
-            if let note {
-                Text(note).accessibilityIdentifier("categoryForm.removeReason")
-            }
-        }
+    private func removeSection(usage: RecordUsage, ledger: Ledger) -> some View {
+        let targets = model.moveTargets(in: ledger)
+        return MoveAndRemoveSection(
+            noun: "category",
+            note: CategoryFormModel.removalNote(
+                name: model.original?.name ?? "", usage: usage, canMove: !targets.isEmpty),
+            targets: targets.map { ($0.id, $0.name) }, moveTo: $model.moveTo,
+            ids: .init(
+                moveTo: "categoryForm.moveTo", moveAndRemove: "categoryForm.moveAndRemove",
+                remove: "categoryForm.remove", reason: "categoryForm.removeReason")
+        ) { confirmingRemoval = true }
     }
 
     private func save() {
@@ -260,6 +281,12 @@ struct CategoryFormSheet: View {
     private func remove() {
         Task {
             if await model.remove(with: { await shell.commit($0, summary: $1) }) { dismiss() }
+        }
+    }
+
+    private func moveAndRemove(_ ledger: Ledger) {
+        Task {
+            if await model.moveAndRemove(in: ledger, with: { await shell.commit($0, summary: $1) }) { dismiss() }
         }
     }
 }
@@ -297,7 +324,8 @@ private struct IconChoice: View {
             Image(systemName: CategoryStyle.symbol(forIonicon: icon))
                 .font(.title3)
                 .foregroundStyle(selected ? Color.white : PennyColor.label)
-                .frame(maxWidth: .infinity, minHeight: 52)
+                .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
+                .aspectRatio(1, contentMode: .fit)
                 .background(
                     selected ? tint : PennyColor.fill,
                     in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)

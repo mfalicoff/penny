@@ -68,6 +68,8 @@ struct RecurringListView: View {
         }
         .background(PennyColor.background)
         .navigationTitle("Recurring")
+        // The card's large title; Settings' sheet root is inline, and a pushed page would inherit it.
+        .toolbarTitleDisplayModeLarge()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add schedule", systemImage: "plus") { addingSchedule = true }
@@ -395,9 +397,10 @@ private struct ScheduleAmount: View {
     }
 }
 
-/// A schedule's page (`schedule` card): what it records and when, the next dates, the
+/// A schedule's page (`schedule-detail` card): what it records and when, the next dates, the
 /// category and account, Edit and a separate Pause/Resume, and Remove with its own
-/// confirmation (`remove-schedule`). Removing keeps the entries it already recorded.
+/// confirmation (`remove-schedule`). Removing keeps the entries it already recorded. The bar
+/// has no title (the hero leads with the name) and a … menu with the same three actions.
 struct ScheduleDetailView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
@@ -410,6 +413,9 @@ struct ScheduleDetailView: View {
         WorkspaceContent { ledger in
             if let rule = ledger.rule(id: id) {
                 content(rule, ledger: ledger)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) { moreMenu(rule) }
+                    }
                     .sheet(isPresented: $editing) { ScheduleFormSheet(rule: rule).environment(shell) }
                     .confirmationDialog(
                         "Remove \(rule.title)?", isPresented: $confirmingRemoval, titleVisibility: .visible
@@ -429,6 +435,10 @@ struct ScheduleDetailView: View {
         .background(PennyColor.background)
         .navigationTitle(shell.workspace.load.ledger?.rule(id: id)?.title ?? "Schedule")
         .inlineNavigationTitle()
+        .toolbar {
+            // `iphone-schedule-detail`: no title over the hero, which already leads with the name.
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
+        }
         .accessibilityIdentifier("screen.schedule")
     }
 
@@ -453,8 +463,10 @@ struct ScheduleDetailView: View {
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .combine)
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 actions(rule)
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
             if !rule.active {
                 Section {
@@ -477,7 +489,7 @@ struct ScheduleDetailView: View {
                 let dates = Self.upcoming(rule, ledger: ledger, today: shell.today)
                 ForEach(Array(dates.enumerated()), id: \.offset) { index, date in
                     HStack {
-                        Text(Self.longDate(date))
+                        Text(Self.longDate(date, today: shell.today))
                         Spacer()
                         if index == 0 {
                             Text(ScheduleText.relative(date, today: shell.today)).font(.footnote)
@@ -523,6 +535,25 @@ struct ScheduleDetailView: View {
         .insetGroupedList()
     }
 
+    private func moreMenu(_ rule: RecurringRule) -> some View {
+        Menu {
+            Button("Edit", systemImage: "square.and.pencil") { editing = true }
+            Button(
+                rule.active ? "Pause" : "Resume", systemImage: rule.active ? "pause" : "play"
+            ) { toggle(rule) }
+            Button("Remove schedule", systemImage: "trash", role: .destructive) { confirmingRemoval = true }
+        } label: {
+            Label("More", systemImage: "ellipsis")
+        }
+        .neutralToolbarGlyph()
+        .accessibilityIdentifier("schedule.more")
+    }
+
+    private func toggle(_ rule: RecurringRule) {
+        let (change, summary) = ScheduleActions.toggle(rule, today: shell.today)
+        Task { failure = await shell.commit(change, summary: summary) }
+    }
+
     private func actions(_ rule: RecurringRule) -> some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 12) { actionButtons(rule) }
@@ -536,10 +567,7 @@ struct ScheduleDetailView: View {
             .accessibilityIdentifier("schedule.edit")
         PennyButton(
             rule.active ? "Pause" : "Resume", systemImage: rule.active ? "pause.fill" : "play.fill", role: .secondary
-        ) {
-            let (change, summary) = ScheduleActions.toggle(rule, today: shell.today)
-            Task { failure = await shell.commit(change, summary: summary) }
-        }
+        ) { toggle(rule) }
         .accessibilityIdentifier("schedule.toggleActive")
     }
 
@@ -558,7 +586,10 @@ struct ScheduleDetailView: View {
         return resumed?.rule(id: rule.id)?.upcomingDates(3) ?? []
     }
 
-    static func longDate(_ date: CalendarDate) -> String {
-        DayText.date(date).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
+    /// "Tue, Nov 18", as the card lists the next dates, into the next year too ("Sun, Jan 18").
+    /// A date a year or more away (a yearly schedule's) adds its year: "Thu, Nov 18, 2027".
+    static func longDate(_ date: CalendarDate, today: CalendarDate) -> String {
+        let format = Date.FormatStyle.dateTime.weekday(.abbreviated).month(.abbreviated).day()
+        return DayText.date(date).formatted(date.days(since: today) < 365 ? format : format.year())
     }
 }

@@ -527,7 +527,7 @@ const cards: Record<string, Card> = {
   "iphone-account-form": {
     open: async ({ page: p }) => {
       await page(p, "/accounts", "Accounts");
-      // The card edits Visa, which entries and schedules use, so Remove is locked.
+      // The card edits Visa, which entries and schedules use, so it offers Move and remove.
       await p.getByRole("button", { name: "Edit Visa" }).click();
       const dialog = p.getByRole("dialog", { name: /account/i });
       await expect(dialog.getByText(/^Visa is used by /)).toBeVisible();
