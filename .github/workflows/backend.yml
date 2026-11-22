@@ -136,3 +136,21 @@ jobs:
           persist-credentials: false
       - name: Decode fixtures strictly and verify manifest hashes
         run: swift test --package-path contracts/swift
+
+  # The flake's self-hosting packages (docs/self-hosting/nixos.md). Builds the API and the web
+  # app with their pinned dependency lists and evaluates every check, so a NuGet or npm
+  # lockfile change without a matching nix/packages update fails here. The NixOS VM test
+  # needs KVM and stays local: `nix build .#checks.x86_64-linux.nixos`.
+  nix:
+    name: Nix packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+      - name: Evaluate the flake
+        run: nix flake check --no-build
+      - name: Build the API and the web app
+        run: nix build .#penny-api .#penny-web --no-link -L

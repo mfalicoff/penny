@@ -215,6 +215,8 @@ async function startNativePostgres(state, secrets) {
     "", "# penny test environment (scripts/test-env)",
     "listen_addresses = '127.0.0.1'", `port = ${state.databasePort}`, "unix_socket_directories = ''",
     "fsync = off", "synchronous_commit = off", "full_page_writes = off",
+    // As in deploy/compose.yaml: a statement whose client gave up stops within a second.
+    "client_connection_check_interval = 1s",
     // A failed statement is not echoed into the log: the role setup sets passwords, and the
     // log is collected as an artifact.
     "log_min_error_statement = panic", "",
@@ -412,7 +414,7 @@ async function startPostgresContainer(state, secrets) {
     "--publish", "127.0.0.1::5432", "--tmpfs", "/var/lib/postgresql",
     "--env", `POSTGRES_DB=${state.database}`, "--env", "POSTGRES_USER=postgres",
     "--env", "POSTGRES_PASSWORD",
-    state.image,
+    state.image, "postgres", "-c", "client_connection_check_interval=1s",
   ], {
     env: { ...process.env, POSTGRES_PASSWORD: secrets.admin },
   });
