@@ -60,8 +60,9 @@ struct ActivityView: View {
         .background(PennyColor.background)
         .navigationTitle("Activity")
         .toolbar {
-            // iPhone: the filters button in the bar (`activity` card); on iPad it is the last chip.
-            if sizeClass != .regular {
+            // iPhone: the filters button in the bar (`activity` card); on iPad it is the last chip. While
+            // the search shows only the active filters, they are removed there instead (`search-empty`).
+            if sizeClass != .regular, !ActivityChips.showsActive(shell.activityFilters) {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Filters", systemImage: "slider.horizontal.3") { filtersPresented = true }
                         .neutralToolbarGlyph()

@@ -86,7 +86,7 @@ public struct StatusBanner<Action: View>: View {
 
     private var icon: String {
         if let symbol { return symbol }
-        switch tone {
+        return switch tone {
         case .offline: "icloud.slash"
         case .error: "exclamationmark.circle.fill"
         case .warning: "exclamationmark.circle"
