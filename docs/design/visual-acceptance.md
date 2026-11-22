@@ -30,7 +30,7 @@ node docs/design/penny-ios/render.mjs 2 iphone-home  # only cards whose id conta
 node docs/design/penny-ios/render.mjs 2 --check    # re-render and compare with the committed images
 ```
 
-Playwright comes from the repository root or from `apps/web` (`npm ci` there). On NixOS, set `PENNY_DESIGN_CHROME` if Playwright's Chromium doesn't run.
+Playwright comes from the repository root or from `apps/web` (`npm ci` there). On NixOS, set `PENNY_DESIGN_CHROME` if Playwright's Chromium doesn't run; `glow-contrast.mjs` uses it too.
 
 Each card is rendered at its `@dsCard` viewport at 2x, full page, in every appearance its state lists. The rendering is pinned so that it doesn't depend on the machine:
 

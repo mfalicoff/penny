@@ -139,11 +139,11 @@
     },
     {
       "path": "docs/design/penny-ios/glow-contrast.mjs",
-      "sha256": "0e490843d9513411b59dfc0241da03702014296976f07a342e9ba2d0c443d199"
+      "sha256": "5e350e1447e27efe7943561278893c1231723647691abfa2ea4dc8b75e9e73f1"
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "c8ce55e6ba6adb524ff8cde45c61d8e562edc93577422db5169b497fe9dbde6b"
+      "sha256": "36f5124eb2488a7bb509a1bfa08d83ca77bc59f63cb362b7145495411ec2f040"
     }
   ],
   "tokens": {
