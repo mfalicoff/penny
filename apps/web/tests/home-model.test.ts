@@ -2,7 +2,7 @@ import { emptyLedger, type Ledger, type Recurring, type Transaction } from "@dom
 import { describe, expect, it } from "vitest";
 import type { SharedRow } from "../src/api/projection";
 import { danaOctober, totalsOf } from "./fakes/futureIncome";
-import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthReport, monthsEnding, shortLabel, spendingChange } from "../src/features/home/model";
+import { calendarDays, categoryComparison, flowLabel, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthReport, monthsEnding, shortLabel, spendingChange } from "../src/features/home/model";
 
 /**
  * Home and Insights reporting (MAZ-92) against fixtures: the shared domain's month breakdown over
@@ -193,6 +193,12 @@ describe("grouping and labels", () => {
     expect(flow.destinations.filter((node) => node.id.startsWith("expense:"))).toHaveLength(6);
     expect(flow.destinations.find((node) => node.id === "expense:overflow")?.amount).toBe(1000 + 1001 + 1002 + 1003);
     expect(flow.expense).toBe(entries.reduce((sum, item) => sum + item.share, 0));
+  });
+
+  it("draws the grouped categories as Other expenses, short enough not to be shortened", () => {
+    expect(flowLabel({ id: "expense:overflow", label: "Other expense categories", amount: 1, color: "#839087" })).toBe("Other expenses");
+    expect(flowLabel({ id: "income:overflow", label: "Other income categories", amount: 1, color: "#839087" })).toBe("Other income");
+    expect(flowLabel({ id: "expense:groceries", label: "Groceries", amount: 1, color: "#0FA3A3" })).toBe("Groceries");
   });
 
   it("shortens long labels on the chart only", () => {

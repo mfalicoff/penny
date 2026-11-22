@@ -4,7 +4,7 @@ import type { Category } from "@domain/ledger.ts";
 import { cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
-import { flowColor, flowNodeIcon, flowNodeSummary, percentOf, shortLabel } from "./model";
+import { flowColor, flowLabel, flowNodeIcon, flowNodeSummary, percentOf, shortLabel } from "./model";
 
 type Side = "in" | "out";
 type Node = FlowNode & { side: Side };
@@ -64,7 +64,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action, ca
   const [selected, setSelected] = useState<string | null>(null);
   // A pointer over a band emphasises it, as the cards draw a hovered band (`web-home`), without selecting it.
   const [hovered, setHovered] = useState<string | null>(null);
-  const nodes: Node[] = useMemo(() => [...flow.sources.map((node) => ({ ...node, side: "in" as const })), ...flow.destinations.map((node) => ({ ...node, side: "out" as const }))], [flow]);
+  const nodes: Node[] = useMemo(() => [...flow.sources.map((node) => ({ ...node, label: flowLabel(node), side: "in" as const })), ...flow.destinations.map((node) => ({ ...node, label: flowLabel(node), side: "out" as const }))], [flow]);
   const active = nodes.find((node) => node.id === selected) ?? null;
   const money = (cents: number) => formatCents(cents, currency);
   const describe = (node: Node) => `${node.side === "in" ? "Came in" : "Went out"}: ${node.label}, ${money(node.amount)}, ${flowNodeSummary(node, flow, node.side)}`;
@@ -228,7 +228,7 @@ function Sankey({ flow, selected, hovered, onHover, currency, describe, toggle, 
   const { width, left: leftX, right: rightX } = geometry;
   const middleX = width / 2 - BAR / 2;
   const layout = useMemo(() => layoutMoneyFlow(flow), [flow]);
-  const positioned = [...layout.sources.map((node) => ({ ...node, side: "in" as const })), ...layout.destinations.map((node) => ({ ...node, side: "out" as const }))];
+  const positioned = [...layout.sources.map((node) => ({ ...node, label: flowLabel(node), side: "in" as const })), ...layout.destinations.map((node) => ({ ...node, label: flowLabel(node), side: "out" as const }))];
   // The selection wins over the pointer; either one emphasises its band and dims the rest.
   const emphasis = selected ?? hovered;
   const opacity = (id: string) => (!emphasis ? 0.34 : emphasis === id ? 0.72 : 0.08);
