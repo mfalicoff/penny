@@ -5,6 +5,7 @@ import { Button, ChoiceGroup, cx } from "../../design/controls";
 import { Icon, type IconName } from "../../design/Icon";
 import { categoryTint } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
+import { RemoveSection } from "./RemoveSection";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import {
   CATEGORY_COLORS,
@@ -56,7 +57,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
   const [busy, setBusy] = useState<"save" | "remove" | null>(null);
   const [moveTo, setMoveTo] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
-  const ids = { form: useId(), name: useId(), nameError: useId(), kindNote: useId(), color: useId(), icon: useId(), remove: useId(), moveTo: useId() };
+  const ids = { form: useId(), name: useId(), nameError: useId(), kindNote: useId(), color: useId(), icon: useId() };
 
   const usage = category ? usageOf(categoryUsage(ledger), category.id) : null;
   const used = usage ? inUse(usage) : false;
@@ -219,9 +220,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
                     setColor(option.value);
                   }}
                 />
-                <span className="organize-swatch__dot" style={{ background: categoryTint({ color: option.value, id: category && option.value === category.color ? category.id : undefined }) }} aria-hidden="true">
-                  <Icon name="checkmark" size={16} weight={56} />
-                </span>
+                <span className="organize-swatch__dot" style={{ background: categoryTint({ color: option.value, id: category && option.value === category.color ? category.id : undefined }) }} aria-hidden="true" />
               </label>
             ))}
           </div>
@@ -251,54 +250,19 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
       </form>
 
       {category ? (
-        <section className="organize-remove" aria-labelledby={ids.remove}>
-          <h3 id={ids.remove}>Remove category</h3>
-          {used && usage ? (
-            <>
-              <p className="form-hint">
-                {category.name} is used by {usageSentence(usage)}. Move them to another {kindLabels[category.kind].toLowerCase()} category to remove it. Renaming keeps every
-                entry in it.
-              </p>
-              {others.length ? (
-                <div className="organize-remove__move">
-                  <div className="form-field">
-                    <label htmlFor={ids.moveTo}>Move them to</label>
-                    <select
-                      id={ids.moveTo}
-                      value={moveTo}
-                      onChange={(event) => {
-                        setMoveTo(event.currentTarget.value);
-                      }}
-                    >
-                      <option value="">Choose a category</option>
-                      {others.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Button variant="danger" icon="trash" onClick={remove} busy={busy === "remove"} disabled={!moveTo || (busy !== null && busy !== "remove")}>
-                    {busy === "remove" ? "Removing…" : "Move and remove"}
-                  </Button>
-                </div>
-              ) : (
-                <p className="note">
-                  <Icon name="lock-closed" size={14} /> Add another {kindLabels[category.kind].toLowerCase()} category first, then move them there.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="form-hint">Nothing uses {category.name}. Shared expenses keep their own copy of a category, so removing it changes none of them.</p>
-              <div>
-                <Button variant="danger-quiet" icon="trash" onClick={remove} busy={busy === "remove"} disabled={busy !== null && busy !== "remove"}>
-                  {busy === "remove" ? "Removing…" : "Remove category"}
-                </Button>
-              </div>
-            </>
-          )}
-        </section>
+        <RemoveSection
+          label="Remove category"
+          others={used && usage ? others : undefined}
+          moveTo={moveTo}
+          onMoveTo={setMoveTo}
+          onRemove={remove}
+          busy={busy}
+          note={
+            used && usage
+              ? `${category.name} is used by ${usageSentence(usage)}.${others.length ? "" : ` Add another ${kindLabels[category.kind].toLowerCase()} category first, then move them there.`}`
+              : `Nothing uses ${category.name}. Shared expenses keep their own copy of a category, so removing it changes none of them.`
+          }
+        />
       ) : null}
     </Dialog>
   );

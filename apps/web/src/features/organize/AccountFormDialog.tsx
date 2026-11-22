@@ -4,6 +4,7 @@ import { accountTypes, uid, type AccountType, type Ledger, type PaymentAccount }
 import { Button, ChoiceGroup } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
+import { RemoveSection } from "./RemoveSection";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import { ACCOUNT_TYPE_ICONS, accountNameProblem, accountTypeLabels, accountUsage, inUse, moveAccountAndRemove, NAME_MAX, RECORD_LIMIT, restoreAccount, usageOf, usageSentence, type Moved } from "./model";
 import { describeSaveError, detailOf, savedDetail, type LedgerWorkspace } from "./workspace";
@@ -36,7 +37,7 @@ export function AccountFormDialog({ account, workspace, onClose, onSaved }: Acco
   const [busy, setBusy] = useState<"save" | "remove" | null>(null);
   const [moveTo, setMoveTo] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
-  const ids = { form: useId(), name: useId(), nameHint: useId(), nameError: useId(), remove: useId(), moveTo: useId(), typeNote: useId() };
+  const ids = { form: useId(), name: useId(), nameHint: useId(), nameError: useId(), typeNote: useId() };
 
   const usage = account ? usageOf(accountUsage(ledger), account.id) : null;
   const used = usage ? inUse(usage) : false;
@@ -170,53 +171,19 @@ export function AccountFormDialog({ account, workspace, onClose, onSaved }: Acco
       </form>
 
       {account ? (
-        <section className="organize-remove" aria-labelledby={ids.remove}>
-          <h3 id={ids.remove}>Remove account</h3>
-          {used && usage ? (
-            <>
-              <p className="form-hint">
-                {account.name} is used by {usageSentence(usage)}. Move them to another account to remove it. Renaming keeps every link.
-              </p>
-              {others.length ? (
-                <div className="organize-remove__move">
-                  <div className="form-field">
-                    <label htmlFor={ids.moveTo}>Move them to</label>
-                    <select
-                      id={ids.moveTo}
-                      value={moveTo}
-                      onChange={(event) => {
-                        setMoveTo(event.currentTarget.value);
-                      }}
-                    >
-                      <option value="">Choose an account</option>
-                      {others.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Button variant="danger" icon="trash" onClick={remove} busy={busy === "remove"} disabled={!moveTo || (busy !== null && busy !== "remove")}>
-                    {busy === "remove" ? "Removing…" : "Move and remove"}
-                  </Button>
-                </div>
-              ) : (
-                <p className="note">
-                  <Icon name="lock-closed" size={14} /> Add another account first, then move them there.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="form-hint">Nothing uses {account.name}. A shared expense you paid with it keeps it on the server until that link is removed.</p>
-              <div>
-                <Button variant="danger-quiet" icon="trash" onClick={remove} busy={busy === "remove"} disabled={busy !== null && busy !== "remove"}>
-                  {busy === "remove" ? "Removing…" : "Remove account"}
-                </Button>
-              </div>
-            </>
-          )}
-        </section>
+        <RemoveSection
+          label="Remove account"
+          others={used && usage ? others : undefined}
+          moveTo={moveTo}
+          onMoveTo={setMoveTo}
+          onRemove={remove}
+          busy={busy}
+          note={
+            used && usage
+              ? `${account.name} is used by ${usageSentence(usage)}.${others.length ? "" : " Add another account first, then move them there."}`
+              : `Nothing uses ${account.name}. A shared expense you paid with it keeps it on the server until that link is removed.`
+          }
+        />
       ) : null}
     </Dialog>
   );

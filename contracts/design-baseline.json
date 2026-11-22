@@ -95,7 +95,7 @@
     },
     {
       "path": "docs/design/penny-ios/assets/icons.js",
-      "sha256": "d8ba85fa7030535dcabe133e5efc52580c50c235f908d922d702b203e4a5e7a0"
+      "sha256": "e7526a8c1d4cb70ed2a38039040a0a4d5183840f3c8cb7224faf2678cf344d67"
     },
     {
       "path": "docs/design/penny-ios/assets/sankey.js",
@@ -115,7 +115,7 @@
     },
     {
       "path": "design-kit/src/icons.ts",
-      "sha256": "36d0f48285b8fdb19cd19eba154826d59db001edb19dd7df08ac4556883351df"
+      "sha256": "525110886021bbdcd1af82ba91ad820fcc5dde0c0893533160cc0b59029b253a"
     },
     {
       "path": "design-kit/src/index.ts",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "754e4beaf7681de6815d60d0115de66401ee2bb80fc0813de407eb16679b58da"
+      "sha256": "7901bcf2e670bcbfce92a7aa438bdc3b89c290bf81182b4806d754ded9732c0b"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -139,11 +139,11 @@
     },
     {
       "path": "docs/design/penny-ios/glow-contrast.mjs",
-      "sha256": "0e490843d9513411b59dfc0241da03702014296976f07a342e9ba2d0c443d199"
+      "sha256": "5e350e1447e27efe7943561278893c1231723647691abfa2ea4dc8b75e9e73f1"
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "4a494cca3ba3d54c700982744c75ab28a167fa496ec307cf03d39c310649bbcb"
+      "sha256": "36f5124eb2488a7bb509a1bfa08d83ca77bc59f63cb362b7145495411ec2f040"
     }
   ],
   "tokens": {
@@ -828,7 +828,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/shared.html",
-      "sha256": "68c09ccc28c112d615dfdd725d8f2c9ed33ce06f6b78a68c47724d40c932c7d8",
+      "sha256": "b27285051ced52a9424c8432912b4532831f9cd0946d0da70bba9ebfb59ae639",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",
@@ -851,7 +851,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/shared-balances.html",
-      "sha256": "17450bc668774199d854d328b17aee98a1bc58c768d205231756a05a990a4204",
+      "sha256": "270892a574c1644221bbe9bf1b20944710f5293082d3ea293da2643c41c8cbd2",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",
@@ -1754,7 +1754,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/shared.html",
-      "sha256": "18d77f7ff32afe9cc4605ada77f93ee8e49240ed699e302cb445123fa02cb050",
+      "sha256": "b98e8c3da9c7f386e3a1527b84818c3885fdf28c6181f1c526ffd5b06e63e865",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",

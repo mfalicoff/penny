@@ -118,9 +118,11 @@
   border: 0;
 }
 
+/* Two rows of four, as on the card. */
 .organize-swatches__options {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(44px, 1fr));
+  justify-items: center;
   gap: 6px;
 }
 
@@ -157,14 +159,12 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  color: transparent;
 }
 
 .organize-swatch input:checked + .organize-swatch__dot {
   box-shadow:
     0 0 0 3px var(--pk-surface),
     0 0 0 5.5px var(--pk-label);
-  color: #fff;
 }
 
 .organize-icon__glyph {
@@ -202,32 +202,109 @@
 }
 
 /* ---------- remove section ---------- */
+/*
+ * Removing an account or category (cards `iphone-account-form`, `iphone-category-form`): one solid
+ * group (Move them to with its choice on the right, then the centered action) and the note under it.
+ */
 .organize-remove {
   display: grid;
-  gap: 8px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 0.5px solid var(--pk-separator);
+  gap: 7px;
+  margin-top: 24px;
 }
 
-.organize-remove h3 {
-  margin: 0;
-  font-size: 0.9375rem;
+.organize-remove__group {
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--pk-surface);
 }
 
-.organize-remove__move {
+.organize-remove__row,
+.organize-remove__action,
+.organize-remove__locked {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 1.0625rem;
 }
 
-.organize-remove__move .form-field {
-  flex: 1 1 200px;
+.organize-remove__row + .organize-remove__action::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
 }
 
-.organize-remove .note .icon {
-  vertical-align: -2px;
+.organize-remove__row > label {
+  flex: 1;
+  min-width: 0;
+}
+
+.organize-remove__choice {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pk-label-2);
+}
+
+/* The native select keeps its keyboard and picker; it reads as the card's value and chevron. */
+.organize-remove__choice select {
+  min-height: 44px;
+  max-width: 12em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  text-align: end;
+  appearance: none;
+  cursor: pointer;
+}
+
+.organize-remove__action,
+.organize-remove__locked {
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--pk-danger);
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.organize-remove__action {
+  cursor: pointer;
+}
+
+.organize-remove__action:disabled {
+  color: var(--pk-label-3);
+  cursor: default;
+}
+
+.organize-remove__locked {
+  color: var(--pk-label-2);
+}
+
+.organize-remove__action:focus-visible,
+.organize-remove__choice select:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -2px;
+}
+
+.organize-remove__note {
+  margin: 0;
+  padding: 0 20px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .inline-create {
