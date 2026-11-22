@@ -30,7 +30,7 @@ struct AuthViewTests {
     func methods() throws {
         let server = try #require(server)
         let sso = ServerCheck(server: server, version: "2.0.0", singleSignOn: true, singleSignOnLabel: "Company ID")
-        #expect(ServerConnectView.methods(sso) == "Email · Company ID")
+        #expect(ServerConnectView.methods(sso) == "Email · SSO")
         let email = ServerCheck(server: server, version: "2.0.0", singleSignOn: false, singleSignOnLabel: nil)
         #expect(ServerConnectView.methods(email) == "Email")
     }
@@ -38,5 +38,18 @@ struct AuthViewTests {
     @Test("whenServerHasAPort_ServerChip_ShouldShowHostAndPort")
     func host() throws {
         #expect(ServerText.host(try #require(server)) == "penny.example.test:8443")
+    }
+
+    @Test("whenPasswordIsTyped_PasswordStrength_ShouldFillTheMeterFromTheLengthRuleUp")
+    func passwordStrength() {
+        #expect(PasswordStrength.score("") == 0)
+        #expect(PasswordStrength.score("short1!A") == 1)
+        #expect(!PasswordStrength.meetsLength("123456789"))
+        #expect(PasswordStrength.meetsLength("1234567890"))
+        #expect(PasswordStrength.score("abcdefghij") == 1)
+        #expect(PasswordStrength.score("abcdefghi1") == 2)
+        // The capture's sample: long, with a symbol, no digits.
+        #expect(PasswordStrength.score("penny-card-pass") == 3)
+        #expect(PasswordStrength.score("Penny-card-pass-2026") == PasswordStrength.maximum)
     }
 }

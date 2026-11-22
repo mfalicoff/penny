@@ -1,3 +1,4 @@
+import PennyDesign
 import SwiftUI
 
 /// iOS keyboard and navigation traits for the sign-in screens. PennyUI also compiles for the
@@ -51,6 +52,17 @@ extension View {
             toolbar(.hidden, for: .navigationBar)
         #else
             self
+        #endif
+    }
+
+    /// The app background behind a signed-out page, including a pushed page's container, which
+    /// is otherwise the system white where the keyboard was while it goes away.
+    func signedOutBackground() -> some View {
+        #if os(iOS)
+            background { PennyColor.background.ignoresSafeArea() }
+                .containerBackground(PennyColor.background, for: .navigation)
+        #else
+            background { PennyColor.background.ignoresSafeArea() }
         #endif
     }
 }

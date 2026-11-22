@@ -170,12 +170,16 @@ private struct ActivityList: View {
         List {
             Section {
                 SyncBanner().listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 DemoBanner().listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 ActivityChips(filters: $shell.activityFilters, ledger: ledger, showFilters: showFilters)
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 ActivityTotals(summary: local.summary, expectedIncome: local.expectedIncome, currency: currency)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 if server == nil {
                     ActivitySharedNote(model: shell.activityShared, period: filters.period)
                         .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)

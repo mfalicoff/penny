@@ -169,8 +169,8 @@ public final class AccountWorkspace: LedgerWorkspace {
         static let keptOnDevice = "Your changes are kept on this device."
         static let offline = "Your changes are saved on this device and sync when you're back online."
         static let unreachable = "Penny couldn't reach your server. Your changes are kept and Penny will try again."
-        static let serverUnavailable =
-            "Your server isn't available right now. Your changes are kept and Penny will try again."
+        // The iphone-sync-failed card draws this state (a 503) with the unreachable copy.
+        static let serverUnavailable = unreachable
         static let rejected = "Your server refused these changes. They're kept on this device; tap Retry to try again."
         static let conflict =
             "Your ledger is changing on another device. Your changes are kept and Penny will try again."

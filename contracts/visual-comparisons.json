@@ -1467,11 +1467,6 @@
         ],
         "deviations": [
           {
-            "summary": "A penny. wordmark outranks \"Welcome back.\"; separate fields with labels above; the SSO button reads Continue with Single sign-on in copper with no icon; the whole New here? line is copper; no glow",
-            "kind": "follow-up",
-            "ref": "MAZ-252"
-          },
-          {
             "summary": "The sample-data link sits under the other links, not pinned to the bottom",
             "kind": "follow-up",
             "ref": "MAZ-257"
@@ -1509,24 +1504,12 @@
       "id": "iphone-create-account",
       "view": "registration (unique test user)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No back button; logo and wordmark over a smaller centered headline; separate fields; the whole Sign in line is copper",
-            "kind": "follow-up",
-            "ref": "MAZ-252"
-          },
-          {
-            "summary": "The native form has no password strength meter, and screenshots leave out the typed password (follow-up from MAZ-253)",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
-          }
         ]
       },
       "web": {
@@ -1569,19 +1552,9 @@
             "ref": "MAZ-257"
           },
           {
-            "summary": "Server URL is a header, not inside the field, with no clear button; values are grey; \"Single sign-on\"; the switching note is grey, not an amber callout; Use this server and Check again are both copper rows",
-            "kind": "follow-up",
-            "ref": "MAZ-252"
-          },
-          {
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Server verified's badge is a filled green seal, not a check in a circle on a tinted tile (follow-up from MAZ-212)",
-            "kind": "follow-up",
-            "ref": "MAZ-252"
           }
         ]
       },
@@ -1698,11 +1671,6 @@
             "summary": "A save is local first, so a failed upload shows Couldn't sync with Retry over the screen, not Couldn't save in the form",
             "kind": "follow-up",
             "ref": "MAZ-257"
-          },
-          {
-            "summary": "The banner title wraps early, and stray separators sit under the banner and chips",
-            "kind": "follow-up",
-            "ref": "MAZ-252"
           }
         ]
       },
@@ -1741,9 +1709,9 @@
             "ref": "MAZ-257"
           },
           {
-            "summary": "The toast leads with a copper kind tile, not the category's round tile, and Undo has no capsule",
+            "summary": "Home doesn't tint the new entry's row in its category color while the toast shows",
             "kind": "follow-up",
-            "ref": "MAZ-252"
+            "ref": "MAZ-257"
           }
         ]
       },
@@ -1787,7 +1755,7 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "The Sign out row has no red icon tile",
+            "summary": "The Sign out row has no red icon tile: it follows the settings card, which draws it as centered red text (the two cards disagree; design decision)",
             "kind": "follow-up",
             "ref": "MAZ-252"
           },
@@ -2309,9 +2277,30 @@
       "id": "iphone-sync-failed",
       "view": "home after the server stops answering, with changes waiting to sync",
       "native": {
-        "status": "blocked",
+        "status": "deviates",
         "owner": "MAZ-71",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2339,9 +2328,30 @@
       "id": "iphone-shared-missing",
       "view": "home while household expenses fail to load",
       "native": {
-        "status": "blocked",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          }
+        ]
       },
       "web": {
         "status": "deviates",

@@ -3,7 +3,9 @@ public import SwiftUI
 /// Inline status that always names the next step (design-kit `Banner`): offline with pending
 /// changes, a save error that keeps the draft, the demo notice, or information.
 /// The kind of `StatusBanner`.
-public enum BannerTone: Sendable { case offline, error, info, demo }
+/// `warning` is the cards' amber banner (`sync-failed`, `shared-missing`): something is held back or
+/// may be missing, nothing is lost, and Retry is the next step.
+public enum BannerTone: Sendable { case offline, error, warning, info, demo }
 
 public struct StatusBanner<Action: View>: View {
     public typealias Tone = BannerTone
@@ -33,16 +35,26 @@ public struct StatusBanner<Action: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 HStack(alignment: .center, spacing: 12) {
-                    content
-                    Spacer(minLength: 0)
-                    action
+                    // The text column takes every point the action doesn't need (no spacer, whose
+                    // extra gap made "Couldn't sync · 1 change waiting" wrap); the action keeps its
+                    // one-line width.
+                    content.layoutPriority(1)
+                    action.fixedSize()
                 }
             }
         }
-        .padding(.horizontal, 14)
+        // The cards' `.banner` padding: 14 before the icon, 8 after the action, whose own padding
+        // finishes the edge.
+        .padding(.leading, 14)
+        .padding(.trailing, Action.self == EmptyView.self ? 14 : 8)
         .padding(.vertical, 10)
         .frame(minHeight: Metrics.minTouchTarget)
-        .background(background, in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
+        .background {
+            // The amber warning is the pending tint over the solid surface, as on the cards, so it
+            // reads the same over the glow.
+            let shape = RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+            shape.fill(tone == .warning ? PennyColor.surface : .clear).overlay(shape.fill(background))
+        }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(tone == .error ? .isStaticText : [])
     }
@@ -61,6 +73,9 @@ public struct StatusBanner<Action: View>: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            // The title and message share one column as wide as the banner allows, so the
+            // title doesn't wrap into a narrower column than its message (`save-error`).
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -68,6 +83,7 @@ public struct StatusBanner<Action: View>: View {
         switch tone {
         case .offline: "icloud.slash"
         case .error: "exclamationmark.circle.fill"
+        case .warning: "exclamationmark.circle"
         case .info: "info.circle"
         case .demo: "play.circle"
         }
@@ -75,7 +91,7 @@ public struct StatusBanner<Action: View>: View {
 
     private var iconColor: Color {
         switch tone {
-        case .offline, .info: PennyColor.pending
+        case .offline, .warning, .info: PennyColor.pending
         case .error: PennyColor.danger
         case .demo: PennyColor.tint
         }
@@ -85,7 +101,7 @@ public struct StatusBanner<Action: View>: View {
         switch tone {
         case .offline: PennyColor.surface
         case .error: PaletteToken.dangerSoft.value.color
-        case .info: PaletteToken.pendingSoft.value.color
+        case .warning, .info: PaletteToken.pendingSoft.value.color
         case .demo: PaletteToken.tintSoft.value.color
         }
     }
@@ -112,7 +128,7 @@ public struct InlineActionButton: View {
         Button(title, action: action)
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(PennyColor.tintText)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 10)
             .frame(minWidth: Metrics.minTouchTarget, minHeight: max(height, Metrics.minTouchTarget))
             .contentShape(Rectangle())
             .buttonStyle(.plain)
@@ -145,14 +161,32 @@ public struct SaveToast: View {
                 }
             }
             Spacer(minLength: 0)
-            if let undo { InlineActionButton("Undo", action: undo) }
+            if let undo { UndoCapsuleButton(action: undo) }
         }
-        .padding(.leading, 12)
-        .padding(.trailing, 4)
-        .padding(.vertical, 6)
-        .pennyGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .padding(.leading, 10)
+        .padding(.trailing, 8)
+        .padding(.vertical, 8)
+        .frame(minHeight: 60)
+        .pennyGlass(in: RoundedRectangle(cornerRadius: 30, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityLabel([title, detail].compactMap(\.self).joined(separator: ", "))
+    }
+}
+
+/// The toast's Undo (`.toast .undo`): copper text on a neutral capsule, 44pt tall.
+private struct UndoCapsuleButton: View {
+    @ScaledMetric(relativeTo: .subheadline) private var height = 44.0
+    let action: () -> Void
+
+    var body: some View {
+        Button("Undo", action: action)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(PennyColor.tintText)
+            .padding(.horizontal, 18)
+            .frame(minHeight: max(height, Metrics.minTouchTarget))
+            .background(PennyColor.fill, in: Capsule())
+            .contentShape(Capsule())
+            .buttonStyle(.plain)
     }
 }
 
