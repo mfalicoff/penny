@@ -3,9 +3,11 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// Activity (`activity`, `activity-expenses`, `search-empty` cards; MAZ-73): recorded entries
-/// grouped by day with each day's net, the period's totals, kind and category chips, a filters
-/// sheet (month, year or all time, one day, type, category), and the system search field.
+/// Activity (`activity`, `activity-searching`, `search-empty`, `ipad-activity` cards; MAZ-73,
+/// MAZ-255): recorded entries grouped by day with each day's net, kind and category chips with the
+/// period as a chip, a filters sheet (month, year or all time, one day, type, category), and
+/// Activity's own search field: at the bottom in the tab bar's place on iPhone
+/// (`ActivitySearchBar`), under the title on iPad. The period's totals are spoken, not drawn.
 ///
 /// Browsing lists this device's ledger with the period's shared expenses (your share, MAZ-185),
 /// which also count in the totals; offline or when they can't load, it says so. A query
@@ -18,8 +20,6 @@ struct ActivityView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var filtersPresented = false
     @State private var width: Double = 0
-    /// Focused when iPad Home's search button opens Activity (MAZ-245).
-    @FocusState private var searchFocused: Bool
 
     /// The list column's width on iPad (`ipad/activity` card).
     static let listWidth: Double = 400
@@ -59,20 +59,14 @@ struct ActivityView: View {
         }
         .background(PennyColor.background)
         .navigationTitle("Activity")
-        .searchable(text: $shell.activityFilters.query, prompt: "Search activity")
-        .searchFocused($searchFocused)
-        .onChange(of: shell.activitySearchRequested, initial: true) {
-            guard shell.activitySearchRequested else { return }
-            shell.activitySearchRequested = false
-            searchFocused = true
-        }
         .toolbar {
-            if case .month = shell.activityFilters.period {
-                ToolbarItem(placement: .navigation) { MonthPicker() }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Filters", systemImage: "line.3.horizontal.decrease") { filtersPresented = true }
-                    .accessibilityIdentifier("activity.filters")
+            // iPhone: the filters button in the bar (`activity` card); on iPad it is the last chip.
+            if sizeClass != .regular {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Filters", systemImage: "slider.horizontal.3") { filtersPresented = true }
+                        .neutralToolbarGlyph()
+                        .accessibilityIdentifier("activity.filters")
+                }
             }
             // iPad: the copper Add entry capsule at the trailing end (`ipad-activity`, MAZ-254). Beside
             // the list the chosen entry's toolbar has it after Edit; with the list alone, it is here.
@@ -163,6 +157,8 @@ private struct ActivityList: View {
     /// Local rows drawn so far; more appear as the list nears its end (100,000-entry ledgers).
     @State private var visibleLimit = ActivityList.pageSize
     @State private var deleting: LedgerEntry?
+    @State private var deletingShared: SharedDeleteRequest?
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     static let pageSize = 200
 
@@ -184,11 +180,20 @@ private struct ActivityList: View {
                     .listRowSeparator(.hidden)
                 DemoBanner().listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                ActivityChips(filters: $shell.activityFilters, ledger: ledger, showFilters: showFilters)
-                    .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+                if sizeClass == .regular {
+                    ActivitySearchField()
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+                ActivityChips(
+                    filters: $shell.activityFilters, ledger: ledger, compact: sizeClass == .regular,
+                    showFilters: showFilters
+                )
+                .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                // The cards draw no totals line; VoiceOver still hears the period's totals.
                 ActivityTotals(summary: local.summary, expectedIncome: local.expectedIncome, currency: currency)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+                    .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 if server == nil {
@@ -235,6 +240,7 @@ private struct ActivityList: View {
         .onChange(of: ledger) { search.update(filters) }
         .task(id: filters.period) { await shell.activityShared.refresh(filters.period) }
         .deleteEntryConfirmation($deleting)
+        .sharedDeleteConfirmation($deletingShared)
     }
 
     static func showsServer(_ search: ActivitySearchModel, filters: ActivityFilters) -> Bool {
@@ -256,9 +262,14 @@ private struct ActivityList: View {
                 .listRowBackground(
                     shell.activitySelection == personal.id ? PaletteToken.tintSoft.value.color : nil)
             } else {
-                NavigationLink(value: ActivityRoute.destination(entry)) {
+                // A plain button that pushes the page: the cards' rows have no disclosure chevron.
+                Button {
+                    shell.route.push(ActivityRoute.destination(entry))
+                } label: {
                     EntryRow(entry: entry, report: report, currency: currency, showsDate: false)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 12))
@@ -269,12 +280,18 @@ private struct ActivityList: View {
                 Button("Edit", systemImage: "square.and.pencil") { shell.edit(personal) }
                     .tint(PennyColor.secondaryLabel)
                     .accessibilityIdentifier("activity.edit")
+            } else if let shared = SharedDeleteRequest(entry, report: report) {
+                // A shared expense is deleted for everyone (`delete-confirm` card).
+                Button("Delete", systemImage: "trash", role: .destructive) { deletingShared = shared }
+                    .accessibilityIdentifier("activity.delete")
             }
         }
         .contextMenu {
             if let personal {
                 Button("Edit", systemImage: "square.and.pencil") { shell.edit(personal) }
                 Button("Delete", systemImage: "trash", role: .destructive) { deleting = personal }
+            } else if let shared = SharedDeleteRequest(entry, report: report) {
+                Button("Delete for everyone", systemImage: "trash", role: .destructive) { deletingShared = shared }
             }
         }
         .onAppear {
@@ -424,17 +441,19 @@ private struct ActivitySearchScope: View {
         switch search.source {
         case .server:
             if search.status == .results, let count = search.totalCount {
-                Label(
-                    "\(count == 1 ? "1 result" : "\(count) results") from your server, including similar words and meanings",
-                    systemImage: "server.rack"
-                )
-                .font(.footnote)
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .accessibilityIdentifier("activity.scope.server")
+                // The cards draw no results note; VoiceOver hears where the results came from.
+                Color.clear.frame(height: 1)
+                    .accessibilityElement()
+                    .accessibilityLabel(
+                        "\(count == 1 ? "1 result" : "\(count) results") from your server, including similar words and meanings"
+                    )
+                    .accessibilityIdentifier("activity.scope.server")
             } else if search.status == .searching {
+                // `activity-searching`: the scope line over the list while the server answers.
                 Label("Searching your server…", systemImage: "magnifyingglass")
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(PennyColor.secondaryLabel)
+                    .padding(.horizontal, 4)
             }
         case .device(.serverFailed(let message)?):
             StatusBanner(tone: .error, title: "Couldn't search your server", message: message) {
@@ -462,32 +481,53 @@ private struct ActivitySearchScope: View {
     }
 }
 
-/// All / Expenses / Income / Investments, the period (opens Filters), and the category chips
-/// of the chosen kind with All categories.
+/// All / Expenses / Income / Investments and the period as a chip (opens Filters) on iPhone
+/// (`activity`); All / Expenses / Income and a filters chip in the iPad's narrower list
+/// (`ipad-activity`); then the category chips of the chosen kind with All categories. While
+/// searching with a filter on, only the active filters show, each with × to remove it
+/// (`search-empty`).
 private struct ActivityChips: View {
     @Binding var filters: ActivityFilters
     let ledger: Ledger
+    /// iPad: the shorter row with the filters chip.
+    var compact = false
     let showFilters: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    kindChip("All", nil)
-                    kindChip("Expenses", .expense)
-                    kindChip("Income", .income)
-                    kindChip("Investments", .investment)
-                    ActivityChip(
-                        title: filters.day.map { DayText.date($0).formatted(.dateTime.month(.abbreviated).day()) }
-                            ?? ActivityPeriodText.title(filters.period),
-                        systemImage: "calendar", selected: filters.day != nil || filters.period == .allTime,
-                        action: showFilters
-                    )
-                    .accessibilityIdentifier("activity.period")
+                    if Self.showsActive(filters) {
+                        activeChips
+                    } else {
+                        kindChip("All", nil)
+                        kindChip("Expenses", .expense)
+                        kindChip("Income", .income)
+                        if compact {
+                            Button(action: showFilters) {
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.subheadline.weight(.semibold))
+                                    .padding(.horizontal, 16)
+                                    .frame(minHeight: Metrics.minTouchTarget)
+                                    .foregroundStyle(PennyColor.label)
+                                    .background(PennyColor.fill, in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Filters")
+                            .accessibilityIdentifier("activity.filters")
+                        } else {
+                            kindChip("Investments", .investment)
+                            ActivityChip(
+                                title: Self.periodTitle(filters), systemImage: "calendar",
+                                selected: filters.day != nil || filters.period == .allTime, action: showFilters
+                            )
+                            .accessibilityIdentifier("activity.period")
+                        }
+                    }
                 }
                 .padding(.vertical, 4)
             }
-            if let kind = filters.kind {
+            if let kind = filters.kind, !Self.showsActive(filters) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ActivityChip(title: "All categories", selected: filters.categoryId == nil) {
@@ -511,6 +551,46 @@ private struct ActivityChips: View {
         .accessibilityLabel("Filters")
     }
 
+    /// Searching with a type, category or day chosen: the row shows only what narrows the search.
+    static func showsActive(_ filters: ActivityFilters) -> Bool {
+        filters.hasQuery && (filters.kind != nil || filters.categoryId != nil || filters.day != nil)
+    }
+
+    static func periodTitle(_ filters: ActivityFilters) -> String {
+        filters.day.map { DayText.date($0).formatted(.dateTime.month(.abbreviated).day()) }
+            ?? ActivityPeriodText.title(filters.period)
+    }
+
+    @ViewBuilder private var activeChips: some View {
+        if let kind = filters.kind {
+            ActivityChip(title: Self.kindTitle(kind), selected: true, removable: true) {
+                filters.kind = nil
+                filters.categoryId = nil
+            }
+            .accessibilityIdentifier("activity.activeFilter.kind")
+        }
+        if let id = filters.categoryId, let category = ledger.category(id: id) {
+            ActivityChip(
+                title: category.name, systemImage: EntryText.symbol(category), selected: true, removable: true
+            ) { filters.categoryId = nil }
+            .accessibilityIdentifier("activity.activeFilter.category")
+        }
+        if filters.day != nil || filters.period != .allTime {
+            ActivityChip(title: Self.periodTitle(filters), systemImage: "calendar", selected: true, removable: true) {
+                if filters.day != nil { filters.day = nil } else { filters.period = .allTime }
+            }
+            .accessibilityIdentifier("activity.activeFilter.period")
+        }
+    }
+
+    static func kindTitle(_ kind: EntryKind) -> String {
+        switch kind {
+        case .expense: "Expenses"
+        case .income: "Income"
+        case .investment: "Investments"
+        }
+    }
+
     /// The four most used categories of `kind`, plus the selected one.
     static func categories(_ kind: EntryKind, selection: String?, ledger: Ledger) -> [LedgerCategory] {
         var result = Array(ledger.categoriesByUse(kind).prefix(4))
@@ -532,6 +612,8 @@ struct ActivityChip: View {
     let title: String
     var systemImage: String?
     let selected: Bool
+    /// An active filter's chip (`search-empty`): × after the title, and a tap removes it.
+    var removable = false
     let action: () -> Void
 
     var body: some View {
@@ -539,6 +621,9 @@ struct ActivityChip: View {
             HStack(spacing: 6) {
                 if let systemImage { Image(systemName: systemImage).accessibilityHidden(true) }
                 Text(title)
+                if removable {
+                    Image(systemName: "xmark").font(.caption.weight(.bold)).accessibilityHidden(true)
+                }
             }
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 14)
@@ -547,12 +632,130 @@ struct ActivityChip: View {
             .background(selected ? PennyColor.label : PennyColor.fill, in: Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityAddTraits(selected && !removable ? .isSelected : [])
+        .accessibilityHint(removable ? "Removes this filter" : "")
     }
 }
 
-/// The period's recorded totals (your shares), the same numbers as Home's for a month. Filters
-/// and search never change them. Income dated after today is listed but not counted until its
+/// iPad: Activity's search field under the title (`ipad-activity`). iPad Home's search button
+/// focuses it (MAZ-245).
+struct ActivitySearchField: View {
+    @Environment(ShellModel.self) private var shell
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        @Bindable var shell = shell
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .accessibilityHidden(true)
+            TextField("Search", text: $shell.activityFilters.query)
+                .focused($focused)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
+                .accessibilityLabel("Search activity")
+                .accessibilityIdentifier("activity.search")
+            if !shell.activityFilters.query.isEmpty {
+                Button {
+                    shell.activityFilters.query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(PennyColor.tertiaryLabel)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
+                .accessibilityIdentifier("activity.searchClear")
+            }
+        }
+        .font(.body)
+        .padding(.horizontal, 12)
+        .frame(minHeight: Metrics.minTouchTarget)
+        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .contain)
+        .onChange(of: shell.activitySearchRequested, initial: true) {
+            guard shell.activitySearchRequested else { return }
+            shell.activitySearchRequested = false
+            focused = true
+        }
+    }
+}
+
+/// iPhone: Activity's bottom bar in the tab bar's place (`activity`, `activity-searching`,
+/// `search-empty` cards): a glass circle that leads back to the tabs (× while searching, which
+/// clears the search and puts the keyboard away) and the glass search capsule. It rides above
+/// the keyboard while typing. Home's search button focuses it.
+struct ActivitySearchBar: View {
+    @Bindable var shell: ShellModel
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        let searching = focused || !shell.activityFilters.query.isEmpty
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 10) {
+                Button {
+                    if searching {
+                        shell.activityFilters.query = ""
+                        focused = false
+                    } else {
+                        shell.route.selectPrevious()
+                    }
+                } label: {
+                    Image(systemName: searching ? "xmark" : "chevron.left")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(PennyColor.label)
+                        .frame(width: PennyTabBar.searchHeight, height: PennyTabBar.searchHeight)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .pennyGlass(in: Circle())
+                .accessibilityLabel(searching ? "Cancel search" : "Back")
+                .accessibilityIdentifier("activity.searchBack")
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .accessibilityHidden(true)
+                    TextField("Search activity", text: $shell.activityFilters.query)
+                        .focused($focused)
+                        .submitLabel(.search)
+                        .autocorrectionDisabled()
+                        .tint(PennyColor.tint)
+                        .accessibilityIdentifier("activity.search")
+                    if !shell.activityFilters.query.isEmpty {
+                        Button {
+                            shell.activityFilters.query = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(PennyColor.tertiaryLabel)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Clear search")
+                        .accessibilityIdentifier("activity.searchClear")
+                    }
+                }
+                .font(.body)
+                .padding(.leading, 18)
+                .padding(.trailing, 12)
+                .frame(height: PennyTabBar.searchHeight)
+                .contentShape(Capsule())
+                .onTapGesture { focused = true }
+                .pennyGlass(in: Capsule())
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 4)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("activity.searchBar")
+        .onChange(of: shell.activitySearchRequested, initial: true) {
+            guard shell.activitySearchRequested else { return }
+            shell.activitySearchRequested = false
+            focused = true
+        }
+    }
+}
+/// The period's recorded totals (your shares), the same numbers as Home's for a month, spoken by
+/// VoiceOver at the top of the list. Filters and search never change them. Income dated after today is listed but not counted until its
 /// date (MAZ-136), so it is named on its own.
 struct ActivityTotals: View {
     let summary: KindTotals
@@ -560,10 +763,9 @@ struct ActivityTotals: View {
     let currency: String
 
     var body: some View {
-        Text(Self.line(summary, expectedIncome: expectedIncome, currency: currency))
-            .font(.footnote)
-            .monospacedDigit()
-            .foregroundStyle(PennyColor.secondaryLabel)
+        // Not drawn (the cards have no totals line, MAZ-255): one point tall, read by VoiceOver.
+        Color.clear.frame(height: 1)
+            .accessibilityElement()
             .accessibilityLabel(Self.spoken(summary, expectedIncome: expectedIncome, currency: currency))
             .accessibilityIdentifier("activity.totals")
     }

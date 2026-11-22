@@ -31,8 +31,8 @@ struct AppearanceSettingsView: View {
                 // The iPad card's shorter footnote, as on the web's tablet layout.
                 Text(
                     sizeClass == .regular
-                        ? "System follows your device's Light and Dark setting. Dark mode uses true black."
-                        : "System follows your device's Light and Dark setting, including scheduled switching. "
+                        ? "System follows your \(SyncBanner.deviceName)'s Light and Dark setting. Dark mode uses true black."
+                        : "System follows your \(SyncBanner.deviceName)'s Light and Dark setting, including scheduled switching. "
                             + "Dark mode uses true black.")
             }
             Section {
@@ -48,7 +48,7 @@ struct AppearanceSettingsView: View {
                         // Narrower than the card: iOS keeps the tab bar and the buttons in the bars glass
                         // unless the device's own setting is on (design decision on MAZ-250).
                         "Use solid navigation bars and controls instead of glass. "
-                        + "Your device's own setting also covers the tab bar and the bars' buttons.",
+                        + "Your \(SyncBanner.deviceName)'s own setting also covers the tab bar and the bars' buttons.",
                     isOn: Binding(
                         get: { appearance.reducesTransparency }, set: { appearance.setReducesTransparency($0) })
                 )
@@ -67,13 +67,13 @@ struct AppearanceSettingsView: View {
                 Text("Display").cardSectionHeader()
             }
             Section {
-                LabeledContent("Text size", value: "Follows your device")
+                LabeledContent("Text size", value: "Follows \(SyncBanner.deviceName)")
             } header: {
                 Text("Text").cardSectionHeader()
             } footer: {
                 // The iPad card has no footnote here.
                 if sizeClass != .regular {
-                    Text("Penny supports Dynamic Type. Change text size in Settings › Display & Brightness.")
+                    Text("Penny supports Dynamic Type. Change text size in \(SyncBanner.deviceName) Settings › Display & Brightness.")
                 }
             }
         }
@@ -348,7 +348,7 @@ struct AppLockSettingsView: View {
     /// lock doesn't cover.
     private var footer: some View {
         Text(
-            "Your device passcode works as a backup. This setting stays on this device and isn't synced. "
+            "Your \(SyncBanner.deviceName) passcode works as a backup. This setting stays on this \(SyncBanner.deviceName) and isn't synced. "
                 + "Widgets and notification previews aren't covered by the lock.")
     }
 }

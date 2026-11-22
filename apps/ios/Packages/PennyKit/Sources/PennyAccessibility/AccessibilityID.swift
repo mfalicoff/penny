@@ -313,10 +313,16 @@ public enum AccessibilityID {
         /// iPad: the detail beside the list before an entry is chosen.
         public static let noSelection = "activity.noSelection"
         public static let deleteConfirm = "deleteEntry.confirm"
+        /// Activity's own search field (MAZ-255): the bottom bar on iPhone, under the title on iPad.
+        public static let search = "activity.search"
+        /// iPhone: the bottom bar's back button, × while searching (`activity`, `search-empty`).
+        public static let searchBack = "activity.searchBack"
+        public static let searchClear = "activity.searchClear"
+        public static let searchBar = "activity.searchBar"
         public static func kindFilter(_ rawValue: String) -> String { "activity.filter.\(rawValue)" }
 
-        static let all = [filters, totals, searchEmpty, noSelection, deleteConfirm, add]
-        static let prefixes = ["activity.filter."]
+        static let all = [filters, totals, searchEmpty, noSelection, deleteConfirm, add, search, searchBack, searchClear, searchBar]
+        static let prefixes = ["activity.filter.", "activity.activeFilter."]
     }
 
     /// Accounts, categories and recurring schedules (MAZ-74). Rows take the model id.

@@ -254,6 +254,12 @@ struct Penny {
     private func tabButton(_ title: String, id: String) throws -> XCUIElement {
         // The cards' tab bar (`PennyTabBar`, MAZ-254), not the system's: found by identifier.
         let byID = app.buttons.matching(identifier: id).firstMatch
+        // On iPhone, Activity's root shows its search bar in the tab bar's place (`activity` card,
+        // MAZ-255): its back button (× while searching) leads back to the tabs.
+        let back = app.buttons.matching(identifier: AccessibilityID.Activity.searchBack).firstMatch
+        for _ in 0..<2 where !byID.waitForExistence(timeout: 2) && back.exists {
+            back.tap()
+        }
         guard byID.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "No \(title) tab")
         }

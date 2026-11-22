@@ -38,7 +38,7 @@ private struct ExpensePage: View {
     @State private var events: [WireAuditEvent] = []
     @State private var form: SharedFormRequest?
     @State private var payment: PaymentRequest?
-    @State private var confirmingDelete = false
+    @State private var deleting: SharedDeleteRequest?
 
     var body: some View {
         List {
@@ -74,15 +74,8 @@ private struct ExpensePage: View {
         .sheet(item: $payment, onDismiss: { Task { await load() } }) { request in
             PaymentSheet(request: request, model: model, now: shell.now)
         }
-        .confirmationDialog(
-            "Delete \(expense?.title ?? "this expense") for everyone?", isPresented: $confirmingDelete,
-            titleVisibility: .visible
-        ) {
-            Button("Delete for everyone", role: .destructive) { Task { await delete() } }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("It leaves everyone's balances and spending. The change history keeps a record.")
-        }
+        // The `delete-confirm` card: the expense, its members and Delete for everyone.
+        .sharedDeleteConfirmation($deleting) { dismiss() }
     }
 
     private func load() async {
@@ -96,15 +89,6 @@ private struct ExpensePage: View {
             if refused.kind == .gone { expense = nil }
         }
         if case .success(let loaded) = await model.history(expenseId: expenseID) { events = loaded }
-    }
-
-    private func delete() async {
-        guard let expense else { return }
-        if let refused = await model.deleteExpense(expense) {
-            failure = refused
-        } else {
-            dismiss()
-        }
     }
 
     // MARK: Sections
@@ -203,7 +187,13 @@ private struct ExpensePage: View {
             Section {
                 Button("Edit", systemImage: "pencil") { form = .expense(expense) }
                     .accessibilityIdentifier("sharedExpense.edit")
-                Button("Delete for everyone", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+                Button("Delete for everyone", systemImage: "trash", role: .destructive) {
+                    deleting = SharedDeleteRequest(
+                        householdId: model.id, expenseId: expense.id, title: expense.title, total: expense.totalCents,
+                        date: CalendarDate.ledgerDate(expense.date) ?? shell.today,
+                        householdName: model.household?.name ?? "", symbol: expense.category.symbol,
+                        color: expense.category.tint)
+                }
                     .disabled(expense.isPaid)
                     .accessibilityIdentifier("sharedExpense.delete")
             } footer: {
