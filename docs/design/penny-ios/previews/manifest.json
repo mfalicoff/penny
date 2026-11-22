@@ -2005,7 +2005,7 @@
     {
       "id": "web-edit-entry",
       "source": "docs/design/penny-ios/web/edit-entry.html",
-      "sourceSha256": "bd29d3a2b758723c516ae07536f4910711f4e52cd1fa406206aa5aa57a90dbdb",
+      "sourceSha256": "e628e69cfc8063d2de447724297fa0f30d28dec57a21e0de16b3194683711ff8",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2014,12 +2014,12 @@
         {
           "appearance": "light",
           "file": "previews/web-edit-entry.light.png",
-          "sha256": "b129b19f270370c92b2969d1c7889acbd777a6fd7c800e038577d0b3e8f1093c"
+          "sha256": "7ddeab95d888185505b81c0d52599b754d8d3ee93150818160c861696b72ef5a"
         },
         {
           "appearance": "dark",
           "file": "previews/web-edit-entry.dark.png",
-          "sha256": "cc89fc2f2daa0321df8ebc93faeed5f5d7c70a39e048cf75ec9e838f2cb29a2c"
+          "sha256": "e3b4f74d7f5f2c6f3417556651b49d4c0844166d5dfb0b79bf376cc57294d35c"
         }
       ]
     },
