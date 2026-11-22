@@ -10,7 +10,7 @@ import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
 import { TABLET, useMediaQuery } from "../useMediaQuery";
 import { TAB_ITEMS, tabFor } from "./navigation";
-import { PageTitleContext, PageTitleStyleContext, TopbarSlotContext, type PageTitleStyle } from "./pageTitle";
+import { AddEntryContext, PageTitleContext, PageTitleStyleContext, TopbarSlotContext, type PageTitleStyle } from "./pageTitle";
 import { useShortcuts } from "./shortcuts";
 import { Sidebar } from "./Sidebar";
 
@@ -119,6 +119,10 @@ export function AppShell() {
     onGo: (to) => void navigate({ to }),
   });
 
+  function openAdd() {
+    setAdding(true);
+  }
+
   function closeAdd() {
     setAdding(false);
     if (pathname === "/entries/new") void navigate({ to: "/", replace: true });
@@ -164,7 +168,9 @@ export function AppShell() {
           <PageTitleContext value={setTitleOverride}>
             <PageTitleStyleContext value={setTitleStyle}>
               <TopbarSlotContext value={toolSlot}>
-                <Outlet />
+                <AddEntryContext value={openAdd}>
+                  <Outlet />
+                </AddEntryContext>
               </TopbarSlotContext>
             </PageTitleStyleContext>
           </PageTitleContext>

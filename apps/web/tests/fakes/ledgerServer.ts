@@ -66,6 +66,8 @@ export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: 
     revision: 3,
     ledger: richLedger(initial),
     down: false,
+    /** The shared projection answers 500 (households couldn't load) while set. */
+    sharedDown: false,
     puts: 0,
     shared: options.shared ?? [],
     projections: [] as string[],
@@ -86,6 +88,7 @@ export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: 
     if (url.startsWith("/api/households/projection")) {
       if (state.down) throw new TypeError("Failed to fetch");
       state.projections.push(url);
+      if (state.sharedDown) return json({ error: "Households couldn't load." }, 500);
       const month = /month=([\d-]+)/.exec(url)?.[1];
       const year = /year=(\d+)/.exec(url)?.[1];
       const rows = state.shared.filter((row) => (!month || row.date.startsWith(month)) && (!year || row.date.startsWith(year)));

@@ -1571,11 +1571,6 @@
             "summary": "The banner adds an explanation and a bordered Retry",
             "kind": "follow-up",
             "ref": "MAZ-234"
-          },
-          {
-            "summary": "No amber \"Shared expenses may be missing\" banner under the Offline banner (web follow-up recorded on MAZ-254)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
           }
         ]
       }
@@ -1861,24 +1856,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Under the hero an Overspent tag and \"You've spent and invested $X more than came in this month.\", not \"$X more went out than came in\" (web follow-up recorded on MAZ-254)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "The flow legend shows Left $0 and Beyond income on a second line, not Over (web follow-up recorded on MAZ-254)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       }
     },
@@ -2311,24 +2294,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No “Shared expenses may be missing” banner above the hero: a plain “Shared expenses couldn't load.” line sits below it",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No amber icon or tinted banner surface, and the action reads “Try again”, not “Retry”",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          }
         ]
       }
     },
@@ -2536,19 +2507,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-88",
         "capture": "1194x834",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The copper Add entry sits on its own row above Delete and Edit, not after Edit at the end of the toolbar (web follow-up recorded on MAZ-254)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       }
     },
@@ -2797,11 +2761,6 @@
             "summary": "The sidebar footer names the account by its email, not the person’s name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "No copper Add entry capsule at the end of the toolbar (web follow-up recorded on MAZ-254)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
           }
         ]
       }

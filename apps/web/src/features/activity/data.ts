@@ -38,7 +38,7 @@ export type SharedState =
   | { status: "ready"; rows: SharedRow[]; scheduled: SharedRow[]; cached: boolean }
   | { status: "loading" }
   /** Offline or unreachable with nothing cached; or another failure. */
-  | { status: "unavailable"; message: string }
+  | { status: "unavailable"; message: string; /** No connection (or the server didn't answer), not another failure. */ offline: boolean }
   /** No households to show: the projection answered 404 (the demo has none). */
   | { status: "none" };
 
@@ -66,9 +66,9 @@ export function useSharedRows(period: Period, online: boolean): SharedState & { 
   if (query.error instanceof ApiError && query.error.status === 404) return { status: "none", retry };
   if (query.isError) {
     const offline = !online || (query.error instanceof ApiError && query.error.status === 0);
-    return { status: "unavailable", message: offline ? "Shared expenses need a connection. They'll appear when Penny reaches the server." : "Shared expenses couldn't load.", retry };
+    return { status: "unavailable", message: offline ? "Shared expenses need a connection. They'll appear when Penny reaches the server." : "Shared expenses couldn't load.", offline, retry };
   }
-  if (!online) return { status: "unavailable", message: "Shared expenses need a connection. They'll appear when Penny reaches the server.", retry };
+  if (!online) return { status: "unavailable", message: "Shared expenses need a connection. They'll appear when Penny reaches the server.", offline: true, retry };
   return { status: "loading", retry };
 }
 

@@ -889,7 +889,8 @@ body:has(.pk-toast) .topbar__add {
     display: grid;
   }
 
-  .topbar__add {
+  .topbar__add,
+  .entry-sheet__add {
     min-height: 44px;
     padding: 0 18px;
     border-radius: 22px;
@@ -901,9 +902,13 @@ body:has(.pk-toast) .topbar__add {
     display: none;
   }
 
-  /* ipad-settings: Settings has no toolbar actions (N still opens Add entry). */
-  .app:has(.settings) .topbar__search,
-  .app:has(.settings) .topbar__add {
+  /* ipad-settings: Settings' only toolbar action is the copper Add entry, with no search. */
+  .app:has(.settings) .topbar__search {
+    display: none;
+  }
+
+  /* ipad-activity: with an entry open in the pane, Add entry ends the pane's toolbar after Edit instead. */
+  .app:has(.entry-sheet--pane) .topbar__add {
     display: none;
   }
 

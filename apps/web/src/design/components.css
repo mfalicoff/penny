@@ -654,6 +654,29 @@
   color: var(--pk-pending);
 }
 
+/* An amber notice in the page (cards `iphone-shared-missing`, `iphone-offline`): the kit's tinted banner. */
+.pk-banner--warning {
+  gap: 12px;
+  padding: 11px 8px 11px 14px;
+  background: color-mix(in srgb, var(--pk-pending) 13%, var(--pk-surface));
+}
+
+.pk-banner--warning > .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--pk-pending);
+}
+
+.pk-banner--warning .pk-banner__title {
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.pk-banner--warning .pk-banner__msg {
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
 .toast-region {
   position: fixed;
   z-index: 30;

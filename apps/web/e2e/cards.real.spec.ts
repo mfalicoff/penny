@@ -333,7 +333,7 @@ async function syncFailed(run: Run) {
 async function sharedMissing(run: Run) {
   await armFault(run);
   await home(run.page);
-  await expect(run.page.getByText(/Shared expenses (couldn't load|need a connection)/).first()).toBeVisible();
+  await expect(run.page.getByRole("status").filter({ hasText: "Shared expenses may be missing" })).toBeVisible();
 }
 
 /** The demo, from sign-in's sample data link. */

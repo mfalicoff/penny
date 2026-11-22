@@ -435,6 +435,20 @@ describe("Activity on a touch tablet (ipad-activity, MAZ-274)", () => {
     expect(screen.queryByRole("complementary", { name: "Taxi home" })).not.toBeInTheDocument();
   });
 
+  it("ends the pane's toolbar in the copper Add entry, after Delete and Edit (ipad-activity)", async () => {
+    stubTouchTablet();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    ledgerServer({ transactions: [dinner] }, { shared: [], search: () => [personalHit(dinner)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const pane = await screen.findByRole("complementary", { name: "Dinner out" });
+    const add = within(pane).getByRole("button", { name: "Add entry" });
+    const toolbar = within(pane).getByRole("button", { name: "Edit" }).parentElement;
+    expect([...(toolbar?.children ?? [])].map((button) => button.getAttribute("aria-label") ?? button.textContent)).toEqual(["Delete", "Edit", "Add entry"]);
+    await user.click(add);
+    expect(await screen.findByRole("dialog", { name: "New entry" })).toBeInTheDocument();
+  });
+
   it("selects the first listed entry when the filters hide the selected one", async () => {
     stubTouchTablet();
     const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });

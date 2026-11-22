@@ -60,7 +60,7 @@ export function ErrorState({ title = "Penny couldn't load this", children, onRet
   );
 }
 
-type BannerTone = "offline" | "error" | "info";
+type BannerTone = "offline" | "error" | "info" | "warning";
 
 interface BannerProps {
   tone: BannerTone;
@@ -76,7 +76,7 @@ interface BannerProps {
   tile?: boolean;
 }
 
-const BANNER_ICON: Record<BannerTone, IconName> = { offline: "cloud-offline", error: "alert-circle", info: "play" };
+const BANNER_ICON: Record<BannerTone, IconName> = { offline: "cloud-offline", error: "alert-circle", info: "play", warning: "alert-circle" };
 
 /** Inline status bar (kit `Banner`). Errors are alerts; the rest are polite status messages. */
 export function Banner({ tone, title, children, action, icon, tile }: BannerProps) {
