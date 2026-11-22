@@ -111,7 +111,8 @@ struct TabStack: View {
         NavigationStack(path: Binding(get: { shell.route.path(for: tab) }, set: { shell.route.setPath($0, for: tab) }))
         {
             TabRoot(tab: tab)
-                .navigationDestination(for: DetailRoute.self) { DetailPage(route: $0) }
+                .pennySolidBars()
+                .navigationDestination(for: DetailRoute.self) { DetailPage(route: $0).pennySolidBars() }
         }
     }
 }
@@ -156,7 +157,7 @@ private struct SplitShell: View {
 
     var body: some View {
         NavigationSplitView {
-            Sidebar(shell: shell)
+            Sidebar(shell: shell).pennySolidBars()
         } detail: {
             detail
         }

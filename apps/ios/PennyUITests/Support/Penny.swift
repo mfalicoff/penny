@@ -212,6 +212,12 @@ struct Penny {
 
     /// A Settings page (`SettingsRoute` raw value), from wherever the shell is.
     func openSettingsPage(_ route: String, screen: String) throws {
+        // On iPad the Manage pages are sidebar rows only; the Settings list leaves them out.
+        if Device.isPad, ["recurring", "accounts", "categories"].contains(route) {
+            try tap(AccessibilityID.Sidebar.item(route))
+            try wait(for: screen)
+            return
+        }
         try openSettings()
         try tap(AccessibilityID.Settings.row(route))
         try wait(for: screen)
@@ -393,6 +399,10 @@ struct Penny {
         AccessibilityID.Settings.row("accounts"): .button,
         AccessibilityID.Settings.row("categories"): .button,
         AccessibilityID.Settings.appLockToggle: .switch,
+        AccessibilityID.Settings.showCents: .switch,
+        AccessibilityID.Settings.reduceTransparency: .switch,
+        AccessibilityID.Settings.weekStart: .button,
+        AccessibilityID.Settings.account: .button,
     ]
 
     private static let prefixTypes: [(prefix: String, type: XCUIElement.ElementType)] = [

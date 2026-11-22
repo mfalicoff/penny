@@ -211,6 +211,7 @@ struct CategoryFormSheet: View {
             } message: {
                 Text("Nothing uses this category, so no entry changes.")
             }
+            .pennySolidBars()
         }
         .tint(PennyColor.tint)
         .interactiveDismissDisabled(model.isSaving)

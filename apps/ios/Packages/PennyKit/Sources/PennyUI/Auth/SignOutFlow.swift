@@ -34,13 +34,12 @@ struct SignOutButton: View {
                 confirming = true
             }
         } label: {
-            HStack {
-                Text(signingOut ? "Signing out…" : "Sign out")
-                if signingOut {
-                    Spacer()
-                    ProgressView()
-                }
+            // Centered, as on the `settings` cards.
+            HStack(spacing: 8) {
+                Text(signingOut ? "Signing out…" : "Sign out").fontWeight(.medium)
+                if signingOut { ProgressView() }
             }
+            .frame(maxWidth: .infinity)
         }
         .disabled(signingOut || auth.state.account == nil)
         .accessibilityIdentifier("auth.signOut")

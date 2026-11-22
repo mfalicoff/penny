@@ -61,6 +61,7 @@ struct EntryCategoryPickerSheet: View {
                 }
                 .environment(shell)
             }
+            .pennySolidBars()
         }
         .presentationDetents([.large])
         .accessibilityIdentifier("screen.categoryPicker")
@@ -252,6 +253,7 @@ struct EntryDatePickerSheet: View {
                         .accessibilityIdentifier("datePicker.done")
                 }
             }
+            .pennySolidBars()
         }
         .presentationDetents([.medium, .large])
         .accessibilityIdentifier("screen.datePicker")
@@ -351,6 +353,7 @@ struct EntrySplitSheet: View {
                         .accessibilityIdentifier("split.done")
                 }
             }
+            .pennySolidBars()
         }
         .presentationDetents([.medium, .large])
         .onAppear(perform: load)

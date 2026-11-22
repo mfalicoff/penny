@@ -130,6 +130,7 @@ struct EntryHouseholdSheet: View {
                         .neutralToolbarGlyph()
                 }
             }
+            .pennySolidBars()
         }
         .presentationDetents([.medium, .large])
         .accessibilityIdentifier("screen.householdPicker")

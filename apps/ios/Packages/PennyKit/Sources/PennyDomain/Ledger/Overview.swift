@@ -251,8 +251,32 @@ public struct MoneyFlowLayout: Hashable, Sendable {
 
 // MARK: - Calendar
 
-/// One month as a Monday-first grid: each day's recorded spending, income and contributions,
-/// and what is expected or scheduled on it. Recorded and expected stay separate: a scheduled
+/// The calendar's first column (Settings › Appearance › Week starts on, MAZ-250): Monday, the
+/// default, or Sunday. A device setting, as on the web (`weekStartsOn`).
+public enum WeekStart: String, CaseIterable, Hashable, Sendable {
+    case monday, sunday
+
+    public var title: String {
+        switch self {
+        case .monday: "Monday"
+        case .sunday: "Sunday"
+        }
+    }
+
+    /// The weekday names in column order.
+    public var weekdayNames: [String] {
+        let mondayFirst = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        return self == .sunday ? ["Sunday"] + mondayFirst.dropLast() : mondayFirst
+    }
+
+    /// A day's column, 0 to 6.
+    public func column(_ date: CalendarDate) -> Int {
+        self == .sunday ? (date.mondayBasedWeekday + 1) % 7 : date.mondayBasedWeekday
+    }
+}
+
+/// One month as a grid that starts on Monday or Sunday (`WeekStart`): each day's recorded
+/// spending, income and contributions, and what is expected or scheduled on it. Recorded and expected stay separate: a scheduled
 /// preview or income dated after today (MAZ-136) is shown as an amber ring, never as money
 /// spent or received.
 public struct CalendarMonth: Hashable, Sendable {
@@ -290,13 +314,16 @@ public struct CalendarMonth: Hashable, Sendable {
     }
 
     public let month: MonthKey
-    /// Blank cells before the 1st (0 when the month starts on a Monday).
+    /// The grid's first column.
+    public let weekStart: WeekStart
+    /// Blank cells before the 1st (0 when the month starts on the first column's weekday).
     public let leadingBlanks: Int
     public let days: [Day]
 
-    public init(_ summary: MonthSummary) {
+    public init(_ summary: MonthSummary, weekStart: WeekStart = .monday) {
         month = summary.month
-        leadingBlanks = summary.month.first.mondayBasedWeekday
+        self.weekStart = weekStart
+        leadingBlanks = weekStart.column(summary.month.first)
         let count = CalendarDate.daysInMonth(year: summary.month.year, month: summary.month.month)
         var days = (0..<count).map { Day(date: summary.month.first.adding(days: $0)) }
         for entry in summary.recordedEntries where summary.month.contains(entry.date) {
