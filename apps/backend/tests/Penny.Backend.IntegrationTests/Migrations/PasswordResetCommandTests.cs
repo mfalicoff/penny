@@ -20,7 +20,7 @@ public sealed class PasswordResetCommandTests(ApiFixture fixture) : IntegrationT
         first.Error.ShouldContain("expires at");
         first.Error.ShouldNotContain(token);
         first.Error.ShouldNotContain(SessionTokens.Hash(token));
-        first.Error.ShouldNotContain(Fixture.RuntimeConnection);
+        first.Error.ShouldNotContain(Fixture.Connection);
         first.Error.ShouldNotContain("Password=");
         (await ScalarAsync("SELECT token_hash FROM penny.password_resets")).ShouldBe(
             SessionTokens.Hash(token)
@@ -59,7 +59,7 @@ public sealed class PasswordResetCommandTests(ApiFixture fixture) : IntegrationT
                 Ct,
                 new Dictionary<string, string>
                 {
-                    ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
+                    ["ConnectionStrings__Postgres"] = Fixture.Connection,
                 }
             );
             result.ExitCode.ShouldBe(1);
@@ -83,10 +83,7 @@ public sealed class PasswordResetCommandTests(ApiFixture fixture) : IntegrationT
             null,
             ["reset-password", email],
             Ct,
-            new Dictionary<string, string>
-            {
-                ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
-            }
+            new Dictionary<string, string> { ["ConnectionStrings__Postgres"] = Fixture.Connection }
         );
 
     private async Task<object?> ScalarAsync(string sql)

@@ -15,7 +15,7 @@ public sealed class ReceiptMaintenanceTests(ApiFixture fixture) : ReceiptTestBas
     private Dictionary<string, string> Environment() =>
         new()
         {
-            ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
+            ["ConnectionStrings__Postgres"] = Fixture.Connection,
             ["Receipts__Root"] = Fixture.ReceiptRoot,
             ["Receipts__MasterKey"] = Fixture.ReceiptKey,
         };

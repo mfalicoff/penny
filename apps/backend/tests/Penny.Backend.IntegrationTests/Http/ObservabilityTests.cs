@@ -46,7 +46,7 @@ public sealed class ObservabilityTests(ApiFixture fixture) : IntegrationTestBase
     {
         var logs = new CapturingLoggerProvider();
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Logging:LogLevel:Default"] = "Information",

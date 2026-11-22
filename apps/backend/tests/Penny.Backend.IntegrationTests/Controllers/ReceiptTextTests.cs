@@ -501,7 +501,7 @@ public sealed class ReceiptTextTests(ApiFixture fixture) : ReceiptTextTestBase(f
     public async Task whenLanguageDataMissing_Host_ShouldFailAtStartup()
     {
         await using var host = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Ocr:Worker"] = "true",

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Npgsql;
+using Penny.Backend.Persistence.Migrations;
 using Pgvector.Npgsql;
 
 namespace Penny.Backend.Persistence.Configuration;
@@ -19,15 +20,13 @@ public sealed class DatabaseSettings
     )
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new InvalidOperationException(
-                "Set ConnectionStrings__Postgres (or ConnectionStrings__Migration for the migration command)."
-            );
+            throw new DatabaseSetupException("Set ConnectionStrings__Postgres.");
         if (
             maxPoolSize is < 1 or > 100
             || connectTimeoutSeconds is < 1 or > 30
             || commandTimeoutSeconds is < 1 or > 30
         )
-            throw new InvalidOperationException(
+            throw new DatabaseSetupException(
                 "Database pool size must be 1–100; connection and command timeouts must be 1–30 seconds."
             );
 
@@ -38,7 +37,7 @@ public sealed class DatabaseSettings
         }
         catch (ArgumentException)
         {
-            throw new InvalidOperationException(
+            throw new DatabaseSetupException(
                 "The PostgreSQL connection string is invalid. Check its keys and syntax."
             );
         }
@@ -47,7 +46,7 @@ public sealed class DatabaseSettings
             || string.IsNullOrWhiteSpace(parsed.Database)
             || string.IsNullOrWhiteSpace(parsed.Username)
         )
-            throw new InvalidOperationException(
+            throw new DatabaseSetupException(
                 "The PostgreSQL connection string requires Host, Database and Username."
             );
         // MAZ-63: no Kerberos/GSS negotiation unless the operator asks for it; the

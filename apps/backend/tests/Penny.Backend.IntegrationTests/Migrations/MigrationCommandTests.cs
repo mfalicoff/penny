@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Penny.Backend.IntegrationTests.Infrastructure;
@@ -11,10 +10,10 @@ namespace Penny.Backend.IntegrationTests.Migrations;
 public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
-    public async Task whenMigrationCredentialsProvided_MigrationCommand_ShouldPersistSchemaWithoutStartingHttp()
+    public async Task whenConnectionProvided_MigrationCommand_ShouldPersistSchemaWithoutStartingHttp()
     {
         await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
-        var result = await RunAsync(Fixture.MigrationConnection);
+        var result = await RunAsync(Fixture.Connection, "migrate");
         result.ExitCode.ShouldBe(0, result.Error);
         result.Output.ShouldContain("migration complete");
         await using var query = Fixture.Admin.CreateCommand(
@@ -24,168 +23,155 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
         (await query.ExecuteScalarAsync(Ct)).ShouldBe(
             (long)context.Database.GetMigrations().Count()
         );
-    }
-
-    [Fact]
-    public async Task whenGrantRuntimeRequested_MigrationCommand_ShouldLeaveRuntimeRoleReady()
-    {
-        // A fresh schema has no runtime grants: the shared runtime host is not ready
-        // until the same command that migrated also applied grant-runtime.sql.
-        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
-        await Fixture.SqlAsync(
-            "CREATE SCHEMA penny AUTHORIZATION penny_migrator; GRANT USAGE ON SCHEMA penny TO penny_runtime",
-            Ct
-        );
-        var migrated = await RunAsync(Fixture.MigrationConnection);
-        migrated.ExitCode.ShouldBe(0, migrated.Error);
-        using (var before = await Client.GetAsync("/api/ready", Ct))
-            before.StatusCode.ShouldBe(System.Net.HttpStatusCode.ServiceUnavailable);
-        var granted = await RunAsync(Fixture.MigrationConnection, "--grant-runtime");
-        granted.ExitCode.ShouldBe(0, granted.Error);
-        granted.Output.ShouldContain("Runtime grants applied.");
-        using (var after = await Client.GetAsync("/api/ready", Ct))
-            after.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
-    }
-
-    [Fact]
-    public void whenGrantScriptEmbedded_RuntimeGrants_ShouldMatchRepositoryFile()
-    {
-        var file = Path.Combine(
-            AppContext.BaseDirectory,
-            "..",
-            "..",
-            "..",
-            "..",
-            "..",
-            "development",
-            "grant-runtime.sql"
-        );
-        Penny.Backend.Persistence.Migrations.RuntimeGrants.Sql().ShouldBe(File.ReadAllText(file));
-    }
-
-    [Fact]
-    public async Task whenRuntimeCredentialsProvided_MigrationCommand_ShouldFailWithoutExposingSecrets()
-    {
-        var result = await RunAsync(Fixture.RuntimeConnection);
-        result.ExitCode.ShouldBe(1);
-        result.Error.ShouldContain("migration-role");
-        result.Error.ShouldNotContain(Fixture.RuntimeConnection);
-        result.Error.ShouldNotContain("Password=");
-    }
-
-    [Fact]
-    public void whenBootstrapScriptEmbedded_DatabaseBootstrap_ShouldMatchRepositoryFile()
-    {
-        var file = Path.Combine(
-            AppContext.BaseDirectory,
-            "..",
-            "..",
-            "..",
-            "..",
-            "..",
-            "development",
-            "bootstrap.sql"
-        );
-        Penny
-            .Backend.Persistence.Migrations.DatabaseBootstrap.Sql()
-            .ShouldBe(File.ReadAllText(file));
-    }
-
-    [Fact]
-    public async Task whenBootstrapRequested_MigrationCommand_ShouldBeRepeatableAndRotateRolePasswords()
-    {
-        // Like a new database: no penny schema. The roles already exist (the fixture made
-        // them), so bootstrap leaves them in place and makes the configured passwords
-        // authoritative. The migration password is rotated and then restored, so the shared
-        // fixture keeps its credentials.
-        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
-        var rotated = new NpgsqlConnectionStringBuilder(Fixture.MigrationConnection)
-        {
-            Password = Guid.NewGuid().ToString("N"),
-        }.ConnectionString;
-        var first = await RunAsync(rotated, Bootstrap(), "--bootstrap", "--grant-runtime");
-        var second = await RunAsync(rotated, Bootstrap(), "--grant-runtime", "--bootstrap");
-        var oldPassword = await RunAsync(Fixture.MigrationConnection);
-        var restored = await RunAsync(Fixture.MigrationConnection, Bootstrap(), "--bootstrap");
-        restored.ExitCode.ShouldBe(0, restored.Error);
-
-        first.ExitCode.ShouldBe(0, first.Error);
-        first.Output.ShouldContain("Database bootstrap complete.");
-        first.Output.ShouldContain("Runtime grants applied.");
-        second.ExitCode.ShouldBe(0, second.Error);
-        oldPassword.ExitCode.ShouldBe(1);
-        await using (
-            var owner = Fixture.Admin.CreateCommand(
-                "SELECT nspowner::regrole::text FROM pg_namespace WHERE nspname = 'penny'"
-            )
-        )
-            (await owner.ExecuteScalarAsync(Ct)).ShouldBe("penny_migrator");
         using var ready = await Client.GetAsync("/api/ready", Ct);
         ready.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
     }
 
     [Fact]
-    public async Task whenBootstrapRoleNamesDiffer_MigrationCommand_ShouldFailWithoutExposingSecrets()
+    public async Task whenUserCannotCreateSchema_MigrationCommand_ShouldFailWithoutExposingSecrets()
     {
-        var environment = Bootstrap();
-        environment["ConnectionStrings__Postgres"] = new NpgsqlConnectionStringBuilder(
-            Fixture.RuntimeConnection
-        )
-        {
-            Username = "someone_else",
-        }.ConnectionString;
-        var result = await RunAsync(Fixture.MigrationConnection, environment, "--bootstrap");
-        result.ExitCode.ShouldBe(1);
-        result.Error.ShouldContain("bootstrap-configuration");
-        result.Error.ShouldNotContain("Password=");
-    }
-
-    private Dictionary<string, string> Bootstrap() =>
-        new()
-        {
-            ["ConnectionStrings__Admin"] = Fixture.AdminConnection,
-            ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
-        };
-
-    private static Task<(int ExitCode, string Output, string Error)> RunAsync(
-        string connection,
-        params string[] options
-    ) => RunAsync(connection, [], options);
-
-    private static async Task<(int ExitCode, string Output, string Error)> RunAsync(
-        string connection,
-        Dictionary<string, string> environment,
-        params string[] options
-    )
-    {
-        var entry = typeof(Program).Assembly.Location;
-        var start = new ProcessStartInfo(
-            Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet"
-        )
-        {
-            WorkingDirectory = Path.GetDirectoryName(entry)!,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-        start.ArgumentList.Add(entry);
-        start.ArgumentList.Add("migrate");
-        foreach (var option in options)
-            start.ArgumentList.Add(option);
-        start.Environment["ConnectionStrings__Migration"] = connection;
-        foreach (var (key, value) in environment)
-            start.Environment[key] = value;
-        using var process = Process.Start(start)!;
-        var output = process.StandardOutput.ReadToEndAsync(Ct);
-        var error = process.StandardError.ReadToEndAsync(Ct);
+        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
+        var role = "limited_" + Guid.NewGuid().ToString("N")[..12];
+        var password = Guid.NewGuid().ToString("N");
+        // Only generated hexadecimal names and passwords are interpolated.
+        await Fixture.SqlAsync($"CREATE ROLE {role} LOGIN PASSWORD '{password}'", Ct);
         try
         {
-            await process.WaitForExitAsync(Ct).WaitAsync(TimeSpan.FromSeconds(15), Ct);
+            var connection = new NpgsqlConnectionStringBuilder(Fixture.Connection)
+            {
+                Username = role,
+                Password = password,
+            }.ConnectionString;
+            var result = await RunAsync(connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                "Database migration failed: PostgresException: SQLSTATE 42501 (insufficient_privilege)"
+            );
+            result.Error.ShouldNotContain(password);
+            result.Error.ShouldNotContain("Password=");
         }
         finally
         {
-            if (!process.HasExited)
-                process.Kill(entireProcessTree: true);
+            await Fixture.SqlAsync($"DROP ROLE {role}", Ct);
         }
-        return (process.ExitCode, await output, await error);
     }
+
+    [Fact]
+    public async Task whenPasswordWrong_MigrationCommand_ShouldReportSqlStateWithoutPassword()
+    {
+        var wrong = Guid.NewGuid().ToString("N");
+        var connection = new NpgsqlConnectionStringBuilder(Fixture.Connection)
+        {
+            Password = wrong,
+        }.ConnectionString;
+        var result = await RunAsync(connection, "migrate");
+        result.ExitCode.ShouldBe(1);
+        result.Error.ShouldContain(
+            "Database migration failed: PostgresException: SQLSTATE 28P01 (invalid_password)"
+        );
+        result.Error.ShouldNotContain(wrong);
+        result.Error.ShouldNotContain("Password=");
+    }
+
+    [Fact]
+    public async Task whenSchemaNewer_MigrationCommand_ShouldSaySo()
+    {
+        await Fixture.SqlAsync(
+            """INSERT INTO penny."__EFMigrationsHistory" VALUES ('29990101000000_Future', '10.0.14')""",
+            Ct
+        );
+        try
+        {
+            var result = await RunAsync(Fixture.Connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                "Database migration failed: DatabaseSetupException: Database schema is newer than this build. No migration was applied."
+            );
+        }
+        finally
+        {
+            await Fixture.SqlAsync(
+                """DELETE FROM penny."__EFMigrationsHistory" WHERE "MigrationId" = '29990101000000_Future'""",
+                Ct
+            );
+        }
+    }
+
+    [Fact]
+    public async Task whenAnotherMigrationHoldsLock_MigrationCommand_ShouldNameTheLock()
+    {
+        await using var holder = await Fixture.Admin.OpenConnectionAsync(Ct);
+        await using (var take = new NpgsqlCommand("SELECT pg_advisory_lock($1)", holder))
+        {
+            take.Parameters.Add(
+                new NpgsqlParameter<long> { TypedValue = DatabaseSchema.MigrationLock }
+            );
+            await take.ExecuteNonQueryAsync(Ct);
+        }
+        try
+        {
+            var result = await RunAsync(Fixture.Connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                "Database migration failed: MigrationLockedException: Another database migration holds the lock."
+            );
+        }
+        finally
+        {
+            // A pooled connection would keep the session lock until its next use.
+            await using var release = new NpgsqlCommand("SELECT pg_advisory_unlock_all()", holder);
+            await release.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+    }
+
+    [Fact]
+    public async Task whenExtensionsMissingAndUserCannotCreateThem_MigrationCommand_ShouldSaySo()
+    {
+        // A database without the search extensions, where the application user may create
+        // pg_trgm (a trusted extension) but not vector.
+        var database = "noext_" + Guid.NewGuid().ToString("N")[..12];
+        // Only a generated hexadecimal name is interpolated.
+        await Fixture.SqlAsync($"CREATE DATABASE {database}", Ct);
+        try
+        {
+            await Fixture.SqlAsync(
+                $"GRANT CONNECT, CREATE ON DATABASE {database} TO penny_app",
+                Ct
+            );
+            var connection = new NpgsqlConnectionStringBuilder(Fixture.Connection)
+            {
+                Database = database,
+            }.ConnectionString;
+            var result = await RunAsync(connection, "migrate");
+            result.ExitCode.ShouldBe(1);
+            result.Error.ShouldContain(
+                $"Database migration failed: DatabaseSetupException: {SearchExtensions.Missing}"
+            );
+        }
+        finally
+        {
+            await Fixture.SqlAsync($"DROP DATABASE {database} WITH (FORCE)", Ct);
+        }
+    }
+
+    [Theory]
+    [InlineData("--bootstrap")]
+    [InlineData("--grant-runtime")]
+    public async Task whenRetiredOptionGiven_MigrationCommand_ShouldPrintUsage(string option)
+    {
+        var result = await RunAsync(Fixture.Connection, "migrate", option);
+        result.ExitCode.ShouldBe(1);
+        result.Error.ShouldContain("command-usage");
+    }
+
+    private static Task<(int ExitCode, string Output, string Error)> RunAsync(
+        string connection,
+        params string[] arguments
+    ) =>
+        MaintenanceProcess.RunAsync(
+            null,
+            arguments,
+            Ct,
+            new Dictionary<string, string> { ["ConnectionStrings__Postgres"] = connection }
+        );
 }

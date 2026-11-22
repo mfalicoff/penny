@@ -128,7 +128,7 @@ public sealed class SharedRecurrenceConcurrencyTests(ApiFixture fixture)
             await WaitForLockWaitAsync();
             (
                 await CountAsync(
-                    "SELECT count(*) FROM (SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'penny_runtime' AND wait_event_type = 'Lock') AS killed"
+                    "SELECT count(*) FROM (SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'penny_app' AND wait_event_type = 'Lock') AS killed"
                 )
             ).ShouldBe(1);
             var failed = await run;
@@ -234,7 +234,7 @@ public sealed class SharedRecurrenceConcurrencyTests(ApiFixture fixture)
             .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         var ruleId = Id(await CreateRuleAsync(home, alex, Rule(9000, alexId, start, "weekly")));
         var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Recurrence:Worker"] = "true",

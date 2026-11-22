@@ -63,7 +63,7 @@ Penny is self-hosted and sends no email, so resets are **operator-issued**: some
 
 ### Operator runbook
 
-Run the command with the same configuration as the API: it uses the **runtime** connection `ConnectionStrings__Postgres` (DML only; the migration role is not needed) and `Auth__PasswordResetHours`. It never starts HTTP and needs the database to be migrated with runtime grants applied.
+Run the command with the same configuration as the API: it uses the API's database login `ConnectionStrings__Postgres` and `Auth__PasswordResetHours`. It never starts HTTP and needs the database to be migrated (the API does that on startup).
 
 ```sh
 # From a source checkout (loads the development .env):
@@ -109,7 +109,6 @@ Attempts are stored in `penny.oidc_attempts`: primary key `transaction_hash` (SH
 - **Bound.** A start is refused with `403 Too many sign-in attempts. Try again later.` while 1,000 unexpired attempts exist. Concurrent starts may each see room, so this is a flood guard, not an exact quota.
 - **Restarts and instances.** Attempts survive restarts and work across API instances on the same database. The provider discovery document and JWKS are cached per process and fetched again after a restart.
 - **Secrets at rest.** State, nonce and verifier are stored in plain text for at most 10 minutes; without the transaction (only its hash is stored) and the provider's authorization code they cannot complete a sign-in.
-- `development/grant-runtime.sql` already grants the runtime role DML on new tables; re-run it after `migrate`, as for every migration.
 
 ### Configuration
 

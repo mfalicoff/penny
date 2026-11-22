@@ -2,8 +2,8 @@
 // Production container smoke test (MAZ-63). Starts deploy/compose.yaml with the
 // given images under a throwaway project, then checks: same-origin web and API,
 // readiness, correlation ids, cookies/CORS through the proxy, restart and volume
-// durability, receipt-volume permission and PostgreSQL loss/recovery, runtime-grant
-// repair, backup and restore into a clean environment, search after an index rebuild
+// durability, receipt-volume permission and PostgreSQL loss/recovery, migration on startup
+// and on restart, backup and restore into a clean environment, search after an index rebuild
 // and the missing-extension guard. Everything is synthetic and removed afterwards.
 //
 //   PENNY_SMOKE_API_IMAGE=localhost/penny-api:dev PENNY_SMOKE_WEB_IMAGE=localhost/penny-web:dev \
@@ -103,7 +103,7 @@ const notReady = (fragment) => () =>
   http("/api/ready").then((r) => (r.status === 503 && r.text.includes(fragment)) || `${r.status} ${r.text}`);
 
 function psql(sql) {
-  return compose(["exec", "-T", "postgres", "psql", "-U", "postgres", "-d", "penny", "-v", "ON_ERROR_STOP=1", "-c", sql]);
+  return compose(["exec", "-T", "postgres", "psql", "-U", "penny", "-d", "penny", "-v", "ON_ERROR_STOP=1", "-c", sql]);
 }
 
 function findUserId(value) {
@@ -210,9 +210,9 @@ async function main() {
 
   console.log(`# ${project} on ${origin} (api ${apiImage}, web ${webImage})`);
   up();
-  check(true, "stack started: postgres healthy, migrate completed, api and web healthy");
-  const migrateLog = compose(["logs", "--no-log-prefix", "migrate"]).stdout;
-  check(migrateLog.includes("Runtime grants applied."), "migration applied runtime grants");
+  check(true, "stack started: postgres healthy, api and web healthy");
+  const migrations = () => compose(["logs", "--no-log-prefix", "api"]).stdout.split("Database migrated.").length - 1;
+  check(migrations() === 1, "the API migrated the new database on startup");
 
   // Same origin: static app, SPA fallback and the API behind one port.
   const page = await http("/");
@@ -335,16 +335,15 @@ async function main() {
   await waitFor("ready after PostgreSQL returns", ready);
   await dataSurvives("after PostgreSQL recovery");
 
-  // Missing runtime grants are reported, and re-running the migration repairs them.
-  psql(`REVOKE SELECT ON penny."__EFMigrationsHistory" FROM penny_runtime`);
-  await waitFor("readiness reports missing grants", notReady("grants"), 15_000);
-  compose(["run", "--rm", "migrate"]);
-  await waitFor("ready after re-running migrate", ready, 30_000);
-  check(true, "runtime role failure detected and repaired by migrate --grant-runtime");
+  // Every start re-checks migrations under the lock; with nothing pending it just serves.
+  compose(["restart", "api"]);
+  await waitFor("ready after restarting the API", ready);
+  check(migrations() === 2, "a restart re-checks migrations and serves");
+  await dataSurvives("after an API restart");
 
   // Backup: stop writers, dump the database, then archive receipts.
   compose(["stop", "web", "api"]);
-  const dump = compose(["exec", "-T", "postgres", "pg_dump", "-U", "postgres", "-d", "penny", "--schema=penny", "--format=custom"], { binary: true }).stdout;
+  const dump = compose(["exec", "-T", "postgres", "pg_dump", "-U", "penny", "-d", "penny", "--schema=penny", "--format=custom"], { binary: true }).stdout;
   check(dump.length > 1024, `database dump taken (${dump.length} bytes)`);
   const receipts = compose(
     ["run", "--rm", "--no-deps", "-T", "--entrypoint", "tar", "api", "-C", "/var/lib/penny/receipts", "-cf", "-", "."],
@@ -352,12 +351,12 @@ async function main() {
   ).stdout;
   check(receipts.length > 2048, `receipt archive taken (${receipts.length} bytes)`);
 
-  // Restore into a clean environment: new volumes, then roles and extensions from
-  // `bootstrap` (no migration), which the dump's owners and grants need.
+  // Restore into a clean environment: new volumes (the image creates the penny login and
+  // database), the search extensions the dump's columns and indexes need, then the dump.
   compose(["down", "-v"]);
   compose(["up", "-d", "--wait", "--no-build", "--pull", "never", "postgres"]);
-  check(compose(["run", "--rm", "--no-deps", "migrate", "bootstrap"]).stdout.includes("Database bootstrap complete."), "bootstrap prepared the empty server");
-  compose(["exec", "-T", "postgres", "pg_restore", "-U", "postgres", "-d", "penny", "--clean", "--if-exists", "--exit-on-error"], { input: dump });
+  psql("CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public");
+  compose(["exec", "-T", "postgres", "pg_restore", "-U", "penny", "-d", "penny", "--clean", "--if-exists", "--exit-on-error"], { input: dump });
   compose(["run", "--rm", "--no-deps", "-T", "--entrypoint", "tar", "api", "-C", "/var/lib/penny/receipts", "-xf", "-"], { input: receipts });
   up();
   await waitFor("ready after restore", ready);
@@ -376,11 +375,13 @@ async function main() {
   await waitFor("search after rebuild", () => searchFinds(token), 30_000);
   check(true, "search finds the restored expense after rebuild");
 
-  // Missing extension: readiness explains it and migrate refuses to run.
+  // Missing extension: readiness explains it, and `migrate` recreates it (the bundled
+  // login may create extensions).
   psql("DROP EXTENSION pg_trgm CASCADE");
   await waitFor("readiness reports missing extension", notReady("pg_trgm"), 15_000);
-  const refused = compose(["run", "--rm", "migrate", "migrate", "--grant-runtime"], { allowFailure: true });
-  check(refused.status !== 0, "migrate refuses a database without pg_trgm");
+  const repaired = compose(["exec", "-T", "api", "dotnet", "Penny.Backend.Api.dll", "migrate"], { allowFailure: true });
+  check(repaired.status === 0, "migrate recreates a dropped pg_trgm", repaired.stderr);
+  await waitFor("ready after recreating the extension", ready, 15_000);
 }
 
 let failed = false;

@@ -11,7 +11,7 @@ public sealed class TestControlOptionsTests
 {
     private const string Token = "0123456789abcdef0123456789abcdef";
     private const string TestDatabase =
-        "Host=127.0.0.1;Database=penny_test_r1234;Username=penny_runtime;Password=x";
+        "Host=127.0.0.1;Database=penny_test_r1234;Username=penny;Password=x";
 
     private static TestControlOptions Read(
         string environment,
@@ -78,9 +78,9 @@ public sealed class TestControlOptionsTests
     }
 
     [Theory]
-    [InlineData("Host=db;Database=penny;Username=penny_runtime")]
-    [InlineData("Host=db;Database=production_penny_test;Username=penny_runtime")]
-    [InlineData("Host=db;Username=penny_runtime")]
+    [InlineData("Host=db;Database=penny;Username=penny")]
+    [InlineData("Host=db;Database=production_penny_test;Username=penny")]
+    [InlineData("Host=db;Username=penny")]
     [InlineData("not a connection string")]
     public void whenDatabaseIsNotATestDatabase_Read_ShouldFail(string connection) =>
         Should.Throw<InvalidOperationException>(() =>
