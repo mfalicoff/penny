@@ -59,6 +59,8 @@ struct ActivityView: View {
         }
         .background(PennyColor.background)
         .navigationTitle("Activity")
+        // iPad: the title is drawn over the list instead of in the bar (`ipad-activity`).
+        .toolbarTitleHidden(sizeClass == .regular)
         .toolbar {
             // iPhone: the filters button in the bar (`activity` card); on iPad it is the last chip. While
             // the search shows only the active filters, they are removed there instead (`search-empty`).
@@ -184,6 +186,14 @@ private struct ActivityList: View {
                 DemoBanner().listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 if sizeClass == .regular {
+                    // The list column's own large title, over the search field (`ipad-activity`).
+                    Text("Activity")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundStyle(PennyColor.label)
+                        .accessibilityAddTraits(.isHeader)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 4, trailing: 0))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     ActivitySearchField()
                         .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
