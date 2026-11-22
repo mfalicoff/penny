@@ -1824,9 +1824,13 @@
       "id": "iphone-edit-entry",
       "view": "edit entry: 🎉 Party supplies, September 2026",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-73",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2423,11 +2427,6 @@
             "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "Search in the toolbar with a month menu and the totals line, not the card's large title, search field and chips",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
           }
         ]
       },
@@ -2445,19 +2444,12 @@
       "id": "ipad-add-entry",
       "view": "iPad new expense form sheet",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The details put a Household row before Date; the card has it after Trip (MAZ-277)",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
