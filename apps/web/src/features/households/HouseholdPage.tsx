@@ -144,7 +144,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
       view={view}
       expenseId={expenseId}
       variant={inlineExpense ? "panel" : "dialog"}
-      closable={!split}
+      compact={split}
       focusOnOpen={(id) => id !== autoPicked}
       onEdit={(expense) => { setForm({ kind: "edit", expense }); }}
       onRule={(rule) => { go({ rule }); }}

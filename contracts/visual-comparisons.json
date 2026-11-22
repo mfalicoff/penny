@@ -2196,11 +2196,6 @@
             "summary": "The month is chosen in the bar (previous, month, next) over both panes; the card has no month control and its toolbar sits over the right pane (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-279"
-          },
-          {
-            "summary": "The selected expense is the web's full detail panel (a Total, Date, Category, Paid by and Split grid, then the shares and actions), not the card's short card with the payer line and one row per share",
-            "kind": "follow-up",
-            "ref": "MAZ-279"
           }
         ]
       }

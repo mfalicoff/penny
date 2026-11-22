@@ -194,6 +194,19 @@ describe("household on a touch tablet (ipad-shared)", () => {
     expect(balances.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(panel).queryByRole("button", { name: "Close Hydro" })).not.toBeInTheDocument();
     expect(within(panel).getByRole("heading", { name: "Hydro" })).not.toHaveFocus();
+    // It's the card's short card: who paid what and when, then each member's share.
+    expect(panel).toHaveTextContent("bea@example.test paid $90.00 · Oct 18");
+    expect(within(panel).queryByText("Total")).not.toBeInTheDocument();
+    const shares = within(panel).getByRole("list", { name: "Shares of Hydro" });
+    expect(within(shares).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(shares).getByText("bea@example.test · payer")).toBeInTheDocument();
+    // Edit, Change history and Delete stay reachable from its … menu.
+    await user.click(within(panel).getByRole("button", { name: "Hydro actions" }));
+    const menu = within(panel).getByRole("list", { name: "Hydro actions" });
+    expect(within(menu).getAllByRole("button").map((item) => item.textContent)).toEqual(["Edit", "Change history", "Delete"]);
+    await user.click(within(menu).getByRole("button", { name: "Change history" }));
+    await user.click(await within(panel).findByRole("button", { name: "Back to the expense" }));
+    expect(await within(panel).findByRole("list", { name: "Shares of Hydro" })).toBeInTheDocument();
     // Choosing another expense opens it there and moves focus to it.
     await user.click(screen.getByRole("link", { name: /^Rent/ }));
     const rent = await screen.findByRole("region", { name: "Rent" });

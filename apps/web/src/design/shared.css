@@ -1305,6 +1305,48 @@ a.row:hover {
     line-height: 1.4;
   }
 
+  /* ipad-shared's selected expense: the title with who paid what beside it, then a row per share. */
+  .expense-panel--compact .expense-panel__head {
+    align-items: baseline;
+  }
+
+  .expense-panel--compact .expense-panel__head .card__title {
+    flex: none;
+    color: var(--pk-label);
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+    text-transform: none;
+  }
+
+  .expense-panel__sub {
+    flex: 1;
+    min-width: 0;
+    color: var(--pk-label-2);
+    font-size: 0.875rem;
+    text-align: end;
+  }
+
+  .expense-panel--compact .more-menu {
+    align-self: center;
+  }
+
+  .expense-share {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .expense-share__name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
+  }
+
+  .expense-share .money {
+    font-weight: 600;
+  }
+
   /* The open expense's row is tinted, as the card's selected row. */
   .household--split .shared-group__rows .row[aria-current="page"] {
     background: var(--pk-tint-soft);
