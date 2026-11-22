@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "754e4beaf7681de6815d60d0115de66401ee2bb80fc0813de407eb16679b58da"
+      "sha256": "07f963c7f1f2c024dfb65d8260f03d4ac585b3598a87f5166032010d019a89f6"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -1173,7 +1173,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/account-form.html",
-      "sha256": "94f766b78e365477ef16f174b6adcc3bd689f49a6608d74358f246f24fd5b092",
+      "sha256": "8008b7aa1719c6fbba15a745acdce587aa20bd07e67a61129711e120c246eaa5",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "route": "/accounts",
@@ -1219,7 +1219,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/category-form.html",
-      "sha256": "03a90a5723b6db50e1aacf72b7d2c19d68aba33e6286b752dc806a4fe7a28488",
+      "sha256": "576e015fb130b93911f016294a0ce49cf0177faa1ac320d453d1365fd105b1e4",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "route": "/categories",

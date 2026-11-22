@@ -2,6 +2,8 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Penny · iPhone · Account form</title>
 <link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>/* Ionicons (MIT) this card needs beyond assets/icons.js; drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"chevron-expand":"<path d=\"M136 208l120-104 120 104M136 304l120 104 120-104\" stroke=\"currentColor\" fill=\"none\" style=\"stroke-width:var(--sw,36px)\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"});</script>
 <style>
   .behind { position: absolute; inset: 0; background: var(--bg); }
   .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
@@ -63,9 +65,10 @@
     </div>
     <div class="gf">Labels where money comes from or how you pay. No bank connection is needed.</div>
     <div class="glist" style="margin-top:24px">
-      <div class="sr noi" style="justify-content:center;color:var(--label-3);font-weight:500"><i data-i="lock-closed" style="width:16px;height:16px"></i>Remove account</div>
+      <div class="sr noi"><div class="tx">Move them to</div><span class="v">Choose<i data-i="chevron-expand" style="width:15px;height:15px;--sw:44px"></i></span></div>
+      <div class="sr noi" style="justify-content:center;gap:8px;color:var(--label-3);font-weight:500"><i data-i="trash" style="width:17px;height:17px"></i>Move and remove</div>
     </div>
-    <div class="gf" style="text-align:center;padding:7px 36px 0">Visa is used by 31 entries and 3 schedules. Move them to another account to remove it.</div>
+    <div class="gf" style="text-align:center;padding:7px 36px 0">Visa is used by 31 entries and 3 schedules.</div>
   </div>
   <div class="home-ind"></div>
 </div>

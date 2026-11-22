@@ -314,6 +314,8 @@ public enum AccessibilityID {
         public static let categoryName = "categoryForm.name"
         public static let categorySave = "categoryForm.save"
         public static let scheduleSave = "scheduleForm.save"
+        /// The schedule page's … menu (Edit, Pause or Resume, Remove).
+        public static let scheduleMore = "schedule.more"
         public static func account(_ id: String) -> String { "account.\(id)" }
         public static func category(_ id: String) -> String { "category.\(id)" }
         public static func schedule(_ id: String) -> String { "schedule.\(id)" }
@@ -322,6 +324,7 @@ public enum AccessibilityID {
 
         static let all = [
             addAccount, addCategory, addSchedule, accountName, accountSave, categoryName, categorySave, scheduleSave,
+            scheduleMore,
         ]
         static let prefixes = ["account.", "category.", "schedule.", "sharedSchedule."]
     }

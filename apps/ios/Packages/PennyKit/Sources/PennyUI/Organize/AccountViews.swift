@@ -13,6 +13,13 @@ struct AccountsListView: View {
         WorkspaceContent { ledger in
             List {
                 if !ledger.accounts.isEmpty {
+                    // The card's subtitle under the large title (`.lsub`), as on Recurring.
+                    Section {
+                        Text(Self.subtitle).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                            .accessibilityIdentifier("accounts.subtitle")
+                    }
+                    .compactSectionSpacing()
                     Section {
                         ForEach(ledger.accounts, id: \.id) { account in
                             Button {
@@ -46,6 +53,8 @@ struct AccountsListView: View {
         }
         .background(PennyColor.background)
         .navigationTitle("Accounts")
+        // The card's large title; Settings' sheet root is inline, and a pushed page would inherit it.
+        .toolbarTitleDisplayModeLarge()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add account", systemImage: "plus") { form = AccountFormRequest(account: nil) }
@@ -59,6 +68,8 @@ struct AccountsListView: View {
         }
         .accessibilityIdentifier("screen.accounts")
     }
+
+    static let subtitle = "Labels for how you pay and get paid."
 
     static let footer =
         "Penny never connects to your bank and doesn't track balances. An account linked to entries or "
@@ -110,8 +121,9 @@ private struct AccountRow: View {
 ///
 /// `onSaved` runs once the account is kept (offline included), with the stored account (its
 /// trimmed name and its id), right before the sheet closes. A failed save keeps the sheet open
-/// with what was typed and the reason. Editing (`account` set) also offers Remove, which is
-/// unavailable, with the reason, while entries or schedules use the account.
+/// with what was typed and the reason. Editing (`account` set) also offers Remove; while
+/// entries or schedules use the account, it offers "Move them to" another account and "Move and
+/// remove" instead (`MoveAndRemoveSection`).
 struct AccountFormSheet: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
@@ -126,7 +138,8 @@ struct AccountFormSheet: View {
     }
 
     var body: some View {
-        let usage = shell.workspace.load.ledger?.usage(ofAccount: model.id) ?? RecordUsage()
+        let ledger = shell.workspace.load.ledger ?? Ledger(categories: [])
+        let usage = ledger.usage(ofAccount: model.id)
         NavigationStack {
             List {
                 failureSection
@@ -152,7 +165,7 @@ struct AccountFormSheet: View {
                     Text("Labels where money comes from or how you pay. No bank connection is needed.")
                 }
                 if !model.isNew {
-                    removeSection(usage: usage)
+                    removeSection(usage: usage, ledger: ledger)
                 }
             }
             .insetGroupedList()
@@ -176,10 +189,20 @@ struct AccountFormSheet: View {
                 "Remove \(model.original?.name ?? "account")?", isPresented: $confirmingRemoval,
                 titleVisibility: .visible
             ) {
-                Button("Remove account", role: .destructive, action: remove)
-                    .accessibilityIdentifier("accountForm.removeConfirm")
+                if usage.isInUse {
+                    Button("Move and remove", role: .destructive) { moveAndRemove(ledger) }
+                        .accessibilityIdentifier("accountForm.removeConfirm")
+                } else {
+                    Button("Remove account", role: .destructive, action: remove)
+                        .accessibilityIdentifier("accountForm.removeConfirm")
+                }
             } message: {
-                Text("Nothing uses this account, so no entry changes.")
+                if usage.isInUse, let target = model.moveTo.flatMap(ledger.account(id:)) {
+                    let name = model.original?.name ?? "this account"
+                    Text("\(OrganizeText.uses(usage)) move to \(target.name), then \(name) is removed.")
+                } else {
+                    Text("Nothing uses this account, so no entry changes.")
+                }
             }
             .pennySolidBars()
         }
@@ -200,23 +223,17 @@ struct AccountFormSheet: View {
         }
     }
 
-    private func removeSection(usage: RecordUsage) -> some View {
-        let note = AccountFormModel.removalNote(name: model.original?.name ?? "", usage: usage)
-        return Section {
-            Button(role: .destructive) {
-                confirmingRemoval = true
-            } label: {
-                Label("Remove account", systemImage: note == nil ? "trash" : "lock")
-                    .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
-            }
-            .disabled(note != nil)
-            .accessibilityHint(note ?? "")
-            .accessibilityIdentifier("accountForm.remove")
-        } footer: {
-            if let note {
-                Text(note).accessibilityIdentifier("accountForm.removeReason")
-            }
-        }
+    private func removeSection(usage: RecordUsage, ledger: Ledger) -> some View {
+        let targets = model.moveTargets(in: ledger)
+        return MoveAndRemoveSection(
+            noun: "account",
+            note: AccountFormModel.removalNote(
+                name: model.original?.name ?? "", usage: usage, canMove: !targets.isEmpty),
+            targets: targets.map { ($0.id, $0.name) }, moveTo: $model.moveTo,
+            ids: .init(
+                moveTo: "accountForm.moveTo", moveAndRemove: "accountForm.moveAndRemove", remove: "accountForm.remove",
+                reason: "accountForm.removeReason")
+        ) { confirmingRemoval = true }
     }
 
     private func save() {
@@ -230,6 +247,12 @@ struct AccountFormSheet: View {
     private func remove() {
         Task {
             if await model.remove(with: { await shell.commit($0, summary: $1) }) { dismiss() }
+        }
+    }
+
+    private func moveAndRemove(_ ledger: Ledger) {
+        Task {
+            if await model.moveAndRemove(in: ledger, with: { await shell.commit($0, summary: $1) }) { dismiss() }
         }
     }
 }
