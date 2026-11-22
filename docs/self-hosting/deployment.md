@@ -190,11 +190,11 @@ The `web` image serves the browser app (`apps/web`: React, Vite, TanStack). It t
 
 ## Container images and releases
 
-`.github/workflows/backend-images.yml` builds `penny-api` and `penny-web` natively on amd64 and arm64 runners. It runs the production-container smoke test on each architecture (`node scripts/deploy-smoke.mjs`), then publishes multi-platform images with provenance and SBOM attestations to `ghcr.io/<owner>/penny-api` and `ghcr.io/<owner>/penny-web`. Pull requests build and test without publishing.
+`.github/workflows/backend-images.yml` builds `penny-api` and `penny-web` natively on amd64 and arm64 runners. It runs the production-container smoke test on each architecture (`node scripts/deploy-smoke.mjs`), then publishes multi-platform images with provenance and SBOM attestations to `ghcr.io/<owner>/penny-api` and `ghcr.io/<owner>/penny-web`. Pull requests and merges to `master` build and test without publishing.
 
 | Event | Tags |
 | --- | --- |
-| Push to `v2` | `v2`, `sha-<commit>` (version label `0.0.0-v2.<run>`) |
+| Manual run on a branch | the branch name, `sha-<commit>` (version label `0.0.0-v2.<run>`) |
 | Tag `v2.3.4` | `2.3.4`, `2.3`, `2`, `latest`, `sha-<commit>` |
 
 Deploy exact version tags; `latest` and `2` move. Run the smoke test locally against your own builds before a release:
