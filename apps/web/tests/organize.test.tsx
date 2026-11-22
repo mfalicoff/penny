@@ -371,8 +371,8 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     await user.clear(within(form).getByLabelText("Date"));
     await user.type(within(form).getByLabelText("Date"), "2026-10-05");
 
-    // The same All categories picker as the personal form, by keyboard.
-    const opener = within(form).getByRole("button", { name: "All categories" });
+    // The category pill in the title field opens the same picker as the personal form, by keyboard.
+    const opener = within(form).getByRole("button", { name: /^Category: / });
     opener.focus();
     await user.keyboard("{Enter}");
     const inner = await dialog("Expense category");
@@ -398,7 +398,7 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Expense category" })).not.toBeInTheDocument();
     });
-    expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
+    expect(within(form).getByRole("button", { name: "Category: Pets" })).toBeInTheDocument();
     expect(within(form).getByLabelText("Title")).toHaveValue("Vet visit");
     expect(within(form).getByLabelText("Amount (CAD)")).toHaveValue("60");
     await synced(ledger, 1);

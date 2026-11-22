@@ -3,7 +3,7 @@ import type { Category, Transaction } from "@domain/ledger.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { useId, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useToday } from "../../app/useToday";
-import { Badge, Button } from "../../design/controls";
+import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
 import { ModalDialog } from "../../design/ModalDialog";
@@ -40,7 +40,7 @@ export function EntryDetailDialog({ entry, onClose, initialAction = "detail" }: 
     <EntryDetailFrame entry={entry} onClose={onClose} initialAction={initialAction}>
       {(sheet) => (
         <ModalDialog labelledBy={titleId} onClose={onClose} initialFocus={editRef} panelClassName="pk-dialog entry-sheet-dialog">
-          {sheet({ titleId, editRef, actionsOnTop: true })}
+          {sheet({ titleId, editRef, layout: "dialog" })}
         </ModalDialog>
       )}
     </EntryDetailFrame>
@@ -49,18 +49,23 @@ export function EntryDetailDialog({ entry, onClose, initialAction = "detail" }: 
 
 /**
  * The same entry beside Activity's list (`web-activity`'s right-hand panel, `ipad-activity`'s
- * detail pane), from 1100px. It is a labelled region, not a dialog: the list stays usable. On a
- * touch tablet (`touch`) Delete and Edit lead the pane, as on the iPad card; on a desktop they
- * close the panel, as on the web card.
+ * detail pane), from 1100px. It is a labelled region, not a dialog: the list stays usable.
+ *
+ * - On a desktop (`web-activity`) the tile and Close lead, and Edit and Delete end the panel.
+ * - On a touch tablet (`touch`, `ipad-activity`) the pane always shows the selected entry, so it
+ *   has no Close: Delete and Edit lead it over a glow, the tile sits beside the title, and the
+ *   Split group lists your share and the other people's. Saving an edit keeps the entry open;
+ *   deleting it calls `onClose`, and Activity selects another entry.
  */
 export function EntryDetailPanel({ entry, onClose, initialAction = "detail", touch = false }: DetailProps & { touch?: boolean }) {
   const titleId = useId();
   const editRef = useRef<HTMLButtonElement>(null);
   return (
-    <EntryDetailFrame entry={entry} onClose={onClose} initialAction={initialAction}>
+    <EntryDetailFrame entry={entry} onClose={onClose} initialAction={initialAction} keepOnSave={touch}>
       {(sheet) => (
         <aside className={touch ? "entry-panel entry-panel--pane" : "entry-panel"} aria-labelledby={titleId}>
-          {sheet({ titleId, editRef, actionsOnTop: touch })}
+          {touch ? <div className="entry-panel__glow" aria-hidden="true" /> : null}
+          {sheet({ titleId, editRef, layout: touch ? "pane" : "panel" })}
         </aside>
       )}
     </EntryDetailFrame>
@@ -70,12 +75,16 @@ export function EntryDetailPanel({ entry, onClose, initialAction = "detail", tou
 interface SheetSlots {
   titleId: string;
   editRef: RefObject<HTMLButtonElement | null>;
-  /** `iphone-entry-detail`, `ipad-activity`: Close, then Delete and Edit, over the tile. Otherwise (`web-activity`) the tile and Close lead, and Edit and Delete end the panel. */
-  actionsOnTop: boolean;
+  /**
+   * `dialog` (`iphone-entry-detail`): Close, then Delete and Edit, over the tile.
+   * `panel` (`web-activity`): the tile and Close lead, and Edit and Delete end the panel.
+   * `pane` (`ipad-activity`): Delete and Edit, then the tile beside the title; no Close.
+   */
+  layout: "dialog" | "panel" | "pane";
 }
 
 /** The detail's content and its Edit and Delete flows, shared by the dialog and the panel. */
-function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: DetailProps & { initialAction: EntryAction; children: (sheet: (slots: SheetSlots) => ReactNode) => ReactNode }) {
+function EntryDetailFrame({ entry: shown, onClose, initialAction, keepOnSave = false, children }: DetailProps & { initialAction: EntryAction; keepOnSave?: boolean; children: (sheet: (slots: SheetSlots) => ReactNode) => ReactNode }) {
   const writer = useLedgerWriter();
   const toast = useToast();
   const today = useToday();
@@ -92,7 +101,9 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
   const expected = isExpectedIncome(entry, today);
   const canWrite = Boolean(writer.save) && !gone;
 
-  const sheet = ({ titleId, editRef, actionsOnTop }: SheetSlots) => {
+  const sheet = ({ titleId, editRef, layout }: SheetSlots) => {
+    const actionsOnTop = layout !== "panel";
+    const pane = layout === "pane";
     const tile = (
       <span className="category-dot category-dot--large" style={tileStyle({ ...category, entryKind: entry.kind })}>
         <Icon name={categoryIcon(category?.icon)} size={26} />
@@ -103,15 +114,39 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
         <Icon name="close" size={16} weight={44} />
       </button>
     );
-    const deleteButton = <Button variant="danger-quiet" iconOnly icon="trash" aria-label="Delete" disabled={!canWrite} onClick={() => { setMode("delete"); }} />;
+    // `ipad-activity`: Delete and Edit are the pane's neutral glass toolbar buttons.
+    const deleteButton = <Button variant={pane ? "secondary" : "danger-quiet"} className={pane ? "glass" : undefined} iconOnly icon="trash" aria-label="Delete" disabled={!canWrite} onClick={() => { setMode("delete"); }} />;
     const editButton = (
-      <Button ref={editRef} variant="secondary" icon="create" disabled={!canWrite} onClick={() => { setMode("edit"); }}>
+      <Button ref={editRef} variant="secondary" className={pane ? "glass" : undefined} icon="create" disabled={!canWrite} onClick={() => { setMode("edit"); }}>
         Edit
       </Button>
     );
+    const head = (
+      <div className="entry-sheet__head">
+        <h2 id={titleId} className="entry-sheet__title">
+          {entry.title}
+        </h2>
+        <p className="entry-sheet__sub">
+          {category?.name ?? "Unknown category"} · <time dateTime={entry.date}>{longDay(entry.date, today)}</time>
+        </p>
+      </div>
+    );
     return (
-      <div className={actionsOnTop ? "entry-sheet entry-sheet--actions-top" : "entry-sheet"}>
-        {actionsOnTop ? (
+      <div className={cx("entry-sheet", actionsOnTop && "entry-sheet--actions-top", pane && "entry-sheet--pane")}>
+        {pane ? (
+          <>
+            <div className="entry-sheet__top">
+              <span className="entry-sheet__toolbar">
+                {deleteButton}
+                {editButton}
+              </span>
+            </div>
+            <div className="entry-sheet__identity">
+              {tile}
+              {head}
+            </div>
+          </>
+        ) : actionsOnTop ? (
           <>
             <div className="entry-sheet__top">
               {closeButton}
@@ -128,14 +163,7 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
             {closeButton}
           </div>
         )}
-        <div className="entry-sheet__head">
-          <h2 id={titleId} className="entry-sheet__title">
-            {entry.title}
-          </h2>
-          <p className="entry-sheet__sub">
-            {category?.name ?? "Unknown category"} · <time dateTime={entry.date}>{longDay(entry.date, today)}</time>
-          </p>
-        </div>
+        {pane ? null : head}
         <p className="entry-sheet__amount">
           {/* Signed as the cards read it (MAZ-202): expenses −, income +, investments unsigned; expected income in amber, unsigned. */}
           {expected ? <Money cents={entry.share} currency={currency} tone="pending" /> : <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={TONE[entry.kind]} />}
@@ -162,7 +190,7 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
         ) : null}
         {writer.unavailable ? <p className="note">{writer.unavailable}</p> : null}
 
-        <DetailGroup title="Details">
+        <DetailGroup title="Details" titled={pane}>
           <DetailRow label="Account" value={account ? account.name : entry.accountId ? "Removed account" : null} />
           <DetailRow label="Repeats" value={repeatLabel(entry, ledger)} />
           {entry.kind === "expense" ? <DetailRow label="Trip" value={trip?.name ?? null} /> : null}
@@ -170,9 +198,11 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
         </DetailGroup>
 
         {split || entry.receipt ? (
-          <DetailGroup title={split && entry.receipt ? "Split & receipt" : split ? "Split" : "Receipt"} list={false}>
+          <DetailGroup title={pane ? (split ? "Split" : "Receipt") : split && entry.receipt ? "Split & receipt" : split ? "Split" : "Receipt"} aside={pane ? split?.method : undefined} titled={pane} list={false}>
             <div className="entry-sheet__split">
-              {split ? (
+              {split && pane ? (
+                <ShareRows people={split.people} share={entry.share} total={entry.total} currency={currency} />
+              ) : split ? (
                 <dl className="entry-sheet__rows">
                   <DetailRow label="Split" value={split.method} />
                   <DetailRow label="Your share" value={formatCents(entry.share, currency)} />
@@ -211,7 +241,8 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
             setMode("detail");
           }}
           onSaved={() => {
-            onClose();
+            if (keepOnSave) setMode("detail");
+            else onClose();
           }}
         />
       ) : null}
@@ -245,16 +276,52 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, children }: De
   );
 }
 
-/** A small upper-case label over one solid group, as the cards' DETAILS and SPLIT & RECEIPT. */
-function DetailGroup({ title, list = true, children }: { title: string; list?: boolean; children: ReactNode }) {
+/**
+ * A small upper-case label over one solid group, as the cards' DETAILS and SPLIT & RECEIPT, or
+ * (`titled`, `ipad-activity`'s panels) a bold title with an optional note at its end ("Split",
+ * then "Equally · 2 people").
+ */
+function DetailGroup({ title, aside, titled = false, list = true, children }: { title: string; aside?: string | undefined; titled?: boolean; list?: boolean; children: ReactNode }) {
   const id = useId();
   return (
     <section className="entry-sheet__group" aria-labelledby={id}>
-      <h3 id={id} className="entry-sheet__label">
+      <h3 id={id} className={titled ? "entry-sheet__heading" : "entry-sheet__label"} aria-label={aside ? `${title}, ${aside}` : undefined}>
         {title}
+        {aside ? <span className="entry-sheet__heading-note">{aside}</span> : null}
       </h3>
       {list ? <dl className="entry-sheet__rows">{children}</dl> : children}
     </section>
+  );
+}
+
+/**
+ * `ipad-activity`'s split: your share with a check, then the other people's share (the total less
+ * yours) with the people glyph, in secondary text. An equal split says how many others there are;
+ * a custom share says "Other people", because a personal entry stores no names or head count then.
+ */
+function ShareRows({ people, share, total, currency }: { people: number | null; share: number; total: number; currency: string | undefined }) {
+  const others = people === null ? "Other people" : people === 2 ? "1 other person" : `${String(people - 1)} other people`;
+  return (
+    <dl className="entry-shares">
+      <div className="entry-shares__row">
+        <dt>
+          <span className="entry-shares__avatar" aria-hidden="true">
+            <Icon name="checkmark" size={14} />
+          </span>
+          Your share
+        </dt>
+        <dd className="pk-num">{formatCents(share, currency)}</dd>
+      </div>
+      <div className="entry-shares__row entry-shares__row--others">
+        <dt>
+          <span className="entry-shares__avatar" aria-hidden="true">
+            <Icon name="people" size={15} />
+          </span>
+          {others}
+        </dt>
+        <dd className="pk-num">{formatCents(total - share, currency)}</dd>
+      </div>
+    </dl>
   );
 }
 

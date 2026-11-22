@@ -115,7 +115,7 @@
     },
     {
       "path": "design-kit/src/icons.ts",
-      "sha256": "2daac34d07599ed14e91145ceb44c41ff6b92d92e8b15b5b90f3a450ddffde07"
+      "sha256": "36d0f48285b8fdb19cd19eba154826d59db001edb19dd7df08ac4556883351df"
     },
     {
       "path": "design-kit/src/index.ts",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "e76da19811e4f18a1cfd2eac3ad2fe72207098aaf92d17519c89200eb5b75bd3"
+      "sha256": "97d700d1d49da6959f6c59de098b36a3e8367d65bbb7dcc7e3da0cd5fec6bae0"
     }
   ],
   "tokens": {

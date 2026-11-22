@@ -330,3 +330,66 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
     expect(within(confirm).getByRole("button", { name: "Cancel" })).toHaveFocus();
   });
 });
+
+/** A touch tablet in landscape (`ipad-activity`): 1194px wide, a coarse pointer and no hover. */
+function stubTouchTablet() {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => {
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      const matches = (!min || 1194 >= Number(min[1])) && !query.includes("hover: hover") && !query.includes("pointer: fine");
+      return { matches, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    }),
+  );
+}
+
+describe("Activity on a touch tablet (ipad-activity, MAZ-274)", () => {
+  it("always shows an entry in the pane, with the card's split rows and no Close", async () => {
+    stubTouchTablet();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    const taxi = entry("taxi", "Taxi home", { total: 3000, share: 1000, date: "2026-11-08", categoryId: "food" });
+    ledgerServer({ transactions: [dinner, taxi, rent] }, { shared: [], search: () => [personalHit(dinner), personalHit(taxi), personalHit(rent)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+
+    // Nothing was chosen, so the first listed entry is selected and shown.
+    const pane = await screen.findByRole("complementary", { name: "Dinner out" });
+    expect(within(results()).getByRole("button", { name: /^Dinner out/ })).toHaveAttribute("aria-current", "true");
+    expect(within(pane).queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+    expect(within(pane).getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    const split = await within(pane).findByRole("region", { name: "Split, Equally · 2 people" });
+    // The pane can open before the ledger's currency loads.
+    await waitFor(() => {
+      expect(within(split).getByText("Your share").nextElementSibling).toHaveTextContent("$6.40");
+    });
+    expect(within(split).getByText("1 other person").nextElementSibling).toHaveTextContent("$6.40");
+    expect(within(split).queryByText("Total")).not.toBeInTheDocument();
+
+    // Three ways: the other two people's share, together.
+    await user.click(within(results()).getByRole("button", { name: /^Taxi home/ }));
+    const taxiPane = await screen.findByRole("complementary", { name: "Taxi home" });
+    const taxiSplit = within(taxiPane).getByRole("region", { name: "Split, Equally · 3 people" });
+    expect(within(taxiSplit).getByText("2 other people").nextElementSibling).toHaveTextContent("$20.00");
+
+    // Deleting the selected entry selects the first listed one again.
+    await user.click(within(taxiPane).getByRole("button", { name: "Delete" }));
+    const confirm = await screen.findByRole("dialog", { name: "Delete “Taxi home”?" });
+    await user.click(within(confirm).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByRole("complementary", { name: "Dinner out" })).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "Taxi home" })).not.toBeInTheDocument();
+  });
+
+  it("selects the first listed entry when the filters hide the selected one", async () => {
+    stubTouchTablet();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    ledgerServer(
+      { transactions: [dinner, pay] },
+      { shared: [], search: (body) => [personalHit(dinner), personalHit(pay)].filter((item) => !body.kind || item.entry.kind === body.kind) },
+    );
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    expect(await screen.findByRole("complementary", { name: "Dinner out" })).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Income" }));
+    expect(await screen.findByRole("complementary", { name: "Monthly salary" })).toBeInTheDocument();
+  });
+});

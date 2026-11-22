@@ -71,7 +71,7 @@ describe("icons and colors", () => {
   it("draws stored Ionicons names with the kit's glyphs and stores the names other clients write", () => {
     expect(categoryIcon("basket-outline")).toBe("basket");
     expect(categoryIcon("home")).toBe("home");
-    expect(categoryIcon("paw")).toBe("pricetag");
+    expect(categoryIcon("rocket")).toBe("pricetag");
     expect(storedIcon("airplane")).toBe("airplane-outline");
   });
 
