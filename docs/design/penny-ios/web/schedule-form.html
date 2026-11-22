@@ -1,0 +1,104 @@
+<!-- @dsCard group="Web" name="New schedule" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · New schedule</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  /* the Recurring page behind the dialog (web/recurring.html) */
+  .col { max-width: 760px; margin: 0 auto; }
+  .lead { font-size: 15px; color: var(--label-2); }
+  .gh { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 20px 4px 8px; display: flex; justify-content: space-between; }
+  .gf { font-size: 13px; color: var(--label-2); line-height: 1.45; margin: 12px 4px 0; }
+  .list { margin: 0; border-radius: 20px; box-shadow: 0 0 0 .5px var(--separator); }
+  .row { min-height: 58px; padding: 10px 18px; }
+  .row + .row::before { left: 66px; }
+  .row.hover { background: var(--fill); }
+  .row .chev { width: 15px; height: 15px; color: var(--label-3); flex: none; margin-left: 4px; }
+  .row .t b .tag { margin-left: 8px; vertical-align: 1px; }
+  .row .t span.tag { display: inline-flex; margin-top: 4px; }
+  .si { width: 36px; height: 36px; border-radius: 11px; background: var(--fill); color: var(--label); display: grid; place-items: center; flex: none; }
+  .si [data-i] { width: 19px; height: 19px; --sw: 40px; }
+  .row .acct { font-size: 13px; color: var(--label-2); width: 120px; text-align: right; }
+
+  /* dialog, after web/add-entry.html */
+  .modal { left: 50%; top: 96px; transform: translateX(-50%); width: 780px; }
+  .mh { align-items: flex-start; }
+  .mh .d { font-size: 13px; color: var(--label-2); margin-top: 3px; }
+  .mb { display: grid; grid-template-columns: 1fr 1fr; }
+  .mb > div { padding: 18px; }
+  .mb > div + div { border-left: .5px solid var(--separator); background: var(--surface-2); }
+  .seg2 { display: flex; background: var(--fill); border-radius: 10px; padding: 3px; height: 34px; }
+  .seg2 div { flex: 1; display: grid; place-items: center; font-size: 13.5px; font-weight: 600; border-radius: 8px; }
+  .seg2 .on { background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .dark .seg2 .on { background: #4A4744; }
+  .lab { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 8px; }
+  .lab:first-child { margin-top: 0; }
+  .amtin { font-size: 46px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.1; }
+  .amtin .c { opacity: .35; } .amtin .caret { display: inline-block; width: 3px; height: 40px; background: var(--tint); vertical-align: -5px; margin-left: 3px; border-radius: 2px; }
+  .field { height: 40px; border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); display: flex; align-items: center; padding: 0 12px; font-size: 15px; }
+  .field.ph { color: var(--label-3); }
+  .drow { display: flex; align-items: center; gap: 10px; height: 44px; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .drow:first-child { border-top: 0; }
+  .drow > [data-i] { width: 17px; height: 17px; color: var(--label-2); }
+  .drow .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; }
+  .drow .v .dot { width: 18px; height: 18px; border-radius: 6px; display: grid; place-items: center; color: #fff; }
+  .drow .v .dot [data-i] { width: 11px; height: 11px; --sw: 56px; }
+  .preview { display: flex; gap: 8px; align-items: center; margin-top: 18px; padding: 10px 12px; border-radius: 12px; background: var(--fill); color: var(--label); font-size: 13.5px; font-weight: 600; }
+  .preview [data-i] { width: 16px; height: 16px; color: var(--label-2); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="recurring" data-url="penny.example.com/recurring?new=schedule">
+  <main class="wmain">
+    <div class="wtop"><h1>Recurring</h1><div class="btn" title="New schedule"><i data-i="add"></i>New schedule</div><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="col">
+        <div class="lead">Penny records these on their date.</div>
+        <div class="gh"><span>Income</span></div>
+        <div class="list">
+          <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Monthly · next Nov 28</span></div><span class="acct">Main chequing</span><div class="amt num pos" style="width:120px">+$3,200.00</div><i data-i="chevron-forward" class="chev"></i></div>
+        </div>
+        <div class="gh"><span>Expenses</span></div>
+        <div class="list">
+          <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Rent</b><span>Monthly · next Dec 1</span></div><span class="acct">Main chequing</span><div class="amt num" style="width:120px">−$1,450.00</div><i data-i="chevron-forward" class="chev"></i></div>
+          <div class="row"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><div class="t"><b>Gym</b><span>Monthly · next Nov 18</span></div><span class="acct">Visa</span><div class="amt num" style="width:120px">−$45.00</div><i data-i="chevron-forward" class="chev"></i></div>
+          <div class="row"><div class="ic" style="background:var(--c-entertainment);opacity:.5"><i data-i="document-text"></i></div><div class="t"><b style="color:var(--label-2)">Magazine</b><span class="tag"><i data-i="pause"></i>Paused · monthly</span></div><span class="acct">Visa</span><div class="amt num" style="width:120px;color:var(--label-2)">−$12.00</div><i data-i="chevron-forward" class="chev"></i></div>
+          <div class="row"><div class="ic" style="background:var(--c-entertainment)"><i data-i="play"></i></div><div class="t"><b>Streaming<span class="tag"><i data-i="people"></i>Shared</span></b><span>Monthly · next Nov 22</span></div><span class="acct">Apartment</span><div class="amt num" style="width:120px">−$8.00<span>your share</span></div><i data-i="chevron-forward" class="chev"></i></div>
+        </div>
+        <div class="gh"><span>Investments</span></div>
+        <div class="list">
+          <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Monthly · next Dec 1</span></div><span class="acct">Main chequing</span><div class="amt num inv" style="width:120px">$200.00</div><i data-i="chevron-forward" class="chev"></i></div>
+        </div>
+        <div class="gf">Open a schedule to edit, pause or remove it. Edits change future dates only; removing a schedule keeps the entries it already recorded. Shared schedules open their household and count only your share.</div>
+      </div>
+    </div>
+  </main>
+  <div class="scrimw"></div>
+  <div class="modal" role="dialog">
+    <div class="mh"><div style="flex:1"><h3>New schedule</h3><div class="d">Penny records each entry on its date, in this browser's calendar.</div></div><div class="btn icon"><i data-i="close"></i></div></div>
+    <div class="mb">
+      <div>
+        <div class="lab">Type</div>
+        <div class="seg2"><div class="on">Expense</div><div>Income</div><div>Investment</div></div>
+        <div class="lab">Amount (CAD)</div>
+        <div class="amtin num"><span class="c">$</span>75.00<span class="caret"></span></div>
+        <div class="lab">Name</div>
+        <div class="field">Internet</div>
+        <div class="lab">Repeats</div>
+        <div class="seg2"><div>Weekly</div><div class="on">Monthly</div><div>Yearly</div></div>
+      </div>
+      <div>
+        <div class="drow"><i data-i="calendar"></i>First date<span class="v">Nov 18, 2026 <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="pricetag"></i>Category<span class="v"><span class="dot" style="background:var(--c-home)"><i data-i="home"></i></span>Home <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="wallet"></i>Account<span class="v">Main chequing <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="people"></i>Your share<span class="v">All of it <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="lab">Note</div>
+        <div class="field ph" style="background:var(--surface)">Note</div>
+        <div class="preview"><i data-i="repeat"></i>First on Nov 18, then monthly on the 18th.</div>
+      </div>
+    </div>
+    <div class="mf"><span class="hint"><kbd>⌘↵</kbd> save · <kbd>Esc</kbd> cancel</span><span style="flex:1"></span><span class="btn">Cancel</span><span class="btn primary">Add schedule</span></div>
+  </div>
+</div>
+</body></html>

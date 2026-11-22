@@ -46,8 +46,15 @@ const read = (path: string): unknown => JSON.parse(readFileSync(`${repository}/$
 export const redesign = read("contracts/fixtures/redesign-states.json") as RedesignStates;
 export const specimens = (read("contracts/design-baseline.json") as DesignBaseline).specimens;
 
+/** Cards drawn at another size than their platform's (MAZ-238): iPad in portrait, the web's 768–1099px layout. */
+const VIEWPORTS: Record<string, { width: number; height: number }> = {
+  "ipad-home-portrait": { width: 834, height: 1194 },
+  "web-tablet": { width: 1024, height: 768 },
+};
+
 /** The browser viewport for a card: the web window, the iPad landscape window or the iPhone's points. */
 export function viewportFor(id: string) {
+  if (VIEWPORTS[id]) return VIEWPORTS[id];
   if (id.startsWith("web-")) return { width: 1440, height: 900 };
   if (id.startsWith("ipad-")) return { width: 1194, height: 834 };
   if (id.startsWith("iphone-")) return { width: 402, height: 874 };

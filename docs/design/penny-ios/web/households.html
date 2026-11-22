@@ -1,0 +1,81 @@
+<!-- @dsCard group="Web" name="All households" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · All households</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .wmain > .glow { --glow-1: rgba(47,163,107,.30); --glow-2: rgba(255,170,110,.26); --glow-3: rgba(80,140,230,.16); }
+  .col { max-width: 880px; margin: 0 auto; }
+  .lead { font-size: 15px; color: var(--label-2); margin-bottom: 4px; }
+  .lead b { color: var(--income); }
+  .lbl { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 22px 4px 8px; }
+  .gp { padding: 0; overflow: hidden; }
+  .gr { display: flex; align-items: center; gap: 16px; padding: 16px 20px; position: relative; }
+  .gr + .gr::before { content: ""; position: absolute; top: 0; left: 80px; right: 0; border-top: .5px solid var(--separator); }
+  .gr.hover { background: var(--fill); }
+  .gi { width: 44px; height: 44px; border-radius: 13px; background: var(--fill); color: var(--label); display: grid; place-items: center; flex: none; }
+  .gi [data-i] { width: 22px; height: 22px; --sw: 40px; }
+  .gr .t { flex: 1; min-width: 0; }
+  .gr .t b { display: block; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .gr .m { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--label-2); margin-top: 4px; }
+  .gr .m .avatar { width: 26px; height: 26px; font-size: 9.5px; border-width: 1.5px; }
+  .gr .m .stack .avatar + .avatar { margin-left: -5px; }
+  .bal { text-align: right; font-size: 13px; color: var(--label-2); }
+  .bal b { display: block; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--label); margin-top: 1px; }
+  .bal b.pos { color: var(--income); }
+  .settled { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 600; color: var(--label-2); }
+  .settled [data-i] { width: 17px; height: 17px; }
+  .chev { width: 16px; height: 16px; color: var(--label-3); flex: none; }
+  .act .gi { width: 36px; height: 36px; border-radius: 11px; color: var(--tint-text); background: var(--tint-soft); }
+  .act .gi [data-i] { width: 19px; height: 19px; }
+  .act .gr { padding: 13px 20px; }
+  .act .gr + .gr::before { left: 72px; }
+  .act .gr .t span { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="households" data-url="penny.example.com/households">
+  <main class="wmain">
+    <div class="glow"></div>
+    <div class="wtop"><h1>Shared</h1><div class="btn icon" title="New household"><i data-i="add"></i></div><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="col">
+        <div class="lead">November · you're owed <b class="num">$142.50</b> overall</div>
+
+        <div class="lbl">Households</div>
+        <div class="panel gp">
+          <div class="gr hover">
+            <div class="gi"><i data-i="home"></i></div>
+            <div class="t"><b>Apartment</b><div class="m"><div class="stack"><div class="avatar">MF</div><div class="avatar">MI</div><div class="avatar">JS</div></div>3 members</div></div>
+            <div class="bal">you're owed<b class="num pos">$142.50</b></div>
+            <i data-i="chevron-forward" class="chev"></i>
+          </div>
+        </div>
+
+        <div class="lbl">Trips</div>
+        <div class="panel gp">
+          <div class="gr">
+            <div class="gi"><i data-i="airplane"></i></div>
+            <div class="t"><b>Lisbon</b><div class="m"><div class="stack"><div class="avatar">MF</div><div class="avatar">SK</div><div class="avatar">MI</div><div class="avatar">JS</div></div>Nov 12–19, 2026</div></div>
+            <div class="bal">you owe<b class="num">$38.20</b></div>
+            <i data-i="chevron-forward" class="chev"></i>
+          </div>
+          <div class="gr">
+            <div class="gi"><i data-i="airplane"></i></div>
+            <div class="t"><b>Cottage weekend</b><div class="m"><div class="stack"><div class="avatar">MF</div><div class="avatar">JS</div></div>Aug 22–24, 2026</div></div>
+            <div class="settled"><i data-i="checkmark-circle"></i>Settled</div>
+            <i data-i="chevron-forward" class="chev"></i>
+          </div>
+        </div>
+
+        <div class="lbl">Start sharing</div>
+        <div class="panel gp act">
+          <div class="gr"><div class="gi"><i data-i="key"></i></div><div class="t"><b>Join with a code</b><span>Someone shared an invite code with you</span></div><i data-i="chevron-forward" class="chev"></i></div>
+          <div class="gr"><div class="gi"><i data-i="add"></i></div><div class="t"><b>New household</b><span>Split rent, bills and groceries every month</span></div><i data-i="chevron-forward" class="chev"></i></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

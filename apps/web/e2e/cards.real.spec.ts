@@ -265,6 +265,82 @@ async function armFault(run: Run) {
 
 const NO_LOCK = "The web has no app lock by design (docs/reference/redesign.md, Access: the web uses the current origin and has no lock).";
 
+// ---- Draft cards (MAZ-238) ----
+
+const NATIVE_SELECT = (what: string) => `The web picks the ${what} with a native select in the entry form (a platform picker), so it has no ${what} list to compare.`;
+
+/** Activity searching for the state's query while the server search is held back by the state's delay. */
+async function searching(run: Run) {
+  await armFault(run);
+  await run.page.goto(`/transactions?month=2026-10&q=${encodeURIComponent(run.state.search?.query ?? "coffee")}`);
+  await expect(run.page.getByRole("status").filter({ hasText: /^Searching/ })).toBeVisible();
+}
+
+/** Opens the Edit entry form of a personal entry (🎉 Party supplies), from its detail. */
+async function editEntry(p: Page) {
+  const detail = await partyDetail(p);
+  await detail.getByRole("button", { name: "Edit" }).click();
+  await expect(p.getByRole("dialog", { name: "Edit entry" })).toBeVisible();
+}
+
+/** Maison's Internet expense (Bea paid), opened from the household's expenses. */
+async function sharedExpense(run: Run) {
+  await maison(run, `?month=${run.state.month ?? "2026-10"}`);
+  await run.page.getByRole("link", { name: /^Internet/ }).first().click();
+  await expect(run.page.getByRole("button", { name: /Mark .* as paid|Edit/ }).first()).toBeVisible();
+}
+
+/** Join a household with the cards' invite code typed in. */
+async function joinWithCode(p: Page) {
+  await page(p, "/households", "Shared");
+  await p.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /Join with a code/ }).click();
+  const dialog = p.getByRole("dialog", { name: "Join a household" });
+  await dialog.getByLabel("Invite code").fill("7F3A9C01B2");
+}
+
+async function personalTrip(p: Page) {
+  await page(p, "/trips", "Trips");
+  await p.getByRole("link", { name: /Québec weekend/ }).first().click();
+  await expect(p.getByRole("heading", { level: 1, name: "Québec weekend" })).toBeVisible();
+}
+
+/** New schedule with the cards' draft: a monthly $75.00 Internet expense. */
+async function newSchedule(p: Page) {
+  await page(p, "/recurring", "Recurring");
+  await p.getByRole("button", { name: "New schedule" }).first().click();
+  const dialog = p.getByRole("dialog", { name: "New schedule" });
+  await dialog.getByLabel("Name").fill("Internet");
+  await dialog.getByLabel("Amount (CAD)").fill("75.00");
+}
+
+/** Home after the server stops taking ledger syncs, with the scenario's pending create waiting. */
+async function syncFailed(run: Run) {
+  const p = run.page;
+  await home(p);
+  await armFault(run);
+  await p.getByRole("button", { name: "Add entry" }).first().click();
+  const dialog = p.getByRole("dialog", { name: "New entry" });
+  await dialog.getByLabel("Amount (CAD)").fill("3");
+  await dialog.getByLabel("Title").fill("Coffee to go");
+  await dialog.getByRole("button", { name: "Add expense" }).click();
+  await expect(p.getByRole("status").filter({ hasText: "1 change waiting" })).toBeVisible();
+  await dismissToast(p);
+}
+
+/** Home while the household projection fails, so the shared expenses can't load. */
+async function sharedMissing(run: Run) {
+  await armFault(run);
+  await home(run.page);
+  await expect(run.page.getByText(/Shared expenses (couldn't load|need a connection)/).first()).toBeVisible();
+}
+
+/** The demo, from sign-in's sample data link. */
+async function demo(p: Page) {
+  await signInScreen(p);
+  await p.getByRole("button", { name: /Take a look around with sample data/ }).click();
+  await expect(p.getByText("You're exploring a demo")).toBeVisible();
+}
+
 const cards: Record<string, Card> = {
   "system-foundations": { skip: { status: "not-applicable", note: "Token and component sheet; checked by `npm run design:check`, not a screen." } },
   "system-widgets": { skip: { status: "not-applicable", note: "Home and Lock Screen widgets are native only; the card has no web owner." } },
@@ -642,6 +718,51 @@ const cards: Record<string, Card> = {
     },
   },
 
+  // Draft cards (MAZ-238): screens that had no card. Each opens the app's screen as it is today.
+  "iphone-activity-filters": {
+    open: async ({ page: p }) => {
+      await activity(p, "2026-10");
+      await p.getByRole("button", { name: /^Filters/ }).first().click();
+      await expect(p.getByRole("dialog", { name: /Filters/ })).toBeVisible();
+    },
+  },
+  "iphone-activity-searching": { faults: true, open: (run) => searching(run) },
+  "iphone-home-explore": {
+    open: async ({ page: p }) => {
+      await home(p);
+      // The web's Home has no Expected income card or Explore your month: the capture shows the end of Home.
+      await scrollTo(p, p.getByRole("region", { name: "Recent" }));
+    },
+  },
+  "iphone-account-picker": { skip: { status: "not-built", note: NATIVE_SELECT("account") } },
+  "iphone-household-picker": { skip: { status: "not-built", note: NATIVE_SELECT("household") } },
+  "iphone-edit-entry": { open: ({ page: p }) => editEntry(p) },
+  "iphone-shared-expense-detail": { open: (run) => sharedExpense(run) },
+  "iphone-join-code": { open: ({ page: p }) => joinWithCode(p) },
+  "iphone-invite-scanner": { skip: { status: "not-applicable", note: "The web has no camera scanner: invite codes are typed; the card has no web owner." } },
+  "iphone-invite": {
+    open: async (run) => {
+      await maison(run, "?tab=people");
+      await run.page.getByRole("button", { name: "Create invite code" }).click();
+      await expect(run.page.getByText(/^Expires in/)).toBeVisible();
+    },
+    note: "The web has no Invite sheet: the code is created under People, as on iphone-shared-people.",
+  },
+  "iphone-notifications-prompt": { skip: { status: "not-applicable", note: "The web has no notifications; the card has no web owner." } },
+  "iphone-trip-personal": { open: ({ page: p }) => personalTrip(p) },
+  "iphone-trip-share": {
+    open: async ({ page: p }) => {
+      await personalTrip(p);
+      await p.getByRole("button", { name: "Share trip" }).first().click();
+      await expect(p.getByRole("dialog")).toBeVisible();
+    },
+  },
+  "iphone-schedule-form": { open: ({ page: p }) => newSchedule(p) },
+  "iphone-currency": { open: ({ page: p }) => page(p, "/settings/currency", "Currency") },
+  "iphone-sync-failed": { fresh: true, faults: true, open: (run) => syncFailed(run) },
+  "iphone-shared-missing": { faults: true, open: (run) => sharedMissing(run) },
+  "iphone-demo": { open: ({ page: p }) => demo(p) },
+
   // iPad
   "ipad-home": {
     open: async ({ page: p }) => {
@@ -660,6 +781,12 @@ const cards: Record<string, Card> = {
   "ipad-shared": { open: (run) => maison(run) },
   "ipad-trip": { open: (run) => lisbon(run) },
   "ipad-settings": { open: ({ page: p }) => page(p, "/settings", "Settings") },
+  "ipad-home-portrait": {
+    open: async ({ page: p }) => {
+      await home(p);
+      await expectAlexOctober(p);
+    },
+  },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
   // address and inbox items; they need an `open` here once it does.
@@ -717,6 +844,58 @@ const cards: Record<string, Card> = {
     },
   },
   "web-sign-in": { open: ({ page: p }) => signInScreen(p) },
+
+  // Draft cards (MAZ-238)
+  "web-households": {
+    open: async ({ page: p }) => {
+      await page(p, "/households", "Shared");
+      await expect(p.getByRole("link", { name: /^Maison/ }).first()).toBeVisible();
+    },
+  },
+  "web-shared-expense": { open: (run) => sharedExpense(run) },
+  "web-trip": { open: (run) => lisbon(run) },
+  "web-recurring": {
+    open: async ({ page: p }) => {
+      await page(p, "/recurring", "Recurring");
+      await expect(p.getByRole("button", { name: /^Gym/ })).toBeVisible();
+    },
+  },
+  "web-accounts": {
+    open: async ({ page: p }) => {
+      await page(p, "/accounts", "Accounts");
+      await expect(p.getByRole("button", { name: "Edit Everyday chequing" })).toBeVisible();
+    },
+  },
+  "web-categories": {
+    open: async ({ page: p }) => {
+      await page(p, "/categories", "Categories");
+      await expect(p.getByRole("button", { name: "Edit Groceries & dining" })).toBeVisible();
+    },
+  },
+  "web-currency": { open: ({ page: p }) => page(p, "/settings/currency", /Currency|Settings/) },
+  "web-schedule-form": { open: ({ page: p }) => newSchedule(p) },
+  "web-edit-entry": { open: ({ page: p }) => editEntry(p) },
+  "web-join-code": { open: ({ page: p }) => joinWithCode(p) },
+  "web-activity-searching": { faults: true, open: (run) => searching(run) },
+  "web-server-unreachable": {
+    faults: true,
+    open: async (run) => {
+      // The shell shows the banner when the server's info request fails while the browser is online.
+      await armFault(run);
+      await run.page.goto("/");
+      await expect(run.page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
+      await expect(run.page.getByText("Can't reach your Penny server")).toBeVisible({ timeout: 30_000 });
+    },
+  },
+  "web-demo": { open: ({ page: p }) => demo(p) },
+  "web-tablet": {
+    open: async ({ page: p }) => {
+      await home(p);
+      await expectAlexOctober(p);
+    },
+  },
+  "web-password-reset": { skip: { status: "not-built", note: "The web has no password reset: the server takes an operator-issued reset code (POST /api/auth/password-reset) and sends no email." } },
+  "web-export": { skip: { status: "not-built", note: "The web has no Export data yet (Settings has no Export row)." } },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
   // address and inbox items; they need an `open` here once it does.

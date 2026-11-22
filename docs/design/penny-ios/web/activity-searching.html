@@ -1,0 +1,59 @@
+<!-- @dsCard group="Web" name="Searching" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Activity searching</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/web.js"></script>
+<style>
+  .split { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 18px; }
+  .bar2 { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .bar2 .sp { flex: 1; }
+  .sum { font-size: 13px; color: var(--label-2); }
+  .sum b { color: var(--label); }
+  .det h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 10px; }
+  .det .amt { font-size: 40px; font-weight: 700; letter-spacing: -0.04em; margin-top: 12px; }
+  .det .amt small { font-size: 14px; color: var(--label-2); font-weight: 500; letter-spacing: 0; margin-left: 6px; }
+  .kv { display: flex; justify-content: space-between; padding: 9px 0; font-size: 14px; border-top: .5px solid var(--separator); }
+  .kv span { color: var(--label-2); }
+  .receipt { height: 96px; border-radius: 12px; margin-top: 12px; background: repeating-linear-gradient(180deg, var(--surface-2) 0 12px, var(--surface) 12px 14px); box-shadow: inset 0 0 0 .5px var(--separator); display: grid; place-items: center; color: var(--label-2); font-size: 13px; }
+  .acts { display: flex; gap: 8px; margin-top: 16px; }
+  .rowacts { display: inline-flex; gap: 2px; color: var(--label-2); }
+  .rowacts [data-i] { width: 15px; height: 15px; }
+  .wsearch.focus { background: var(--surface); color: var(--label); box-shadow: inset 0 0 0 1.5px var(--tint), 0 0 0 4px var(--tint-soft); width: 320px; }
+  .wsearch .caret { display: inline-block; width: 2px; height: 17px; background: var(--tint); margin-left: -6px; border-radius: 1px; }
+  .wsearch .x { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--label-3); color: var(--surface); display: grid; place-items: center; }
+  .wsearch .x [data-i] { width: 10px; height: 10px; --sw: 64px; }
+  .loading { height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 14.5px; font-weight: 500; color: var(--label-2); }
+  .spin { width: 22px; height: 22px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--label-3) 35%, transparent); border-top-color: var(--tint); transform: rotate(35deg); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="activity" data-url="penny.example.com/activity?q=coffee">
+  <main class="wmain">
+    <div class="wtop">
+      <h1>Activity</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="wsearch focus"><i data-i="search" style="color:var(--label-2)"></i>coffee<span class="caret"></span><span class="x"><i data-i="close"></i></span></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div>
+        <div>
+          <div class="bar2">
+            <div class="wchips"><span class="wchip on">All</span><span class="wchip">Expenses</span><span class="wchip">Income</span><span class="wchip">Investments</span><span class="wchip"><i data-i="options"></i>Filters</span></div>
+            <div class="sp"></div>
+            <div class="btn icon"><i data-i="document-text"></i></div>
+          </div>
+          <div class="panel" style="padding:12px 4px;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th style="width:34px"></th><th>Entry</th><th>Account</th><th>Split</th><th class="r">Amount</th><th style="width:40px"></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <div class="loading" role="status"><span class="spin"></span>Searching…</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

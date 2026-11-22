@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
-The 83 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 118 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (164 images: 81 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (234 images: 116 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -192,6 +192,34 @@ MAZ-216 captured every iOS card again against a fresh test environment (`apps/io
 - **MAZ-274 (2026-11-21).** `ipad-activity` was captured again on the web at 1194×834 with touch, light and dark. The pane always shows an entry: Activity selects the first listed one when it opens, and again when the selected one is deleted or filtered out, so the pane has no Close. Delete and Edit are neutral glass buttons over a copper glow, the tile sits beside the title, and Details and Split are panels with bold titles; Split ends its title with "Equally · 2 people" and lists Your share with a check and "1 other person" (or "N other people", "Other people" for a custom share) with their share. The list takes two fifths of the width, as on the card, and the selected row is tinted copper from edge to edge. What remains is the time in the subtitle, which entries don't store (MAZ-225).
 - **MAZ-264 (2026-11-22).** The owner decided to change three cards to the web's month control. `iphone-shared` and `iphone-shared-balances` put the month pill ("November ⌄") after Back in the navigation bar's glass row, as on Home; on Balances the household's name sits on its own small centered row under the bar. `ipad-shared` moves its toolbar over both panes, with previous, "November 2026 ⌄" and next on the left and History, Invite and + Expense on the right. The design kit's filled icon parts (create, pricetag, wallet, calendar, alert-circle, ellipsis-horizontal, finger-print and the kit's happy) now follow the text color instead of drawing black, so in dark the Edit pencil, the tag's hole, the wallet's clasp and the … menu show; every baseline was rendered again (on Linux). The web's swatches on the category form are two rows of four with the ring alone on the selected color, and removing an account or category is the redrawn cards' solid group (Move them to with its choice, the centered Move and remove, grey until a destination is chosen) with the usage note under it. Every web card was captured again at 402×874, 1194×834 (with touch) and 1440×900, light and dark: the three household cards, `iphone-account-form` and `iphone-category-form` keep only their other recorded differences, and the native household verdicts now name the month pill (MAZ-256).
 - **iOS screens and states with no card.** The design doesn't draw these yet: the Activity filters sheet; the account, household and date pickers; Spending by category; the Currency page; Edit entry; a shared expense's detail; recording a monthly payment; Join with a code and the invite scanner; the invite sheet with its QR code; sharing a personal trip; a personal trip's page (only shared trips have cards); New schedule; the Explore your month list and Coming up on iPhone; the Expected income card; the notification prompt and the Notifications row; the "Shared expenses may be missing" and server-unreachable banners; the demo banner; Activity's "Searching your server…" state; and iPad in portrait and in compact widths.
+
+## Drafted cards (MAZ-238, 2026-11-22)
+
+The web and iOS audits (MAZ-215, MAZ-216) found screens and states with no card, so nothing checked them. MAZ-238 drafts 35 cards for them in the kit's styles, light and dark, for the owner to review before they become the target. Each has a state in `redesign-states.json` and an entry in `visual-comparisons.json`. The web was captured against a fresh test environment (Chromium; `ipad-home-portrait` at 834×1194 and `web-tablet` at 1024×768, see `viewportFor` in `apps/web/e2e/cards.ts`). The iOS app wasn't captured: the cards were drafted on Linux, and the Cards test plan has no state for them yet, so their native side is `blocked` until the owner approves them.
+
+| Area | Drafted cards |
+| --- | --- |
+| Activity | `iphone-activity-filters`, `iphone-activity-searching`, `web-activity-searching` |
+| Home | `iphone-home-explore` (Expected income and Explore your month), `ipad-home-portrait`, `web-tablet` (the 768–1099px layout with the icon rail) |
+| Entries | `iphone-account-picker`, `iphone-household-picker`, `iphone-edit-entry`, `web-edit-entry` |
+| Shared | `iphone-shared-expense-detail`, `web-shared-expense`, `web-households`, `iphone-join-code`, `web-join-code`, `iphone-invite`, `iphone-invite-scanner`, `iphone-notifications-prompt` |
+| Trips | `iphone-trip-personal`, `iphone-trip-share`, `web-trip` |
+| Organize and settings | `iphone-schedule-form`, `web-schedule-form`, `web-recurring`, `web-accounts`, `web-categories`, `iphone-currency`, `web-currency`, `web-export` |
+| States and access | `iphone-sync-failed`, `iphone-shared-missing`, `web-server-unreachable`, `iphone-demo`, `web-demo`, `web-password-reset` |
+
+Screens from the audits that follow an existing card instead of getting their own:
+
+- **Phone More menu:** gone. Phones have four tabs, and Manage and Settings open from Home's settings button, as `iphone-settings` draws.
+- **Spending by category (iOS):** the Insights screen, `iphone-insights`.
+- **Recording a monthly payment:** the Record payment sheet, `iphone-record-payment`, with the monthly subtitle.
+- **Date picker:** a system picker (platform chrome), opened from the labeled row on the entry cards.
+- **Notifications row:** the row on `iphone-settings`; it opens the system permission prompt, then iOS Settings. The web has no notifications.
+- **Coming up on iPhone:** not on iPhone; Expected income (`iphone-home-explore`) is its counterpart there, and `ipad-home` has Coming up.
+- **iPad compact widths and other 768–1099px web pages:** compact iPad uses the iPhone cards; other web pages at 768–1099px follow their desktop card with `web-tablet`'s icon rail.
+- **Settings Server pane (web):** the Server & sync panel on `web-settings`.
+- **A personal trip on the web:** `iphone-trip-personal`'s content in `web-trip`'s layout.
+
+Two drafts are new designs rather than drawings of a shipped screen, because neither app has the flow: `web-export` (Export data, which `web-settings` already lists) and `web-password-reset`. The server takes an operator-issued reset code (`POST /api/auth/password-reset`) and sends no email, so the card draws only "Set a new password" with that code. The audit's "request" and "email sent" steps need email sending, which is a product decision. Both are `not-built` on the web.
 
 ## Review scenarios
 

@@ -1,0 +1,42 @@
+<!-- @dsCard group="Web" name="Accounts" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Accounts</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .col { max-width: 760px; margin: 0 auto; }
+  .lead { font-size: 15px; color: var(--label-2); }
+  .gh { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 20px 4px 8px; display: flex; justify-content: space-between; }
+  .gf { font-size: 13px; color: var(--label-2); line-height: 1.45; margin: 12px 4px 0; }
+  .list { margin: 0; border-radius: 20px; box-shadow: 0 0 0 .5px var(--separator); }
+  .row { min-height: 58px; padding: 10px 18px; }
+  .row + .row::before { left: 66px; }
+  .row.hover { background: var(--fill); }
+  .row .chev { width: 15px; height: 15px; color: var(--label-3); flex: none; margin-left: 4px; }
+  .row .t b .tag { margin-left: 8px; vertical-align: 1px; }
+  .row .t span.tag { display: inline-flex; margin-top: 4px; }
+  .si { width: 36px; height: 36px; border-radius: 11px; background: var(--fill); color: var(--label); display: grid; place-items: center; flex: none; }
+  .si [data-i] { width: 19px; height: 19px; --sw: 40px; }
+  .row + .row::before { left: 68px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="accounts" data-url="penny.example.com/accounts">
+  <main class="wmain">
+    <div class="wtop"><h1>Accounts</h1><div class="btn"><i data-i="add"></i>Add account</div><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="col">
+        <div class="lead">Labels for how you pay and get paid.</div>
+        <div class="gh"><span>Your accounts</span></div>
+        <div class="list">
+          <div class="row"><div class="si"><i data-i="wallet"></i></div><div class="t"><b>Main chequing</b><span>Bank account · 42 entries, 3 schedules</span></div><div class="btn icon" style="width:32px;height:32px;box-shadow:none;background:transparent;color:var(--label-2)"><i data-i="create"></i></div><i data-i="chevron-forward" class="chev"></i></div>
+          <div class="row hover"><div class="si"><i data-i="card"></i></div><div class="t"><b>Visa</b><span>Credit card · 31 entries, 2 schedules</span></div><div class="btn icon" style="width:32px;height:32px;background:transparent;color:var(--label-2)"><i data-i="create"></i></div><i data-i="chevron-forward" class="chev"></i></div>
+          <div class="row"><div class="si"><i data-i="wallet"></i></div><div class="t"><b>Savings</b><span>Bank account · not used yet</span></div><div class="btn icon" style="width:32px;height:32px;box-shadow:none;background:transparent;color:var(--label-2)"><i data-i="create"></i></div><i data-i="chevron-forward" class="chev"></i></div>
+        </div>
+        <div class="gf">Penny never connects to your bank and doesn't track balances. An account linked to entries or schedules can be renamed, but not removed until those are moved to another account.</div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>
