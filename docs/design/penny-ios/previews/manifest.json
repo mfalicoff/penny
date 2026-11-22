@@ -50,12 +50,12 @@
         {
           "appearance": "light",
           "file": "previews/system-foundations.light.png",
-          "sha256": "d9c61e0739ac074687b778cf119a42346d686c1bffa83dc12baa22e258111abd"
+          "sha256": "149e4039615c75bec64f05995bbd4d038632b3625799d0d98fe56ca0bd13a089"
         },
         {
           "appearance": "dark",
           "file": "previews/system-foundations.dark.png",
-          "sha256": "b0bb8ef10d678db19b7ced9eb5326e93056c6124b3e56d0f654222b3fc48ae0f"
+          "sha256": "73a92981f0270d58e08976177cb3b68ff9e770daddcf5b1173d3bee23488d3b2"
         }
       ]
     },
@@ -71,12 +71,12 @@
         {
           "appearance": "light",
           "file": "previews/system-widgets.light.png",
-          "sha256": "d750d3001386882c1f6fd9b56840db1ac773f408c4cae054eeea40c7b736142c"
+          "sha256": "6344bf2462a4b2925e10d711a590bc0d842c4523e06eb00f0764c7a5ab0fe598"
         },
         {
           "appearance": "dark",
           "file": "previews/system-widgets.dark.png",
-          "sha256": "537db481c797b96aeffa6e665b4c2169edd0c473048db6a3934d6c38e312b458"
+          "sha256": "bcc358c935b5e15e9d0b2bb3d032dcc88d4b979bb4ef899fa5bc8adcfbe145ce"
         }
       ]
     },
@@ -92,12 +92,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-account-form.light.png",
-          "sha256": "701e67a482b55ddf3e6a1512ea6b61a5b8359233a4cbc5d5e4e8dc65454f481e"
+          "sha256": "5b48cab530793761efcb874d91eb3b27722784945a76ef093d3afcdad87ca208"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-account-form.dark.png",
-          "sha256": "a4831a686104ed31e4f2b0c9f31e5947389d845b7a393dda9497b3ed5ec7d653"
+          "sha256": "a2e0f042ace5f77823afc63802417b9247adff657e428d00cb3d312d332dccc9"
         }
       ]
     },
@@ -113,12 +113,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-account-picker.light.png",
-          "sha256": "0b9f64b3f5c48e9ed96671a5f31b527ca82c92455fb4e7e507bdc6ace3796976"
+          "sha256": "ef285ef7531c854e45b03fd6d40616910c7f1a0a40ef9d7085580f376f7830d6"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-account-picker.dark.png",
-          "sha256": "fda884bbf2e33979b929670d08f8c4138966de61f34dc4415e79684fa26efe2d"
+          "sha256": "2e3a8181ea5f77b4b5d4d5574cb356d8a34b282e4da2f0e99857bbe6b480896c"
         }
       ]
     },
@@ -134,12 +134,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-accounts.light.png",
-          "sha256": "bc066c5a5252636ad238021be2ec596a54d667e3ba153e8b1aeb9734a9d36592"
+          "sha256": "d0b900df0d1f2eb4329c60852e5a2c49030632f466d3bb0765556b590e4eae8a"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-accounts.dark.png",
-          "sha256": "59d8956b3fb6dc47941dac10be2bf732832ce8f85177bd31e4f8d16029d84dca"
+          "sha256": "517ad91c4f5d5aa8f296bb70ceca184bb0e9ef0a11ff43672c31948cb642a3df"
         }
       ]
     },
@@ -155,12 +155,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-activity-filters.light.png",
-          "sha256": "703115ae72a1e03b7390274ff661405d2e263d98eaaa420ceec9f09f856a20b3"
+          "sha256": "d394e682c54343ab6a80e541d24e6f1f195db948ed660d7e172aef5241b7a320"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-activity-filters.dark.png",
-          "sha256": "75a0a794147c231979457d6605b1a8d8f2492a0e06a88a1fde4c24e013dd79f2"
+          "sha256": "45f76d6a5ee2910f7f57ce85c0eaa24d4ee86b627b55bc6e1cdd04fcf72cb951"
         }
       ]
     },
@@ -176,12 +176,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-activity-searching.light.png",
-          "sha256": "469f971aa561bf696f2ce24d7e7ab05c6e166b9bf1a3b59bd9495c7de47f1232"
+          "sha256": "2d63e1888047872a1af052a5529310d64bd4f35f4f6a998847298f7053f520f0"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-activity-searching.dark.png",
-          "sha256": "004ab9fff400f0a55a046a10d34f10177081d764bc66534040b8e70a75a60842"
+          "sha256": "919961cf1fe9081e0b91238ef0f39328d46db13b0c0e871c8913c1b85d8a24bf"
         }
       ]
     },
@@ -197,12 +197,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-activity.light.png",
-          "sha256": "2b09df4d253a06b7bf1d824873581b6bead535604402ef6109fca366234bfc3a"
+          "sha256": "afbeec0367262d31557a3197989a321633fc5bb4f418b5ade6616644d149cf23"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-activity.dark.png",
-          "sha256": "e26bc56e68eb02c433db72732970997c756076b5c3fd50517a27bd219647983e"
+          "sha256": "7bae4282843c7dbdf2851f70712933a490c5834a2e8607c834f8d23d89e1c5d1"
         }
       ]
     },
@@ -218,12 +218,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-add-expense.light.png",
-          "sha256": "21df2635bb40bb3a3381af84dbfd07c43a891116e001172c723c03beffd0d684"
+          "sha256": "030503c48f9dc4363b8c28dd16dc21a0d916908b43d94d3e09cf9fe3223a5d42"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-add-expense.dark.png",
-          "sha256": "b535160145b97c8dee3fd4ee0fcda8a20c45b6b82349995ccead5ac747d4495a"
+          "sha256": "7a948d36bb56179ff69cb36882125cd06800235a6b49b99a285446ea701615ef"
         }
       ]
     },
@@ -239,12 +239,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-add-income.light.png",
-          "sha256": "7f2ca3f5aafc27e5de6e8c88dfeab9872548da6f04ac7f5d992bb4f2aa6543d8"
+          "sha256": "1a89ce40ab80f96f0bbf503ef2b28e9513c9b1d868b50704c91c6237d85a8f11"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-add-income.dark.png",
-          "sha256": "f7a94186fc618cc0f6c771f721f87d90c78d89070d94304d23a594f7bccd6807"
+          "sha256": "73cf704b5d088c891e7dc32b0fd9656025f94dbc3b5fabc6c98e9e9f8eb1c259"
         }
       ]
     },
@@ -260,12 +260,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-app-lock.light.png",
-          "sha256": "bb94179f919e16da66ba5c7a2960b0936c676daff52446e21f64d00fc6552c16"
+          "sha256": "592d0fe3afa340634be34df95688136d65b7c5767aadc7bbabb7641b4027cf50"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-app-lock.dark.png",
-          "sha256": "ec1df3ba447639efca8edc7899410c89b7e4b650bf50b3831d91c9c0d45bd48a"
+          "sha256": "8d63cc1f23c70528e3e91fbe3953262d4daf7fec0cf5419e089b885a9051d0cf"
         }
       ]
     },
@@ -281,12 +281,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-appearance.light.png",
-          "sha256": "dad96ed13a1bb8d408680be50a0bc52151c4e371a6ecab7d9553480c875d7acb"
+          "sha256": "ed9fbfa76e8c67772e656fb69bebd0e1dd8de5261d4cc09bc65d8cb6242e77a4"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-appearance.dark.png",
-          "sha256": "3385fc1c2ccdf2387588963c6cb29b5138c67c9e59dd83285a2426664f2ff778"
+          "sha256": "cdccf3dc9ed2663d350ea223c64a057ee9dc7bd5828b0154b996177e0be19f7c"
         }
       ]
     },
@@ -302,12 +302,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-calendar.light.png",
-          "sha256": "cd20bf882ce85f1a3223aa55f044e2ecaee6a5446fea919eab870afe4bfaf1f7"
+          "sha256": "fe03163f329227272f86b4aa5e4a672d5a3b82076ce8d9941c7418402e9a853d"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-calendar.dark.png",
-          "sha256": "a962c4f63913da150e115cfe801330511fdd9f55202e8190138c781c1ae1cead"
+          "sha256": "ec6c93d4f330317be1320f2e3d5953e1f3690c891d30f8e490e0e316ed19359a"
         }
       ]
     },
@@ -323,12 +323,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-categories.light.png",
-          "sha256": "e153db2160359df47889c4833d37beb13ebaac6e84d8a30aac5f468432faa7b3"
+          "sha256": "44702abea2b8f5e0b11f6c80b350d2008307eb42562fbd5109075c20fba2d3e2"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-categories.dark.png",
-          "sha256": "bad689594efb13a564f8c0b2cddbc0c03d7f56ac7fee3b987bfe6c53e8f478e8"
+          "sha256": "fd31245db4bfe3c20479743cd7bf736904f0b0e9a667939891a7ffa7a29d23bd"
         }
       ]
     },
@@ -344,12 +344,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-category-form.light.png",
-          "sha256": "9c6619021010ed1f526fbeb40a091eb8733cbd5c58657b213fc1d4392d72e19d"
+          "sha256": "e94b0689d6e684aa5d525e51133ac1062f80208eef01440cc5e2487e189e279e"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-category-form.dark.png",
-          "sha256": "b09a04d112358d02f12332e3b3209d94ea38ac43ab17e56c608e09937ce05790"
+          "sha256": "6b1555878f46600068f1b561a6853aa41d31dd71e96920b44caf855318ade175"
         }
       ]
     },
@@ -365,12 +365,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-category-picker.light.png",
-          "sha256": "e24eb5a1874fbd33d90b99aa8b3b5edf2d7e3933ee0534efca4aa9f988b9a459"
+          "sha256": "89dcf3fba3e5dcc7c4b0eb668d2d2570ef42463205e1659c1ee8b69d95746382"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-category-picker.dark.png",
-          "sha256": "a4497dba830d73d307e7021e50f59d970ca0022f668427d6687df082187926e3"
+          "sha256": "1fe70819e94ce29b0755967583cb8d673f1b1c98bdf1bf6ce58b98cee7745030"
         }
       ]
     },
@@ -386,12 +386,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-create-account.light.png",
-          "sha256": "f0855bfeba109efc64b271cd08b5980f43656ae38b7feec97608d3072fc00c44"
+          "sha256": "7b69b9f8888c6a0010a051c8904191696dd9d47c9d5bf15660539f8aa418080f"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-create-account.dark.png",
-          "sha256": "0ed48226aa63fa2db221626988f506f727fcaa60992d3495a995d3b1766d664b"
+          "sha256": "e592804f94782d052cfd3d396384444ee015ca6c971ff98230e7e47dbf7641d0"
         }
       ]
     },
@@ -407,12 +407,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-currency.light.png",
-          "sha256": "b7a2b02122a713dc8faac731a9c0100b3f2c38e83225f18b37749b3b1f1ab45e"
+          "sha256": "c717a5e861f660140f589315ec3372852b11af3cf554d1bc84d95724ad5f9861"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-currency.dark.png",
-          "sha256": "9deb8ce092374a5feaec06eb42dbc1773b3c221eb17b06ca3cd4c8764f7ba5f4"
+          "sha256": "4d7d376d844c47c9b7ee3411029bc9b521d854290a7710acb145502336455f58"
         }
       ]
     },
@@ -428,12 +428,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-delete-confirm.light.png",
-          "sha256": "d4cd981f1c7c458465fbff5fecef6298fef924c6341ac9eed9d4b8fe44ec622c"
+          "sha256": "e2d47d77a65601b3be4a38cff4e64684d138b1fa6912dc08003788d0bb0876dd"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-delete-confirm.dark.png",
-          "sha256": "e994198cb32be4a4367bc161d3dd3c01a929c028585b329c18492fbb942be860"
+          "sha256": "6929cc1abf94c629f151475e5cb915f9f1917935531c1d5be2129b60e5787aea"
         }
       ]
     },
@@ -449,12 +449,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-demo.light.png",
-          "sha256": "2102b7d8484e4f3eb37ec48e401817e341d70c09738e5e184090d92116098eac"
+          "sha256": "6e10c49fdc255d8c2ffe40d2dc5f8ec368984cf4f285e55f2591d0c77eb0c6a7"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-demo.dark.png",
-          "sha256": "f071b127b07b77ef1610ed8a7971131476043481bbeaab876df3bd66cf302d6a"
+          "sha256": "723c8bea4837b079a190d3fe8b0980d027f74eed1ff3b565c39c72fd0f37b328"
         }
       ]
     },
@@ -470,12 +470,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-edit-entry.light.png",
-          "sha256": "e4d9838991494198a26b37d02d7d4e53019541d3cc5416037f78df4ced12d22d"
+          "sha256": "bfa58fe1967696dc350b58454a7bde45bd7e07f657394c27f05bd8467b4f34e9"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-edit-entry.dark.png",
-          "sha256": "0583d7ead125cb2dcc045b408eb31b571ee4545dda76902e21d6a12a07182f36"
+          "sha256": "208865124adf3e33b6a9d1c88c950b226d785e9101f736ced5420192f8f52a13"
         }
       ]
     },
@@ -491,12 +491,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-empty-home.light.png",
-          "sha256": "881466a1f6bf2cc3dfd279e6a6500876cabc60778c8406b2f3a78fb870a32b5a"
+          "sha256": "d0231ef859c03f61ede8a38e2a13c67c4b3aae4a23d1f8cc43726b2cbb20bd56"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-empty-home.dark.png",
-          "sha256": "eac4c50ea6e1c8488e7690767e80c6b83f7ae8ecdf75dbe33ed1486cdac5d759"
+          "sha256": "9149259b66f3b7f01f3f71cde8dba4eb6bf67863d7b3dea675b68778e0b92d67"
         }
       ]
     },
@@ -512,12 +512,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-entry-detail.light.png",
-          "sha256": "ae83fd7f086a3cad175b1cd991cab6b8a513b233e745dad3e712a25fcb107682"
+          "sha256": "fe6efbc7cf9cca91982279e776bea5c70dffb26773a2c9e2d1050fbe9fd041ff"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-entry-detail.dark.png",
-          "sha256": "56332b7a617958d52cd7acb3f63f03446496b6cd9478dc3fa83995ca764a11f0"
+          "sha256": "33ff3f923111c5dff3d6ea29ad182fda3f17f9948fcc97cb2d506ccf4faac9fe"
         }
       ]
     },
@@ -533,12 +533,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-entry-extras.light.png",
-          "sha256": "c3e033c08614b9e6ed7e817c62148f2a1c606f403c80644c851496e26fc88fa0"
+          "sha256": "7ac5fce95d89b97c9cedcf8ef96f307c6bc5f39d2e6c34d2119206c1d390949f"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-entry-extras.dark.png",
-          "sha256": "2d35f85777106334329d6a868b449f1443adfba596f4431bb5adc8bb1d95e1a7"
+          "sha256": "50dcddd033bf76469ed52e8da52d6a9a8ab3007414f8ece0fe2cf2f769c90bee"
         }
       ]
     },
@@ -554,12 +554,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-history.light.png",
-          "sha256": "e9af345e1e37a8a9fabbb38e1581488e0af1f7dc6f51362ecd23030a27e125d4"
+          "sha256": "91b2e2b675e8a551458689d39e9c51b36604e4ab62b062a6c63db08a1eb07269"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-history.dark.png",
-          "sha256": "05b31d573543a07807d5cbe23364ac0f0c76555b6a5c99c7537e2f765b3bbbec"
+          "sha256": "4ffb7c3c821f94baf3e1ac056916748b92653198b01b9e7bf3d44efdbc13c0fa"
         }
       ]
     },
@@ -575,7 +575,7 @@
         {
           "appearance": "dark",
           "file": "previews/iphone-home-dark.dark.png",
-          "sha256": "060e49b78b0148e92f71259b3f04a175525bf1f2973dbf192012dd028e8fc7f3"
+          "sha256": "e24d3e995ff9ef79a93a5cf956657a31eb375b8cbad2694b484e8098c3131c62"
         }
       ]
     },
@@ -591,12 +591,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-home-explore.light.png",
-          "sha256": "78a4571c566b699a25488a45f43c8c4d66d809052a6ad8b12df03e5808f2dea2"
+          "sha256": "57e8cfd35ef944748017732af187dc30908d6ed1e9b5d8a6fed95984643263ca"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-home-explore.dark.png",
-          "sha256": "1f092467f43231fd5559b8047fc457a3bbe953c822668a70b5a284d23fba3959"
+          "sha256": "ae045a27ce86d2a04c8e92a11555d0d44a16c4464cfdb1b53d45e087a728824a"
         }
       ]
     },
@@ -612,12 +612,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-home.light.png",
-          "sha256": "4659a482a0221771e8f0ee8c1a1692d3223c5c3e2429f9720ba8c9009eeb8b88"
+          "sha256": "e22181e1f46e4f85f1f226be263ecbb34b0affdd54f4f16db937bd16a020ed86"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-home.dark.png",
-          "sha256": "060e49b78b0148e92f71259b3f04a175525bf1f2973dbf192012dd028e8fc7f3"
+          "sha256": "e24d3e995ff9ef79a93a5cf956657a31eb375b8cbad2694b484e8098c3131c62"
         }
       ]
     },
@@ -633,12 +633,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-household-create.light.png",
-          "sha256": "94d558c99c46bac59c42fc0ff4252cce1656b6037f57613409ca328adbbfe424"
+          "sha256": "0515476d7f66e40b0a5e3583e82d5ed98f21e2a6cb20ddba8bc42638372f89a8"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-household-create.dark.png",
-          "sha256": "64eae211668dfd4382ffb72d2fea2c99c60378980a581bf8b6a60f99c9e94bef"
+          "sha256": "03ea4d9a1a35dad362e302f870690d91afd6985d68205e80f48c06f4e5878cac"
         }
       ]
     },
@@ -654,12 +654,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-household-picker.light.png",
-          "sha256": "7bb55dd30edf813e83d5743165d9510b09c262b344e93760d8e08e794422a916"
+          "sha256": "9854b69f5eb169baa6fb677c4db8fc4ec7fec31b6d9b280c13d69fbfc105a4f1"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-household-picker.dark.png",
-          "sha256": "492f1e14731c813f4623a63110912f36cf427d6d6bca39621a86895925043f61"
+          "sha256": "5e025ebe74af1eec06fe690d8cbf853ec9b4db968d3cc45336f96ca6861061ef"
         }
       ]
     },
@@ -675,12 +675,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-insights.light.png",
-          "sha256": "995c69800162d2c2f67e8122822e5cc670fb9bacdd181a424220d177841ea177"
+          "sha256": "96b8b3f42d0fbb91c6b07e35969de3e9b87b12c8ff7559ecefd83b92f57de1d9"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-insights.dark.png",
-          "sha256": "b1805a310f623cde52438ccdd5b90fb8c49b4008955e17a9cc2716ad499417ea"
+          "sha256": "d2ef109f520c7389aee8c656aa430c9abad6e9325e34f482b68f9f40bca04bee"
         }
       ]
     },
@@ -696,12 +696,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-invite-scanner.light.png",
-          "sha256": "9b2dea5dc5e0d22950e513971effff932d05f47f9b5d3d93260cf1d89aea52af"
+          "sha256": "cea5cac90f4b8c988ef2ed0a5c41dd72dbe33ad66a75b1e0f2e4c8effedf10d6"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-invite-scanner.dark.png",
-          "sha256": "cbd98cdb7d28a22be71c9934da3c5ca91969662c2167305c46bd412ca843eb4f"
+          "sha256": "71abb7fdc9cb65395865b42899dc8c613161a2df808faa511109c5b155131421"
         }
       ]
     },
@@ -717,12 +717,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-invite.light.png",
-          "sha256": "0c16b41c48993b660f0d0a1ea6bbb33963fc1e88ef4491e7901188da2b7cb545"
+          "sha256": "b63b459b78a9c6e366b5dd2b13f72c2efba3899eac3c309b9019f46d6890c389"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-invite.dark.png",
-          "sha256": "2ec39aebab7f279b3735a1fe68fd45aa7551ef0239579b150e93da9d28393268"
+          "sha256": "d2c44902e986e39014fa45985b2938fc80f71bfc7090bbbf3283e2c61c97453f"
         }
       ]
     },
@@ -738,12 +738,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-join-code.light.png",
-          "sha256": "2c914324441dfad720ede650b24de8e0b140a62dd20358bb6cce775e77b3e20d"
+          "sha256": "3993fb37cd90f25c56e57afdfc23ba09446d13accebce23eff8db633a65bbbe9"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-join-code.dark.png",
-          "sha256": "3a058ec88ee5c5d8beda8c90e2801505f88e5ff4ee250f6f013b0a055b322d6d"
+          "sha256": "bcda095a67e93c154d912457cbb1fa4aa7c74c1219e882608c0a903be0eec6bc"
         }
       ]
     },
@@ -759,12 +759,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-lock.light.png",
-          "sha256": "c7ff1d716a91c435f8c0a7f93e1ee135b676b596b8c3d32b40cd62924d367e5d"
+          "sha256": "896d689e4fa7d0582a1a5413f67382a5e97cc9cb79a8814bfdd66247dfd90036"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-lock.dark.png",
-          "sha256": "5229774ef6df981efd653fac5c1121ffbf712cea7336ecd49421a4c0f93ada9f"
+          "sha256": "e2cb39836e8a9f15be5342d8d423374d8d153958c7c5fea9e9666a2fb76fccd7"
         }
       ]
     },
@@ -780,12 +780,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-money-flow.light.png",
-          "sha256": "25624e5513669d002a94535cc4a1387484058ab4c4e4f6f2df6c0c9ab44e4ce0"
+          "sha256": "bce79f192c94f64ef613c6dd5cd3e53713d29732d2f67597514521ad5abe2504"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-money-flow.dark.png",
-          "sha256": "134da3bb2fa3a24c48de2d53cec18d2931bf20c23a967f7281bd41d80ba1749a"
+          "sha256": "027a0855aff3968f7698f7ce906fb92acadfebc03c57e8c2699dba2d7c05852e"
         }
       ]
     },
@@ -801,12 +801,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-notifications-prompt.light.png",
-          "sha256": "532b84b3ab79c080bf5b9d1d13133acdf301c4d258b5a4b263b4e1f9b98f2afe"
+          "sha256": "c608ae48b47e2a711dace04355a306dc7c25d2f3178f5d9f39d800174bbb2d4a"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-notifications-prompt.dark.png",
-          "sha256": "44b4aad1febd02d668a43c2ce1bc10a784b287b93222af5c55bb2dedebed75fd"
+          "sha256": "e033f12a332d6e2786210cba991a0812d98d98e95e81d96cb6cbd2c15a2364c3"
         }
       ]
     },
@@ -822,12 +822,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-offline.light.png",
-          "sha256": "c4c9d78a0765d6609a344b09b6be20662011da81f6963cef0395c196c7da86e6"
+          "sha256": "68b31da5a859e516b38fbe693d23f1f7651b978439f5bbc9aa8c07ec76325c18"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-offline.dark.png",
-          "sha256": "e75412682bb8a4450623416a5a971ba24d423fe5a16091f98d83c14cd92d021c"
+          "sha256": "d72760b3487bee1880f97b9392a09b8ebd66ec33087f3f9b8e3af527e15e0f7d"
         }
       ]
     },
@@ -843,12 +843,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-payment-stale.light.png",
-          "sha256": "0b9381a45a73f9758320dc7f452dcb55c195b419969ffbfdbe156875c438bf12"
+          "sha256": "8897e84fd7eb26dc2298f624cc92177de45aa7e4fda6cedfc82c6f4c3142098f"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-payment-stale.dark.png",
-          "sha256": "4aa02aa8889e1f5c5610d15f9d302877c1e608737d21e42810d4fcedffde06d2"
+          "sha256": "fdb017cf8e7dfb4bbf5c59aa8b816a719af0faeb96469f584e0b68eba8f99030"
         }
       ]
     },
@@ -864,12 +864,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attach-confirm.light.png",
-          "sha256": "014ce9d690e681f96570cd56476fbd8f19952d2ea6989e2e6607c0588f3c8a61"
+          "sha256": "a94593d78fa45d0847394166a5ff9f3be6d865ccba61f8c26da621f9d4d19eb3"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-attach-confirm.dark.png",
-          "sha256": "1d27f896b831540122635faa9bf169020ddbec1b2ae6b369b5ba39174c724ee6"
+          "sha256": "8a30f820db47af588b43f59ee5c7d7b695c1aab41d573a0e1f2bec2d8df21eca"
         }
       ]
     },
@@ -885,12 +885,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attach-entry.light.png",
-          "sha256": "54359fc5d0a9459dcdf5a517172608ebd5e5084cd0333970d832671d797b08d6"
+          "sha256": "4555d554f9ef727e9da5c96027c169dd3d72698210ca7fbb520801315ce02c17"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-attach-entry.dark.png",
-          "sha256": "b5beed34fbff4c9cb410d186e2f0cd5f0ac589c0a7999aa58fe60cab6dc01845"
+          "sha256": "a5bb379a4f44d5695c8d6a6f05b74738989ba0ac9d659474e5dd15ef15dd51fa"
         }
       ]
     },
@@ -906,12 +906,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attach-file.light.png",
-          "sha256": "f212b67c7c4af7e315910cf135d7daaaf09e680657559efb678372feff4891f4"
+          "sha256": "eb2e13994c523a8751f9c25a6ae5634192f42f33c7b1cfec6f05d9704dc10392"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-attach-file.dark.png",
-          "sha256": "0d2fe34198fdce8098c26f3f2a066b76a96236365c9e3490737e265e0039b3ca"
+          "sha256": "9d43adf8cd92c565a1f7550daf0cec917d3cbbf467e6454f1adbbb27797c44ad"
         }
       ]
     },
@@ -927,12 +927,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attached-toast.light.png",
-          "sha256": "f9a3e7201780c67aef3e135c33505e0911136cfd3d3b40feeb97ec99f034d683"
+          "sha256": "61372997ee4e3d7631c373d07f905115d48c2c14a25a7f382d6a17972594cba2"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-attached-toast.dark.png",
-          "sha256": "8eae1694856b109d35f729b4cf6b1149d869db5c6ca7a9f60ef4ec1169489a92"
+          "sha256": "0d41f212c58f771a72abb7f041a0eac48167cdae6581761864edc27ead078fff"
         }
       ]
     },
@@ -948,12 +948,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-email-settings.light.png",
-          "sha256": "f699d4dd1e0b8d8d9bea7d69637ad85da7f80534c63ec0f72b25f5ad894efbe2"
+          "sha256": "fdcbdcbec267affb5a91669656628db80c3c4ddca2320956d59316534a0e1e37"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-email-settings.dark.png",
-          "sha256": "471e641b9474276774510529accfb7c4f04dadea19fd339d1974b6be9df5af3b"
+          "sha256": "1cd42971e1b9e35fdca16868438559c23a6217ecd663501fd7abf9e02f62c4c1"
         }
       ]
     },
@@ -969,12 +969,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-inbox-item.light.png",
-          "sha256": "62b411a0add0a0182028a93e404147984c2486b47e409cf528ce050196238cab"
+          "sha256": "930a78385f0f2e38490533dd9eaa776a48404d55e3bfff9caa8a88e77260a517"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-inbox-item.dark.png",
-          "sha256": "6d0589498ec21c2764f766854a1886d68834f912cc86e64ccfca0f478b958cd6"
+          "sha256": "28b832777776f470f8c3079de7c2c5c7427c8b0f08aca38fbbf23525eb3a08d6"
         }
       ]
     },
@@ -990,12 +990,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-inbox.light.png",
-          "sha256": "fcd04cd6726654b1ac77840b69a0278ec53bb73028a8a876779ecfac07e216d4"
+          "sha256": "a2a7c8d27f6d23de380075275691a69e7bb72ff88c9f86b97e4496e56d1b35aa"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt-inbox.dark.png",
-          "sha256": "f3adaf844aa72d59468db01287a1362e1ac58a2aecae60b97056655ba6919a48"
+          "sha256": "411178be7a7a3b23709a7f79620e9706e2c2d2ca6fe280120879078b8489f801"
         }
       ]
     },
@@ -1011,7 +1011,7 @@
         {
           "appearance": "dark",
           "file": "previews/iphone-receipt.dark.png",
-          "sha256": "5c701dbe9e623a0e83d25fd00330d7d96ce8f16383052348ccb3e9741ef719a5"
+          "sha256": "199685e31809cd14e8986fa8fad23fb1142aa56987292419ce42350795336bab"
         }
       ]
     },
@@ -1027,12 +1027,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-record-payment.light.png",
-          "sha256": "c1c5cb297313506375d2e22df014958f21724dfcd7a10608f4aa907ead37fc87"
+          "sha256": "73d83c67116f78d7e0604f5c426b8e209f4d7bc67a9c5210c8ebff046ea7bdec"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-record-payment.dark.png",
-          "sha256": "e9e0581f991e78d7a380fcaa6773a991e57223492652f22149d5af65dcd8126c"
+          "sha256": "fe5af88eac45492cecd35829b361c6572823565f8e23984019665256e4231655"
         }
       ]
     },
@@ -1048,12 +1048,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-recurring.light.png",
-          "sha256": "4f0b0ec491883d9e71984aad045f96444b21f5fbf3c1c41fe150099259936551"
+          "sha256": "b8993060ad79e8de2f9f4edbb13ab3a798bf2463fd97663e5a1d2bec1afc4196"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-recurring.dark.png",
-          "sha256": "57da1444a26782619774c32cd4186efe3098b015af9c1742ee8ce31dff5708bc"
+          "sha256": "57d53eb8628fb276af9a3e179514e35032bc465ba9953f45cf64734e66120837"
         }
       ]
     },
@@ -1069,12 +1069,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-save-error.light.png",
-          "sha256": "802f9d069419fd928f4968de76bea24653134dc82a663b8d0e17368570f272c4"
+          "sha256": "f43e7c4249ef7f98dbb85ea8eee2c6fe4e3718c98e9d0126aa3193abacd685d6"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-save-error.dark.png",
-          "sha256": "12adc94cc5637a9e31ebe79fe0df8ad2c5a06064106f0700959bfba9af8d2af1"
+          "sha256": "2a2de182afcd9ab0e6b81647402e4cb042df7a7988937feba4d9c04c20b1c6ee"
         }
       ]
     },
@@ -1090,12 +1090,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-saved-toast.light.png",
-          "sha256": "e21a8a50220f54b588890aaa6b7b5637153ab03555c8059920510f4a362bfe9a"
+          "sha256": "86e19503a0fb9a37dfda114dc6821adb4e5379fe5513bfa8252b79693cc5d8ff"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-saved-toast.dark.png",
-          "sha256": "084ab44c8c1b8255d79057b0d8f4f18d63716a41c46c65d76dfa2b139de164c2"
+          "sha256": "e60b689ec79ca831c5cf77a49c549a915a7ebdd219fe8743ac75149b29cd98d0"
         }
       ]
     },
@@ -1111,12 +1111,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-schedule-detail.light.png",
-          "sha256": "11e243772696fbc86d49b207ae23d9e85d00ea729c411b130ba0acf3cffbf77a"
+          "sha256": "e35f7ea2650c07ca98f663d31b7378921559555da8ba54fb3367d0dd59489181"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-schedule-detail.dark.png",
-          "sha256": "b6696e4fddaa1b0aa5b754ebb95a8bee5f732da6a16da0c0809f2d7d6359a1d4"
+          "sha256": "702a608430b9ebbfd9c214c749c1e5901cbbdef7eb2412a1ee09abce1f3da904"
         }
       ]
     },
@@ -1132,12 +1132,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-schedule-form.light.png",
-          "sha256": "6c3e0d70604cd177c01a38b9d98233fa41661ff490b844908cc4e594d0f57f8e"
+          "sha256": "bfdbfc8ad74089f0e97a9bdf4d7692392a12a12874fbe35e42bc6e4eeaedfcfa"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-schedule-form.dark.png",
-          "sha256": "8884dee332c4b8c19cc46f86008e73800c2e0b04a14a747aca38ba75b6e79da5"
+          "sha256": "cc6a0206631f1bb5292ba51065d0f4727507189c7a8228dc1566b3531d74c27f"
         }
       ]
     },
@@ -1153,12 +1153,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-search-empty.light.png",
-          "sha256": "bd6819b1b1d88443d3b7fc6a0ffcaf92ece93ac652d9f5733faad74dd1d378aa"
+          "sha256": "1c6d4b15af15d45043ea40adfdc62b2a5af79144d0c74a68932767c3254ce8b3"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-search-empty.dark.png",
-          "sha256": "74389811ddf33714459f9ceb927a8373a9761a2942487b5b254b338563c29ef7"
+          "sha256": "5490ef877c1717e8563ed125f203d0af8401d94429f86cc4c380ceb9f52ec11b"
         }
       ]
     },
@@ -1174,12 +1174,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-server-connect.light.png",
-          "sha256": "d16953e361e146588a68499860df3eb8cbf84f7b0674878b500e0bd28a782db4"
+          "sha256": "e19bbf3148e423e37498acf0b2653c223f6f9ddbaced9e5ae73dba8f3fd03785"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-server-connect.dark.png",
-          "sha256": "21f053abc4c915106f94d38425620fe1b20cf70f30c975f75d2788fc6d0a4677"
+          "sha256": "0c23452bda008d4ac400bcd3a1eef2ef38b36546d1c09010b959f20dfe6dac71"
         }
       ]
     },
@@ -1195,12 +1195,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-settings.light.png",
-          "sha256": "c322413a94258e9c8ce491b94f7d1d0834f058ed9b41ba0076756c40b2561266"
+          "sha256": "63e7a467f0e702facb020a6499772386f6bbebbf53338bff9c91e071e31c8778"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-settings.dark.png",
-          "sha256": "86c790d5cb1acf260944795e48082dec1d77539b5791f60c166851de533ffd51"
+          "sha256": "bd99378ba2811cf77c20c71ca2ca6232a11ee232b25b8b5bd9bb329d535f0455"
         }
       ]
     },
@@ -1216,12 +1216,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-balances.light.png",
-          "sha256": "b9c4938e52b8e5ea375761c2c2d6921bf5433ba05d2ef7338505dd18b17c0649"
+          "sha256": "84abcca6e043f57a24e6a18f2147979f8b07773d392985f238e606149c630484"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-balances.dark.png",
-          "sha256": "9a6f418a603c96c0e55fe3de184e2c3edb613022254e72c7308d60ef89097043"
+          "sha256": "90f1d11283fca59cbb62699317e654e4deb000c6ac72c6f68d72118b6de4b53e"
         }
       ]
     },
@@ -1237,12 +1237,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-expense-add.light.png",
-          "sha256": "749726c4290f78861d2e6d463385b59bd6da41349a4d73e55cbb1e02d3483d80"
+          "sha256": "cb54fa6be3635129e40c3014102f68a374b86fe78f742c591c4876076c2e189b"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-expense-add.dark.png",
-          "sha256": "ad279462c99c60d7550a6ebd23e30a2b59f5890ad87f5ee4bade04c97ba66e36"
+          "sha256": "f547cbf2ca6fd119249b0cc54ef86a188fd3477d9866c633e5436ec605d7681f"
         }
       ]
     },
@@ -1258,12 +1258,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-expense-detail.light.png",
-          "sha256": "fa4faa87544382adf4ea952757f96699ee5b2a40cba73f1f987ccce26ecb463e"
+          "sha256": "045dcbaf2dfc9a911356fdb2b145d25742c9872e7cec3f6004784a801210e3d5"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-expense-detail.dark.png",
-          "sha256": "9b0691d3cd41de8c116a8ac6ef35ba205de03c7c175ca4e55267d011507a6349"
+          "sha256": "f6965500100010879270d07871e17824d2194f29eae2b321398d2d3e10aa81d9"
         }
       ]
     },
@@ -1279,12 +1279,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-list.light.png",
-          "sha256": "8fdb617a959a3ba06e64e894bca243836fcbce76e22e9c6e655a1d64eaf45d49"
+          "sha256": "a4e3c5e93dcc67b88cbdef389a43d90379e965022d2fcd7fb638ac76f5cb0a56"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-list.dark.png",
-          "sha256": "fcbbe98acc0c31ca2d2e659bf47c469c83e08bea25d6fd3ab912e5120c64f5b3"
+          "sha256": "5728258212a165198e736118c808640e371bf01770538930912550abafcd68ab"
         }
       ]
     },
@@ -1300,12 +1300,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-missing.light.png",
-          "sha256": "a30b0cd817848a00f06cc01a46aa7b1d2ebc7773f6002d3386978578b3775964"
+          "sha256": "f4fd263b7d478fa4ab82b45a2c68d0f22c83f5fb9e4ce7c6c558b2d57c484b30"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-missing.dark.png",
-          "sha256": "f54ccb4b46380291cc15bba3b0f0b78de95fd22dad71dd216ab7bc95e3c00449"
+          "sha256": "d21ce4899c64a14ac5034de8019466b1aeafe77663445141164ce4ab79cdf725"
         }
       ]
     },
@@ -1321,12 +1321,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-people.light.png",
-          "sha256": "8bb6d45973e0b577cab6a92132a74ee331c248947584ae5c452dcc31d621dc73"
+          "sha256": "57bf51b12b2ce0918dedaf32d54821deee43cf3180074caf05b7573194fa7a19"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-people.dark.png",
-          "sha256": "16239ddffcf24114165ae4fa307b952596427904645fba501f2d71adc5e95f15"
+          "sha256": "0807e729fb813381b8eaf1ed82617cd7ce9e8dfde47789b7b808d0c4b12605e9"
         }
       ]
     },
@@ -1342,12 +1342,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared.light.png",
-          "sha256": "611338229c8e0287f46305b8922cf58e8b8f19919eb77328f932240eadc1cc26"
+          "sha256": "2443b325375a6cf8193b0caddbeee0e1afd16a657e200e7cf45812feacecc69d"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared.dark.png",
-          "sha256": "cd217ad0d4df52b5f5690efd66051b92d990484ef0d9629eb3584983298f4b18"
+          "sha256": "73d89a6064cc185f39beeffc1e036f748226dbd1219dffd72121ca6bdda07e3b"
         }
       ]
     },
@@ -1363,12 +1363,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-in.light.png",
-          "sha256": "0fddd48de8b427da412c2532cb6e864e53e0e84d3c300c151e64c28d4f78e249"
+          "sha256": "f973d104b9251b95ece60510c62bc44c9cfe08d7da3fc68b230e87c84cc171db"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-in.dark.png",
-          "sha256": "b7738ae357d245da8d10435d02941dab6ff6794462f0b5871a08054f832ab483"
+          "sha256": "dda5ee83d2ffd45c89cb6e1f71ca985fb79902a9e6b4dd619e420db4be64b1c7"
         }
       ]
     },
@@ -1384,12 +1384,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out-plain.light.png",
-          "sha256": "88f4469049a30db762a2cf5cea252f8bbd5ecdc5931cfabc4c24ded6fb425285"
+          "sha256": "212be0396e5b26196f7104a9c3a27404dbf1ee1a42cabc96385ace29188c5cd6"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-out-plain.dark.png",
-          "sha256": "42b5722b40dff4b7fdd321f2a0540fc5f984d3a587ef6138d64106f60d040585"
+          "sha256": "ffe492b6fbd75246eabe4f4e88a16f39d7f20c17ea411499498d7ecce7fef738"
         }
       ]
     },
@@ -1405,12 +1405,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out.light.png",
-          "sha256": "b21c17672c675bba55b1feaddcf06598531a507153c7d20dd6d576a38557d9f5"
+          "sha256": "a67df468ac43fa91689f2da9a9f7dbebf8543314909b223df5d6e7bb154da1fc"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-out.dark.png",
-          "sha256": "e367208f6e2ce64cd8613621a3988f50307fded695ffe05e1c3abd367b8309c7"
+          "sha256": "605cad64889771b50ed2636549cba4bab578f3364ad3f2b8ce1bd3fdd7029f32"
         }
       ]
     },
@@ -1426,12 +1426,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-split.light.png",
-          "sha256": "a2655051068aff0c1fadfb00a9c1eb6c1c4ad412c34d1ea244cd18bfbe37f947"
+          "sha256": "66db9b1de151a0e48288c1201502db7a72956f5daab2175abc35c2505934796e"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-split.dark.png",
-          "sha256": "2197e7056993fa7f34369818689bfeed507306c2f2e441ca7ea354df14c939a5"
+          "sha256": "0f8cfa0c286de28e5b201ade7f9748497083306a9d719f3a85da5ba0b51f70fa"
         }
       ]
     },
@@ -1447,12 +1447,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sync-failed.light.png",
-          "sha256": "f2501e617fa3242a85b909038db475f18f76cb4fa9ab456d875da9aec2cb3f95"
+          "sha256": "94d3ad2396a386e78c0771330189eb71751c40bb964b73122fdd1a3b347113c4"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sync-failed.dark.png",
-          "sha256": "146fc72ec4431cb8278437157ad529cb8039d4548b195983ae3f4752c17f94bf"
+          "sha256": "a921f921295bb2ad9623ba60c483a3ee91d83274b59d92b407b10865dcbae210"
         }
       ]
     },
@@ -1468,12 +1468,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trip-detail.light.png",
-          "sha256": "e3d327a2cda9923bd957ee9eaa88b4109da3fee447ec04ef240b46308b0334d1"
+          "sha256": "427410075fe117fc55bd8d849a256c6e6b7f2698b62e80f1dab14a15d9116aa1"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-trip-detail.dark.png",
-          "sha256": "93f7fe98e39d04132fa379ff38180b28b6e45e090bc5f887d0bd7981315632fa"
+          "sha256": "1ea992ab0c1196fdac327030f84e078cad33928123c50bf7854e8a9b0480d7db"
         }
       ]
     },
@@ -1489,12 +1489,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trip-form.light.png",
-          "sha256": "6173e479f7296cfa654ec951244d58e9a8bea02f50767fefbd89d420829203ca"
+          "sha256": "b7daaf8a4b861d473da76055291295164a685c56dd97a2e03113b882bd4b490a"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-trip-form.dark.png",
-          "sha256": "f0602ab125208a76f68251d6dc4a05a45a71650acc2c552cd3c35f7808744dd1"
+          "sha256": "c310fbf65b8cb2e31a2d651cd6e5521166f48b53ad807d86a4e621101bec0ac1"
         }
       ]
     },
@@ -1510,12 +1510,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trip-personal.light.png",
-          "sha256": "e6853d595e78f3602be4cf3e17859278cefc1773ecaa57a5789357f26938e62d"
+          "sha256": "1224285087a4915d78de290439e35d108ba2f0e209882a91a8ee39f29b822786"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-trip-personal.dark.png",
-          "sha256": "e45da4d4567cb3d34c111d704527d573f02aae34816f3070ef38245d65da51ea"
+          "sha256": "49dd2ed12f1faf24dd470664913034f010828d7afdd27b97006075b2486caeb8"
         }
       ]
     },
@@ -1531,12 +1531,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trip-share.light.png",
-          "sha256": "be398d267d71084d6f46dce708f55e82a26f39d39fe0da666196d09d3c779864"
+          "sha256": "84dd50cf045b93f042494568b404a7c7a388401e6e3f169b79cbc8f0fce47e93"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-trip-share.dark.png",
-          "sha256": "1592ece3e93d986b5fc17b542cd6caf87a3f6d2fc7c164d2323a239eebadb595"
+          "sha256": "570a652d9f1a3de7ff9baf1b8fceb9a8b0ff4cad06b711c955fac2cd6b704803"
         }
       ]
     },
@@ -1552,12 +1552,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trips.light.png",
-          "sha256": "4e835ef72fb5b80a1c3555626c6318207187176298e55873c9d59d0f8b965ac0"
+          "sha256": "480e0ed56206990ca567d3e2e64c168e632338cdfb7b3b817e9e21306dfb4018"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-trips.dark.png",
-          "sha256": "1535a1b96b88d86b88cc8c0e3329f86a3e958fb1ac347e58c4e043dc808af074"
+          "sha256": "3266f3e7fdfe0295dd060ee69852645b6d21b83427ff1ef01a8845c3e3283e8a"
         }
       ]
     },
@@ -1573,12 +1573,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-activity.light.png",
-          "sha256": "303532c4745f0d6fc021b713a58ab8c03541b3a33f69dffecb2fc61bd2061330"
+          "sha256": "a469a00042291a7e5d765531c745cb94f49c8fe9388a251126f34523fa87fe7d"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-activity.dark.png",
-          "sha256": "a725457fb687accba8d0c655da415f50890bbcc4200322d8901d93074b54a55f"
+          "sha256": "09462109ba1e87b8f9782978f23fc1fbb22ec699d350a8aab7e47efd18f3a516"
         }
       ]
     },
@@ -1594,12 +1594,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-add-entry.light.png",
-          "sha256": "248a67164fbe0f00057a9349a393964e3863ad7332614eab6d6f4d94a2476016"
+          "sha256": "a4087bdf10ef43ca0e6604d4863c19e4cc5a5396eae3181424f45eb1901fff5c"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-add-entry.dark.png",
-          "sha256": "11a1b7141a8fc49cc0181c57b7d33d9b549793ef71b662c5e96cd141374596b9"
+          "sha256": "de53b8e4015671f5aeaeb7a5848985fec20f7dd3fbc517bf20520e3b2311f91c"
         }
       ]
     },
@@ -1615,12 +1615,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-home-portrait.light.png",
-          "sha256": "64f47899a8762e06f61ca73fb11c59a229792ada1f60eb19a5a7abe08e917598"
+          "sha256": "e2db36788f5563242c37bb758156a99c13fee494ea2c7bac0ccd5459a582a6b5"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-home-portrait.dark.png",
-          "sha256": "aaa7a1307f972c825156b906ecf094f5a86e999f886d63f5afbbda893a08cd61"
+          "sha256": "751ff0f1743749b59386c28a15c787cbd08ce2c4e3784edb3e581f9f97c26ff6"
         }
       ]
     },
@@ -1636,12 +1636,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-home.light.png",
-          "sha256": "a86b2bd959889700785a6b468b8ec2d73326f594a254b67ec4eb51fc770e0ca0"
+          "sha256": "ac35fecb5908c2213f1c24763a2b10657cb82e8e023dca32eea6d1c4ce1b587c"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-home.dark.png",
-          "sha256": "0b8a67eb14a41bbe301a21d7d77d14678ae82e9e63429049a9007f653e78b5ce"
+          "sha256": "fe3aa9e40834f49431e1a6366969324af4c9cd1ec7de9f33e9a2fdb99195ce23"
         }
       ]
     },
@@ -1657,12 +1657,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-confirm.light.png",
-          "sha256": "b92596624445ece35696518521f1fd4df0a2e13fe088f729ad330cf893d81b49"
+          "sha256": "8fad7a0ca25f3fd04c7e1d6f8b6d911a3ca332e9774398dabdf571185ad124df"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attach-confirm.dark.png",
-          "sha256": "2e608f28f6baf001e8db350ccca04a3e270711ac927661de1d22bf16b0a641cd"
+          "sha256": "e36b8a487204b32aad521ad9d1296d8e8863bc1a051a050111c8233cfb371a3a"
         }
       ]
     },
@@ -1678,12 +1678,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-entry.light.png",
-          "sha256": "72058150895522829f093674b79abf3cd21ec96d6ca1e4c08e3ef231f3f2eae7"
+          "sha256": "d91fa1e9064f78459ae26c99115619d4ce68b86fd1cfafad82bf4f26f76a4cb3"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attach-entry.dark.png",
-          "sha256": "cb909a399e22646dc4f0b63633e586f6f578bb610ac8d39a9ad70173931ef15e"
+          "sha256": "a55c0a54a96e6dafca1dcaf3bae12c4084d1add1210aafc61980ec6cb5dcfaa7"
         }
       ]
     },
@@ -1699,12 +1699,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-file.light.png",
-          "sha256": "e13e09b1b9e9f00560ab58acd028f116742a5539a797b0846b1260bdc8700848"
+          "sha256": "25dbfaf7fd11bd3004fd70256a243cbab0993c3191dee33eacf136d8d73b416d"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attach-file.dark.png",
-          "sha256": "ba893ec1932346b91a84a662f6827a0e015c1c1adaff58f0003901c89d11b469"
+          "sha256": "6ac1299959089fbbd8551613290ab22f38e391e3c0d534f354bfba58e2297dc8"
         }
       ]
     },
@@ -1720,12 +1720,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attached-toast.light.png",
-          "sha256": "07a4be697cc63e6755a2ff2e575c688118d32f9b9099c0af1bd0f51afe8487a4"
+          "sha256": "a82d0028446a841f25e032a9d645c83e78445c9ec42655dc15addb4e9db254a4"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attached-toast.dark.png",
-          "sha256": "996bea1dcabefe2eeb090e79fa14f4de0cf9411560083cddd0ada4e855aff560"
+          "sha256": "f937a927a8e7f54c797c760938b882d9fd847e2c6cb560b6d7f9c8bbf49dac37"
         }
       ]
     },
@@ -1741,12 +1741,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-email-settings.light.png",
-          "sha256": "96430691d0bf5241e30eaf44701034f63aa2de8a0453b8dbd4794042864376ae"
+          "sha256": "477174a1362451f1b0604aa92a5ea96b12af0064bb9c41fdf9171ff11f5302b7"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-email-settings.dark.png",
-          "sha256": "65eb5d3447db9f899c1653e2f757e83ed9b4c40909238ed16c49f9ddc9f787c3"
+          "sha256": "53189c3be37a9dea91858101361672d733db1ddffb8cf2c1663e73383363f9da"
         }
       ]
     },
@@ -1762,12 +1762,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-inbox-item.light.png",
-          "sha256": "b5d39f5fefef1a9a7fa58084ea8663d85d994f202b7d52220b115a448af67ac1"
+          "sha256": "7e21251c497540060226986eaf48deb1d8d8a9e1e1e1624998b743c831d6d110"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-inbox-item.dark.png",
-          "sha256": "f9b7cf919b5871cc46d94e34dad7c7fd4c9e926917d141f0b4f4961fa144016e"
+          "sha256": "bedde769d2e23631ffff1a45b6ae43d5afb8e344a70bd87b6af34ee80371cf6e"
         }
       ]
     },
@@ -1783,12 +1783,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-inbox.light.png",
-          "sha256": "80eace61520ee4a95b5b32e90627e0dfd921325a28e48edf920d4e0fc5804cf9"
+          "sha256": "4ceff26a40ccc13f70f173c38bc58e7921a81c8aeba87681235eb4fbccc31d76"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-inbox.dark.png",
-          "sha256": "a0846b8307fcaf5dc38cde6b4427aee0117ee3c6935627eae0af9fc02720c45d"
+          "sha256": "a60bde0edf94084e6d5a1aea427caa17592547f1f6a35923a338fe9dd8f199bd"
         }
       ]
     },
@@ -1804,12 +1804,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-settings.light.png",
-          "sha256": "44884715ae1dafaada4f84410df2ff9180a74ef32bc2f44b1d199639a976f87e"
+          "sha256": "b055a9a2a6f01b997a46fba76edc6ee55e03bc17e313aa0741b2597db616ef1f"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-settings.dark.png",
-          "sha256": "2ac8be7da6c96269a8bfd16118f3055466928359a7309d90ca7f55beaa058aad"
+          "sha256": "bfa444bd0cdea248348a59de4f0442204505bdac2ca462dc3b146cab96106fc4"
         }
       ]
     },
@@ -1825,12 +1825,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-shared.light.png",
-          "sha256": "8b6d3326c1ccc4fdbfeda2f83d20d46cda6e524050842cda8a45308dd9f7560c"
+          "sha256": "d932854303755d2104a75028deea4b9485ad431a5ce1e0d06d1daa0af5c79357"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-shared.dark.png",
-          "sha256": "2a6f9ec46ab2c6ad1bf382effc74204e0bf02ff6e46050329d3b326b7ee26a13"
+          "sha256": "40782f5af54747ba4cfeb585a198d2d71304c6576378a1eb090cf8dfb3411f4d"
         }
       ]
     },
@@ -1846,12 +1846,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-trip.light.png",
-          "sha256": "5057a3f6148a61c6d73e809b653dc8b2a5654853335fa1ca12690b6835846b6b"
+          "sha256": "aa01c335566ceae4febb640aef96d031c79a5a4783c22bbf8e47eba28a37ff17"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-trip.dark.png",
-          "sha256": "018fc872ef446abe18fd7d2af47a07db18dfe98b22c8f97d07550fbaae39c46d"
+          "sha256": "9cec225a983ecf0cb9b335b10313a32c63fb070ac1ab8c409ea36f120773d14b"
         }
       ]
     },
@@ -1867,12 +1867,12 @@
         {
           "appearance": "light",
           "file": "previews/web-accounts.light.png",
-          "sha256": "3425205643d876e8bddf6e27f024f686f82372e3d058ec3b3b7c4a4f13854977"
+          "sha256": "abbf885aa6675a1f3b36fab98ba02dc80a45a1be298f556d58b3100830fc194a"
         },
         {
           "appearance": "dark",
           "file": "previews/web-accounts.dark.png",
-          "sha256": "5d73474612f55388327d6d4a5ccf810627b40f477926cf62db3d22bc5df1d20c"
+          "sha256": "bfc57467753e95efd1fa654c24c322c4165c618f331affd9bcd6704d79982582"
         }
       ]
     },
@@ -1888,12 +1888,12 @@
         {
           "appearance": "light",
           "file": "previews/web-activity-searching.light.png",
-          "sha256": "5747d2fdb82482c213c0418a61811876c001761a3352eb727c57a32624188ea0"
+          "sha256": "9c7b27b201b2860c375a590ac698e3c1aff615d012009862dcd79a038c25818a"
         },
         {
           "appearance": "dark",
           "file": "previews/web-activity-searching.dark.png",
-          "sha256": "81bc85f1da6cf6e0c95b96ffb43331c42236b5e835101b84716c3e53000f814c"
+          "sha256": "61c83f26e932ee51ce84e3de6bb82be3b362dbc86535eeb456fa3c2eac473e37"
         }
       ]
     },
@@ -1909,12 +1909,12 @@
         {
           "appearance": "light",
           "file": "previews/web-activity.light.png",
-          "sha256": "63177c0f2a52d53af22aca596ad8b26a0fb843b9eae1ce60930976b93c2c0344"
+          "sha256": "b09c56a6ae1401562f9a9a4b6ef1dd48db26e2257f38354e440961c7456e2cb0"
         },
         {
           "appearance": "dark",
           "file": "previews/web-activity.dark.png",
-          "sha256": "f17452b900f9f271281613292802b6d5c9370ecf544d4690747683851394d730"
+          "sha256": "675e6127fbe0177c09f8e6e323b7ea44e48469595ec8007e869a8a1f9f51aeb7"
         }
       ]
     },
@@ -1930,12 +1930,12 @@
         {
           "appearance": "light",
           "file": "previews/web-add-entry.light.png",
-          "sha256": "79a07357dbbab1bf628e7fc5c0aaf1daaab062f6774696fc108be2dbe147a9f7"
+          "sha256": "1390636385c1212d637b37e81b91662c8b96c19383298a68009ffaf651b3bcee"
         },
         {
           "appearance": "dark",
           "file": "previews/web-add-entry.dark.png",
-          "sha256": "5021cb4e5149b64c092d8ae78420d8bf2758dc1f9a8f9b6e118a1b9f7d7a517e"
+          "sha256": "b33b8b7456b6d6a141ebc11ad7758ef7648e7f46db093c4a689caa445e43385e"
         }
       ]
     },
@@ -1951,12 +1951,12 @@
         {
           "appearance": "light",
           "file": "previews/web-categories.light.png",
-          "sha256": "de4acb2dfab06bd67ef7041ae2240c5aba0564b6af0fefd9687b4539c9e1d04e"
+          "sha256": "5df3cb3bb31147a59191dc43aaeac35cde795ec3a4977da03f4c27673a86c696"
         },
         {
           "appearance": "dark",
           "file": "previews/web-categories.dark.png",
-          "sha256": "983a0885e91ff26ba4f100538b7849f749d96f094b718636209bb61aa276e857"
+          "sha256": "de0405ba50898d58e0243191dccee56fc6a0d5f19f9b0339fe2d3a54a9e8d1e8"
         }
       ]
     },
@@ -1972,12 +1972,12 @@
         {
           "appearance": "light",
           "file": "previews/web-currency.light.png",
-          "sha256": "c8f99e1872a40c36fbc06a3bd7465106a2c1e04457ad3d0c00f00e2218d208b4"
+          "sha256": "4d15fba345b1901f0b0522335b0175b538fd0fb9ceba43e9627e725d3cdaec4e"
         },
         {
           "appearance": "dark",
           "file": "previews/web-currency.dark.png",
-          "sha256": "60007d8fa701c3ecf1a880a206b67eca52ed84728ffb56b204b20b6630dc4324"
+          "sha256": "29c0a084e34b6c138853a2a8cdb4fca3c0ae8f682500d84ff2f8f785e9ea5d7e"
         }
       ]
     },
@@ -1993,12 +1993,12 @@
         {
           "appearance": "light",
           "file": "previews/web-demo.light.png",
-          "sha256": "c3d8220d4d33365729f5d330bf701e6144a9c299ee98c4ee35518c4db09a6f12"
+          "sha256": "f4ff3c37a385f7a8b16b77447821c7539c1062018297afcb90d90bc73aa0d149"
         },
         {
           "appearance": "dark",
           "file": "previews/web-demo.dark.png",
-          "sha256": "24af7a89c6f9aa4ba71299365a759494ec084c81090f5e22c92458dadf5cf651"
+          "sha256": "5763a571eea65a618a64bb24cd59db247f65b91f4359c9e0d19e99e0950d2e8c"
         }
       ]
     },
@@ -2014,12 +2014,12 @@
         {
           "appearance": "light",
           "file": "previews/web-edit-entry.light.png",
-          "sha256": "8317a1efc52416f0a81557be34140a617d85bed6436a41d82d08c5cd9ebe2a77"
+          "sha256": "b129b19f270370c92b2969d1c7889acbd777a6fd7c800e038577d0b3e8f1093c"
         },
         {
           "appearance": "dark",
           "file": "previews/web-edit-entry.dark.png",
-          "sha256": "8d5ffdc36d6ce442ac9835391f7892e3c57ac5c9f7974a5d9485db2e593eca22"
+          "sha256": "cc89fc2f2daa0321df8ebc93faeed5f5d7c70a39e048cf75ec9e838f2cb29a2c"
         }
       ]
     },
@@ -2035,12 +2035,12 @@
         {
           "appearance": "light",
           "file": "previews/web-export.light.png",
-          "sha256": "a803f8b4edfc72be63b9cdca1d762ae54330232ef6a90fb784d83715f2dda072"
+          "sha256": "0691f7db307b94d377ada9bf381f7cde6fcddace303cf30b9cf095a724a6740f"
         },
         {
           "appearance": "dark",
           "file": "previews/web-export.dark.png",
-          "sha256": "40f4327aec92330265a9129d8e781f3e98c92468f93856260702aa5e18e64368"
+          "sha256": "a2c18d7adef52cb7cca7c000f06e5a52655f5d4fd2b0d81951e2b689b2e15c37"
         }
       ]
     },
@@ -2056,12 +2056,12 @@
         {
           "appearance": "light",
           "file": "previews/web-home.light.png",
-          "sha256": "eeb3942b2bf9c87feace322c908560cb130de03d824bbcfbc13c9ab2e3972a68"
+          "sha256": "584506466a63020066230b11e423025069fa25b944e12f956d6a9d1f4f22a869"
         },
         {
           "appearance": "dark",
           "file": "previews/web-home.dark.png",
-          "sha256": "25b43fd063b873931b8be9704bf3738025cee6b4c46d909c2a598a8bbddb0898"
+          "sha256": "e89cc004cd36ad683105c9ad25be6a5a46671d84f7cd24a1912d75767e6dadec"
         }
       ]
     },
@@ -2077,12 +2077,12 @@
         {
           "appearance": "light",
           "file": "previews/web-household.light.png",
-          "sha256": "b581d49939551256845b79b8839f1c9e884385da78b0da25cafe3b6ef005bdb4"
+          "sha256": "b1770d0d77d3843683f703ed2690cab044fc6608a7982393e51bdc672906b42e"
         },
         {
           "appearance": "dark",
           "file": "previews/web-household.dark.png",
-          "sha256": "2be446f619718cee605485853e87f6a7d71bc5defba73394fca5a83ad5d94e3d"
+          "sha256": "0b37de7d5c24cf6a2460cc51e11f38d09a4754594c041401b2bf27d07b4acb03"
         }
       ]
     },
@@ -2098,12 +2098,12 @@
         {
           "appearance": "light",
           "file": "previews/web-households.light.png",
-          "sha256": "f567f56d1f68c1b4926857fe85e98d4610070353f4f09c936aaaf25bf1a998d7"
+          "sha256": "e8dfa7cbad3fee59efaf66c76d1c7f19737ce8921c9cf698447a99fb65e361d8"
         },
         {
           "appearance": "dark",
           "file": "previews/web-households.dark.png",
-          "sha256": "0eb0c151a0c43489351dd9f2cd6965a497451da14254f3d59209e331d9c86e05"
+          "sha256": "53e1e3c7c235f33acf6fe521f731e1c5d7fe698b8806ef6d78948c44d9547a29"
         }
       ]
     },
@@ -2119,12 +2119,12 @@
         {
           "appearance": "light",
           "file": "previews/web-insights.light.png",
-          "sha256": "4ec7cfa082d77084824820ed86e69cab512dec133a90e66c6cb22cc797c92d9c"
+          "sha256": "b135a590dc4391e6d962c1ae4cde82d680daa98911e13175f82001dc1d1530f3"
         },
         {
           "appearance": "dark",
           "file": "previews/web-insights.dark.png",
-          "sha256": "9eb5f1f7756b803247f424ef98d9f3dba7c26d89036553f66f34fb687d7fbd7b"
+          "sha256": "078e31bda553956984cb6b39bd7349a88fa8cfe1172ec97d072c53ce0b396074"
         }
       ]
     },
@@ -2140,12 +2140,12 @@
         {
           "appearance": "light",
           "file": "previews/web-join-code.light.png",
-          "sha256": "b486867b9ce68a0f51a15cd4d1fd5382d6c1cb4e81745622ed33e2773dff45b4"
+          "sha256": "f9619d17de0dfc9f045c6f43f48622a49e6e915d7a46acd55de5b9272963dae6"
         },
         {
           "appearance": "dark",
           "file": "previews/web-join-code.dark.png",
-          "sha256": "b7d6611223305f9f6b07a546094d7bef8c19a14395a8a85bbb5505eabc59e777"
+          "sha256": "74675dea7a01fd59e7398543b7394ead773a5a317f2df53a93c1fd98c7bd2c08"
         }
       ]
     },
@@ -2161,12 +2161,12 @@
         {
           "appearance": "light",
           "file": "previews/web-password-reset.light.png",
-          "sha256": "07eced973a86298a486a65decda049a227b737f99c7103ed0a0a7c91e7a386eb"
+          "sha256": "b73056ebb547e4bd4c60455eafc098757d6734d7d75d1abc8d48227b6b9314ba"
         },
         {
           "appearance": "dark",
           "file": "previews/web-password-reset.dark.png",
-          "sha256": "f20031d7346b58be5f59779de267cb8814d8ec84c379084314b5ab781ef42121"
+          "sha256": "fb01e526cdccc751b35f1c4e648730b4db9b2fca3e3d990399fe72bdc5b87237"
         }
       ]
     },
@@ -2182,12 +2182,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-confirm.light.png",
-          "sha256": "618454c87a634241af44fabe30692ee121a5a09bbff45979d7684d9877a22031"
+          "sha256": "e0810921c4cf80d35d58c7965d7469d2a6429afb568d08fea48a501a26813303"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attach-confirm.dark.png",
-          "sha256": "d6e3be28745756cc73af3a9d9271f3f0996a5f26eb4d10c1501a964a2d7a83ce"
+          "sha256": "c4418a960b788c79ab331fe4998656dea0e663b10f0aa4f85b18bdaf09e3f972"
         }
       ]
     },
@@ -2203,12 +2203,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-entry.light.png",
-          "sha256": "ad120bef75310e0e3ef0b22a6c20df9f28912d622c7088f8bb5e70c2ddd41633"
+          "sha256": "fe5a5add27f88175b25b691d603d8b08a8dae5b57be71f545511bd0ed27fff46"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attach-entry.dark.png",
-          "sha256": "295e667e9be51bb364ea1078c02ea835fb255aac1f85e31f836f2a98b7fdeb98"
+          "sha256": "4c6e96af922453311bc8a6e44ef5845e66db1731ea142b147e0bc8e21090ddd9"
         }
       ]
     },
@@ -2224,12 +2224,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-file.light.png",
-          "sha256": "bcd3cf905a3d8e6cede9844a5fcb0822ae3734e36b90a74295db30b3db7ae66b"
+          "sha256": "94cf431ea4d5f1d9f2d12966608fec7910d0cd81bbd50eefa6f5a0127a1621fc"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attach-file.dark.png",
-          "sha256": "5598462e39349cc81594e9a9bbdf2a33d0457f1586b98b00d2e59f3f54e3bd11"
+          "sha256": "5546d2e46bb6c2d6abb979b18b37c9a162b16cf274c2b8442dabc49aeda43725"
         }
       ]
     },
@@ -2245,12 +2245,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attached-toast.light.png",
-          "sha256": "9ff67dfaa5b059c284cf354a06087563b5792e1cd2a687472dc21278abc415f2"
+          "sha256": "2e85f19ac0aa97fab5a7e24ed5c2a03175285ee54ae4ed191fbb96497dec8ed6"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attached-toast.dark.png",
-          "sha256": "a01fd2c81c06ae36f9f952bea852d9a2d2eeee1e5d351950c2e77faddc2443b7"
+          "sha256": "8d481ab7681284ea640b3f4c067a9ec506f46e45a1934c1f2538888da8d9efce"
         }
       ]
     },
@@ -2266,12 +2266,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-email-settings.light.png",
-          "sha256": "48b88d9f8a00ebc5b16be4525920f5b70e4aafd7b5695688c511d45e11658bfc"
+          "sha256": "d7fe05c2b3b466b624b535e3de5b3c0a5bba909d247449d0816ecd9cf664d3d0"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-email-settings.dark.png",
-          "sha256": "8003021e827f060ebbf9a25865f98c25910ccb286f99fc979e083eefa0352664"
+          "sha256": "accbbe3787d638b17e6035f57b5c4e38401541532d8e4a0e9735f154460f9900"
         }
       ]
     },
@@ -2287,12 +2287,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-inbox-item.light.png",
-          "sha256": "9eeeea5d5867d431a7ddc0db535bb549ce019a0b38670a0b67cb7f51a813cee9"
+          "sha256": "b74fd52413cba1c9286d1e3264b4958e1f2cfca161b2951165f7715a0a820128"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-inbox-item.dark.png",
-          "sha256": "8db88f7f2c4ada9c8d48b9aad87560f0f34a39333b6da800ef8acfbe3f529353"
+          "sha256": "c3ff31355f2815407d8f7210856cfea6c87368fd950f0431175ca9235c086ca5"
         }
       ]
     },
@@ -2308,12 +2308,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-inbox.light.png",
-          "sha256": "132968b28c170ca0359b469abc778b183a1ccc739b06f2147ab2dfc87ceddc2a"
+          "sha256": "6efe4fb9a55671bbb9fad4bb2e7b4ca331addd31b3a01d7f84f80f70e9162324"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-inbox.dark.png",
-          "sha256": "cebe7927460ee4ebcc0f48e5e1b80a1424dc8798677226ace5e8d3cd159eb39e"
+          "sha256": "933b62dae088aadfec998e8e7b400fa3359ae9326a69477a5d0ca23247a5f80a"
         }
       ]
     },
@@ -2329,12 +2329,12 @@
         {
           "appearance": "light",
           "file": "previews/web-recurring.light.png",
-          "sha256": "57761d06ff9c94143471a5cbc726969cc4ff5ec2e7ed88bdf84aeecc9efc262b"
+          "sha256": "2e299ad3dbe2f2ea3c5730167526df22e135e50fbf709533330d7c27ce808227"
         },
         {
           "appearance": "dark",
           "file": "previews/web-recurring.dark.png",
-          "sha256": "3a50b282c0a9790d1cea3917f818190c9fbd7410efd34b0e60f72728cff5faa9"
+          "sha256": "17c0e9025f98547842be84eb5ff51563428c4157f0d7cd16c51ccf68fd77aa57"
         }
       ]
     },
@@ -2350,12 +2350,12 @@
         {
           "appearance": "light",
           "file": "previews/web-schedule-form.light.png",
-          "sha256": "95323046513de1137ad3594d739e8e6dfa86fd28d8c10e72a019ab558eeeb1f2"
+          "sha256": "de9c8581b59dbdcad335aa475a1318fd5b218ca21e7982f05391e43d6ab7531f"
         },
         {
           "appearance": "dark",
           "file": "previews/web-schedule-form.dark.png",
-          "sha256": "bd352dd3fef04b03b303396a71371e56b3fc25333c9549371a4da412c570c3aa"
+          "sha256": "95638261068aaa9c07f692bb13b6125e5a87f2813e381a7a5673be7e44537895"
         }
       ]
     },
@@ -2371,12 +2371,12 @@
         {
           "appearance": "light",
           "file": "previews/web-server-unreachable.light.png",
-          "sha256": "12414fd34ee6aefdd3f0a75194eaedcbde38254c5468e42a57cf7441cfa0f6bd"
+          "sha256": "4a85ace6eedf6333254c3c40ca75bf9e2967211cdd3364e29c80c95606346796"
         },
         {
           "appearance": "dark",
           "file": "previews/web-server-unreachable.dark.png",
-          "sha256": "de424fd0ef6617396d67a7636f51d2660d08110588c3bc92e3b387ad33b14c93"
+          "sha256": "55e16980417129990a0b9b674eecbce5f8b2e34ff798393b5b692d5c65b70747"
         }
       ]
     },
@@ -2392,12 +2392,12 @@
         {
           "appearance": "light",
           "file": "previews/web-settings.light.png",
-          "sha256": "eb4e8e779472cdb81b4a49596171773e5a33378067c674a1dc71d9a45da9ff9a"
+          "sha256": "3b033a9deed6b9e33bba6fa8bb3f35bd370c42c75fc4fcba89219f36c162d7a3"
         },
         {
           "appearance": "dark",
           "file": "previews/web-settings.dark.png",
-          "sha256": "4175ddf50cf835e38a688538ca832000c12368888d879832b73d946432d6ead8"
+          "sha256": "8d573a768b115c2c654f9b330ef9e1090b8cea48eca22f8b23a9273dfaeeafa7"
         }
       ]
     },
@@ -2413,12 +2413,12 @@
         {
           "appearance": "light",
           "file": "previews/web-shared-expense.light.png",
-          "sha256": "b1d1c6267ec64b35240801aab766637f43ba8d0cd825da49978ef7b95d9ff593"
+          "sha256": "08c90f4ac9ac47f1d36b2bd6aa8d9cd1a9c97344c17adb894d33ad1d56d0d181"
         },
         {
           "appearance": "dark",
           "file": "previews/web-shared-expense.dark.png",
-          "sha256": "32c85dc1f41394419e64c0a52269a2f9be28f5eb6ed9b12f04499dc1f43249d2"
+          "sha256": "286ff1677e00e9fca2b107d1abd1ee627e61e99eb24b3af01694ffa665641424"
         }
       ]
     },
@@ -2434,12 +2434,12 @@
         {
           "appearance": "light",
           "file": "previews/web-sign-in.light.png",
-          "sha256": "a172be566a04f983ff992ad0766a93ea9dc14049e473a73cd3d0d1e9c87bc3fd"
+          "sha256": "172381d2f4b650c0143d9340b856f7b943a0203863d7108edb9b3f4fb805c265"
         },
         {
           "appearance": "dark",
           "file": "previews/web-sign-in.dark.png",
-          "sha256": "490a998e2b07d2df3b6352f1fd497e91633a5e8129b2c9f49d28acc961634867"
+          "sha256": "3e671f6e8884686cf185baeb0474e2dbe111fff7b1f73a4dc73ac31b4ad47def"
         }
       ]
     },
@@ -2455,12 +2455,12 @@
         {
           "appearance": "light",
           "file": "previews/web-tablet.light.png",
-          "sha256": "d0c48d0e58d4acb1621a6f9ae3c8e0098819595513a26a23bb43e1d4390a38f7"
+          "sha256": "1c4ea6501c60e4422cdf2fa9efa6b32b1ece999467726b624dfdc78cbb477630"
         },
         {
           "appearance": "dark",
           "file": "previews/web-tablet.dark.png",
-          "sha256": "a5442b925dbd2864e2146e7a607d157230389b58dc58728d9c2cd8b00fc08d17"
+          "sha256": "5aa25ee5fb14b4457750b47551d1b9cdba4312f03a467574958638cd238a0b6a"
         }
       ]
     },
@@ -2476,12 +2476,12 @@
         {
           "appearance": "light",
           "file": "previews/web-trip.light.png",
-          "sha256": "ed121c312eb6cf781a740b39033f5aa48cee6100223ce91f4ee260f05bb2d0d0"
+          "sha256": "3526f2fc363414d166e06e2ec82094b1569bd97a5bd2495baba9b2998ad775a8"
         },
         {
           "appearance": "dark",
           "file": "previews/web-trip.dark.png",
-          "sha256": "c852058014c4464481458b98d73c0ecb87b5d26db6ff8136c4709196827519fa"
+          "sha256": "37173b87dc85994c92f8daffef4d86d4c41d84e7abdbc14832faeeb58bf384a0"
         }
       ]
     },
@@ -2497,12 +2497,12 @@
         {
           "appearance": "light",
           "file": "previews/web-trips.light.png",
-          "sha256": "8a6f123d33c93aedabec6c1efd587623d577cd156b30cbdd812e8643b08efbc0"
+          "sha256": "8851be7be1ecb31e0c32a8d034a20468a71dd006f84812598e5e0d57cf8bc6df"
         },
         {
           "appearance": "dark",
           "file": "previews/web-trips.dark.png",
-          "sha256": "528e9af373865de6286e603ba5a51db1c4f549d8080b56f96ad12d9a254839e9"
+          "sha256": "2b49896eaa5c164c2bd95d8b9c5d06d6f0e9dfc9727af7f0e0c20cf720964a3b"
         }
       ]
     }
