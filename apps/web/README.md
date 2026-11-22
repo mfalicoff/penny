@@ -418,7 +418,7 @@ The bundle contains no server URL, connection string or credential. In productio
 
 ## CI
 
-`.github/workflows/web.yml` runs on every pull request, on pushes to `v2`, nightly and on demand. **Web lint, types, tests, build and browser smoke** runs install, design-token check, lint, typecheck, unit and component tests, the production build with artifact verification, a stale route tree check, and the mocked Playwright smoke in Chromium. **Browser smoke (mocked API, firefox/webkit)** runs the same smoke on the other engines, and **Real-stack browser journeys (chromium/firefox/webkit)** runs the real-server specs ([browser tests](#browser-tests)). No job has secrets. Mark all of them as required status checks in the repository's branch protection. GitHub runs scheduled workflows from the default branch only, so the nightly run starts once this workflow is on it.
+`.github/workflows/web.yml` runs on every pull request, on pushes to `master`, nightly and on demand. **Web lint, types, tests, build and browser smoke** runs install, design-token check, lint, typecheck, unit and component tests, the production build with artifact verification, a stale route tree check, and the mocked Playwright smoke in Chromium. **Browser smoke (mocked API, firefox/webkit)** runs the same smoke on the other engines, and **Real-stack browser journeys (chromium/firefox/webkit)** runs the real-server specs ([browser tests](#browser-tests)). No job has secrets. Mark all of them as required status checks in the repository's branch protection. GitHub runs scheduled workflows from the default branch only, so the nightly run starts once this workflow is on it.
 
 ### Browser tests
 

@@ -1,32 +1,33 @@
 name: iOS checks
 
-# The native SwiftUI app (apps/ios, MAZ-66). Runs when the app or anything its tests read
-# changes: the design baseline, fixtures, the signing docs and the release workflow.
+# The native SwiftUI app (apps/ios, MAZ-66). A pull request starts this workflow when it touches
+# the app or anything its jobs read. The `changes` job then picks the macOS jobs the change
+# needs (scripts/ios-ci-scope.mjs, MAZ-201): macOS runners are scarce, so a backend-only change
+# runs only the full-stack smoke job, and Renovate's backend updates and Release Please's branch
+# run none. A skipped job reports "skipped", which branch rules count as passing. The TestFlight
+# release and manual runs always run every job.
 on:
   pull_request:
     paths:
       - apps/ios/**
+      - contracts/**
+      - '!contracts/README.md'
+      - '!contracts/visual-comparisons.json'
+      - docs/ios/ipa.md
       - .github/workflows/ios-testflight.yml
-      - contracts/**
-      - apps/ios/Configuration/Version.xcconfig
-      - docs/ios/ipa.md
+      - .github/workflows/ios.yml
+      - scripts/ios-ci-scope.mjs
       - apps/backend/**
+      - '!apps/backend/tests/**'
+      - '!apps/backend/**/*.md'
       - scripts/test-env/**
       - flake.nix
       - flake.lock
-      - .github/workflows/ios.yml
+  # On master only the Linux `search-model` job runs: it saves the search model to master's
+  # cache, which every pull request can restore. A pull request's own caches are visible only to
+  # that pull request, so before this each one downloaded the model again on macOS.
   push:
-    branches: [v2]
-    paths:
-      - apps/ios/**
-      - contracts/**
-      - apps/ios/Configuration/Version.xcconfig
-      - docs/ios/ipa.md
-      - apps/backend/**
-      - scripts/test-env/**
-      - flake.nix
-      - flake.lock
-      - .github/workflows/ios.yml
+    branches: [master]
   # The TestFlight release (ios-testflight.yml, MAZ-98) runs these same gates before archiving.
   workflow_call:
   workflow_dispatch:
@@ -36,15 +37,76 @@ permissions:
 
 concurrency:
   # github.workflow is the caller's name when called, so a TestFlight run never cancels (or is
-  # cancelled by) a pull request or push run on the same ref.
+  # cancelled by) a pull request or push run on the same ref. A new push to a pull request
+  # cancels its previous run.
   group: ios-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Choose the iOS jobs this change needs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.scope.outputs.app }}
+      stack: ${{ steps.scope.outputs.stack }}
+    steps:
+      # The pull request's merge commit and its first parent (master), with trees but no file
+      # contents: enough for `git diff --name-only`.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+          filter: blob:none
+          sparse-checkout: scripts/ios-ci-scope.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+      - name: Changed files decide the jobs
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            git diff --name-only HEAD^1 HEAD | node scripts/ios-ci-scope.mjs
+          else
+            node scripts/ios-ci-scope.mjs < /dev/null
+          fi
+
+  search-model:
+    name: Save the search model to master's cache
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: apps/backend/development
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+      - name: Cache search model
+        id: cache
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: ios-search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+          # Saved here on Linux, restored on macOS by ui-smoke.
+          enableCrossOsArchive: true
+      - name: Download and verify search model
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: node apps/backend/development/download-model.mjs
+
   ios:
     name: Swift format, build and iPhone/iPad tests
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     # Apple Silicon image with Xcode 27; scripts/ios.sh selects the exact version pinned in
-    # apps/ios/.xcode-version and fails if the image does not have it.
+    # apps/ios/.xcode-version and fails if the image does not have it. Passing runs took up to
+    # 41 minutes on 2026-11-21 and 22.
     runs-on: xcode-27
     timeout-minutes: 60
     steps:
@@ -69,6 +131,8 @@ jobs:
     # Split from the job above (MAZ-163), which ran into its 60-minute limit with these steps:
     # each builds on its own, and launching boots two more clean simulators.
     name: Release check, TestFlight archive checks and launch
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
@@ -90,12 +154,15 @@ jobs:
           if-no-files-found: warn
 
   ui-smoke:
-    # Required PR check (MAZ-81): the Smoke XCUITest plan on clean iPhone and iPad simulators
-    # against the real .NET API on PostgreSQL with the local OIDC provider (MAZ-62's
-    # environment, started and torn down by `ios.sh ui-test`). docs/ios/ui-tests.md.
+    # PR check (MAZ-81): the Smoke XCUITest plan on clean iPhone and iPad simulators against the
+    # real .NET API on PostgreSQL with the local OIDC provider (MAZ-62's environment, started and
+    # torn down by `ios.sh ui-test`). docs/ios/ui-tests.md.
     name: XCUITest smoke on iPhone and iPad against the full stack
+    needs: changes
+    if: needs.changes.outputs.stack == 'true'
     runs-on: xcode-27
-    timeout-minutes: 60
+    # Passing runs took up to 50 minutes on 2026-11-21 and 22, close to the old 60-minute limit.
+    timeout-minutes: 75
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
       # GitHub-hosted macOS runners cannot run Linux containers, so the stack runs its own
@@ -123,7 +190,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .cache/backend/models
-          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+          # The search-model job saves this key on master (see `push` above).
+          key: ios-search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+          enableCrossOsArchive: true
       - name: Download and verify search model
         run: node apps/backend/development/download-model.mjs
       - name: Restore locked packages

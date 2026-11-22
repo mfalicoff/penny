@@ -56,7 +56,7 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 
 | Plan | Contents | When | Retries |
 | --- | --- | --- | --- |
-| **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity | Every PR and push to `v2` (`ios.yml`, job `ui-smoke`), required | None |
+| **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity | Every PR that touches the app, the contracts, the backend or the test environment (`ios.yml`, job `ui-smoke`) | None |
 | **Full** | Everything except screenshots, accessibility audits and performance: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77), notification navigation (`NotificationJourneyTests`, MAZ-79), and MAZ-82's full journeys (entries, search, organize and recurrence, sync conflicts, settings) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
 | **Screenshots** | `ScreenshotTests`: light and dark × default, accessibility XL text, Reduce Transparency, Reduce Motion; sign-in with keyboard and error. `AccessibilityAuditTests` (MAZ-82): Xcode accessibility audits, VoiceOver labels, keyboard-safe Add entry | Nightly, on releases and on demand | None |
 | **Performance** | `PerformanceTests` (MAZ-82): cold launch, first sync, Activity, scroll and search of a 5,001-entry ledger against the budgets in [native QA](qa.md#performance-budgets) | Nightly, on releases and on demand | None |
@@ -178,7 +178,7 @@ Tests find elements only by identifier, never by visible text (except system-pro
 
 ## CI
 
-`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`; each job summary shows the plan's timings table. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](../reference/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
+`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment, except Renovate's backend updates and Release Please's branch; [testing](../development/testing.md)) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`; each job summary shows the plan's timings table. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](../reference/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
 
 ## Privacy
 
