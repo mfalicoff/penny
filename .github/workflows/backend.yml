@@ -2,8 +2,10 @@ name: Backend checks
 
 on:
   pull_request:
+  # Every merge to master runs the checks again and saves master's caches, which every pull
+  # request can restore (a pull request's own caches are visible only to that pull request).
   push:
-    branches: [v2]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
