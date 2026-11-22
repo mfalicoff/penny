@@ -1,4 +1,4 @@
-import type { Page, Request } from "@playwright/test";
+import type { Page, Request, Route } from "@playwright/test";
 import { expect, test } from "./test";
 import { openSettings } from "./shell";
 
@@ -75,21 +75,56 @@ test("the layout fits a 320px window without horizontal scrolling", async ({ pag
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test("Activity downloads the ledger once when it opens, as Home does", async ({ page }) => {
-  // Each GET /api/ledger sends every entry: the offline store's sync is the only reader on these
-  // pages (Activity's currency comes from that ledger, not from a second Query download).
-  for (const path of ["/", "/transactions"]) {
+test("Activity, the trip form and the household dialog download the ledger once, as Home does", async ({ page }) => {
+  // Each GET /api/ledger sends every entry. With the offline store on, its sync is the only reader:
+  // the currency these screens show comes from its copy, and a Query read of the same ledger landing
+  // during that sync doesn't start another (MAZ-242).
+  const screens: { path: string; heading: string; open?: () => Promise<void> }[] = [
+    { path: "/", heading: "Home" },
+    { path: "/transactions", heading: "Activity" },
+    {
+      path: "/trips",
+      heading: "Trips",
+      open: async () => {
+        await page.getByRole("button", { name: "New trip" }).first().click();
+        await expect(page.getByRole("dialog", { name: "New trip" })).toBeVisible();
+      },
+    },
+    {
+      path: "/households",
+      heading: "Shared",
+      open: async () => {
+        await page.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /New household/ }).click();
+        await expect(page.getByRole("dialog", { name: "New household" }).getByText("Uses your ledger currency. Everyone who joins must use CAD too.")).toBeVisible();
+      },
+    },
+  ];
+  for (const screen of screens) {
     const reads: string[] = [];
     const count = (request: Request) => {
       if (request.method() === "GET" && new URL(request.url()).pathname === "/api/ledger") reads.push(request.url());
     };
     page.on("request", count);
-    await page.goto(path);
-    await expect(page.getByRole("heading", { level: 1, name: path === "/" ? "Home" : "Activity", exact: true })).toBeVisible();
+    // The dialogs open while the store's sync still waits for the ledger: a read of their own then
+    // would be a second download, and its answer would have started a third.
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const hold = async (route: Route) => {
+      await held;
+      await route.fallback();
+    };
+    if (screen.open) await page.route("/api/ledger", hold);
+    await page.goto(screen.path);
+    await expect(page.getByRole("heading", { level: 1, name: screen.heading, exact: true })).toBeVisible();
+    await screen.open?.();
+    release();
+    await page.unroute("/api/ledger", hold);
     // Nothing in flight for half a second: a follow-up sync or a late Query read would have started.
     await page.waitForLoadState("networkidle");
     page.off("request", count);
-    expect(reads, path).toHaveLength(1);
+    expect(reads, screen.path).toHaveLength(1);
   }
 });
 
