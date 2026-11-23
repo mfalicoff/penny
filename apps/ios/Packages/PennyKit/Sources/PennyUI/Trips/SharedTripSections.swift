@@ -150,18 +150,11 @@ struct SharedTripExpenseSections: View {
             context.ledger == nil ? [] : context.privateEntries.sorted { ($0.date, $0.id) < ($1.date, $1.id) }
         if combined {
             Section {
+                PanelTitle("Expenses", detail: Self.counts(shared: shared.count, private: privateEntries.count))
+                    .accessibilityIdentifier("tripPage.sharedExpenses")
                 emptyState(shared: shared, privateCount: privateEntries.count)
                 ForEach(shared) { sharedRow($0) }
                 ForEach(privateEntries, id: \.id) { privateRow($0, inline: true) }
-            } header: {
-                HStack(spacing: 8) {
-                    Text("Expenses").font(.headline).foregroundStyle(PennyColor.label).textCase(nil)
-                    Spacer(minLength: 8)
-                    Text(Self.counts(shared: shared.count, private: privateEntries.count))
-                        .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel).textCase(nil)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("tripPage.sharedExpenses")
             }
         } else {
             Section {
@@ -292,6 +285,7 @@ struct SharedTripShareByCategory: View {
         if !shareByCategory.isEmpty {
             Section {
                 let items = shareByCategory
+                PanelTitle("Your share by category")
                 let total = items.reduce(Int64(0)) { $0 + $1.cents }
                 ForEach(items, id: \.name) { item in
                     HStack(spacing: 12) {
@@ -305,8 +299,6 @@ struct SharedTripShareByCategory: View {
                     .frame(minHeight: Metrics.minTouchTarget)
                     .accessibilityElement(children: .combine)
                 }
-            } header: {
-                Text("Your share by category").cardSectionHeader()
             } footer: {
                 Text("Balances settle per month, so bookings and spending in different months are repaid separately.")
             }
@@ -349,5 +341,28 @@ struct ShareBar: View {
             }
             .frame(maxWidth: .infinity)
             .accessibilityHidden(true)
+    }
+}
+
+/// A panel's title inside its card, with an optional note on the right (`ipad-trip`'s
+/// "People · November balance", "Expenses · 4 shared · 1 private").
+struct PanelTitle: View {
+    let title: String
+    var detail: String?
+
+    init(_ title: String, detail: String? = nil) {
+        self.title = title
+        self.detail = detail
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(title).font(.headline).foregroundStyle(PennyColor.label)
+            Spacer(minLength: 8)
+            if let detail { Text(detail).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel) }
+        }
+        .listRowSeparator(.hidden)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 }

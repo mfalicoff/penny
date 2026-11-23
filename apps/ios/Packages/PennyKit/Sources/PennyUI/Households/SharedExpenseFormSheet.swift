@@ -139,7 +139,7 @@ private struct SharedExpenseForm: View {
                     .padding(.horizontal, 14)
                     .frame(minHeight: Metrics.minTouchTarget)
                     .background(
-                        PennyColor.surface,
+                        PennyColor.secondarySurface,
                         in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                     )
                     Group {
@@ -155,7 +155,7 @@ private struct SharedExpenseForm: View {
                 .padding(.vertical, 12)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(PennyColor.background)
+            .background(PennyColor.surface)
             .safeAreaInset(edge: .bottom) {
                 if showsKeypad {
                     AmountKeypad { key in form.draft.amountText = AmountInput.apply(key, to: form.draft.amountText) }
@@ -366,13 +366,6 @@ private struct SharedExpenseForm: View {
                 .accessibilityHint("Use the keypad below to type the amount.")
                 .accessibilityIdentifier("sharedForm.amount")
             }
-            Text(model.currency)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(PennyColor.fill, in: Capsule())
-                .accessibilityLabel("Currency \(model.currency)")
         }
         .frame(maxWidth: .infinity)
     }
@@ -458,7 +451,8 @@ private struct SharedExpenseForm: View {
             .buttonStyle(.plain)
             .accessibilityIdentifier("sharedForm.details")
         }
-        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        .background(
+            PennyColor.secondarySurface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
     }
 
     /// Paid by and Split in the form, as on the card, so the split shows above the keypad: the
@@ -525,7 +519,8 @@ private struct SharedExpenseForm: View {
                     .accessibilityIdentifier("sharedForm.splitRow")
                 }
             }
-            .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+            .background(
+                PennyColor.secondarySurface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
         }
     }
 
@@ -544,7 +539,7 @@ private struct SharedExpenseForm: View {
             .frame(minHeight: Metrics.minTouchTarget)
             // The card's `.pill.on`: the label color, inverted, not copper.
             .foregroundStyle(chosen ? PennyColor.surface : PennyColor.label)
-            .background(chosen ? PennyColor.label : PennyColor.surface, in: Capsule())
+            .background(chosen ? PennyColor.label : PennyColor.secondarySurface, in: Capsule())
         }
         .buttonStyle(.plain)
         .disabled(locked)
@@ -575,19 +570,23 @@ private struct SharedExpenseForm: View {
         return parts.joined(separator: " · ")
     }
 
+    /// `iphone-shared-expense-add`: "Your share · in your spending" on the fill, the amount bold
+    /// and unsigned, as the card draws it.
     private var yourShare: some View {
         HStack {
-            Text("Your share · counts in your spending").font(.subheadline.weight(.semibold))
+            Text("Your share \(Text("· in your spending").foregroundStyle(PennyColor.secondaryLabel))")
+                .font(.subheadline)
             Spacer()
             if let share = form.viewerShare {
-                MoneyText(share, meaning: .expense, currency: model.currency)
+                Text(MoneyFormat.amount(share, currency: model.currency))
+                    .font(.title3.weight(.bold)).monospacedDigit()
             } else {
                 Text("—").foregroundStyle(PennyColor.secondaryLabel)
             }
         }
         .padding(.horizontal, 16)
-        .frame(minHeight: ControlSize.row)
-        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        .padding(.vertical, 14)
+        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("sharedForm.yourShare")
     }

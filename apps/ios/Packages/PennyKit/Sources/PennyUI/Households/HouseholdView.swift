@@ -269,11 +269,10 @@ struct HouseholdPage: View {
             .onChange(of: "\(model.requestedRuleID ?? "")|\(model.rules.count)", initial: true) { openRequestedRule() }
             .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
             .toolbar {
-                // `iphone-shared`: no title over the hero, which already leads with the name. Balances
-                // and People collapse the hero, so the name is the inline title there
-                // (`iphone-shared-balances`, `iphone-shared-people`). Pushed pages still go back to it.
-                // A shared trip always leads with its name in the hero (`iphone-trip-detail`, `ipad-trip`).
-                if showsHero || trip != nil {
+                // The cards draw no inline title: the hero (or, on Balances and People, a row under the
+                // bar) names the household, and the month pill sits beside Back. Pushed pages still go
+                // back to the name.
+                if model.household != nil {
                     ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
                 }
             }
@@ -288,13 +287,13 @@ struct HouseholdPage: View {
                 // (`ipad-shared`).
                 if showsMonthPill {
                     if isTwoColumn {
-                        ToolbarItem(placement: .navigation) { HouseholdMonthStep(model: model, offset: -1) }
-                        ToolbarSpacer(.fixed, placement: .navigation)
-                        ToolbarItem(placement: .navigation) { HouseholdMonthPicker(model: model, showsYear: true) }
-                        ToolbarSpacer(.fixed, placement: .navigation)
-                        ToolbarItem(placement: .navigation) { HouseholdMonthStep(model: model, offset: 1) }
+                        ToolbarItem(placement: .besideBack) { HouseholdMonthStep(model: model, offset: -1) }
+                        ToolbarSpacer(.fixed, placement: .besideBack)
+                        ToolbarItem(placement: .besideBack) { HouseholdMonthPicker(model: model, showsYear: true) }
+                        ToolbarSpacer(.fixed, placement: .besideBack)
+                        ToolbarItem(placement: .besideBack) { HouseholdMonthStep(model: model, offset: 1) }
                     } else {
-                        ToolbarItem(placement: .navigation) { HouseholdMonthPicker(model: model) }
+                        ToolbarItem(placement: .besideBack) { HouseholdMonthPicker(model: model) }
                     }
                 }
                 if showsHistoryButton {
@@ -521,6 +520,15 @@ struct HouseholdPage: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
                 .listRowSeparator(.hidden)
+            } else {
+                // Balances and People collapse the hero: the name is a small centered row under the bar
+                // (`iphone-shared-balances`, `iphone-shared-people`), since the pill sits beside Back.
+                Text(household.name).font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityAddTraits(.isHeader)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
+                    .listRowSeparator(.hidden)
             }
             if let reason = model.readOnlyReason {
                 StatusBanner(tone: .info, title: model.isArchived ? "Archived" : "Read only", message: reason)
@@ -888,6 +896,7 @@ struct HouseholdPage: View {
     @ViewBuilder private var tripPeopleSection: some View {
         let balances = model.recap?.balances ?? []
         Section {
+            PanelTitle("People", detail: "\(HouseholdText.shortMonth(model.month)) balance")
             ForEach(model.people.current) { member in
                 HStack(spacing: 12) {
                     Monogram(initials: model.people.initials(member.userId), size: 30)
@@ -901,14 +910,6 @@ struct HouseholdPage: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("household.member.\(member.userId)")
             }
-        } header: {
-            HStack(spacing: 8) {
-                Text("People").font(.headline).foregroundStyle(PennyColor.label).textCase(nil)
-                Spacer(minLength: 8)
-                Text("\(HouseholdText.shortMonth(model.month)) balance").font(.subheadline).textCase(nil)
-                    .foregroundStyle(PennyColor.secondaryLabel)
-            }
-            .accessibilityElement(children: .combine)
         }
     }
 
@@ -1491,5 +1492,17 @@ private struct WideBalanceRow: View {
     /// "pays you $110.40", or "pays bea@example.test $18.00".
     private func line(_ transfer: WireTransfer) -> String {
         "pays \(people.object(transfer.toUserId)) \(MoneyFormat.amount(transfer.amountCents, currency: currency))"
+    }
+}
+
+extension ToolbarItemPlacement {
+    /// The leading group after Back, where the cards draw the month pill. (`.navigation` can join
+    /// the trailing group on a pushed page.)
+    static var besideBack: ToolbarItemPlacement {
+        #if os(iOS)
+            .topBarLeading
+        #else
+            .navigation
+        #endif
     }
 }
