@@ -18,6 +18,7 @@ import {
 import { writeCertificate } from "./tls.mjs";
 import { scenario, seed } from "./seed.mjs";
 import { startOidcProvider } from "./oidc-provider.mjs";
+import { startSmtpSink } from "./smtp-sink.mjs";
 import { emailSummary, receiptEmail, sendEmail } from "./email.mjs";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -31,7 +32,7 @@ function parse(argv) {
   for (let index = 0; index < own.length; index++) {
     const item = own[index];
     if (!item.startsWith("--")) positional.push(item);
-    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker", "--email", "--http"].includes(item)) flags[item.slice(2)] = true;
+    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker", "--email", "--smtp", "--http"].includes(item)) flags[item.slice(2)] = true;
     else flags[item.slice(2)] = own[++index];
   }
   return { verb: positional.shift() ?? "help", positional, flags, command };
@@ -44,10 +45,12 @@ async function start(flags) {
   if (!validRunId(runId)) throw new Error("Run ids use 4–24 lowercase letters or digits.");
   const webPort = flags["web-port"] ? Number(flags["web-port"]) : await freePort();
   let oidc;
+  let smtp;
   let tls;
   try {
     tls = writeCertificate(join(statePath(runId), "tls"));
     if (flags.oidc) oidc = await startOidcProvider({ tls, webPorts: [webPort] });
+    if (flags.smtp) smtp = await startSmtpSink();
     const state = await up({
       runId,
       tls,
@@ -60,12 +63,14 @@ async function start(flags) {
       worker: !flags["no-worker"],
       oidc: oidc?.settings,
       email: flags.email === true,
+      smtp: smtp ? { port: smtp.port } : undefined,
     });
     if (oidc) await oidc.attach(state);
     if (flags.seed) await seedInto(state, flags.seed);
-    return { state, oidc };
+    return { state, oidc, smtp };
   } catch (error) {
     await oidc?.close();
+    await smtp?.close();
     // up() removes the run on failure; this covers a failure before it started.
     if (tls && !existsSync(join(statePath(runId), "env.json"))) rmSync(statePath(runId), { recursive: true, force: true });
     throw error;
@@ -105,21 +110,22 @@ async function main() {
   const id = flags["run-id"];
   switch (verb) {
     case "up": {
-      const { state, oidc } = await start(flags);
+      const { state, oidc, smtp } = await start(flags);
       console.log(JSON.stringify(summary(state), null, 2));
-      if (oidc) {
-        console.log("The local OIDC provider runs in this process; press Ctrl+C to stop it (the environment stays up).");
+      if (oidc || smtp) {
+        console.log("The local OIDC provider or SMTP sink runs in this process; press Ctrl+C to stop it (the environment stays up).");
         await new Promise(() => {});
       }
       return;
     }
     case "run": {
       if (!command.length) throw new Error("Usage: penny-env run [options] -- <command...>");
-      const { state, oidc } = await start(flags);
+      const { state, oidc, smtp } = await start(flags);
       let code;
       const stop = async () => {
         collectArtifacts(state);
         await oidc?.close();
+        await smtp?.close();
         if (!flags.keep) await down(state.runId, { keepArtifacts: false });
       };
       const signals = ["SIGINT", "SIGTERM"];
@@ -197,9 +203,10 @@ async function main() {
 function help() {
   return [
     "penny-env: disposable .NET API + PostgreSQL environments for browser and simulator runs.",
-    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--email] [--http] [--no-build] [--no-worker] [--run-id ID]",
+    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--email] [--smtp] [--http] [--no-build] [--no-worker] [--run-id ID]",
     "     every run picks free ports and its own id; the API is HTTPS with the run's certificate (--http: plain HTTP)",
     "     --email: emailed receipts end to end: penny-render and the Email Worker (wrangler dev) (MAZ-184)",
+    "     --smtp: the API sends email (password resets, invitations) to an SMTP sink in this process (MAZ-124)",
     "  mail --to ADDRESS [--subject S] [--attach FILE] [--eml FILE]   send through the Email Worker",
     "  run [up options] [--keep] -- <command...>   start, run, collect artifacts, always tear down",
     "  status | env | reset | clock <ISO|reset> | user [label] | fault '<json>'|clear | seed <scenario>",

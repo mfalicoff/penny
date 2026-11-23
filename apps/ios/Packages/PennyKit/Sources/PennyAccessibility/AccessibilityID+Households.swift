@@ -13,8 +13,12 @@ extension AccessibilityID {
             public static let recordMonthly = "screen.recordMonthly"
             public static let paymentStale = "screen.paymentStale"
             public static let history = "screen.householdHistory"
+            /// Invite by email (MAZ-124).
+            public static let inviteEmail = "screen.inviteEmail"
 
-            static let all = [start, invite, scanner, expenseForm, recordShare, recordMonthly, paymentStale, history]
+            static let all = [
+                start, invite, scanner, expenseForm, recordShare, recordMonthly, paymentStale, history, inviteEmail,
+            ]
         }
 
         // The Shared tab.
@@ -79,6 +83,15 @@ extension AccessibilityID {
         public static let inviteCopy = "invite.copy"
         public static let inviteNew = "invite.new"
         public static let inviteDone = "invite.done"
+        // Invite by email (MAZ-124); rows end in the invitation id.
+        public static let inviteEmailAddress = "inviteEmail.address"
+        public static let inviteEmailSend = "inviteEmail.send"
+        public static let inviteEmailClose = "inviteEmail.close"
+        public static let inviteEmailError = "inviteEmail.error"
+        public static let inviteEmailEmpty = "inviteEmail.empty"
+        public static let inviteEmailShareCode = "inviteEmail.shareCode"
+        public static func inviteEmailRow(_ id: String) -> String { "inviteEmail.row.\(id)" }
+        public static func inviteEmailMore(_ id: String) -> String { "inviteEmail.more.\(id)" }
 
         // The camera scanner.
         public static let scannerPreview = "scanner.preview"
@@ -151,6 +164,8 @@ extension AccessibilityID {
                 history, month, previousMonth, nextMonth, readOnly, notice, invite, inviteCreate, more, leave,
                 archive, rename,
                 monthlyNote, inviteCode, inviteQR, inviteExpires, inviteShare, inviteCopy, inviteNew, inviteDone,
+                inviteEmailAddress, inviteEmailSend, inviteEmailClose, inviteEmailError, inviteEmailEmpty,
+                inviteEmailShareCode,
                 scannerPreview,
                 scannerDenied, scannerTypeCode, scannerClose, expenseTotal, expenseShare, expenseEdit, expenseDelete,
                 expenseMore, expenseRule,

@@ -299,6 +299,19 @@ struct HouseholdRulesTests {
                 ]), createdAt: 0), people: people, money: money)
         #expect(automatic.summary == "Rent was added automatically")
         #expect(automatic.changes == ["$2900.00 · split by percent"])
+        // MAZ-124: invitations by email, without the address or the code.
+        let emailed = AuditDescription(
+            WireAuditEvent(
+                id: "6", householdId: "h1", actorId: "a", action: "invite.emailed",
+                after: .object(["inviteId": .string("i1")]), createdAt: 0), people: people, money: money)
+        #expect(emailed.summary == "You emailed an invitation")
+        #expect(emailed.changes.isEmpty)
+        let revoked = AuditDescription(
+            WireAuditEvent(
+                id: "7", householdId: "h1", actorId: "b", action: "invite.revoked",
+                before: .object(["inviteId": .string("i1")]), createdAt: 0), people: people, money: money)
+        #expect(revoked.summary == "bea@example.test revoked an invitation")
+        #expect(AuditFilter.members.includes("invite.emailed"))
         #expect(AuditFilter.payments.includes("reimbursement.created"))
         #expect(!AuditFilter.members.includes("expense.created"))
         #expect(AuditFilter.expenses.includes("recurring.updated"))

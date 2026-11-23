@@ -142,6 +142,35 @@ public struct APIClient: Sendable {
                 body: WireOidcComplete(transaction: transaction, callbackUrl: callback), authenticated: false))
     }
 
+    private struct PasswordResetRequestBody: Encodable { var email: String }
+    private struct PasswordResetBody: Encodable {
+        var token: String
+        var password: String
+    }
+
+    /// `POST /api/auth/password-reset/request` (MAZ-124). Needs no session. 202 whether or not
+    /// the address has an account; 404 while the server sends no email.
+    public func requestPasswordReset(email: String) async throws {
+        guard (3...254).contains(email.utf16.count) else { throw APIError.invalidRequest(.invalidField("email")) }
+        let ok: WireOk = try await json(
+            .post, "/api/auth/password-reset/request", body: PasswordResetRequestBody(email: email),
+            authenticated: false)
+        guard ok.ok else { throw APIError.malformedResponse }
+    }
+
+    /// `POST /api/auth/password-reset` (MAZ-123): redeems a reset code for a new password. Needs no
+    /// session and issues none; the server signs every device of the account out.
+    public func resetPassword(token: String, password: String) async throws {
+        guard Self.isLowercaseHex64(token) else { throw APIError.invalidRequest(.invalidField("token")) }
+        guard (10...256).contains(password.utf16.count) else {
+            throw APIError.invalidRequest(.invalidField("password"))
+        }
+        let ok: WireOk = try await json(
+            .post, "/api/auth/password-reset", body: PasswordResetBody(token: token, password: password),
+            authenticated: false)
+        guard ok.ok else { throw APIError.malformedResponse }
+    }
+
     static func isLowercaseHex64(_ text: String) -> Bool {
         text.utf8.count == 64 && text.utf8.allSatisfy { ($0 >= 48 && $0 <= 57) || ($0 >= 97 && $0 <= 102) }
     }

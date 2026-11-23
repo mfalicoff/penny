@@ -18,6 +18,8 @@ struct SignInView: View {
     let mode: Mode
     var onChangeServer: () -> Void
     var onSwitchMode: () -> Void
+    /// MAZ-124: Forgot password, with the email typed so far. Shown only while the server sends email.
+    var onForgotPassword: (String) -> Void = { _ in }
 
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
     @State private var name = ""
@@ -143,6 +145,13 @@ struct SignInView: View {
             )
             .padding(.top, 20)
         }
+        if auth.state == .signedOut(.passwordReset), mode == .signIn {
+            AuthMessage(
+                text: "Your password changed and every device was signed out. Sign in with the new password.",
+                tone: .notice
+            )
+            .padding(.top, 20)
+        }
         if let leftover = auth.unremovedLocalData, mode == .signIn {
             VStack(alignment: .leading, spacing: 8) {
                 AuthMessage(text: Self.unremovedMessage(email: leftover.email))
@@ -199,6 +208,18 @@ struct SignInView: View {
                 .focused($focus, equals: .password)
                 .onSubmit(submit)
                 .accessibilityIdentifier("auth.password")
+            }
+            .overlay(alignment: .topTrailing) {
+                // `iphone-sign-in-providers`: Forgot password? on the Password label's line.
+                if mode == .signIn, auth.server?.emailEnabled == true {
+                    Button("Forgot password?") { onForgotPassword(email) }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(PennyColor.tintText)
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: Metrics.minTouchTarget)
+                        .contentShape(Rectangle())
+                        .accessibilityIdentifier("auth.forgotPassword")
+                }
             }
         }
         .disabled(busy)

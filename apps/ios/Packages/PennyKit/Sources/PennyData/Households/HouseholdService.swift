@@ -41,6 +41,28 @@ public protocol HouseholdService: Sendable {
     func createSharedRule(householdId: String, _ input: WireRuleInput) async throws -> WireSharedRule
     func updateSharedRule(householdId: String, id: String, _ input: WireRuleInput) async throws -> WireSharedRule
     func deleteSharedRule(householdId: String, id: String, revision: Int) async throws
+
+    /// Invitations by email (MAZ-124). Default: the server sends no email (404).
+    func emailInvites(householdId: String) async throws -> [WireEmailInvite]
+    func sendEmailInvite(householdId: String, email: String) async throws -> WireEmailInvite
+    func resendEmailInvite(householdId: String, inviteId: String) async throws -> WireEmailInvite
+    func revokeEmailInvite(householdId: String, inviteId: String) async throws
+}
+
+extension HouseholdService {
+    public func emailInvites(householdId: String) async throws -> [WireEmailInvite] { throw APIError.emailOff }
+    public func sendEmailInvite(householdId: String, email: String) async throws -> WireEmailInvite {
+        throw APIError.emailOff
+    }
+    public func resendEmailInvite(householdId: String, inviteId: String) async throws -> WireEmailInvite {
+        throw APIError.emailOff
+    }
+    public func revokeEmailInvite(householdId: String, inviteId: String) async throws { throw APIError.emailOff }
+}
+
+extension APIError {
+    /// The 404 a server answers while it sends no email (MAZ-124).
+    static let emailOff = APIError.notFound(message: "This server doesn't send email.")
 }
 
 /// The signed-in account's households, straight from the API. A 401 ends the session it was
@@ -86,6 +108,18 @@ public struct APIHouseholdService: HouseholdService {
     }
     public func archiveHousehold(id: String) async throws {
         try await call { try await client.archiveHousehold(id: id) }
+    }
+    public func emailInvites(householdId: String) async throws -> [WireEmailInvite] {
+        try await call { try await client.emailInvites(householdId: householdId) }
+    }
+    public func sendEmailInvite(householdId: String, email: String) async throws -> WireEmailInvite {
+        try await call { try await client.sendEmailInvite(householdId: householdId, email: email) }
+    }
+    public func resendEmailInvite(householdId: String, inviteId: String) async throws -> WireEmailInvite {
+        try await call { try await client.resendEmailInvite(householdId: householdId, inviteId: inviteId) }
+    }
+    public func revokeEmailInvite(householdId: String, inviteId: String) async throws {
+        try await call { try await client.revokeEmailInvite(householdId: householdId, inviteId: inviteId) }
     }
     public func createTrip(
         name: String, currency: Currency, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,

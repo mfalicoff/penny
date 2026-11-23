@@ -12,6 +12,7 @@
 // on PATH. The guarantee is the same: it never connects to a server it did not create.
 import { apiEmailEnvironment, emailSettings, startRenderer, startWorker, stopWorker } from "./email.mjs";
 import { trustCertificate, writeCertificate } from "./tls.mjs";
+import { apiSmtpEnvironment } from "./smtp-sink.mjs";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -372,6 +373,8 @@ export async function up(options = {}) {
         TestControls__Token: state.controlToken,
         Logging__LogLevel__Default: "Information",
         ...(email ? apiEmailEnvironment(email, state.email.rendererUrl) : { InboundMail__Worker: "false" }),
+        // Outgoing email (MAZ-124) only with --smtp: without it the server sends no email, as by default.
+        ...(options.smtp ? apiSmtpEnvironment(options.smtp, state.origins) : {}),
         ...(options.oidc ? {
           Oidc__Issuer: options.oidc.issuer,
           Oidc__ClientId: options.oidc.clientId,

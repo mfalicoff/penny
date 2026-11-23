@@ -25,6 +25,8 @@ public struct HouseholdFailure: Error, Equatable, Sendable {
         case gone
         /// The invite code is wrong, expired or was replaced.
         case invalidInvite
+        /// MAZ-124: the server stopped sending email. Share a code instead.
+        case emailOff
         case rateLimited
         /// The session ended; sign in again.
         case signIn
@@ -88,6 +90,30 @@ public struct HouseholdFailure: Error, Equatable, Sendable {
             self.init(.invalid, "That's too much text to save. Shorten the note and try again.")
         case .unavailable, .server, .unexpectedStatus, .malformedResponse:
             self.init(.server, "The server had a problem, so nothing was saved. Try again in a moment.")
+        }
+    }
+
+    /// A failed invitation by email (MAZ-124) in words: the server's own text for its rules and
+    /// limits (403 creator only, 409 already joined), "doesn't send email" as `.emailOff`, and the
+    /// daily limit, whose 429 carries no text the client keeps.
+    public static func emailInvite(_ error: any Error) -> HouseholdFailure {
+        switch error as? APIError {
+        case .notFound(let message?) where message.localizedCaseInsensitiveContains("send email"):
+            return HouseholdFailure(
+                .emailOff, "This server no longer sends email, so nothing was sent. Share a code instead.")
+        case .notFound(let message?) where message.localizedCaseInsensitiveContains("invitation not found"):
+            return HouseholdFailure(.gone, "This invitation was already revoked. Nothing was changed.")
+        case .rateLimited:
+            return HouseholdFailure(
+                .rateLimited, "Too many invitation emails today. Try again tomorrow, or share a code instead.")
+        case .conflict(let message):
+            return HouseholdFailure(.restricted, message ?? "They already joined with this invitation.")
+        case .badRequest(let message):
+            return HouseholdFailure(.invalid, message ?? "Enter a valid email address.")
+        case .invalidRequest:
+            return HouseholdFailure(.invalid, "Enter a valid email address.")
+        default:
+            return HouseholdFailure(error)
         }
     }
 

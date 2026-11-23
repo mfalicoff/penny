@@ -44,6 +44,9 @@ public enum SignedOutReason: Equatable, Sendable {
     /// The server ended the session (expired or revoked). Local work for that account is
     /// kept, so signing in again as `email` picks it up.
     case sessionExpired(email: String)
+    /// MAZ-124: a reset code set a new password, and the server signed every device out. Sign-in
+    /// says so.
+    case passwordReset
 }
 
 public enum SignInMethod: Equatable, Sendable {
@@ -86,11 +89,14 @@ public struct ServerCheck: Equatable, Sendable {
 
     /// MAZ-169: the server's privacy policy, when it publishes one.
     public let privacyPolicy: URL?
+    /// MAZ-124: whether the server sends email.
+    public let emailEnabled: Bool
 
     public init(
         server: ServerURL, version: String, singleSignOn: Bool?, singleSignOnLabel: String?,
-        privacyPolicy: URL? = nil
+        privacyPolicy: URL? = nil, emailEnabled: Bool = false
     ) {
+        self.emailEnabled = emailEnabled
         self.server = server
         self.version = version
         self.singleSignOn = singleSignOn
@@ -124,6 +130,8 @@ public struct AuthFailure: Error, Equatable, Sendable {
         case noServer
         /// The server changed while the request was in flight; its answer was dropped.
         case superseded
+        /// MAZ-124: a password reset code that is malformed, used, replaced or expired.
+        case invalidCode
     }
 
     public let kind: Kind
