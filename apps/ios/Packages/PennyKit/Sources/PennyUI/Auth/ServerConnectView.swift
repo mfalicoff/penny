@@ -169,7 +169,7 @@ struct ServerConnectView: View {
         VStack(spacing: 11) {
             Rectangle().fill(PennyColor.separator).frame(height: 0.5)
             HStack {
-                Text(name).foregroundStyle(PennyColor.label)
+                Text(name).foregroundStyle(PennyColor.secondaryLabel)
                 Spacer(minLength: 12)
                 Text(value).fontWeight(.semibold).foregroundStyle(PennyColor.label)
                     .multilineTextAlignment(.trailing)
