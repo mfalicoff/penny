@@ -228,7 +228,7 @@ private struct ExpensePage: View {
                 let status = expense.status(of: split.userId)
                 let isPayer = split.userId == expense.payerUserId
                 HStack(spacing: 12) {
-                    Monogram(initials: people.initials(split.userId), size: 32)
+                    Monogram(face: people.face(split.userId), size: 32)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(people.name(split.userId)).font(.body.weight(.semibold))
                         Text(isPayer ? "Paid · payer" : MoneyFormat.amount(split.amountCents, currency: model.currency))

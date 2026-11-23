@@ -550,6 +550,62 @@ final class CardCaptureTests: CardTestCase {
         }
     }
 
+    // MARK: iPhone profile (MAZ-171, MAZ-169)
+
+    @MainActor
+    func test_whenSeeded_IphoneProfile_ShouldBeCaptured() async throws {
+        try await card(
+            "iphone-profile",
+            note: "No Verified mark and no Your data group (export, delete account): those features aren't built yet"
+        ) { card in
+            try card.penny.openSettings()
+            try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
+            try card.penny.wait(for: AccessibilityID.Profile.changePassword)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneProfileProvider_ShouldBeRecorded() async throws {
+        try blocked(
+            "iphone-profile-provider",
+            note:
+                "The full-stack seeds have no account that signs in with a provider; the read-only profile is "
+                + "covered by the PennyData profile tests")
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneProfilePhoto_ShouldBeCaptured() async throws {
+        try await card("iphone-profile-photo", freshSeedPerAppearance: true) { card in
+            try card.penny.openSettings()
+            try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
+            try card.penny.tap(AccessibilityID.Profile.changePicture)
+            // The system photo picker: the first of the simulator's sample photos.
+            let photo = card.app.images.matching(identifier: "PXGGridLayout-Info").firstMatch
+            guard photo.waitForExistence(timeout: 20) else {
+                throw UIExpectationFailed(description: "the photo picker showed no photo")
+            }
+            photo.tap()
+            try card.penny.wait(for: AccessibilityID.Profile.cropScreen, timeout: 20)
+            try card.penny.wait(for: AccessibilityID.Profile.cropChoose)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneNamePrompt_ShouldBeCaptured() async throws {
+        try await card("iphone-name-prompt", freshSeedPerAppearance: true) { card in
+            try card.penny.wait(for: AccessibilityID.Home.hero)
+            // The card's account has no name yet: clear alex's, then come back to Penny, which
+            // reads the profile again and asks.
+            let alex = try card.seeded().user(card.state.alias ?? "alex")
+            try await card.stack.setDisplayName(nil, token: alex.token)
+            XCUIDevice.shared.press(.home)
+            card.app.activate()
+            try card.penny.wait(for: AccessibilityID.Profile.namePromptScreen, timeout: 20)
+            try card.penny.type("Max", into: AccessibilityID.Profile.promptName)
+            card.penny.hideKeyboard()
+        }
+    }
+
     // MARK: iPhone signed out
 
     @MainActor
@@ -582,6 +638,7 @@ final class CardCaptureTests: CardTestCase {
             try card.penny.wait(for: AccessibilityID.Auth.createAccount)
             // The card's filled form, with the strength meter for the typed password. Screenshots leave
             // out a secure field's bullets, so the password itself doesn't show.
+            try card.penny.type("Max Falicoff", into: AccessibilityID.Profile.signUpName)
             try card.penny.type("max@example.test", into: AccessibilityID.Auth.email)
             try card.penny.type("penny-card-pass", into: AccessibilityID.Auth.password)
             card.penny.hideKeyboard()
@@ -709,6 +766,18 @@ final class CardCaptureTests: CardTestCase {
             try card.penny.openSettings()
             // The page beside the list (MAZ-182) is the card's Appearance, not the lock just set.
             try card.penny.tap(AccessibilityID.Settings.row("appearance"), opening: AccessibilityID.Screen.appearance)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadProfile_ShouldBeCaptured() async throws {
+        try await card(
+            "ipad-profile",
+            note: "No Verified mark and no Your data group (export, delete account): those features aren't built yet"
+        ) { card in
+            try card.penny.openSettings()
+            try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
+            try card.penny.wait(for: AccessibilityID.Profile.changePassword)
         }
     }
 }

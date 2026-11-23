@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-22",
+  "reviewedAt": "2026-11-23",
   "cards": [
     {
       "id": "system-foundations",
@@ -462,19 +462,12 @@
       "id": "iphone-shared-list",
       "view": "shared households and trips list",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -498,19 +491,12 @@
       "id": "iphone-shared",
       "view": "household Maison",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -534,19 +520,12 @@
       "id": "iphone-shared-balances",
       "view": "Maison balances, October 2026 (alex owes bea)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -578,11 +557,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
           {
             "summary": "The invite card shows Create invite code until asked, because a new code replaces the one already shared (decided by the owner in MAZ-256)",
             "kind": "approved",
@@ -625,19 +599,9 @@
         ],
         "deviations": [
           {
-            "summary": "An equal split lists each person and their share without the card's checkboxes: an equal split always includes everyone on the date (design decision recorded on MAZ-256)",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
             "summary": "Opened from the household's Expense, the form adds Add entry's Household row before Date",
             "kind": "follow-up",
             "ref": "MAZ-277"
-          },
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       },
@@ -667,19 +631,12 @@
       "id": "iphone-record-payment",
       "view": "record alex's share of Internet",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -703,19 +660,12 @@
       "id": "iphone-payment-stale",
       "view": "a second device records alex's Internet share with the revision it read before the first payment",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -761,19 +711,12 @@
       "id": "iphone-history",
       "view": "Maison audit history",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -819,19 +762,12 @@
       "id": "iphone-trip-detail",
       "view": "shared trip Lisbon",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-76",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Payers are named by their email, so a row's \"paid · split N ways\" line wraps",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -892,11 +828,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The account row names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
           {
             "summary": "No Notifications row (notifications follow the system permission), and Categories shows its count",
             "kind": "follow-up",
@@ -1219,11 +1150,6 @@
             "summary": "The sample-data link sits under the other links, not pinned to the bottom",
             "kind": "follow-up",
             "ref": "MAZ-257"
-          },
-          {
-            "summary": "No Privacy Policy link under the sample-data link",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           }
         ]
       },
@@ -1267,9 +1193,9 @@
         ],
         "deviations": [
           {
-            "summary": "No “By creating an account you agree to the Privacy Policy.” line under Create account",
+            "summary": "A Name field comes first, as on the newer create-account cards (iphone-create-account-providers, web-create-account) that this card predates",
             "kind": "follow-up",
-            "ref": "MAZ-169"
+            "ref": "MAZ-170"
           }
         ]
       },
@@ -1783,19 +1709,12 @@
       "id": "iphone-shared-expense-detail",
       "view": "shared expense detail: Internet in Maison (Bea paid), October 2026",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       },
       "web": {
@@ -2306,10 +2225,26 @@
       "id": "iphone-profile",
       "view": "Settings › Profile for a password account: picture, name, verified email, export and delete",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-171",
-        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
-        "followUp": "MAZ-171"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
+        "deviations": [
+          {
+            "summary": "The Sign-in group has no Verified mark: the app has no email verification yet",
+            "kind": "follow-up",
+            "ref": "MAZ-172"
+          },
+          {
+            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2338,10 +2273,9 @@
       "id": "iphone-profile-provider",
       "view": "Settings › Profile for a Google account: name and picture from the provider, read only",
       "native": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-171",
-        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
-        "followUp": "MAZ-171"
+        "note": "The full-stack seeds have no account that signs in with a provider, so the read-only profile can't be captured; the PennyData profile tests cover it."
       },
       "web": {
         "status": "blocked",
@@ -2353,10 +2287,14 @@
       "id": "iphone-profile-photo",
       "view": "profile picture move-and-scale crop",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-171",
-        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
-        "followUp": "MAZ-171"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with a simulator sample photo, so the picture differs from the card's illustration."
       },
       "web": {
         "status": "deviates",
@@ -2379,10 +2317,13 @@
       "id": "iphone-name-prompt",
       "view": "Home with the name prompt for an account without a display name",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-171",
-        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
-        "followUp": "MAZ-171"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "matches",
@@ -2560,7 +2501,7 @@
       "native": {
         "status": "deviates",
         "owner": "MAZ-77",
-        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
@@ -2570,11 +2511,6 @@
             "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           },
           {
             "summary": "The card has Show as a table under the money flow, which the native dashboard doesn't show yet (follow-up recorded on MAZ-224)",
@@ -2599,7 +2535,7 @@
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
-        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
@@ -2609,11 +2545,6 @@
             "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       },
@@ -2662,7 +2593,7 @@
       "native": {
         "status": "deviates",
         "owner": "MAZ-75",
-        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
@@ -2672,16 +2603,6 @@
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       },
@@ -2708,7 +2629,7 @@
       "native": {
         "status": "deviates",
         "owner": "MAZ-76",
-        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
@@ -2718,16 +2639,6 @@
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
-            "summary": "People and the expense rows name people by their email, not their name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       },
@@ -2754,7 +2665,7 @@
       "native": {
         "status": "deviates",
         "owner": "MAZ-69",
-        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
@@ -2764,11 +2675,6 @@
             "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           },
           {
             "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
@@ -2956,10 +2862,26 @@
       "id": "ipad-profile",
       "view": "Settings with Profile in the detail column",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-171",
-        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
-        "followUp": "MAZ-171"
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
+        "deviations": [
+          {
+            "summary": "The Sign-in group has no Verified mark: the app has no email verification yet",
+            "kind": "follow-up",
+            "ref": "MAZ-172"
+          },
+          {
+            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       },
       "web": {
         "status": "deviates",

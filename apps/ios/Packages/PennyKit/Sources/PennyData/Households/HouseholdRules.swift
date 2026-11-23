@@ -29,10 +29,11 @@ public struct HouseholdPeople: Equatable, Sendable {
 
     public func member(_ userId: String) -> WireHouseholdMember? { members.first { $0.userId == userId } }
 
-    /// "You", the member's email, or "Former member" for someone the viewer can't see.
+    /// "You", the member's name (else their email, MAZ-171), or "Former member" for someone the
+    /// viewer can't see.
     public func name(_ userId: String) -> String {
         if userId == meId { return "You" }
-        return member(userId)?.email ?? "Former member"
+        return member(userId)?.shownName ?? "Former member"
     }
 
     /// "your" for the viewer, otherwise "bea@example.test's".
@@ -45,18 +46,30 @@ public struct HouseholdPeople: Equatable, Sendable {
         userId == meId ? "you" : name(userId)
     }
 
-    /// Up to two letters for a monogram, from the email's local part ("bea.kim@…" is "BK").
+    /// Up to two letters for a monogram, from the member's name, else their email's local part
+    /// ("bea.kim@…" is "BK").
     public func initials(_ userId: String) -> String {
-        guard let email = member(userId)?.email else { return "?" }
-        return Self.initials(email: email)
+        guard let member = member(userId) else { return "?" }
+        return Self.initials(name: member.shownName)
+    }
+
+    /// The member's picture and monogram (MAZ-171).
+    public func face(_ userId: String) -> PersonFace {
+        PersonFace(initials: initials(userId), avatarUrl: member(userId)?.avatarUrl)
     }
 
     /// The monogram letters for an email address (also the iPad sidebar's account, MAZ-182).
-    public static func initials(email: String) -> String {
-        let local = email.split(separator: "@").first.map(String.init) ?? email
-        let parts = local.split(whereSeparator: { ".-_+".contains($0) }).filter { !$0.isEmpty }
-        let letters = parts.count >= 2 ? [parts[0], parts[1]].compactMap(\.first) : Array(local.prefix(2))
-        return String(letters).uppercased()
+    public static func initials(email: String) -> String { initials(name: email) }
+
+    /// The monogram letters for a name or an email, as on the web: the first letters of the first
+    /// two words ("Max Falicoff" is "MF"), else the first two letters ("max@…" is "MA").
+    public static func initials(name: String) -> String {
+        let local = name.split(separator: "@").first.map(String.init) ?? name
+        let parts = local.split(whereSeparator: { $0.isWhitespace || ".-_+".contains($0) })
+        let letters =
+            parts.count >= 2 ? [parts[0], parts[1]].compactMap(\.first) : Array((parts.first ?? "").prefix(2))
+        let text = String(letters).uppercased()
+        return text.isEmpty ? "?" : text
     }
 
     public func isCurrentMember(_ userId: String) -> Bool { member(userId)?.isCurrent == true }
@@ -81,6 +94,26 @@ public struct HouseholdPeople: Equatable, Sendable {
             guard let left = member.leftAt else { return true }
             return date < PennyDomain.CalendarDate(Date(milliseconds: left), in: utc)
         }
+    }
+}
+
+/// A person as the shared screens draw them: their picture, else a monogram (MAZ-171).
+public struct PersonFace: Hashable, Sendable {
+    public var initials: String
+    /// Same-origin picture URL; nil shows the monogram.
+    public var avatarUrl: String?
+
+    public init(initials: String, avatarUrl: String? = nil) {
+        self.initials = initials
+        self.avatarUrl = avatarUrl
+    }
+}
+
+extension WireHouseholdMember {
+    /// Their display name, else their email (MAZ-171).
+    public var shownName: String {
+        let name = displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? email : name
     }
 }
 

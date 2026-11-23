@@ -423,6 +423,7 @@ public enum AccessibilityID {
         + Households.all
         + Receipt.all
         + ReceiptInbox.all
+        + Profile.all
         + Trips.all
         + Notifications.all
         + Journeys.all

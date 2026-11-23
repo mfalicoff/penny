@@ -28,15 +28,21 @@ final class AuthJourneyTests: PennyUITestCase {
         let penny = try await launch()
 
         try penny.tap(AccessibilityID.Auth.switchMode)
+        // MAZ-171: the name people see comes first; with it, no name prompt follows.
+        try penny.type("Robin Test", into: AccessibilityID.Profile.signUpName)
         try penny.type(email, into: AccessibilityID.Auth.email)
         try penny.type(password, into: AccessibilityID.Auth.password)
         try penny.tap(AccessibilityID.Auth.createAccount)
         try penny.waitForShell()
         try penny.wait(for: AccessibilityID.Home.empty)
+        XCTAssertFalse(penny.element(AccessibilityID.Profile.namePromptScreen).exists)
 
-        // The account exists on the server with that password.
+        // The account exists on the server with that password and name.
         let token = try await stack.signIn(email: email, password: password)
         XCTAssertFalse(token.isEmpty)
+        let profile = try await stack.send(
+            "GET", stack.configuration.apiURL.appending(path: "api/profile"), token: token)
+        XCTAssertEqual(profile["displayName"] as? String, "Robin Test")
     }
 
     @MainActor

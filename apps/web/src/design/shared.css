@@ -1975,16 +1975,6 @@ a.row:hover {
   text-align: end;
 }
 
-.split-row__check {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--pk-tint);
-  color: #fff;
-}
-
 .split-row__percent {
   display: inline-flex;
   align-items: center;

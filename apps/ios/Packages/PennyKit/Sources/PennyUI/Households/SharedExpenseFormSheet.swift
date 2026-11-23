@@ -221,7 +221,7 @@ private struct SharedExpenseForm: View {
                 case .household:
                     EntryHouseholdSheet(
                         households: scope?.households ?? [], current: model.id,
-                        initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? ""
+                        face: shell.accountFace
                     ) { id in
                         pendingHousehold = .some(id)
                     }
@@ -506,7 +506,7 @@ private struct SharedExpenseForm: View {
                 ForEach(participants) { member in
                     let share = (try? preview.get())?.first { $0.userId == member.userId }?.amountCents
                     HStack(spacing: 10) {
-                        Monogram(initials: model.people.initials(member.userId))
+                        Monogram(face: model.people.face(member.userId))
                         Text(model.people.name(member.userId)).lineLimit(1)
                         Spacer(minLength: 8)
                         Text(share.map { MoneyFormat.amount($0, currency: model.currency) } ?? "—")
@@ -543,7 +543,7 @@ private struct SharedExpenseForm: View {
             form.draft.choosePayer(member.userId, viewerId: viewerId)
         } label: {
             HStack(spacing: 6) {
-                Monogram(initials: model.people.initials(member.userId))
+                Monogram(face: model.people.face(member.userId))
                 Text(member.userId == viewerId ? "You" : model.people.name(member.userId)).lineLimit(1)
             }
             .font(.subheadline.weight(.semibold))
@@ -712,7 +712,7 @@ private struct SharedSplitSheet: View {
     {
         let share = (try? preview.get())?.first { $0.userId == member.userId }?.amountCents
         HStack(spacing: 12) {
-            Monogram(initials: model.people.initials(member.userId))
+            Monogram(face: model.people.face(member.userId))
             Text(model.people.name(member.userId))
             Spacer(minLength: 8)
             switch form.draft.mode {

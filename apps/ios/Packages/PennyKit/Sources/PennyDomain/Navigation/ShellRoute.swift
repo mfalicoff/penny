@@ -36,7 +36,7 @@ public enum DetailRoute: Hashable, Sendable {
 /// Pages inside Settings. The first three are the old More tab's "Manage" pages, which the
 /// iPad sidebar lists directly.
 public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
-    case recurring, accounts, categories, appearance, currency, appLock, server, receiptEmail, receiptInbox
+    case recurring, accounts, categories, appearance, currency, appLock, server, receiptEmail, receiptInbox, profile
 
     public static let manage: [SettingsRoute] = [.recurring, .accounts, .categories]
 
@@ -51,6 +51,7 @@ public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .server: "Server"
         case .receiptEmail: "Receipt email"
         case .receiptInbox: "Receipts to attach"
+        case .profile: "Profile"
         }
     }
 
