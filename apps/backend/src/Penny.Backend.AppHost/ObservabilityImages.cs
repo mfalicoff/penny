@@ -1,7 +1,7 @@
 namespace Penny.Backend.AppHost;
 
-// The local Grafana stack, each image pinned by its multi-platform index digest. Update the
-// tag and the digest together.
+// The local Grafana stack and the Mailpit test inbox, each image pinned by its multi-platform
+// index digest. Update the tag and the digest together.
 public static class ObservabilityImages
 {
     public static readonly PinnedImage Alloy = new(
@@ -37,5 +37,13 @@ public static class ObservabilityImages
         "grafana/grafana",
         "13.3.1",
         "0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf"
+    );
+
+    // Local SMTP server with a web inbox for the API's password reset and invitation emails.
+    public static readonly PinnedImage Mailpit = new(
+        "docker.io",
+        "axllent/mailpit",
+        "v1.34.0",
+        "23a2ef85bc50853ab3093645d1d64679afd8887e89da5e48a88940c172591a4e"
     );
 }
