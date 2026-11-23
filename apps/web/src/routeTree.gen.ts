@@ -21,6 +21,7 @@ import { Route as RecurringRouteImport } from './routes/recurring'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as EntriesNewRouteImport } from './routes/entries/new'
 import { Route as HouseholdsIndexRouteImport } from './routes/households/index'
@@ -93,6 +94,11 @@ const SettingsRouteRoute = SettingsRouteRouteImport.update({
 const TransactionsRoute = TransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/recurring': typeof RecurringRoute
   '/reset-password': typeof ResetPasswordRoute
   '/transactions': typeof TransactionsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/recurring': typeof RecurringRoute
   '/reset-password': typeof ResetPasswordRoute
   '/transactions': typeof TransactionsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/recurring': typeof RecurringRoute
   '/reset-password': typeof ResetPasswordRoute
   '/transactions': typeof TransactionsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/reset-password'
     | '/transactions'
+    | '/verify-email'
     | '/auth/callback'
     | '/entries/new'
     | '/settings/appearance'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/reset-password'
     | '/transactions'
+    | '/verify-email'
     | '/auth/callback'
     | '/entries/new'
     | '/settings/appearance'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/reset-password'
     | '/transactions'
+    | '/verify-email'
     | '/auth/callback'
     | '/entries/new'
     | '/settings/appearance'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   RecurringRoute: typeof RecurringRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TransactionsRoute: typeof TransactionsRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   EntriesNewRoute: typeof EntriesNewRoute
   TripsIdRoute: typeof TripsIdRoute
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -563,6 +583,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecurringRoute: RecurringRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TransactionsRoute: TransactionsRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   EntriesNewRoute: EntriesNewRoute,
   TripsIdRoute: TripsIdRoute,
