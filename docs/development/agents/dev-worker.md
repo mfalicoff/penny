@@ -153,6 +153,19 @@ Your prompt lists the ready members with their branches and commits.
 4. Respond to review and CI as in section 5, fixing on the integration branch. A fix that belongs to one member's change is still yours to make.
 5. Merge as in section 6, then make sure every included issue is **Done**.
 
+## Two-phase issues
+
+A feature that needs backend or web work and Swift work ships in two pull requests on the same issue. That way the Mac only gets the Swift part, and that part builds on an API that is already on master. The orchestrator's prompt says which phase you're in.
+
+**Phase 1 (Linux): backend, contract and web.**
+1. Do the backend, the API contract (contracts/openapi.json, fixtures and the shared rules, with the Swift rules if a shared rule changes) and the web side. Leave the iOS screens.
+2. Use a branch that isn't the issue's Linear branch, for example `phase1/<short-name>`, and don't name the issue in the pull request's title, body or commits. Linear links pull requests by branch name and closes the issue when a linked one merges.
+3. After the pull request merges, comment the link on the issue yourself, then post "Phase 1 merged in #<n>. Left for iOS:" and list exactly what remains on iOS (screens, cards, the API calls to use). Move the issue to **Todo** and remove your `worker:*` label, so the orchestrator routes phase 2 to the Mac.
+
+**Phase 2 (Mac): iOS.** Read the "Phase 1 merged" comment, build the iOS part against the API on master, and finish as usual: the issue's Linear branch and `Fixes`.
+
+In a bundle, the member does steps 1 and 2 and the integrator does step 3 for its phase 1 members.
+
 ## Hand over to a human
 
 1. Add the `needs-human` label to the Linear issue.
