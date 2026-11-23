@@ -264,6 +264,10 @@ public struct AuditDescription: Equatable, Sendable {
             summary = "\(actor) renamed the \(group)"
         case "invite.created":
             summary = "\(actor) created an invite code"
+        case "invite.emailed":
+            summary = "\(actor) emailed an invitation"
+        case "invite.revoked":
+            summary = "\(actor) revoked an invitation"
         case "member.joined":
             summary = "\(after["userId"]?.string.map(people.name) ?? actor) joined the \(group)"
         case "member.left":

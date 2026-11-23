@@ -226,12 +226,18 @@ public struct WireServerInfo: Codable, Equatable, Sendable {
     /// and `null` when none is set. Read it through `privacyPolicy`, which drops anything that
     /// isn't an absolute http(s) URL.
     public var privacyPolicyUrl: String?
+    /// MAZ-124: whether the server sends email (password reset links and invitations by email).
+    /// Absent on older servers; read it through `sendsEmail`, which treats absent as false.
+    public var emailEnabled: Bool?
 
-    public init(name: String, version: String, privacyPolicyUrl: String? = nil) {
+    public init(name: String, version: String, privacyPolicyUrl: String? = nil, emailEnabled: Bool? = nil) {
         self.name = name
         self.version = version
         self.privacyPolicyUrl = privacyPolicyUrl
+        self.emailEnabled = emailEnabled
     }
+
+    public var sendsEmail: Bool { emailEnabled == true }
 
     public var privacyPolicy: URL? { PrivacyPolicy.url(privacyPolicyUrl) }
 }

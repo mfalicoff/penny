@@ -169,8 +169,8 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-create-account-providers` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-170) | Gap: draft card, not built yet |
 | `iphone-verify-email` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-172) | Gap: draft card, not built yet |
 | `iphone-unverified` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-172) | Gap: draft card, not built yet |
-| `iphone-forgot-password` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-124) | Gap: draft card, not built yet |
-| `iphone-invite-email` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-124) | Gap: draft card, not built yet |
+| `iphone-forgot-password` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1` (the server sends email to an SMTP sink; recorded as blocked without it): Forgot password on sign-in, then Send reset link (MAZ-124) | Covered |
+| `iphone-invite-email` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1`: an expired and a waiting invitation sent through the real API, then an address typed (MAZ-124) | Covered |
 | `iphone-delete-account` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |
 | `iphone-export-all` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |
 | `iphone-monitoring-prompt` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |

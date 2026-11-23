@@ -343,7 +343,7 @@ struct HouseholdPage: View {
                 PaymentSheet(request: request, model: model, now: shell.now)
             }
             .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
-                InviteSheet(model: model).environment(shell)
+                InviteEntrySheet(model: model).environment(shell)
             }
             .alert("Rename household", isPresented: $renaming) {
                 TextField("Name", text: $newName)

@@ -26,6 +26,8 @@ final class FakeHouseholds: HouseholdService {
         var nextId = 0
         /// How long each answer takes, by method name or `monthRecap <YYYY-MM>`.
         var delays: [String: Duration] = [:]
+        /// Invitations by email (MAZ-124), newest first.
+        var emailInvites: [WireEmailInvite] = []
     }
 
     let state = Mutex(State())
@@ -155,6 +157,39 @@ final class FakeHouseholds: HouseholdService {
     func createInvite(householdId: String) async throws -> WireInvite {
         try await call("createInvite")
         return WireInvite(code: state.withLock { $0.inviteCode }, expiresAt: 1_793_000_600_000)
+    }
+
+    func emailInvites(householdId: String) async throws -> [WireEmailInvite] {
+        try await call("emailInvites")
+        return state.withLock { $0.emailInvites }
+    }
+
+    func sendEmailInvite(householdId: String, email: String) async throws -> WireEmailInvite {
+        try await call("sendEmailInvite")
+        return state.withLock { state in
+            state.nextId += 1
+            let invite = WireEmailInvite(
+                id: "invite-\(state.nextId)", email: email.lowercased(), status: .sending, createdAt: 1_793_000_000_000)
+            state.emailInvites.removeAll { $0.email == invite.email }
+            state.emailInvites.insert(invite, at: 0)
+            return invite
+        }
+    }
+
+    func resendEmailInvite(householdId: String, inviteId: String) async throws -> WireEmailInvite {
+        try await call("resendEmailInvite")
+        return try state.withLock { state in
+            guard let index = state.emailInvites.firstIndex(where: { $0.id == inviteId }) else {
+                throw APIError.notFound(message: "Invitation not found.")
+            }
+            state.emailInvites[index].status = .sending
+            return state.emailInvites[index]
+        }
+    }
+
+    func revokeEmailInvite(householdId: String, inviteId: String) async throws {
+        try await call("revokeEmailInvite")
+        state.withLock { $0.emailInvites.removeAll { $0.id == inviteId } }
     }
 
     func leaveHousehold(id: String) async throws {

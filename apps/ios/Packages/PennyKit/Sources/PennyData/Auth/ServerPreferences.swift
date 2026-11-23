@@ -11,14 +11,18 @@ public struct SavedServer: Codable, Equatable, Sendable {
     /// The privacy policy `/api/info` last published (MAZ-169), kept so Settings can link it
     /// offline. Nil when the server publishes none.
     public var privacyPolicy: URL?
+    /// Whether `/api/info` last said the server sends email (MAZ-124): Forgot password on sign-in
+    /// and Invite by email. False until a server says so, and on servers older than the field.
+    public var emailEnabled: Bool
 
-    public init(server: ServerURL, version: String? = nil, privacyPolicy: URL? = nil) {
+    public init(server: ServerURL, version: String? = nil, privacyPolicy: URL? = nil, emailEnabled: Bool = false) {
         self.server = server
         self.version = version
         self.privacyPolicy = privacyPolicy
+        self.emailEnabled = emailEnabled
     }
 
-    private enum CodingKeys: String, CodingKey { case url, version, privacyPolicyUrl }
+    private enum CodingKeys: String, CodingKey { case url, version, privacyPolicyUrl, emailEnabled }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -28,6 +32,7 @@ public struct SavedServer: Codable, Equatable, Sendable {
         }
         version = try container.decodeIfPresent(String.self, forKey: .version)
         privacyPolicy = PrivacyPolicy.url(try? container.decodeIfPresent(String.self, forKey: .privacyPolicyUrl))
+        emailEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .emailEnabled)) == true
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -35,6 +40,7 @@ public struct SavedServer: Codable, Equatable, Sendable {
         try container.encode(server.url.absoluteString, forKey: .url)
         try container.encodeIfPresent(version, forKey: .version)
         try container.encodeIfPresent(privacyPolicy?.absoluteString, forKey: .privacyPolicyUrl)
+        if emailEnabled { try container.encode(true, forKey: .emailEnabled) }
     }
 }
 

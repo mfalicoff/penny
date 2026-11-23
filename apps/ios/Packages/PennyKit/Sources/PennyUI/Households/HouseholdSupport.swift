@@ -175,6 +175,7 @@ struct HouseholdFailureBanner: View {
         case .membership: "Membership changed"
         case .gone: "No longer there"
         case .invalidInvite: "Invite code didn't work"
+        case .emailOff: "Email is off on this server"
         case .rateLimited: "Too many attempts"
         case .signIn: "Sign in again"
         case .invalid: "Check what you entered"
@@ -204,12 +205,14 @@ struct HouseholdTag: View {
 
     @ScaledMetric(relativeTo: .caption) private var glyph = 10.0
     let text: String
-    let systemImage: String
+    let systemImage: String?
     var tone: Tone = .neutral
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: systemImage).font(.system(size: glyph, weight: .bold)).accessibilityHidden(true)
+            if let systemImage {
+                Image(systemName: systemImage).font(.system(size: glyph, weight: .bold)).accessibilityHidden(true)
+            }
             Text(text)
         }
         .font(.caption.weight(.semibold))

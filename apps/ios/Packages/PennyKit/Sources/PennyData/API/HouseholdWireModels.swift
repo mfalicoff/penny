@@ -102,6 +102,45 @@ public struct WireInvite: Codable, Equatable, Sendable {
     }
 }
 
+/// An invitation sent by email (MAZ-124, `EmailInvite`). The address is normalized (trimmed,
+/// lower case). Times are Unix milliseconds. Unknown statuses decode as `.sending`, so a newer
+/// server's state never breaks the list.
+public struct WireEmailInvite: Codable, Equatable, Identifiable, Sendable {
+    public enum Status: String, Codable, Equatable, Sendable {
+        /// Queued, or a resend not yet sent.
+        case sending
+        /// Sent, unused and unexpired.
+        case waiting
+        case expired
+        /// Someone joined with it.
+        case joined
+        /// The mail server refused it for good.
+        case failed
+
+        public init(from decoder: any Decoder) throws {
+            self = Status(rawValue: try decoder.singleValueContainer().decode(String.self)) ?? .sending
+        }
+    }
+
+    public var id: String
+    public var email: String
+    public var status: Status
+    public var createdAt: Int64
+    public var sentAt: Int64?
+    public var expiresAt: Int64?
+
+    public init(
+        id: String, email: String, status: Status, createdAt: Int64, sentAt: Int64? = nil, expiresAt: Int64? = nil
+    ) {
+        self.id = id
+        self.email = email
+        self.status = status
+        self.createdAt = createdAt
+        self.sentAt = sentAt
+        self.expiresAt = expiresAt
+    }
+}
+
 /// A shared category travels by value (`{name, icon, color}`); households have no category list.
 public struct WireSharedCategory: Codable, Equatable, Hashable, Sendable {
     public var name: String

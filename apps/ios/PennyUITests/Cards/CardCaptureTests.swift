@@ -377,6 +377,54 @@ final class CardCaptureTests: CardTestCase {
         }
     }
 
+    // MARK: iPhone email (MAZ-124)
+
+    @MainActor
+    func test_whenTheServerSendsEmail_IphoneInviteEmail_ShouldBeCaptured() async throws {
+        guard try await stack().sendsEmail() else {
+            return try blocked("iphone-invite-email", note: Self.needsSMTP)
+        }
+        try await card("iphone-invite-email") { card in
+            let seed = try card.seeded()
+            let token = try seed.user(card.state.alias ?? "alex").token
+            let household = try seed.household("maison")
+            // The card's two invitations: one sent days ago whose link expired (72 hours), and one
+            // sent today, still waiting. Only once: the second appearance reuses the seed.
+            if card.appearance == card.state.appearances.first {
+                try await card.stack.setClock("2026-10-11T09:00:00Z")
+                try await card.stack.emailInvite(token: token, household: household, email: "alex.k@example.test")
+                try await card.stack.setClock(Stack.defaultNow)
+                try await card.stack.emailInvite(token: token, household: household, email: "jo.s@example.test")
+            }
+            try card.penny.openHousehold(household)
+            try card.penny.tap(Households.invite, orIn: Households.more, opening: Households.Screen.inviteEmail)
+            try card.penny.wait(for: Households.inviteEmailShareCode, timeout: 20)
+            guard card.app.staticTexts["alex.k@example.test"].waitForExistence(timeout: 20) else {
+                throw UIExpectationFailed(description: "The invitations didn't load")
+            }
+            try card.penny.type("sam@example.test", into: Households.inviteEmailAddress)
+        }
+    }
+
+    @MainActor
+    func test_whenTheServerSendsEmail_IphoneForgotPassword_ShouldBeCaptured() async throws {
+        guard try await stack().sendsEmail() else {
+            return try blocked("iphone-forgot-password", note: Self.needsSMTP)
+        }
+        try await card("iphone-forgot-password") { card in
+            let solo = try card.seeded().user(card.state.alias ?? "solo")
+            try card.penny.type(solo.email, into: AccessibilityID.Auth.email)
+            try card.penny.tap(AccessibilityID.Auth.forgotPassword)
+            try card.penny.wait(for: AccessibilityID.Screen.forgotPassword)
+            try card.penny.tap(AccessibilityID.Auth.sendResetLink)
+            try card.penny.wait(for: AccessibilityID.Auth.resetSent, timeout: 20)
+            card.penny.hideKeyboard()
+        }
+    }
+
+    private static let needsSMTP =
+        "Needs a stack that sends email: PENNY_STACK_SMTP=1 scripts/ios.sh ui-test cards (penny-env --smtp)"
+
     @MainActor
     func test_whenSeeded_IphoneTripPersonal_ShouldBeCaptured() async throws {
         try await card("iphone-trip-personal") { card in

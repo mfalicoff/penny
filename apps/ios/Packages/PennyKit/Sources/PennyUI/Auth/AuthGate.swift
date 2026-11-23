@@ -192,7 +192,7 @@ struct SignedOutFlow: View {
     let auth: AuthController
     var onTryDemo: (() -> Void)?
 
-    enum Route: Hashable { case createAccount, server }
+    enum Route: Hashable { case createAccount, server, forgotPassword(email: String), resetPassword }
 
     @State private var path: [Route] = []
     @State private var keyboardShown = false
@@ -210,7 +210,8 @@ struct SignedOutFlow: View {
                 } else {
                     SignInView(
                         auth: auth, mode: .signIn, onChangeServer: { path.append(.server) },
-                        onSwitchMode: { path.append(.createAccount) })
+                        onSwitchMode: { path.append(.createAccount) },
+                        onForgotPassword: { path.append(.forgotPassword(email: $0)) })
                 }
             }
             .safeAreaInset(edge: .top) {
@@ -235,6 +236,12 @@ struct SignedOutFlow: View {
                         auth: auth, mode: .createAccount, onChangeServer: {}, onSwitchMode: { path.removeAll() })
                 case .server:
                     ServerConnectView(auth: auth) { path.removeAll() }
+                case .forgotPassword(let email):
+                    ForgotPasswordView(
+                        auth: auth, initialEmail: email,
+                        onEnterCode: { path = [.resetPassword] }, onBack: { path.removeAll() })
+                case .resetPassword:
+                    ResetPasswordView(auth: auth) { path.removeAll() }
                 }
             }
             .pennySolidBars()
