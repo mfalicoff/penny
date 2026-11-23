@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serverInfoSchema } from "../src/api/info";
-import { json, renderApp, stubServer } from "./render";
+import { ALEX, json, renderApp, stubServer } from "./render";
 
 const POLICY = "https://penny.example.com/privacy";
 
@@ -11,6 +11,10 @@ function server(privacyPolicyUrl: string | null | undefined, signedIn = false) {
   return stubServer((url) => {
     if (url === "/api/info") return json({ name: "penny", version: "2.0.0-test", ...(privacyPolicyUrl === undefined ? {} : { privacyPolicyUrl }) });
     if (url === "/api/auth/me" && !signedIn) return json({ error: "Please sign in to continue." }, 401);
+    // Settings › Profile loads the profile before it renders its sections and the footer.
+    if (url === "/api/profile" && signedIn) {
+      return json({ userId: "u".repeat(32), email: ALEX, nameEditable: true, avatarEditable: true, needsName: false, signIn: "password" });
+    }
     return undefined;
   });
 }

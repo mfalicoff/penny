@@ -1262,6 +1262,11 @@
             "summary": "The sample-data link sits under the other links, not pinned to the bottom",
             "kind": "follow-up",
             "ref": "MAZ-257"
+          },
+          {
+            "summary": "No Privacy Policy link under the sample-data link",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       },
@@ -1288,11 +1293,6 @@
             "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (decided in MAZ-239)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Shows the server's Privacy Policy link on its own line under the sample-data note, where iphone-sign-in-providers puts it; this card has no link (Design decision follow-up on MAZ-169)",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           }
         ]
       }
@@ -1301,12 +1301,19 @@
       "id": "iphone-create-account",
       "view": "registration (unique test user)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No “By creating an account you agree to the Privacy Policy.” line under Create account",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
+          }
         ]
       },
       "web": {
@@ -1332,11 +1339,6 @@
             "summary": "A Name field comes first, as on the newer create-account cards (iphone-create-account-providers, web-create-account) that this card predates",
             "kind": "follow-up",
             "ref": "MAZ-170"
-          },
-          {
-            "summary": "Ends with “By creating an account you agree to the Privacy Policy.” as iphone-create-account-providers does; this card has no such line (Design decision follow-up on MAZ-169)",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           }
         ]
       }
@@ -2382,9 +2384,9 @@
         ],
         "deviations": [
           {
-            "summary": "With a mouse the subtitle reads “Scroll to zoom, drag to move” instead of “Pinch to zoom, drag to move”; touch screens show the card’s words",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
+            "summary": "With a mouse the subtitle reads “Scroll to zoom, drag to move” instead of “Pinch to zoom, drag to move”; touch screens show the card’s words (decided by the owner in MAZ-171)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -3213,11 +3215,6 @@
             "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Shows the server's Privacy Policy link after the sample-data note, where web-sign-in-providers puts it; this card has no link (Design decision follow-up on MAZ-169)",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           }
         ]
       }
