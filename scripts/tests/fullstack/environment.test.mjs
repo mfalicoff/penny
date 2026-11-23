@@ -32,6 +32,7 @@ test("a seeded environment answers the published search expectations", { timeout
   const definition = scenario("searchable-household");
   const context = await seed(definition, {
     apiUrl: state.apiUrl, runTag: state.runId, setClock: (now) => control(state, "PUT", "clock", { now }),
+    verifyEmail: (email) => control(state, "POST", "email-verified", { email }),
   });
   const request = client(state.apiUrl);
   const key = (value) => value.replace(/^shared:\$expense:(.+)$/, (_, ref) => `shared:${context.expenseIds[ref]}`);

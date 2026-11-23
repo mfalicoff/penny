@@ -1,10 +1,11 @@
 /**
  * Codes that arrive in a link's fragment (MAZ-124): the password reset link
- * `/reset-password#code=<64 hex>` and the invitation link `/join#code=<10 hex>`. A fragment never
- * reaches the server or its logs; the routes read it once, keep the code here and drop it from the
- * address bar, so it isn't left in the history, a bookmark or a shared screenshot.
+ * `/reset-password#code=<64 hex>`, the invitation link `/join#code=<10 hex>` and the email
+ * verification link `/verify-email#code=<64 hex>` (MAZ-172). A fragment never reaches the server or
+ * its logs; the routes read it once, keep the code here and drop it from the address bar, so it
+ * isn't left in the history, a bookmark or a shared screenshot.
  *
- * The reset code is a credential, so it stays in memory only: reloading the page asks for the
+ * The reset and verification codes are credentials, so they stay in memory only: reloading the page asks for the
  * code instead. The invite code waits in sessionStorage, so it survives a sign-in round trip
  * through the identity provider in this tab, and is removed once the join dialog is done with it.
  */
@@ -72,4 +73,37 @@ export function subscribeJoinCode(listener: () => void): () => void {
   return () => {
     listeners.delete(listener);
   };
+}
+
+/* ---------- email verification (MAZ-172) ---------- */
+
+let verifyCode: string | null = null;
+let verifyVersion = 0;
+const verifyListeners = new Set<() => void>();
+
+/** Keeps a verification code from the emailed link `/verify-email#code=<64 hex>`, in memory only. */
+export function keepVerifyCode(code: string | null): void {
+  const value = code?.toLowerCase() ?? "";
+  if (!RESET_CODE.test(value)) return;
+  verifyCode = value;
+  verifyVersion += 1;
+  for (const listener of verifyListeners) listener();
+}
+
+/** For `useSyncExternalStore`: changes with every link, so a link opened over the page starts afresh. */
+export const verifyCodeVersion = (): number => verifyVersion;
+
+export function subscribeVerifyCode(listener: () => void): () => void {
+  verifyListeners.add(listener);
+  return () => {
+    verifyListeners.delete(listener);
+  };
+}
+
+/** The kept verification code, if a link brought one. */
+export const peekVerifyCode = (): string | null => verifyCode;
+
+/** Forgets the verification code once it has been redeemed (or refused). */
+export function clearVerifyCode(): void {
+  verifyCode = null;
 }

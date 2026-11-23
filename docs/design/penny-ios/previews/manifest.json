@@ -1837,7 +1837,7 @@
     {
       "id": "iphone-unverified",
       "source": "docs/design/penny-ios/iphone/unverified.html",
-      "sourceSha256": "ff43837a1522588f995ee9f6be8a58856835c11cd0f51d2c723efed809e554f2",
+      "sourceSha256": "9ac73b0b10617157ce5489a40b7e0c73a322b07aabed673ad2e7de7851694f4d",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1846,19 +1846,19 @@
         {
           "appearance": "light",
           "file": "previews/iphone-unverified.light.png",
-          "sha256": "c31225cc8b1a3ddf07e2e48184150c66725d7f4c2e6178fb01fcff42902bd211"
+          "sha256": "1c6aea4ef2bff5d92c70226d9b8a4d3442ac8a8b8b15d7e762ffbb1b15687574"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-unverified.dark.png",
-          "sha256": "75a95d6246817d1c7b9c5ed23b4b0c26b4701c4b04f6cfc569564d78d47ac7c0"
+          "sha256": "c70a45dc45abeefbdbcb7c5a9d1efa098e97e326ec208483901b426dd66474f4"
         }
       ]
     },
     {
       "id": "iphone-verify-email",
       "source": "docs/design/penny-ios/iphone/verify-email.html",
-      "sourceSha256": "3243c110fea48b158c68e3879022f875a3976570d6788060439c015fc85dcc07",
+      "sourceSha256": "fd2f8bbceef728d0d0925dacae9f0669bb4c6e1dc7ee12a3bc17c143d44092c9",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1867,12 +1867,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-verify-email.light.png",
-          "sha256": "85e7b0d6866cf72ded20641d6b36c301080de372289dd6ecbcc0583efe28a02a"
+          "sha256": "3087b02def2d5fc588d79c7086b2fd853d36f278b1b14ba1c2b2d9f7a9f6cec3"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-verify-email.dark.png",
-          "sha256": "0b937f0c61edcea0ef8ed05f60c03c63a02d217745e3084adda0d3cc9dfcc49b"
+          "sha256": "c9929891e70de04e366a80b4956e76b01f61727b5cbb52442e2ec422dc793833"
         }
       ]
     },
@@ -2404,7 +2404,7 @@
     {
       "id": "web-email-verified",
       "source": "docs/design/penny-ios/web/email-verified.html",
-      "sourceSha256": "61c5cd86c2dcb0d2021dca7bc8e8e68572b44add1e2b7acd12564f9c10d8eb3a",
+      "sourceSha256": "7e64b123905a9fe29347f2da7497ea2a734d9b5fda71bd3fa48d77c7fc1ba4d5",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2413,12 +2413,12 @@
         {
           "appearance": "light",
           "file": "previews/web-email-verified.light.png",
-          "sha256": "69fab5b0fb3103ca1f9650a488e30a8daf0e727b6731e94845319d8138a98974"
+          "sha256": "0c94c647c0396e75cf72b422536b6523e20b171f5fedb15a446394154fe7b9ae"
         },
         {
           "appearance": "dark",
           "file": "previews/web-email-verified.dark.png",
-          "sha256": "82dd17fa21108e5e014edda197dabe941fbe382f317019fc6d4d11f06b57b02f"
+          "sha256": "f4681955726211632b7a67c5991e7be3c392736ddf284c01ac9d8eb47f6fdfe7"
         }
       ]
     },
@@ -3097,7 +3097,7 @@
     {
       "id": "web-verify-email",
       "source": "docs/design/penny-ios/web/verify-email.html",
-      "sourceSha256": "99f10b2ac214329bd9322835f4cb7c36552c7fdf64f3239c90d5b47de5261e70",
+      "sourceSha256": "067b4c8bcb80e6e3797a0c6cdeb35468c4dbcc8c04e633e9bc573c41a577098b",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -3106,12 +3106,12 @@
         {
           "appearance": "light",
           "file": "previews/web-verify-email.light.png",
-          "sha256": "b0ac76a7e44b9d36258e5df58896cb18217da8ed7830461ef6c3329237bd23d2"
+          "sha256": "37e10f77de60294f38aeadcd2f7cfcc30081b9766130ae83287be71fa9738911"
         },
         {
           "appearance": "dark",
           "file": "previews/web-verify-email.dark.png",
-          "sha256": "5fce05333d8f635fe1715ceff7323371e7bf180ac82e634ec411f3afced0164c"
+          "sha256": "6599c1754c9513683334180ecccd7f903d7a51221ece662ee82537630c5865ed"
         }
       ]
     }

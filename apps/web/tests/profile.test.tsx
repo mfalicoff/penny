@@ -19,6 +19,7 @@ const profile = (overrides: Record<string, unknown> = {}) => ({
   avatarEditable: true,
   needsName: false,
   signIn: "password",
+  emailVerified: true,
   ...overrides,
 });
 

@@ -5954,6 +5954,287 @@
           }
         ]
       }
+    },
+    "/api/auth/email-verification": {
+      "post": {
+        "summary": "Verify your email with an emailed code",
+        "operationId": "postApiAuthEmailVerification",
+        "description": "MAZ-172. Redeems the code from a verification email's link (`<Email__AppUrl>/verify-email#code=<code>`). Anonymous, so the link works on any device. The code is single use, expires after 48 hours, is replaced by every newer verification email and works only while the account still has the address it was sent to. Success records the email as verified (users.email_verified_at) and returns the address. Verification only records that the address is proven: nothing waits for it. Works while email is off too, for links sent before. Shares the sign-in rate limit; the origin policy applies. See docs/reference/authentication.md#email-verification-maz-172.",
+        "x-owner": "MAZ-172",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailVerificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The email is verified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailVerified"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`This verification link is invalid or has expired.` for a missing, malformed, unknown, used, superseded or expired code, or one sent to an earlier address; or `Invalid JSON.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (shared with sign-in).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/email-verification/resend": {
+      "post": {
+        "summary": "Send the verification email again",
+        "operationId": "postApiAuthEmailVerificationResend",
+        "description": "MAZ-172. Queues a new verification email to the signed-in account's address. The answer is 202 `{ok:true}` whether or not an email is queued: nothing is queued for a verified account, while an earlier one is still waiting, within 60 seconds of the last one, or past the daily limits (Email__RecipientMessagesPerDay, Email__AccountMessagesPerDay). Clients count the minute down before offering Resend again. The new email's code replaces the earlier one. No request body. Shares the sign-in rate limit.",
+        "x-owner": "MAZ-172",
+        "responses": {
+          "202": {
+            "description": "Accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`This server doesn't send email.` while email is off: verification is off, so clients show no unverified state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (shared with sign-in).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/email": {
+      "post": {
+        "summary": "Change your email",
+        "operationId": "postApiAuthEmail",
+        "description": "MAZ-172. A password account changes its email after confirming its password. The new address follows the sign-up rule (trimmed, lowercased, at most 254 characters). The account becomes unverified, a code sent to an earlier address stops working and, while the server sends email, a verification email goes to the new address. Sessions stay. The same address changes nothing. Returns the updated profile. Shares the sign-in rate limit.",
+        "x-owner": "MAZ-172",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`Enter a valid email address.`, a wrong or missing password (`Your current password is incorrect.`) or `Invalid JSON.` The session stays signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Untrusted origin, or an account that signs in with a provider (`Your sign-in provider manages your email. Change it with your provider.`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`Another account already uses this email.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (shared with sign-in).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8719,6 +9000,14 @@
           "passwordChangedAt": {
             "type": "integer",
             "description": "Unix milliseconds when a password account last changed its password (signed in or by reset). Omitted before the first change and for oidc accounts."
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "description": "MAZ-172. Whether the account's current email is proven: an emailed link was opened, the sign-in provider says so, an operator marked it, or the account existed before email verification. Nothing waits for it. Show the unverified state and Resend only while the server sends email (`emailEnabled` on /api/info)."
+          },
+          "emailVerifiedAt": {
+            "type": "integer",
+            "description": "MAZ-172. Unix milliseconds when the current email was verified. Omitted while unverified."
           }
         },
         "required": [
@@ -8727,7 +9016,8 @@
           "nameEditable",
           "avatarEditable",
           "needsName",
-          "signIn"
+          "signIn",
+          "emailVerified"
         ]
       },
       "ProfileUpdate": {
@@ -8859,6 +9149,51 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "EmailVerificationRequest": {
+        "type": "object",
+        "description": "An emailed verification code (MAZ-172).",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "EmailVerified": {
+        "type": "object",
+        "description": "The address an emailed link verified (MAZ-172).",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "EmailChange": {
+        "type": "object",
+        "description": "A signed-in email change for a password account (MAZ-172).",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "email",
+          "password"
         ]
       }
     }

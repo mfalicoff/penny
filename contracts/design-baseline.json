@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "66755a41a2e5b1a8fed5d80ab9cd327a583f8397b95c426a280118d58df7dbbe"
+      "sha256": "8fd348e07a4deac554873cce281a5b1486a5b6a4c6546514336920f350759bbf"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "1b54bdfc34fe8ff2ade8e03cc7b932b4f9f22e457c30c68584d80ad071bcd43b"
+      "sha256": "bc4b464bf1b43543070f37d1a9bfff322ec4d47de60b3888fc523d53c5d8dc22"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "e4ec9ae9d4d114fdc6ef8cb4dbbaa0d2b5d34543b26436c90bd859c81f90183b"
+      "sha256": "6259eac14e7ba2bf6427630bd0f08be2604fbc426637750ca456b53d97111995"
     }
   ],
   "tokens": {
@@ -2263,7 +2263,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/verify-email.html",
-      "sha256": "3243c110fea48b158c68e3879022f875a3976570d6788060439c015fc85dcc07",
+      "sha256": "fd2f8bbceef728d0d0925dacae9f0669bb4c6e1dc7ee12a3bc17c143d44092c9",
       "nativeIssue": "MAZ-172",
       "webIssue": "MAZ-172",
       "route": "/auth/callback",
@@ -2276,7 +2276,7 @@
     },
     {
       "id": "iphone-unverified",
-      "name": "Verify your email to share",
+      "name": "Verify your email on Shared",
       "group": "iPhone",
       "platform": "iPhone",
       "category": "Shared",
@@ -2286,7 +2286,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/unverified.html",
-      "sha256": "ff43837a1522588f995ee9f6be8a58856835c11cd0f51d2c723efed809e554f2",
+      "sha256": "9ac73b0b10617157ce5489a40b7e0c73a322b07aabed673ad2e7de7851694f4d",
       "nativeIssue": "MAZ-172",
       "webIssue": "MAZ-172",
       "route": "/households",
@@ -3580,7 +3580,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/verify-email.html",
-      "sha256": "99f10b2ac214329bd9322835f4cb7c36552c7fdf64f3239c90d5b47de5261e70",
+      "sha256": "067b4c8bcb80e6e3797a0c6cdeb35468c4dbcc8c04e633e9bc573c41a577098b",
       "nativeIssue": "MAZ-172",
       "webIssue": "MAZ-172",
       "route": "/auth/callback",
@@ -3603,7 +3603,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/email-verified.html",
-      "sha256": "61c5cd86c2dcb0d2021dca7bc8e8e68572b44add1e2b7acd12564f9c10d8eb3a",
+      "sha256": "7e64b123905a9fe29347f2da7497ea2a734d9b5fda71bd3fa48d77c7fc1ba4d5",
       "nativeIssue": "MAZ-172",
       "webIssue": "MAZ-172",
       "route": "/auth/callback",

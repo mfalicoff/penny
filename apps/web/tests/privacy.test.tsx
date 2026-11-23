@@ -13,7 +13,7 @@ function server(privacyPolicyUrl: string | null | undefined, signedIn = false) {
     if (url === "/api/auth/me" && !signedIn) return json({ error: "Please sign in to continue." }, 401);
     // Settings › Profile loads the profile before it renders its sections and the footer.
     if (url === "/api/profile" && signedIn) {
-      return json({ userId: "u".repeat(32), email: ALEX, nameEditable: true, avatarEditable: true, needsName: false, signIn: "password" });
+      return json({ userId: "u".repeat(32), email: ALEX, nameEditable: true, avatarEditable: true, needsName: false, signIn: "password", emailVerified: true });
     }
     return undefined;
   });

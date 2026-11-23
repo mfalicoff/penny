@@ -245,7 +245,7 @@ Rules the drafts follow:
 - **Provider buttons** follow Apple's and Google's button rules: Sign in with Apple is black (white in dark), Google is white with its outline (dark gray in dark), and both come before the server's SSO and email. The logos are drawn in the cards; they are the providers' marks, not kit icons.
 - **The privacy policy** is linked from sign-in, create account ("By creating an account you agree to the Privacy Policy."), Profile, Delete account, Privacy and both monitoring prompts. It opens in the browser.
 - **Without email on the server**, the existing cards apply: sign-in has no Forgot password (`iphone-sign-in`), invites use a code (`iphone-invite`), the operator's reset code uses `web-password-reset`, and nothing asks to verify.
-- **Unverified accounts** keep their personal ledger and can't create, join or be invited to households and trips (MAZ-172's recommendation), which `iphone-unverified` draws on the Shared tab.
+- **Unverified accounts** can do everything a verified one can, inviting and being invited included (owner decision on MAZ-172, 2026-11-23). Verification only shows the address is the person's. `iphone-unverified` draws a reminder with Resend link and Change email on the Shared tab, with New household and Join available.
 - **Reset and verification messages** never say whether an email is registered ("If max@example.com has a Penny account…").
 - **Monitoring** is off until the person chooses, and the prompt says what is never sent. Session replay is a web-only switch (`web-privacy`), since iOS replay stays in Embrace (MAZ-129).
 

@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useRef, useState, type SyntheticEvent, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { resendVerification } from "../../api/auth";
 import { ApiError } from "../../api/client";
+import { useEmailEnabled } from "../../api/info";
 import {
   AVATAR_ACCEPT,
   avatarMimeOf,
@@ -473,7 +475,60 @@ function SignInRow({ profile }: { profile: Profile }) {
         <span className="profile__row-title">{oidc ? (profile.provider ?? "Single sign-on") : profile.email}</span>
         <span className="profile__row-detail">{oidc ? profile.email : "Email and password"}</span>
       </span>
+      <EmailVerificationMark profile={profile} />
     </div>
+  );
+}
+
+/**
+ * The Sign-in row's verification state (MAZ-172, card `web-profile`): Verified, or, while the
+ * server sends email, Not verified with Resend link. Nothing waits for it, and without email
+ * delivery an unverified account shows nothing.
+ */
+function EmailVerificationMark({ profile }: { profile: Profile }) {
+  const emailEnabled = useEmailEnabled();
+  const toast = useToast();
+  const [sent, setSent] = useState(false);
+  const resend = useMutation({
+    mutationKey: ["auth", "email-verification", "resend"],
+    mutationFn: () => resendVerification(),
+    onSuccess: () => {
+      setSent(true);
+      toast.show({ title: "Link sent", detail: `Open the link we sent to ${profile.email} to verify it.` });
+    },
+    onError: (error) => {
+      toast.show({
+        title: "The link didn't send",
+        detail: error instanceof ApiError && error.status === 429 ? "Too many attempts. Wait a few minutes and try again." : PROFILE_MESSAGES.offline,
+      });
+    },
+  });
+  if (profile.emailVerified) {
+    return (
+      <span className="profile__verified">
+        <Icon name="checkmark-circle" size={15} />
+        Verified
+      </span>
+    );
+  }
+  if (!emailEnabled) return null;
+  return (
+    <span className="profile__unverified">
+      <span className="profile__unverified-label">
+        <Icon name="alert-circle" size={15} />
+        Not verified
+      </span>
+      {sent ? null : (
+        <Button
+          busy={resend.isPending}
+          onClick={() => {
+            resend.mutate();
+          }}
+        >
+          Resend link
+        </Button>
+      )}
+    </span>
   );
 }
 

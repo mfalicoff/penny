@@ -30,6 +30,27 @@ public sealed class MailTemplatesTests
         text.ShouldContain("penny.example.test");
     }
 
+    [Theory]
+    [InlineData("en", "Verify your email for Penny", "for 48 hours")]
+    [InlineData("fr", "Confirmez votre adresse courriel pour Penny", "pendant 48 heures")]
+    public void whenVerificationRendered_EmailVerification_ShouldLinkTheAppWithTheCodeInTheFragment(
+        string locale,
+        string subject,
+        string lifetime
+    )
+    {
+        var (title, text) = MailTemplates.EmailVerification(
+            locale,
+            AppUrl,
+            Token,
+            TimeSpan.FromHours(48)
+        );
+        title.ShouldBe(subject);
+        text.ShouldContain($"{AppUrl}/verify-email#code={Token}");
+        text.ShouldContain(lifetime);
+        text.ShouldContain("penny.example.test");
+    }
+
     [Fact]
     public void whenInviteRendered_HouseholdInvite_ShouldNameTheHouseholdAndFormatTheCode()
     {

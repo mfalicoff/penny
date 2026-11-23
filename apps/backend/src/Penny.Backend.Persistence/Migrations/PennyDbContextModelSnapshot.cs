@@ -26,6 +26,50 @@ namespace Penny.Backend.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.EmailVerification", b =>
+                {
+                    b.Property<string>("TokenHash")
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("TokenHash");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("email_verifications", "penny", t =>
+                        {
+                            t.HasCheckConstraint("CK_email_verifications_email", "length(email) BETWEEN 3 AND 254");
+
+                            t.HasCheckConstraint("CK_email_verifications_expiry", "expires_at > created_at");
+
+                            t.HasCheckConstraint("CK_email_verifications_token_hash", "token_hash ~ '^[0-9a-f]{64}$'");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Household", b =>
                 {
                     b.Property<string>("Id")
@@ -1327,7 +1371,7 @@ namespace Penny.Backend.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_mail_outbox_attempts", "attempts >= 0");
 
-                            t.HasCheckConstraint("ck_mail_outbox_kind", "(kind = 'password-reset' AND user_id IS NOT NULL AND email_invite_id IS NULL) OR (kind = 'household-invite' AND email_invite_id IS NOT NULL AND user_id IS NULL)");
+                            t.HasCheckConstraint("ck_mail_outbox_kind", "(kind IN ('password-reset', 'email-verification') AND user_id IS NOT NULL AND email_invite_id IS NULL) OR (kind = 'household-invite' AND email_invite_id IS NOT NULL AND user_id IS NULL)");
 
                             t.HasCheckConstraint("ck_mail_outbox_lease", "(lease_owner IS NULL) = (lease_token IS NULL) AND (lease_token IS NULL) = (lease_expires_at IS NULL)");
 
@@ -2379,6 +2423,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("email")
                         .UseCollation("C");
 
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("email_verified_at");
+
                     b.Property<bool>("NameFromProvider")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -2442,6 +2490,15 @@ namespace Penny.Backend.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_user_avatars_mime", "mime = 'image/webp'");
                         });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.EmailVerification", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Household", b =>

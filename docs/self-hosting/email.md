@@ -1,6 +1,6 @@
 # Email delivery (optional)
 
-Penny can send two kinds of email through any SMTP server or provider: **password reset links** and **household and trip invitations**. Email is off by default. A server without email settings works exactly as before: resets use an operator-issued code ([password reset](../reference/authentication.md#password-reset-maz-123)) and people share invite codes themselves.
+Penny can send three kinds of email through any SMTP server or provider: **password reset links**, **household and trip invitations** and **email verification links**. Email is off by default. A server without email settings works exactly as before: resets use an operator-issued code ([password reset](../reference/authentication.md#password-reset-maz-123)) and people share invite codes themselves.
 
 `GET /api/info` tells the apps which flow to show (`emailEnabled`). With email on, the sign-in screen's "Forgot password?" asks for an email, and a household's Invite can send an email. With it off, the apps offer the reset-code and shared-code flows.
 
@@ -9,6 +9,7 @@ Penny can send two kinds of email through any SMTP server or provider: **passwor
 | Email | Sent when | Contains |
 | --- | --- | --- |
 | Reset your password | Someone asks on the sign-in screen and the address has an account | A link to `<Email__AppUrl>/reset-password#code=<code>`. The code works once, for `Auth__PasswordResetHours` (24 by default), and replaces any earlier code, including one from the `reset-password` command |
+| Verify your email | Someone creates a password account, changes its email, or asks to resend | A link to `<Email__AppUrl>/verify-email#code=<code>`. The code works once, for 48 hours, replaces any earlier one and stops working if the account's email changes ([email verification](../reference/authentication.md#email-verification-maz-172)) |
 | Invitation | The creator of a household or trip invites an address, or resends | The household or trip name, the inviter's display name, a link to `<Email__AppUrl>/join#code=<code>` and the code itself. It works once, for `Email__InviteHours` (72 by default). The invitee still accepts it in the app |
 
 Emails are plain text, in English or French (the requester's browser or app language). They contain no amounts, entries or other financial data. Links only point to `Email__AppUrl`, which must be one of `Auth__AllowedOrigins`. Codes are in the URL fragment (after `#`), which browsers never send to a server, so they don't end up in proxy access logs.
@@ -84,7 +85,7 @@ Use a sender address on the domain these records cover. Free-mail addresses (a p
 ## Rate limits and abuse
 
 - A reset request always answers the same, whether or not the address has an account, and whether or not an email is sent. Requests share the sign-in rate limit per client (`Auth__RateLimitPermits`).
-- While a reset email for an account is waiting to be sent, more requests for it send nothing extra.
+- While a reset email for an account is waiting to be sent, more requests for it send nothing extra. A verification email is resent at most once a minute, and never to a verified account.
 - Past `Email__RecipientMessagesPerDay` or `Email__AccountMessagesPerDay`, reset requests still answer the same but send nothing; invitations answer `429 Too many invitation emails today…`.
 - Requests from two different accounts at the same moment can each pass the recipient check once, so a burst can exceed the recipient limit by a message or two.
 
@@ -95,6 +96,10 @@ The worker sends up to 10 emails per pass over one connection. A temporary failu
 Delivery is at least once: if the API stops between sending and recording, the email is sent again on restart with a new code.
 
 Finished outbox rows are deleted after 7 days.
+
+## Without email: verification
+
+New password accounts are verified through the emailed link. Without email, verification is off: nothing is sent, the apps show no unverified state, and nothing in Penny waits for it. To mark an account verified anyway, for example before turning email on, run `verify-email EMAIL` with the API's configuration ([email verification](../reference/authentication.md#email-verification-maz-172)).
 
 ## Troubleshooting
 

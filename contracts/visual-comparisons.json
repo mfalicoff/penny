@@ -2244,11 +2244,6 @@
         "note": "Profile is a page styled as the sheet; the seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
           {
-            "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
-            "kind": "follow-up",
-            "ref": "MAZ-172"
-          },
-          {
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
@@ -2366,7 +2361,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-172",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification.",
+        "note": "The iPhone card is the native app's (MAZ-172 phase 2). On a phone the web shows its own /verify-email page, the web-verify-email card's.",
         "followUp": "MAZ-172"
       }
     },
@@ -2376,13 +2371,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-172",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no email verification, so sharing is never held back.",
+        "note": "The card now shows a reminder on the Shared tab with Resend link and Change email; sharing stays available (owner decision, MAZ-172: no feature waits for verification). Built in MAZ-172 phase 2.",
         "followUp": "MAZ-172"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-172",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification, so sharing is never held back.",
+        "note": "The native app's Shared tab reminder. The web shows the unverified state and Resend link in Settings › Profile.",
         "followUp": "MAZ-172"
       }
     },
@@ -2878,11 +2873,6 @@
         ],
         "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
-          {
-            "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
-            "kind": "follow-up",
-            "ref": "MAZ-172"
-          },
           {
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
@@ -3508,11 +3498,6 @@
         "note": "The seeded account has no picture, so initials show and the button reads Add picture. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
           {
-            "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
-            "kind": "follow-up",
-            "ref": "MAZ-172"
-          },
-          {
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
@@ -3564,10 +3549,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-172",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification.",
-        "followUp": "MAZ-172"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The test environment has no SMTP server, so the capture stubs emailEnabled and reports the seeded account as unverified. Layout, icon tile, the note's copy (no feature waits for verification, owner decision on MAZ-172), Continue to Penny and the Resend in 0:42 · Change email line match."
       }
     },
     {
@@ -3579,10 +3568,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-172",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification.",
-        "followUp": "MAZ-172"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The link's code is answered by a stub in the capture. Layout, check tile, the \"is confirmed as yours.\" line, Open Penny and the other-device line match."
       }
     },
     {

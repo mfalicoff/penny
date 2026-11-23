@@ -11,6 +11,7 @@ public static class MailTemplates
 {
     public const string ResetPath = "/reset-password#code=";
     public const string JoinPath = "/join#code=";
+    public const string VerifyPath = "/verify-email#code=";
 
     public static (string Subject, string Text) PasswordReset(
         string locale,
@@ -47,6 +48,46 @@ public static class MailTemplates
                     "",
                     "Every device signed in to your account is then signed out.",
                     "If you didn't ask, ignore this email. Your password stays the same.",
+                    "",
+                    $"Penny · {host}"
+                )
+            );
+    }
+
+    // MAZ-172: proves the address. It names only the server, like a password reset.
+    public static (string Subject, string Text) EmailVerification(
+        string locale,
+        string appUrl,
+        string token,
+        TimeSpan lifetime
+    )
+    {
+        var host = Host(appUrl);
+        var link = appUrl + VerifyPath + token;
+        var hours = Hours(lifetime);
+        return locale == MailLocales.French
+            ? (
+                "Confirmez votre adresse courriel pour Penny",
+                Lines(
+                    $"Confirmez que cette adresse est bien la vôtre pour votre compte Penny sur {host}.",
+                    "",
+                    $"Ouvrez ce lien pour la confirmer. Il fonctionne une seule fois, pendant {hours} {Plural(hours, "heure", "heures")} :",
+                    link,
+                    "",
+                    "Si vous n'avez pas créé de compte Penny, ignorez ce courriel.",
+                    "",
+                    $"Penny · {host}"
+                )
+            )
+            : (
+                "Verify your email for Penny",
+                Lines(
+                    $"Confirm that this address is yours for your Penny account on {host}.",
+                    "",
+                    $"Open this link to verify it. It works once, for {hours} {Plural(hours, "hour", "hours")}:",
+                    link,
+                    "",
+                    "If you didn't create a Penny account, ignore this email.",
                     "",
                     $"Penny · {host}"
                 )

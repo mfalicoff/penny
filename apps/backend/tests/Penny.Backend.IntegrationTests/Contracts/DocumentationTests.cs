@@ -126,6 +126,10 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/households/{id}/email-invites", "post"),
                 ("/api/households/{id}/email-invites/{inviteId}/resend", "post"),
                 ("/api/households/{id}/email-invites/{inviteId}", "delete"),
+                // Email verification (MAZ-172).
+                ("/api/auth/email-verification", "post"),
+                ("/api/auth/email-verification/resend", "post"),
+                ("/api/auth/email", "post"),
             }
         )
         {
