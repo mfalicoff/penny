@@ -197,7 +197,7 @@ struct SharedDeleteConfirmation: ViewModifier {
     private func subject(_ target: SharedDeleteRequest) -> DeleteConfirmationSheet.Subject {
         let people = shell.households.model(for: target.householdId)?.people
         let current = people?.current ?? []
-        let others = current.filter { $0.userId != people?.meId }.map(\.email)
+        let others = current.filter { $0.userId != people?.meId }.map(\.shownName)
         let month = MonthPicker.title(MonthKey(target.date), long: false)
         let currency = shell.households.model(for: target.householdId)?.currency ?? shell.currency
         return DeleteConfirmationSheet.Subject(
@@ -207,7 +207,7 @@ struct SharedDeleteConfirmation: ViewModifier {
                 place: target.householdName.isEmpty ? nil : target.householdName,
                 currency: currency),
             symbol: target.symbol, color: target.color,
-            members: current.map { HouseholdPeople.initials(email: $0.email) },
+            members: current.map { people?.face($0.userId) ?? PersonFace(initials: "?") },
             noteSymbol: "person.2", note: SharedDeleteRequest.note(others: others, month: month),
             confirmTitle: "Delete for everyone")
     }

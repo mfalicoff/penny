@@ -557,7 +557,7 @@ struct HouseholdPage: View {
     /// color (never red), settled is muted. The month is chosen in the section headers below.
     private func householdHero(_ household: WireHousehold) -> some View {
         VStack(spacing: 6) {
-            MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) }, size: 44)
+            MonogramStack(faces: model.people.current.map { model.people.face($0.userId) }, size: 44)
                 .padding(.bottom, 4)
             Text(household.name).font(.title2.weight(.bold))
                 .multilineTextAlignment(.center)
@@ -578,7 +578,7 @@ struct HouseholdPage: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 8)
-                MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) }, size: 30)
+                MonogramStack(faces: model.people.current.map { model.people.face($0.userId) }, size: 30)
             }
             Text(
                 "\(HouseholdText.shortMonth(model.month)) · "
@@ -899,7 +899,7 @@ struct HouseholdPage: View {
             PanelTitle("People", detail: "\(HouseholdText.shortMonth(model.month)) balance")
             ForEach(model.people.current) { member in
                 HStack(spacing: 12) {
-                    Monogram(initials: model.people.initials(member.userId), size: 30)
+                    Monogram(face: model.people.face(member.userId), size: 30)
                     Text(model.people.name(member.userId)).font(.body).lineLimit(2)
                     Spacer(minLength: 8)
                     MemberBalance(
@@ -1008,7 +1008,7 @@ struct HouseholdPage: View {
         switch confirm {
         case .leave: "Leave \(model.household?.name ?? "this household")?"
         case .archive: "Archive \(model.household?.name ?? "this household")?"
-        case .remove(let member): "Remove \(member.email)?"
+        case .remove(let member): "Remove \(member.shownName)?"
         case nil: ""
         }
     }
@@ -1030,7 +1030,7 @@ struct HouseholdPage: View {
             "Nobody can add or change anything afterwards, and invites stop working. Everyone must be settled in "
                 + "every month. History stays readable."
         case .remove(let member):
-            "\(member.email) stops seeing new expenses and keeps their history. They need a zero balance in every "
+            "\(member.shownName) stops seeing new expenses and keeps their history. They need a zero balance in every "
                 + "month first."
         }
     }
@@ -1069,7 +1069,7 @@ struct SharedExpenseRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Monogram(initials: people.initials(expense.payerUserId))
+            Monogram(face: people.face(expense.payerUserId))
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.title).font(.callout.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
@@ -1144,7 +1144,7 @@ private struct BalanceRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Monogram(initials: people.initials(balance.userId))
+            Monogram(face: people.face(balance.userId))
             VStack(alignment: .leading, spacing: 2) {
                 Text(people.name(balance.userId)).font(.body.weight(.semibold))
                 Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
@@ -1236,9 +1236,9 @@ private struct MemberRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Monogram(initials: people.initials(member.userId))
+            Monogram(face: people.face(member.userId))
             VStack(alignment: .leading, spacing: 2) {
-                Text(member.userId == people.meId ? "\(member.email) (you)" : member.email)
+                Text(member.userId == people.meId ? "\(member.shownName) (you)" : member.shownName)
                     .font(.body.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
                 Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
@@ -1329,7 +1329,7 @@ private struct SelectedExpenseSection: View {
         Section {
             ForEach(expense.splits.filter { $0.amountCents > 0 }, id: \.userId) { split in
                 HStack(spacing: 12) {
-                    Monogram(initials: people.initials(split.userId))
+                    Monogram(face: people.face(split.userId))
                     Text(
                         split.userId == expense.payerUserId
                             ? "\(people.name(split.userId)) · payer" : people.name(split.userId)
@@ -1460,7 +1460,7 @@ private struct WideBalanceRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Monogram(initials: people.initials(balance.userId), size: 30)
+            Monogram(face: people.face(balance.userId), size: 30)
             Text(people.name(balance.userId)).font(.body).lineLimit(2)
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 4) {

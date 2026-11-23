@@ -28,7 +28,7 @@ public final class HouseholdDirectory {
     public private(set) var households: [WireHousehold] = []
     /// The viewer's balance in each household's current month, when it could be read.
     public private(set) var balances: [String: Int64] = [:]
-    public private(set) var memberInitials: [String: [String]] = [:]
+    public private(set) var memberFaces: [String: [PersonFace]] = [:]
     /// The viewer's user id, from the first household whose members could be read.
     public private(set) var meId: String?
     public private(set) var load: HouseholdLoad = .idle
@@ -67,16 +67,16 @@ public final class HouseholdDirectory {
             let month = month()
             let email = email
             var balances: [String: Int64] = [:]
-            var initials: [String: [String]] = [:]
+            var initials: [String: [PersonFace]] = [:]
             var meId: String?
-            await withTaskGroup(of: (String, Int64?, [String], String?).self) { group in
+            await withTaskGroup(of: (String, Int64?, [PersonFace], String?).self) { group in
                 for household in list {
                     group.addTask {
                         async let detail = try? service.household(id: household.id)
                         async let recap = try? service.monthRecap(householdId: household.id, month: month)
                         let people = await detail.map { HouseholdPeople(members: $0.members, email: email) }
                         let balance = await recap.map { $0.balance(of: people?.meId) }
-                        let letters = people.map { people in people.current.map { people.initials($0.userId) } } ?? []
+                        let letters = people.map { people in people.current.map { people.face($0.userId) } } ?? []
                         return (household.id, balance, letters, people?.meId)
                     }
                 }
@@ -87,7 +87,7 @@ public final class HouseholdDirectory {
                 }
             }
             self.balances = balances
-            memberInitials = initials
+            memberFaces = initials
             if let meId { self.meId = meId }
             load = .loaded
         } catch is CancellationError {

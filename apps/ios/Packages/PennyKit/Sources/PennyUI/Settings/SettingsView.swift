@@ -24,9 +24,9 @@ struct SettingsView: View {
         let currencyLocked = ledger.map { CurrencyPolicy.lockReason(ledger: $0) != nil } ?? false
         List {
             Section {
-                // The account opens its details (server, email, status); the demo has none.
+                // The account opens its profile (MAZ-171); the demo has none.
                 if shell.account != nil {
-                    pageLink(.server) { _ in AccountHeader() }
+                    pageLink(.profile) { _ in AccountHeader() }
                         .accessibilityIdentifier("settings.account")
                 } else {
                     AccountHeader()
@@ -94,22 +94,23 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    // Read-only, as on the card: the host, why it can't change, and a lock. The
-                    // account row above opens the server's details.
-                    HStack {
-                        Label {
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(ServerText.host(account.server)).lineLimit(1)
-                                Text("Sign out to change servers").font(.footnote)
-                                    .foregroundStyle(PennyColor.secondaryLabel)
+                    // Read-only, as on the card: the host, why it can't change, and a lock (no
+                    // chevron). It opens the server's details (version, connection, status).
+                    pageLink(.server, chevron: false) { selected in
+                        HStack {
+                            Label {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(ServerText.host(account.server)).lineLimit(1)
+                                    Text("Sign out to change servers").font(.footnote)
+                                        .foregroundStyle(Self.valueStyle(selected))
+                                }
+                            } icon: {
+                                Image(systemName: "server.rack")
                             }
-                        } icon: {
-                            Image(systemName: "server.rack")
+                            Spacer()
+                            Self.lockMark(selected)
                         }
-                        Spacer()
-                        Self.lockMark(false)
                     }
-                    .cardSettingsRow()
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("settings.server")
                 } header: {
@@ -225,8 +226,8 @@ struct SettingsView: View {
     }
 }
 
-/// The account (or demo) with its sync status: a monogram, the account and, when synced, a
-/// green cloud (`settings` card).
+/// The account (or demo) with its sync status: its picture or monogram, its name (else its email,
+/// MAZ-171) and, when synced, a green cloud (`settings` card).
 private struct AccountHeader: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.settingsRowSelected) private var selected
@@ -234,28 +235,39 @@ private struct AccountHeader: View {
     var body: some View {
         let sync = shell.workspace.sync
         HStack(spacing: 14) {
-            Monogram(initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "D", size: 52)
+            Monogram(face: shell.accountFace, size: 52)
             VStack(alignment: .leading, spacing: 2) {
-                Text(shell.account?.email ?? "Demo account").font(.title3.weight(.bold)).lineLimit(1)
-                HStack(spacing: 5) {
-                    Image(systemName: SyncText.symbol(sync))
-                        .foregroundStyle(Self.symbolStyle(sync, selected: selected))
-                        .accessibilityHidden(true)
-                    Text(SyncText.line(sync))
+                Text(shell.accountName).font(.title3.weight(.bold)).lineLimit(1)
+                // iPad (`ipad-settings`): the email under a name; the sidebar shows the sync status.
+                if shell.route.settingsIsColumn, let account = shell.account, shell.profile.displayName != nil {
+                    Text(account.email).font(.subheadline)
+                        .foregroundStyle(selected ? Color.white.opacity(0.85) : PennyColor.secondaryLabel)
+                        .lineLimit(1)
+                } else {
+                    syncLine(sync)
                 }
-                .font(.subheadline)
-                .foregroundStyle(
-                    selected
-                        ? Color.white.opacity(0.85)
-                        : sync.needsAttention ? PennyColor.pending : PennyColor.secondaryLabel
-                )
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("settings.syncStatus")
             }
             Spacer(minLength: 0)
         }
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
+    }
+
+    private func syncLine(_ sync: SyncStatus) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: SyncText.symbol(sync))
+                .foregroundStyle(Self.symbolStyle(sync, selected: selected))
+                .accessibilityHidden(true)
+            Text(SyncText.line(sync))
+        }
+        .font(.subheadline)
+        .foregroundStyle(
+            selected
+                ? Color.white.opacity(0.85)
+                : sync.needsAttention ? PennyColor.pending : PennyColor.secondaryLabel
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("settings.syncStatus")
     }
 
     /// Green once synced, as on the card; amber when something needs attention.
@@ -286,6 +298,7 @@ struct SettingsPage: View {
         case .server: ServerPage()
         case .receiptEmail: ReceiptEmailSettingsView()
         case .receiptInbox: ReceiptInboxView()
+        case .profile: ProfileView()
         }
     }
 }

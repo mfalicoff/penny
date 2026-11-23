@@ -101,8 +101,8 @@ struct EntryHouseholdSheet: View {
     @Environment(\.dismiss) private var dismiss
     let households: [WireHousehold]
     let current: String?
-    /// The account's monogram on the Personal row.
-    var initials = ""
+    /// The account's picture or monogram on the Personal row.
+    var face = PersonFace(initials: "?")
     let choose: (String?) -> Void
 
     var body: some View {
@@ -164,7 +164,7 @@ struct EntryHouseholdSheet: View {
                         .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                         .accessibilityHidden(true)
                 } else {
-                    Monogram(initials: initials.isEmpty ? "?" : initials)
+                    Monogram(face: face)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).foregroundStyle(PennyColor.label)

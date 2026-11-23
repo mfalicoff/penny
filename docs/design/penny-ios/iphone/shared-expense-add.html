@@ -26,8 +26,6 @@
   .al { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; position: relative; font-size: 16px; }
   .al + .al::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; border-top: .5px solid var(--separator); }
   .al .avatar { width: 30px; height: 30px; font-size: 11px; border: 0; }
-  .al .ck { width: 22px; height: 22px; border-radius: 50%; background: var(--tint); color: #fff; display: grid; place-items: center; }
-  .al .ck [data-i] { width: 14px; height: 14px; --sw: 64px; }
   .al .v { margin-left: auto; font-weight: 600; }
   .al .v.me { color: var(--label); }
   .yours { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding: 14px 16px; border-radius: 16px; background: var(--fill); font-size: 15px; }
@@ -64,9 +62,9 @@
       <div class="lbl"><span>Split</span></div>
       <div class="seg"><div class="on">Equally</div><div>Amounts</div><div>Percent</div></div>
       <div class="alloc">
-        <div class="al"><span class="ck"><i data-i="checkmark"></i></span><span class="avatar mono">MF</span>You<span class="v num me">$32.10</span></div>
-        <div class="al"><span class="ck"><i data-i="checkmark"></i></span><span class="avatar mono">MI</span>Mira<span class="v num">$32.10</span></div>
-        <div class="al"><span class="ck"><i data-i="checkmark"></i></span><span class="avatar mono">JS</span>Jo<span class="v num">$32.10</span></div>
+        <div class="al"><span class="avatar mono">MF</span>You<span class="v num me">$32.10</span></div>
+        <div class="al"><span class="avatar mono">MI</span>Mira<span class="v num">$32.10</span></div>
+        <div class="al"><span class="avatar mono">JS</span>Jo<span class="v num">$32.10</span></div>
       </div>
       <div class="yours"><span>Your share <span style="color:var(--label-2)">· in your spending</span></span><b class="num">$32.10</b></div>
       <div class="opts">

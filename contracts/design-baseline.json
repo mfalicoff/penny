@@ -903,7 +903,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/shared-expense-add.html",
-      "sha256": "fb5c5f71a646fd264d6cca99954df0c2b73fd99a5552f9595c4a3d574a76dfdf",
+      "sha256": "3aa6a7e7d00c31bb8a2854f7e8d761b6387590acb57d16b2092dd6fca255711c",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",

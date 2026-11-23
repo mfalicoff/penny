@@ -4,35 +4,70 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// A person as a gray monogram, like iOS Contacts (people never get a meaning color).
+/// A person: their picture (MAZ-171), else a gray monogram like iOS Contacts (people never get a
+/// meaning color). Pictures load once per URL through the shell's `AvatarStore`; without one (the
+/// demo, previews), or while loading, or when the server has none for this viewer, the monogram
+/// shows.
 struct Monogram: View {
     let initials: String
+    let avatarUrl: String?
     @ScaledMetric private var size: Double
+    /// Pictures come from the shell's store; outside a shell (previews) the monogram shows.
+    @Environment(ShellModel.self) private var shell: ShellModel?
+    private var avatars: AvatarStore? { shell?.avatars }
 
-    init(initials: String, size: Double = 34) {
+    init(initials: String, avatarUrl: String? = nil, size: Double = 34) {
         self.initials = initials
+        self.avatarUrl = avatarUrl
         _size = ScaledMetric(wrappedValue: size, relativeTo: .body)
     }
 
+    init(face: PersonFace, size: Double = 34) {
+        self.init(initials: face.initials, avatarUrl: face.avatarUrl, size: size)
+    }
+
     var body: some View {
-        Text(initials)
-            .font(.system(size: size * 0.36, weight: .bold))
-            .foregroundStyle(PennyColor.monogramLabel)
-            .frame(width: size, height: size)
-            .background(PennyColor.monogram, in: Circle())
-            .accessibilityHidden(true)
+        Group {
+            if let image = AvatarImage.image(avatars?.data(avatarUrl)) {
+                image.resizable().scaledToFill()
+            } else {
+                Text(initials)
+                    .font(.system(size: size * 0.36, weight: .bold))
+                    .foregroundStyle(PennyColor.monogramLabel)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(PennyColor.monogram)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .accessibilityHidden(true)
+        .task(id: avatarUrl) {
+            if let avatarUrl, let avatars { await avatars.load(avatarUrl) }
+        }
     }
 }
 
-/// Overlapping monograms for a household's members.
+/// Decodes a downloaded picture for display.
+enum AvatarImage {
+    static func image(_ data: Data?) -> Image? {
+        guard let data else { return nil }
+        #if canImport(UIKit)
+            return UIImage(data: data).map { Image(uiImage: $0) }
+        #else
+            return NSImage(data: data).map { Image(nsImage: $0) }
+        #endif
+    }
+}
+
+/// Overlapping pictures or monograms for a household's members.
 struct MonogramStack: View {
-    let initials: [String]
+    let faces: [PersonFace]
     var size: Double = 34
 
     var body: some View {
         HStack(spacing: -size * 0.2) {
-            ForEach(Array(initials.prefix(4).enumerated()), id: \.offset) { _, letters in
-                Monogram(initials: letters, size: size)
+            ForEach(Array(faces.prefix(4).enumerated()), id: \.offset) { _, face in
+                Monogram(face: face, size: size)
                     .overlay(Circle().stroke(PennyColor.surface, lineWidth: size >= 40 ? 3 : 1.5))
             }
         }

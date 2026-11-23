@@ -321,7 +321,7 @@ struct HouseholdModelTests {
         #expect(directory.load == .loaded)
         #expect(directory.households.map(\.name) == ["Apartment"])
         #expect(directory.balances[FakeHouseholds.home] == 6000)
-        #expect(directory.memberInitials[FakeHouseholds.home]?.count == 3)
+        #expect(directory.memberFaces[FakeHouseholds.home]?.count == 3)
         #expect(directory.overallBalance == 6000)
     }
 

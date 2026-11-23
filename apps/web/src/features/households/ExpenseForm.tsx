@@ -133,7 +133,7 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
  * Add or edit a shared expense, or edit a repeating one (cards `iphone-shared-expense-add`,
  * `iphone-split`; specimens `shared-expense`, `shared-split`, `shared-payer`), in the card's order:
  * the amount; the title with the category as a pill in its field (it opens every category); Paid by
- * as filled pills; the split mode and each person's share, checked as included; your share; then
+ * as filled pills; the split mode and each person's share (everyone on the date is included); your share; then
  * Date, your account and the "Receipt, repeat, note" row, which opens repeat, note and receipt in
  * place (MAZ-278). Save is in the footer (also ⌘↵ or Ctrl+Enter). A new one opened from Add entry (`scope`) also shows the type
  * and Household, so it can go back to being a personal entry without losing what was typed.
@@ -520,16 +520,13 @@ export function ExpenseFormDialog({
                 { value: "percent", label: "Percent", disabled: paid },
               ]}
             />
-            {/* Card `.alloc`: everyone on the expense's date is in the split, so each row is checked. */}
+            {/* Card `.alloc`: everyone on the expense's date is in the split, so there is nothing to tick (owner decision, MAZ-171). */}
             <ul className="split-rows split-rows--card" aria-label="Shares" aria-describedby={ids.splitWho}>
               {participants.map((member) => {
                 const share = preview?.shares?.find((item) => item.userId === member.userId)?.amountCents;
                 const name = member.userId === meId ? "You" : memberName(member);
                 return (
-                  <li key={member.userId} className="split-row split-row--checked">
-                    <span className="split-row__check" aria-hidden="true">
-                      <Icon name="checkmark" size={14} weight={64} />
-                    </span>
+                  <li key={member.userId} className="split-row">
                     <Avatar name={memberName(member)} src={member.avatarUrl} size={30} />
                     <span className="split-row__name">{name}</span>
                     {draft.splitMode === "equal" ? (
@@ -689,7 +686,7 @@ function moreSummary(draft: Draft, repeats: boolean): string {
   return parts.join(" · ");
 }
 
-/** Who the split includes, read with the shares (the card shows only the checked rows). */
+/** Who the split includes, read with the shares (the card lists everyone included). */
 function splitWhoText(rule: boolean, trip: unknown, total: number | null): string {
   const who = rule ? "Everyone in the household when each one is added is included." : trip ? "Everyone on the trip is included." : "Everyone who was a member on the expense date is included; people who join later aren't.";
   return total === null || total < 1 ? `${who} Enter the total to see each share.` : who;

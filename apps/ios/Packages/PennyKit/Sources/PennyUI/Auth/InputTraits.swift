@@ -66,3 +66,16 @@ extension View {
         #endif
     }
 }
+
+extension View {
+    /// A person's name (MAZ-171): AutoFill's name, words capitalized, no autocorrection.
+    func personNameEntry() -> some View {
+        #if os(iOS)
+            textContentType(.name)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+        #else
+            autocorrectionDisabled()
+        #endif
+    }
+}

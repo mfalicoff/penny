@@ -408,7 +408,7 @@ private struct EntryForm: View {
             case .household:
                 EntryHouseholdSheet(
                     households: scope?.households ?? [], current: nil,
-                    initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? ""
+                    face: shell.accountFace
                 ) { id in
                     pendingHousehold = .some(id)
                 }

@@ -171,7 +171,7 @@ struct PaymentSheet: View {
 
     private func personColumn(_ userId: String, verb: String) -> some View {
         VStack(spacing: 4) {
-            Monogram(initials: model.people.initials(userId), size: 64)
+            Monogram(face: model.people.face(userId), size: 64)
                 .padding(.bottom, 6)
             Text(model.people.name(userId)).font(.body.weight(.semibold))
                 .lineLimit(2).multilineTextAlignment(.center)

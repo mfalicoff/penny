@@ -26,8 +26,17 @@ struct AppShell: View {
         // Today moves on at midnight and when the app comes back, so income dated on the new
         // day leaves Expected for Left to spend without a relaunch (MAZ-136).
         .task { await shell.followDayChanges() }
+        // The account's name and picture, and whether to ask for a name (MAZ-171).
+        .task { await shell.profile.refreshSummary() }
+        .sheet(isPresented: namePrompt) {
+            NamePromptSheet().environment(shell)
+        }
         .onChange(of: scenePhase) {
-            if scenePhase == .active { shell.refreshToday() }
+            if scenePhase == .active {
+                shell.refreshToday()
+                // A name or picture changed on another device shows when the app comes back.
+                Task { await shell.profile.refreshSummary() }
+            }
         }
         // On iPad Settings is the detail column, so Add entry opens over it instead of closing
         // it (ShellRoute.settingsIsColumn). In a compact width it is a sheet again, and only one
@@ -47,6 +56,17 @@ struct AppShell: View {
             NavigationStack { CalendarView().pennySolidBars() }.environment(shell)
         }
         .accessibilityIdentifier(shell.isDemo ? "root.demo" : "root.signedIn")
+    }
+
+    /// "What should people call you?" over Home, once, while no other sheet is up.
+    private var namePrompt: Binding<Bool> {
+        Binding(
+            get: {
+                shell.profile.showsNamePrompt && !shell.route.isAddEntryPresented && shell.editingEntry == nil
+                    && !shell.route.isCalendarPresented && !shell.route.isSettingsPresented
+                    && shell.route.householdStart == nil
+            },
+            set: { shown in if !shown { shell.profile.markPromptShown() } })
     }
 }
 
@@ -436,7 +456,7 @@ private struct SidebarHeader: View {
     }
 }
 
-/// The account's monogram, its name (the email until profiles, MAZ-171) and sync status, and
+/// The account's picture or monogram, its name (else its email, MAZ-171) and sync status, and
 /// Settings, which is selected (a tinted gear on a filled row) while Settings is shown.
 private struct SidebarFooter: View {
     @Bindable var shell: ShellModel
@@ -444,9 +464,9 @@ private struct SidebarFooter: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Monogram(initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "D", size: 40)
+            Monogram(face: shell.accountFace, size: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text(shell.account?.email ?? "Demo account").font(.subheadline.weight(.semibold)).lineLimit(1)
+                Text(shell.accountShortName).font(.subheadline.weight(.semibold)).lineLimit(1)
                 Text(SyncText.line(shell.workspace.sync)).font(.footnote)
                     .foregroundStyle(PennyColor.secondaryLabel)
             }

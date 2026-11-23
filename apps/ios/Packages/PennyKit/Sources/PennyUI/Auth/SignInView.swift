@@ -12,7 +12,7 @@ struct SignInView: View {
         case createAccount
     }
 
-    enum Field: Hashable { case email, password }
+    enum Field: Hashable { case name, email, password }
 
     let auth: AuthController
     let mode: Mode
@@ -20,6 +20,7 @@ struct SignInView: View {
     var onSwitchMode: () -> Void
 
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+    @State private var name = ""
     @State private var email = ""
     @State private var password = ""
     @State private var failure: String?
@@ -63,6 +64,16 @@ struct SignInView: View {
                 .accessibilityIdentifier(mode == .signIn ? "auth.signIn" : "auth.createAccount")
                 .padding(.top, mode == .signIn ? 18 : 26)
                 if mode == .signIn { singleSignOn }
+                // MAZ-169: the agreement under Create account (`iphone-create-account`).
+                if mode == .createAccount, let policy = auth.server?.privacyPolicy {
+                    Text(PrivacyPolicyText.agreement(policy))
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 14)
+                        .accessibilityIdentifier("legal.privacyPolicy")
+                }
                 AuthLink(
                     lead: mode == .signIn ? "New here?" : "Already have an account?",
                     action: mode == .signIn ? "Create an account" : "Sign in",
@@ -82,8 +93,9 @@ struct SignInView: View {
         .scrollDismissesKeyboard(.interactively)
         .signedOutBackground()
         .hiddenNavigationBar()
-        .task(id: auth.server) {
+        .task(id: auth.server?.server) {
             if mode == .signIn { await auth.refreshSingleSignOn() }
+            await auth.refreshServerInfo()
         }
         .onAppear {
             if email.isEmpty, let expiredEmail { email = expiredEmail }
@@ -158,6 +170,17 @@ struct SignInView: View {
 
     private var fields: some View {
         AuthFieldGroup {
+            // MAZ-171: the name people see, first in create account.
+            if mode == .createAccount {
+                AuthFieldRow(label: "Name") {
+                    TextField("Name", text: $name, prompt: Text("What people call you"))
+                        .personNameEntry()
+                        .submitLabel(.next)
+                        .focused($focus, equals: .name)
+                        .onSubmit { focus = .email }
+                        .accessibilityIdentifier("auth.name")
+                }
+            }
             AuthFieldRow(label: "Email") {
                 TextField("Email", text: $email, prompt: Text(verbatim: "you@example.com"))
                     .emailEntry()
@@ -233,12 +256,27 @@ struct SignInView: View {
         focus = nil
         let email = email
         let password = password
+        let name = name
+        if mode == .createAccount {
+            // The name is asked here, as on the web, so a new account isn't asked again over Home.
+            switch DisplayName.validate(name) {
+            case .valid: break
+            case .empty:
+                failure = "Enter the name people in your households and trips will see."
+                focus = .name
+                return
+            case .invalid(let message):
+                failure = message
+                focus = .name
+                return
+            }
+        }
         Task {
             do throws(AuthFailure) {
                 if mode == .signIn {
                     try await auth.signIn(email: email, password: password)
                 } else {
-                    try await auth.register(email: email, password: password)
+                    try await auth.register(email: email, password: password, displayName: name)
                 }
             } catch {
                 failure = error.message
