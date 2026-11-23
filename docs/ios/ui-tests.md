@@ -34,6 +34,7 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix) |
 | `PENNY_IPHONE`, `PENNY_IPAD` | Device types, as for `ios.sh test` |
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
+| `PENNY_STACK_SMTP=1` | The server sends email to an SMTP sink (`penny-env --smtp`, MAZ-124). The `iphone-forgot-password` and `iphone-invite-email` cards need it and are recorded as blocked without it; leave it off for the rest, since `iphone-sign-in` has no Forgot password |
 | `PENNY_UPGRADE_FROM_APP` | A previous `Penny.app`: installed and launched first, so the plan upgrades it in place |
 | `PENNY_UI_STALL_SECONDS` | Seconds without xcodebuild output before a device's run counts as hung, is stopped and runs once more (default 720) |
 

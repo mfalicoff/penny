@@ -139,8 +139,12 @@ struct InviteEmailSheet: View {
         }
     }
 
-    @ViewBuilder
     private var invited: some View {
+        VStack(alignment: .leading, spacing: 0) { invitedContent }
+    }
+
+    @ViewBuilder
+    private var invitedContent: some View {
         Text("Invited").cardSectionHeader().padding(.horizontal, 16)
         Group {
             switch invites.load {
@@ -177,7 +181,7 @@ struct InviteEmailSheet: View {
         VStack(spacing: 0) {
             ForEach(Array(invites.invites.enumerated()), id: \.element.id) { index, invite in
                 if index > 0 {
-                    Rectangle().fill(PennyColor.separator).frame(height: 0.5).padding(.leading, 68)
+                    Rectangle().fill(PennyColor.separator).frame(height: 0.5).padding(.leading, 60)
                 }
                 InviteEmailRow(
                     invite: invite, now: shell.now(), working: invites.working.contains(invite.id),
@@ -254,9 +258,9 @@ private struct InviteEmailRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "envelope")
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(PennyColor.secondaryLabel)
-                .frame(width: 40, height: 40)
+                .frame(width: 32, height: 32)
                 .background(PennyColor.fill, in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
@@ -276,7 +280,7 @@ private struct InviteEmailRow: View {
                 text: EmailInviteText.status(invite.status), systemImage: Self.symbol(invite.status),
                 tone: Self.tone(invite.status))
             if working {
-                ProgressView().frame(width: 40, height: 40)
+                ProgressView().frame(width: Metrics.minTouchTarget, height: Metrics.minTouchTarget)
             } else {
                 Menu {
                     if invite.status != .joined {
@@ -286,9 +290,9 @@ private struct InviteEmailRow: View {
                     Button("Cancel invite", systemImage: "xmark.circle", role: .destructive, action: cancel)
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(PennyColor.label)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 30, height: 30)
                         .background(PennyColor.fill, in: Circle())
                         .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
                         .contentShape(Circle())
@@ -298,7 +302,7 @@ private struct InviteEmailRow: View {
             }
         }
         .padding(.leading, 16)
-        .padding(.trailing, 12)
+        .padding(.trailing, 8)
         .padding(.vertical, 12)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("inviteEmail.row.\(invite.id)")
