@@ -172,8 +172,8 @@ var renderer = render
 // Mailpit takes the API's password reset and invitation emails over plain SMTP and shows them
 // in its web inbox. Nothing leaves the machine; messages are gone when the container stops.
 
-var mailpit = ObservabilityImages
-    .Mailpit.ApplyTo(builder.AddContainer("mailpit", ObservabilityImages.Mailpit.Image))
+var mailpit = DevelopmentImages
+    .Mailpit.ApplyTo(builder.AddContainer("mailpit", DevelopmentImages.Mailpit.Image))
     .WithEndpoint(targetPort: 1025, name: "smtp", scheme: "tcp")
     .WithHttpEndpoint(targetPort: 8025, name: "http")
     .WithUrlForEndpoint("http", url => url.DisplayText = "Mailpit (inbox)")
