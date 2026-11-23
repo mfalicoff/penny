@@ -1,5 +1,5 @@
-// Local development orchestration (MAZ-138): PostgreSQL, the search model
-// download, the .NET API (it migrates on startup), the Vite web app, emailed receipts
+// Local development orchestration (MAZ-138): PostgreSQL, the search model download, the .NET
+// API (it migrates on startup), the Vite web app, Mailpit for outgoing email, emailed receipts
 // (penny-render and the Cloudflare Email Worker under wrangler dev, MAZ-184) and a Grafana
 // stack (Alloy, Loki, Tempo, Prometheus, Grafana). Start it with
 // `bash apps/backend/dotnet.sh run --project src/Penny.Backend.AppHost`.
@@ -168,6 +168,20 @@ var renderer = render
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithIconName("DocumentPdf");
 
+// --- Outgoing email -----------------------------------------------------------------------
+// Mailpit takes the API's password reset and invitation emails over plain SMTP and shows them
+// in its web inbox. Nothing leaves the machine; messages are gone when the container stops.
+
+var mailpit = DevelopmentImages
+    .Mailpit.ApplyTo(builder.AddContainer("mailpit", DevelopmentImages.Mailpit.Image))
+    .WithEndpoint(targetPort: 1025, name: "smtp", scheme: "tcp")
+    .WithHttpEndpoint(targetPort: 8025, name: "http")
+    .WithUrlForEndpoint("http", url => url.DisplayText = "Mailpit (inbox)")
+    .WithUrlForEndpoint("smtp", url => url.DisplayLocation = UrlDisplayLocation.DetailsOnly)
+    .WithHttpHealthCheck("/livez", endpointName: "http")
+    .WithEnvironment("MP_DISABLE_VERSION_CHECK", "true")
+    .WithIconName("MailInbox");
+
 // --- API ------------------------------------------------------------------------------------
 
 var searchModel = builder
@@ -194,6 +208,16 @@ var api = builder
     .WithEnvironment("InboundMail__WebhookSecret", inboundMailSecret)
     .WithEnvironment("InboundMail__RendererUrl", renderer.GetEndpoint("http"))
     .WithEnvironment("InboundMail__PollSeconds", "2")
+    // Outgoing email goes to Mailpit. Security=none is only allowed for a loopback host, so
+    // the host is 127.0.0.1 rather than the endpoint's "localhost" name.
+    .WithEnvironment("Email__Smtp__Host", "127.0.0.1")
+    .WithEnvironment(
+        "Email__Smtp__Port",
+        mailpit.GetEndpoint("smtp").Property(EndpointProperty.Port)
+    )
+    .WithEnvironment("Email__Smtp__Security", "none")
+    .WithEnvironment("Email__From", "penny@penny.test")
+    .WithEnvironment("Email__PollSeconds", "2")
     .WithoutAspireTelemetry()
     .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", alloy.GetEndpoint("otlp-grpc"))
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
@@ -208,6 +232,7 @@ var api = builder
     .WaitFor(postgres)
     .WaitFor(alloy)
     .WaitFor(renderer)
+    .WaitFor(mailpit)
     .WaitForCompletion(searchModel);
 
 // The Cloudflare Email Worker (apps/email-worker) under wrangler dev (workerd), pointed at the
@@ -225,6 +250,9 @@ builder
         workerDirectory
     )
     .WithHttpEndpoint(port: EmailWorker.Port, isProxied: false, name: "http")
+    .WithUrlForEndpoint("http", url =>
+        url.DisplayText = "Mail in: POST /cdn-cgi/handler/email (the root answers 404)"
+    )
     .WithArgs(context =>
     {
         context.Args.Add("dev");
@@ -261,8 +289,10 @@ var web = builder
     .WaitFor(api);
 
 api.WithEnvironment(
-    "Auth__AllowedOrigins",
-    ReferenceExpression.Create($"{web.GetEndpoint("http")},http://127.0.0.1:4173")
-);
+        "Auth__AllowedOrigins",
+        ReferenceExpression.Create($"{web.GetEndpoint("http")},http://127.0.0.1:4173")
+    )
+    // Links in emails open the web app; it must be one of Auth__AllowedOrigins.
+    .WithEnvironment("Email__AppUrl", web.GetEndpoint("http"));
 
 builder.Build().Run();

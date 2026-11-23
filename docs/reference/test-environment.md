@@ -121,6 +121,10 @@ node scripts/test-env/penny-env.mjs mail --to r-…@receipts.penny.test --eml fo
 
 It also needs Docker or Podman (for penny-render) and poppler, libvips and Tesseract on the host (the inbound mail worker checks them at startup). `scripts/tests/fullstack/email.test.mjs` runs the same path in the full-stack suite: a Worker reject for an unknown address, delivery with plus-addressing, the rendered email PDF and the attachment in the inbox, a normal ledger save that attaches it, then Done. Sender verification stays "not verified" locally, because only Cloudflare's ingress adds the ARC result Penny trusts.
 
+## Outgoing email under the Aspire AppHost
+
+The Aspire AppHost (`apps/backend/src/Penny.Backend.AppHost`, see [apps/backend/README.md](../../apps/backend/README.md#run-the-whole-stack-with-aspire-maz-138)) runs [Mailpit](https://mailpit.axllent.org) as a local SMTP server and points the API's `Email__*` settings at it, so password reset and invitation emails can be tried without a real mail provider. Open **Mailpit (inbox)** from the Aspire dashboard, request a reset (**Forgot password?** on the web sign-in page) or send a household or trip invitation by email, and read the message there. Nothing leaves the machine, and Mailpit keeps messages only until its container stops.
+
 ## Golden fixtures
 
 | Fixture | Contents | Consumers |
