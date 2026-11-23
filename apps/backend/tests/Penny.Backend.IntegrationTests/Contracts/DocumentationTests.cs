@@ -119,6 +119,7 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/profile/avatar", "put"),
                 ("/api/profile/avatar", "delete"),
                 ("/api/users/{userId}/avatar", "get"),
+                ("/api/auth/password", "post"),
             }
         )
         {

@@ -23,6 +23,7 @@ public sealed class AuthController(
 {
     private static readonly string[] ResetFields = ["token", "password"];
     private static readonly string[] RegisterFields = ["email", "password", "displayName"];
+    private static readonly string[] ChangeFields = ["currentPassword", "newPassword"];
 
     [AllowAnonymous]
     [EnableRateLimiting(AuthRateLimit.Policy)]
@@ -83,6 +84,23 @@ public sealed class AuthController(
     {
         var fields = await JsonStringFields.ReadAsync(Request, ResetFields, cancellationToken);
         await resets.CompleteAsync(fields[0], fields[1], cancellationToken);
+        return Ok(new OkResponse(true));
+    }
+
+    // MAZ-171: a signed-in password change. Rate-limited like sign-in; the other sessions end
+    // and this one (and its cookie) stays.
+    [EnableRateLimiting(AuthRateLimit.Policy)]
+    [HttpPost("password", Name = "postApiAuthPassword")]
+    [ProducesResponseType<OkResponse>(200)]
+    [ProducesResponseType<ApiError>(400)]
+    [ProducesResponseType<ApiError>(401)]
+    [ProducesResponseType<ApiError>(403)]
+    [ProducesResponseType<ApiError>(413)]
+    [ProducesResponseType<ApiError>(429)]
+    public async Task<ActionResult<OkResponse>> ChangePassword(CancellationToken cancellationToken)
+    {
+        var fields = await JsonStringFields.ReadAsync(Request, ChangeFields, cancellationToken);
+        await auth.ChangePasswordAsync(User.Session(), fields[0], fields[1], cancellationToken);
         return Ok(new OkResponse(true));
     }
 

@@ -23,6 +23,7 @@ import { useIsDemo } from "../../demo/demo";
 import { Avatar, Button, Card, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { ErrorState, LoadingState, useToast } from "../../design/states";
+import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import { PictureCropDialog } from "./PictureCropDialog";
 import { SectionTitle } from "./SectionTitle";
 import { useSettingsLayout } from "./SettingsLayout";
@@ -66,6 +67,13 @@ function describeError(error: unknown, fallback: string): string {
 /** "Google", or "your sign-in provider" when the server has no name configured for it. */
 export const providerName = (profile: Pick<Profile, "provider">) => profile.provider ?? "your sign-in provider";
 
+/** "Oct 3", or "Oct 3, 2025" outside the current year. */
+function changedOn(instant: number): string {
+  const date = new Date(instant);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString("en-CA", { month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }) });
+}
+
 const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 function AccountProfile({ email }: { email: string }) {
@@ -101,6 +109,7 @@ function ProfileEditor({ profile }: { profile: Profile }) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [pictureError, setPictureError] = useState<string | null>(null);
   const [picked, setPicked] = useState<Picked | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const shown = profile.displayName ?? profile.email;
@@ -198,6 +207,14 @@ function ProfileEditor({ profile }: { profile: Profile }) {
           choose(event.currentTarget.files);
         }}
       />
+      {changingPassword ? (
+        <ChangePasswordDialog
+          email={profile.email}
+          onClose={() => {
+            setChangingPassword(false);
+          }}
+        />
+      ) : null}
       {picked ? (
         <PictureCropDialog
           file={picked.file}
@@ -273,6 +290,24 @@ function ProfileEditor({ profile }: { profile: Profile }) {
         </Card>
         <Card title="Sign-in">
           <SignInRow profile={profile} />
+          {profile.signIn === "password" ? (
+            <div className="profile__row profile__row--password">
+              <span className="profile__row-icon" aria-hidden="true">
+                <Icon name="key" size={18} />
+              </span>
+              <span className="profile__row-body">
+                <span className="profile__row-title">Password</span>
+                {profile.passwordChangedAt ? <span className="profile__row-detail">Changed {changedOn(profile.passwordChangedAt)}</span> : null}
+              </span>
+              <Button
+                onClick={() => {
+                  setChangingPassword(true);
+                }}
+              >
+                Change password
+              </Button>
+            </div>
+          ) : null}
           {profile.signIn === "oidc" ? <p className="profile__note">You sign in to Penny with {providerName(profile)}. Your account has no password.</p> : null}
         </Card>
         {extras}
@@ -334,6 +369,24 @@ function ProfileEditor({ profile }: { profile: Profile }) {
         </h2>
         <div className="profile__list">
           <SignInRow profile={profile} />
+          {profile.signIn === "password" ? (
+            <button
+              type="button"
+              className="profile__row profile__row--link"
+              onClick={() => {
+                setChangingPassword(true);
+              }}
+            >
+              <span className="profile__row-icon" aria-hidden="true">
+                <Icon name="key" size={18} />
+              </span>
+              <span className="profile__row-body">
+                <span className="profile__row-title">Change password</span>
+                {profile.passwordChangedAt ? <span className="profile__row-detail">Changed {changedOn(profile.passwordChangedAt)}</span> : null}
+              </span>
+              <Icon name="chevron-forward" size={16} />
+            </button>
+          ) : null}
         </div>
         {profile.signIn === "oidc" ? <p className="group-note">You sign in to Penny with {providerName(profile)}. Your account has no password.</p> : null}
       </section>

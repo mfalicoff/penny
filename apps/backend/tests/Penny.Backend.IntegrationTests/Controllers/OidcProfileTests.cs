@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Profiles;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -209,6 +210,31 @@ public sealed class OidcProfileTests(ApiFixture fixture, FakeOidcProvider provid
         profile.TryGetProperty("avatarUrl", out _).ShouldBeFalse();
         profile.GetProperty("avatarEditable").GetBoolean().ShouldBeTrue();
         Provider.PictureRequests.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task whenAccountSignsInWithProvider_ChangePassword_ShouldReturnForbidden()
+    {
+        await using var api = Provider.CreateApi(Fixture.Connection);
+        using var client = CreateClient(api);
+        var token = await SignInTokenAsync(client, new FakeOidcGrant());
+
+        using var response = await SendAsync(
+            client,
+            token,
+            HttpMethod.Post,
+            "/api/auth/password",
+            JsonContent.Create(new { currentPassword = "", newPassword = "a brand new password" })
+        );
+
+        await AuthTests.ShouldBeErrorAsync(
+            response,
+            HttpStatusCode.Forbidden,
+            AuthService.NoPassword
+        );
+        (await ProfileAsync(client, token))
+            .TryGetProperty("passwordChangedAt", out _)
+            .ShouldBeFalse();
     }
 
     private static FakeOidcGrant Grant(Dictionary<string, object?> claims) =>

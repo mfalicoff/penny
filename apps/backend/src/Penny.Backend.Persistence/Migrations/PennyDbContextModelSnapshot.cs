@@ -2204,6 +2204,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("password")
                         .UseCollation("C");
 
+                    b.Property<DateTimeOffset?>("PasswordChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("password_changed_at");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")

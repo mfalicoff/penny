@@ -1,7 +1,7 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./client";
 import { sessionKey, userKey } from "./keys";
-import { profileSchema, type Me, type Profile, type ProfileUpdate } from "./schemas";
+import { okSchema, profileSchema, type Me, type PasswordChange, type Profile, type ProfileUpdate } from "./schemas";
 
 /**
  * Display names and pictures (MAZ-171). The shell reads the summary from the session (`/me`);
@@ -104,4 +104,12 @@ export async function uploadAvatar(picture: Blob, mime: AvatarMime, signal?: Abo
   const parsed = profileSchema.safeParse(value);
   if (!parsed.success) throw new ApiError(response.status, PROFILE_MESSAGES.pictureFailed, { cause: parsed.error });
   return parsed.data;
+}
+
+/**
+ * `POST /api/auth/password`: changes the password of a signed-in password account. Other sessions
+ * end; this one stays. A wrong current password is a 400, so it never signs anyone out.
+ */
+export async function changePassword(change: PasswordChange, signal?: AbortSignal): Promise<void> {
+  await apiFetch("/api/auth/password", okSchema, { method: "POST", body: change, ...(signal ? { signal } : {}) });
 }

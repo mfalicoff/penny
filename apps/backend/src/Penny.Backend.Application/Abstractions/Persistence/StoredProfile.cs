@@ -12,5 +12,6 @@ public sealed record StoredProfile(
     bool NamePromptDismissed,
     string? OidcIssuer,
     string? AvatarVersion,
-    byte[]? AvatarSourceHash
+    byte[]? AvatarSourceHash,
+    DateTimeOffset? PasswordChangedAt = null
 );

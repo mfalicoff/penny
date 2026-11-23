@@ -3,6 +3,19 @@ namespace Penny.Backend.Application.Abstractions.Persistence;
 public interface IAccountRepository
 {
     Task<StoredUser?> FindByEmailAsync(string email, CancellationToken cancellationToken);
+    Task<StoredUser?> FindByIdAsync(string userId, CancellationToken cancellationToken);
+
+    // A signed-in password change: replaces the hash only if it is still `currentHash` (a
+    // concurrent change wins), records `changedAt` and revokes every other session of the
+    // user, keeping `keepTokenHash`, in one transaction. False when the hash had changed.
+    Task<bool> TryChangePasswordAsync(
+        string userId,
+        string currentHash,
+        string newHash,
+        string keepTokenHash,
+        DateTimeOffset changedAt,
+        CancellationToken cancellationToken
+    );
     Task<StoredUser?> FindByIdentityAsync(
         string issuer,
         string subject,

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -61,6 +62,14 @@ namespace Penny.Backend.Persistence.Migrations
                 type: "boolean",
                 nullable: false,
                 defaultValue: false
+            );
+
+            migrationBuilder.AddColumn<DateTimeOffset>(
+                name: "password_changed_at",
+                schema: "penny",
+                table: "users",
+                type: "timestamp with time zone",
+                nullable: true
             );
 
             migrationBuilder.CreateTable(
@@ -160,6 +169,12 @@ namespace Penny.Backend.Persistence.Migrations
 
             migrationBuilder.DropColumn(
                 name: "name_prompt_dismissed",
+                schema: "penny",
+                table: "users"
+            );
+
+            migrationBuilder.DropColumn(
+                name: "password_changed_at",
                 schema: "penny",
                 table: "users"
             );

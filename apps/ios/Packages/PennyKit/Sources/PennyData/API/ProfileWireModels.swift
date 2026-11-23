@@ -21,6 +21,9 @@ public struct WireProfile: Codable, Equatable, Sendable {
     /// For an `oidc` account, the configured name of its own sign-in provider; absent when
     /// none is configured ("your sign-in provider").
     public var provider: String?
+    /// Unix milliseconds when a password account last changed its password; absent before the
+    /// first change and for `oidc` accounts ("Changed Oct 3").
+    public var passwordChangedAt: Int64?
 
     public init(
         userId: String,
@@ -31,7 +34,8 @@ public struct WireProfile: Codable, Equatable, Sendable {
         avatarEditable: Bool = true,
         needsName: Bool = false,
         signIn: String = "password",
-        provider: String? = nil
+        provider: String? = nil,
+        passwordChangedAt: Int64? = nil
     ) {
         self.userId = userId
         self.email = email
@@ -42,6 +46,7 @@ public struct WireProfile: Codable, Equatable, Sendable {
         self.needsName = needsName
         self.signIn = signIn
         self.provider = provider
+        self.passwordChangedAt = passwordChangedAt
     }
 }
 
@@ -93,5 +98,18 @@ public struct WireRegistration: Encodable, Equatable, Sendable {
         self.email = email
         self.password = password
         self.displayName = displayName
+    }
+}
+
+/// `POST /api/auth/password` (MAZ-171): a signed-in password change. 400 for a wrong current
+/// password or a new one outside 10–256 characters, 403 for an account that signs in with a
+/// provider. Other sessions end; this one stays.
+public struct WirePasswordChange: Encodable, Equatable, Sendable {
+    public var currentPassword: String
+    public var newPassword: String
+
+    public init(currentPassword: String, newPassword: String) {
+        self.currentPassword = currentPassword
+        self.newPassword = newPassword
     }
 }

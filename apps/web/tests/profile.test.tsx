@@ -214,6 +214,50 @@ describe("Settings › Profile", () => {
   });
 });
 
+describe("Change password", () => {
+  it("shows when the password last changed and changes it, keeping this session", async () => {
+    const changedAt = new Date(2026, 9, 3, 12).getTime();
+    let current = profile({ displayName: "Alex Martin" });
+    const fetchMock = stubServer((url, init) => {
+      if (url === "/api/profile") return json(current);
+      if (url === "/api/auth/password") {
+        const body = bodyOf(init) as { currentPassword: string; newPassword: string };
+        if (body.currentPassword !== "correct horse battery") return json({ error: "Your current password is incorrect." }, 400);
+        current = profile({ displayName: "Alex Martin", passwordChangedAt: changedAt });
+        return json({ ok: true });
+      }
+      return undefined;
+    });
+    const user = userEvent.setup();
+    renderApp("/settings/profile");
+    await user.click(await screen.findByRole("button", { name: /Change password/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Change password" });
+    await user.type(within(dialog).getByLabelText("Current password"), "wrong password!");
+    await user.type(within(dialog).getByLabelText("New password"), "short");
+    await user.click(within(dialog).getByRole("button", { name: "Change password" }));
+    expect(within(dialog).getByText("Use a new password of 10 to 256 characters.")).toBeInTheDocument();
+    expect(callsTo(fetchMock, "/api/auth/password")).toHaveLength(0);
+    await user.clear(within(dialog).getByLabelText("New password"));
+    await user.type(within(dialog).getByLabelText("New password"), "a brand new password");
+    await user.click(within(dialog).getByRole("button", { name: "Change password" }));
+    expect(await within(dialog).findByText("Your current password is incorrect.")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Current password")).toHaveFocus();
+    await user.type(within(dialog).getByLabelText("Current password"), "correct horse battery");
+    await user.click(within(dialog).getByRole("button", { name: "Change password" }));
+    expect(await screen.findByText("Password changed")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Change password" })).not.toBeInTheDocument();
+    expect(await screen.findByText("Changed Oct 3")).toBeInTheDocument();
+    expect(callsTo(fetchMock, "/api/auth/password").map(bodyOf).at(-1)).toEqual({ currentPassword: "correct horse battery", newPassword: "a brand new password" });
+  });
+
+  it("isn't offered to an account that signs in with a provider", async () => {
+    stubServer((url) => (url === "/api/profile" ? json(profile({ displayName: "Grace Hopper", nameEditable: false, signIn: "oidc", provider: "Authentik" })) : undefined));
+    renderApp("/settings/profile");
+    await screen.findByLabelText("Name");
+    expect(screen.queryByRole("button", { name: /Change password/ })).not.toBeInTheDocument();
+  });
+});
+
 describe("sign-up", () => {
   it("asks for a name and sends it with the credentials", async () => {
     let signedIn = false;

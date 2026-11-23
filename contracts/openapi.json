@@ -5347,6 +5347,105 @@
           }
         }
       }
+    },
+    "/api/auth/password": {
+      "post": {
+        "summary": "Change your password",
+        "operationId": "postApiAuthPassword",
+        "description": "MAZ-171. The current password must verify and the new one has 10-256 characters, as at sign-up. Rate-limited like sign-in. Every other session of the account ends; this session and its cookie stay.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A wrong or missing current password (\"Your current password is incorrect.\") or a new password outside 10-256 characters (\"Use a new password of 10–256 characters.\"). The session stays signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin, or an account that signs in with a provider (\"Your account signs in with your sign-in provider, so it has no password to change.\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8095,6 +8194,10 @@
             "type": "string",
             "minLength": 1,
             "description": "For an oidc account: the configured display name of its own sign-in provider, found by the account's issuer. Omitted when not configured; say \"your sign-in provider\"."
+          },
+          "passwordChangedAt": {
+            "type": "integer",
+            "description": "Unix milliseconds when a password account last changed its password (signed in or by reset). Omitted before the first change and for oidc accounts."
           }
         },
         "required": [
@@ -8124,6 +8227,25 @@
             "description": "The person skipped the name prompt; needsName becomes false."
           }
         }
+      },
+      "PasswordChange": {
+        "type": "object",
+        "description": "A signed-in password change (MAZ-171).",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
       }
     }
   }

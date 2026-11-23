@@ -926,7 +926,7 @@ const cards: Record<string, Card> = {
   // Account and profile cards drafted for review (MAZ-267): none of these flows exist on the web yet.
   "iphone-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "Profile is a page styled as the sheet. The Sign-in group has no Verified mark or Change password, and Your data (export, delete account) is missing: those features aren't built yet.",
+    note: "Profile is a page styled as the sheet. The Sign-in group has no Verified mark, and Your data (export, delete account) is missing: those features aren't built yet.",
   },
   "iphone-profile-provider": { skip: { status: "blocked", note: "The full-stack seeds have no account that signs in with a provider; the read-only profile is covered by the web unit tests." } },
   "iphone-profile-photo": {
@@ -965,11 +965,11 @@ const cards: Record<string, Card> = {
   "iphone-privacy": { skip: { status: "not-built", note: "The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person." } },
   "ipad-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "The Sign-in group has no Verified mark or Change password, and Your data (export, delete account) is missing: those features aren't built yet.",
+    note: "The Sign-in group has no Verified mark, and Your data (export, delete account) is missing: those features aren't built yet.",
   },
   "web-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "The Sign-in panel has no Verified mark or Change password, Your data (export, delete account) and the privacy policy footer are missing, and the section list has no Privacy or Export data: those features aren't built yet.",
+    note: "The Sign-in panel has no Verified mark, Your data (export, delete account) and the privacy policy footer are missing, and the section list has no Privacy or Export data: those features aren't built yet.",
   },
   "web-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
   "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },

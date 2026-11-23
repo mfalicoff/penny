@@ -13,7 +13,7 @@ using Pgvector;
 namespace Penny.Backend.Persistence.Migrations
 {
     [DbContext(typeof(PennyDbContext))]
-    [Migration("20261123001358_AddUserProfiles")]
+    [Migration("20261123010738_AddUserProfiles")]
     partial class AddUserProfiles
     {
         /// <inheritdoc />
@@ -2206,6 +2206,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password")
                         .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("PasswordChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("password_changed_at");
 
                     b.HasKey("Id");
 

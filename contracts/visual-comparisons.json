@@ -2402,11 +2402,6 @@
             "ref": "MAZ-172"
           },
           {
-            "summary": "The Sign-in group has no Change password row: the API has no signed-in password change yet",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
@@ -3099,11 +3094,6 @@
             "ref": "MAZ-172"
           },
           {
-            "summary": "The Sign-in group has no Change password row: the API has no signed-in password change yet",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
@@ -3733,11 +3723,6 @@
             "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
             "kind": "follow-up",
             "ref": "MAZ-172"
-          },
-          {
-            "summary": "The Sign-in group has no Change password row: the API has no signed-in password change yet",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           },
           {
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",

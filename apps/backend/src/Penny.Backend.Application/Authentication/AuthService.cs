@@ -30,6 +30,10 @@ public sealed class AuthService(
         "An account already uses this email. Sign in with its existing method; automatic account linking is disabled.";
     public const string OidcAccountExists =
         "This account already exists. Please try signing in again.";
+    public const string WrongCurrentPassword = "Your current password is incorrect.";
+    public const string InvalidNewPassword = "Use a new password of 10–256 characters.";
+    public const string NoPassword =
+        "Your account signs in with your sign-in provider, so it has no password to change.";
 
     public async Task<IssuedSession> RegisterAsync(
         string? email,
@@ -124,6 +128,39 @@ public sealed class AuthService(
             throw new BackendFailure(FailureKind.Conflict, OidcAccountExists);
         await profiles.ApplyProviderAsync(userId, identity.Profile, cancellationToken);
         return new(await IssueAsync(userId, cancellationToken), identity.Email);
+    }
+
+    // A signed-in password change (MAZ-171): the current password must verify, the new one
+    // follows the sign-up rule. Every other session of the account ends; this one stays.
+    // Accounts that sign in with a provider have no password (an empty hash) and are refused.
+    // A wrong current password is a 400, not a 401, so the session survives the mistake.
+    public async Task ChangePasswordAsync(
+        AuthenticatedSession session,
+        string? currentPassword,
+        string? newPassword,
+        CancellationToken cancellationToken
+    )
+    {
+        var user = await accounts.FindByIdAsync(session.UserId, cancellationToken)
+            ?? throw new BackendFailure(FailureKind.Unauthorized, SignInRequired);
+        if (user.Password.Length == 0)
+            throw new BackendFailure(FailureKind.Forbidden, NoPassword);
+        if (!Credentials.IsValidPassword(newPassword))
+            throw new BackendFailure(FailureKind.Invalid, InvalidNewPassword);
+        // Always verify, so a missing current password costs the same as a wrong one.
+        if (passwords.Verify(user.Password, currentPassword ?? "") == PasswordCheck.Failed)
+            throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+        if (
+            !await accounts.TryChangePasswordAsync(
+                user.Id,
+                user.Password,
+                passwords.Hash(newPassword),
+                session.TokenHash,
+                Now(),
+                cancellationToken
+            )
+        )
+            throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
     }
 
     // Returns null for a missing, malformed, unknown, expired or revoked token.

@@ -21,4 +21,8 @@ public sealed class User
 
     // SHA-256 of the provider picture URL the stored picture was copied from.
     public byte[]? AvatarSourceHash { get; set; }
+
+    // When the password last changed (signed-in change or operator reset); null before the
+    // first change.
+    public DateTimeOffset? PasswordChangedAt { get; set; }
 }

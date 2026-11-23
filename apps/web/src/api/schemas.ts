@@ -61,8 +61,17 @@ export const profileSchema = z.object({
   signIn: z.enum(["password", "oidc"]),
   // The configured name of the account's own provider; absent: "your sign-in provider".
   provider: z.string().min(1).optional(),
+  // When a password account last changed its password (Unix ms); absent before the first change.
+  passwordChangedAt: z.number().int().optional(),
 });
 export type Profile = z.infer<typeof profileSchema>;
+
+/** `POST /api/auth/password` body: a signed-in password change. */
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().max(256),
+  newPassword: z.string().min(10).max(256),
+});
+export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 
 /** `PATCH /api/profile` body: absent fields change nothing; a null name clears it. */
 export const profileUpdateSchema = z.object({
