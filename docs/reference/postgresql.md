@@ -6,7 +6,7 @@ The schema is defined in code with **EF Core** (`Npgsql.EntityFrameworkCore.Post
 
 ## Target schema
 
-PostgreSQL stores the product tables, the derived search and receipt-text tables, the short-lived OIDC attempt table (MAZ-54), the password reset code table (MAZ-123) and EF's `__EFMigrationsHistory`, all in schema `penny`.
+PostgreSQL stores the product tables, the derived search and receipt-text tables, the short-lived OIDC attempt table (MAZ-54), the password reset code table (MAZ-123), the mail outbox and emailed invitations (MAZ-124, `mail_outbox`, `household_email_invites`) and EF's `__EFMigrationsHistory`, all in schema `penny`.
 
 | Area | Tables | Notes |
 | --- | --- | --- |

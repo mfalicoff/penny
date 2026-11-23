@@ -19,6 +19,10 @@ All operations require a session (cookie or bearer). Unknown households, househo
 | `patchApiHouseholdsId` | `PATCH /api/households/{id}` | `200 {household}` | Creator |
 | `patchApiHouseholdsIdTrip` | `PATCH /api/households/{id}/trip` | `200 {household}` | Creator, shared trips only |
 | `postApiHouseholdsIdInvites` | `POST /api/households/{id}/invites` | `201 {code, expiresAt}` | Creator |
+| `getApiHouseholdsIdEmailInvites` | `GET /api/households/{id}/email-invites` | `200 {items}` | Creator; email on ([invitations by email](#invitations-by-email)) |
+| `postApiHouseholdsIdEmailInvites` | `POST /api/households/{id}/email-invites` | `202` invitation | Creator; email on |
+| `postApiHouseholdsIdEmailInvitesInviteIdResend` | `POST /api/households/{id}/email-invites/{inviteId}/resend` | `202` invitation | Creator; email on |
+| `deleteApiHouseholdsIdEmailInvitesInviteId` | `DELETE /api/households/{id}/email-invites/{inviteId}` | `200 {ok:true}` | Creator; email on |
 | `postApiHouseholdsJoin` | `POST /api/households/join` | `200 {household}` | Anyone with a live code (rate limited) |
 | `postApiHouseholdsIdLeave` | `POST /api/households/{id}/leave` | `200 {ok:true}` | Current members |
 | `deleteApiHouseholdsIdMembersUserid` | `DELETE /api/households/{id}/members/{userId}` | `200 {ok:true}` | Creator |
@@ -55,7 +59,7 @@ Errors use `{error: string}`. Request bodies: unknown keys are ignored, optional
 
 - A code is 5 random bytes from the BCL `RandomNumberGenerator`, written as 10 upper-case hex characters. Only `SHA-256(code)` (lower-case hex) is stored in `household_invites.code_hash`, so stored hashes cannot be replayed. Codes are accepted in any case.
 - A code expires 10 minutes after it is issued (`expiresAt` is Unix milliseconds; valid while `expiresAt > now`).
-- A household has one live code: issuing a new code deletes the previous ones.
+- A household has one live shared code: issuing a new code deletes the previous one. Emailed invitations keep their own codes.
 - **A code admits any number of accounts** until it expires or is replaced, so one code can be shared with a group. Joining never consumes or marks it (`household_invites.used_at` stays empty). Each account still joins only once: a current member gets `409 You are already a member.`
 
 ## Shared trips and personal trip links
@@ -79,9 +83,20 @@ Verified with real PostgreSQL: eight accounts using one code at once (each joins
 
 **Search (MAZ-121).** Search evaluates membership periods and splits inside its own query (the household-view rule), so join, leave/removal and archive write nothing for search: access changes exactly when these transactions commit ([search](search.md#implementation-maz-121)).
 
+### Invitations by email
+
+When the server sends email (MAZ-124, [email delivery](../self-hosting/email.md)), the creator can also invite an address. Every route answers `404 This server doesn't send email.` while email is off; the shared code keeps working either way.
+
+- `POST /api/households/{id}/email-invites` `{email}` stores the invitation (`household_email_invites`, one row per household and normalized address) and queues its email (`mail_outbox`) in the household's transaction, then answers `202` with `{id, email, status, createdAt, sentAt, expiresAt}`. The mail worker sends it later. Inviting an address that already has an invitation resends it.
+- The code is issued when the email is sent, under the household lock: 10 upper-case hex characters like a shared code, stored only as SHA-256 in `household_email_invites.code_hash`. It works for `Email__InviteHours` (72 by default) after sending and **joins once**: the join clears it in the join's transaction. A resend issues a new code when its email is sent; the earlier code works until then. If the household was archived, the invitation revoked or used, or the inviter is no longer its creator when the worker gets to it, nothing is sent.
+- `status`: `sending` (queued, or a resend not yet sent), `waiting` (sent, unused, unexpired), `expired`, `joined`, or `failed` (the mail server refused it for good, for example an unknown mailbox).
+- `POST .../email-invites/{inviteId}/resend` queues a new email (`409 They already joined with this invitation.` after a join). `DELETE .../email-invites/{inviteId}` revokes it: its code stops working, an unsent email is not sent, and it leaves the list. Archiving revokes every invitation.
+- Limits: `429 Too many invitation emails today. Try again tomorrow, or share a code instead.` once the creator caused `Email__AccountMessagesPerDay` emails, or the address received `Email__RecipientMessagesPerDay`, in the last 24 hours. Joining keeps its own rate limit.
+- The invitee joins with `POST /api/households/join`, which accepts shared and emailed codes alike, with the same checks (currency, already a member) and the same error for any unusable code.
+
 ## Audit
 
-Membership operations write audit rows in the same transaction: `household.created`, `trip.created` (after: household view), `household.renamed` and `trip.edited` (before/after views), `invite.created` (after `{expiresAt}`), `member.joined` (after `{userId}`), `member.left` and `member.removed` (before `{userId}`, actor is the remover) and `household.archived` (after `{householdId}`). They are stored as `jsonb`; the audit endpoint is MAZ-58's ([settlement](settlement.md#audit-history)).
+Membership operations write audit rows in the same transaction: `household.created`, `trip.created` (after: household view), `household.renamed` and `trip.edited` (before/after views), `invite.created` (after `{expiresAt}`), `invite.emailed` (MAZ-124, written when an invitation email issues its code; after `{expiresAt}`, never the address), `invite.revoked` (an emailed invitation revoked), `member.joined` (after `{userId}`), `member.left` and `member.removed` (before `{userId}`, actor is the remover) and `household.archived` (after `{householdId}`). They are stored as `jsonb`; the audit endpoint is MAZ-58's ([settlement](settlement.md#audit-history)).
 
 ## Behavior notes
 

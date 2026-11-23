@@ -40,7 +40,7 @@ The backend trusts **no** forwarding headers by default, not even from loopback.
 
 ## Password reset (MAZ-123)
 
-Penny is self-hosted and sends no email, so resets are **operator-issued**: someone with access to the server's configuration runs a maintenance command for the user's email, then delivers the printed code to the user over a channel they already trust (in person, a message, a phone call). The user enters the code and a new password in the app. It is in the [contract](api-reference.md) as `POST /api/auth/password-reset`.
+Without [email delivery](../self-hosting/email.md), resets are **operator-issued**: someone with access to the server's configuration runs a maintenance command for the user's email, then delivers the printed code to the user over a channel they already trust (in person, a message, a phone call). The user enters the code and a new password in the app. It is in the [contract](api-reference.md) as `POST /api/auth/password-reset`.
 
 ### Flow and checks
 
@@ -61,6 +61,19 @@ Penny is self-hosted and sends no email, so resets are **operator-issued**: some
 
 **Known limit.** A login that verified the *old* password just before a reset commits can still create a session just after it; the reset cannot see that session. This needs the old password and a race of a few milliseconds; signing out other devices again (another reset) removes it.
 
+### Password reset by email (MAZ-124)
+
+When the server sends email (`emailEnabled` on `GET /api/info`), a signed-out user can ask for a reset themselves. The operator command keeps working alongside it.
+
+| Step | Behavior |
+| --- | --- |
+| Request | `POST /api/auth/password-reset/request` with `{email}`, anonymous, sharing the sign-in rate limit and origin policy. The email is normalized with the sign-in rule. The answer is always `202 {ok:true}`, whether or not the address has an account, whether an email for it is still waiting and whether a daily limit is reached; only a malformed address (`400 Enter a valid email address.`) or email being off (`404 This server doesn't send email.`) differ, and neither depends on accounts. |
+| Queue | For an account, one transaction holding its user row queues a `mail_outbox` row (account id, SHA-256 of the address, language; no address or code), unless one for the account is still unsent or `Email__AccountMessagesPerDay` / `Email__RecipientMessagesPerDay` is reached in the last 24 hours. Nothing is sent inside the request. |
+| Send | The mail worker issues the code when it sends: the same code as the operator command (32 random bytes as hex, SHA-256 stored, `Auth__PasswordResetHours`, one per account, replacing any earlier one, operator-issued included), to the account's current address. The email links to `<Email__AppUrl>/reset-password#code=<code>`; the fragment never reaches a server. A retry issues a new code, so only the latest email's link works. |
+| Redeem | Unchanged: `POST /api/auth/password-reset` with `{token, password}`, single use, revoking every session. |
+
+The request does a little less work for an unknown address (no outbox insert), so its timing is not perfectly constant; its body, status and headers are identical.
+
 ### Operator runbook
 
 Run the command with the same configuration as the API: it uses the API's database login `ConnectionStrings__Postgres` and `Auth__PasswordResetHours`. It never starts HTTP and needs the database to be migrated (the API does that on startup).
@@ -80,7 +93,7 @@ docker exec <api-container> dotnet Penny.Backend.Api.dll reset-password person@e
 - **Deliver** the code privately and promptly. Tell the user to open Penny, choose the password reset option, paste the code and choose a new password of 10–256 characters, then sign in again on every device.
 - **Lost or leaked code:** run the command again; the new code supersedes the old one. An unused code expires on its own.
 
-Clients: the web and native apps need a "reset password" screen that posts `{token, password}` and then shows the sign-in form (native: MAZ-68; the web app has none yet, MAZ-84 shipped sign-in only). Until it ships, the endpoint can be called directly, for example `curl -X POST https://penny.example.com/api/auth/password-reset -H 'Content-Type: application/json' -d @reset.json` with `{"token":"…","password":"…"}` in a private file, by the user or with the user present choosing the password.
+Clients: the web app's "Forgot password?" opens `/forgot-password` (asks for an email) when the server sends email and `/reset-password` (enter the code and a new password) when it doesn't; the emailed link opens `/reset-password` with the code filled in (MAZ-124). The native app's screens are MAZ-68's. The endpoint can also be called directly, for example `curl -X POST https://penny.example.com/api/auth/password-reset -H 'Content-Type: application/json' -d @reset.json` with `{"token":"…","password":"…"}` in a private file, by the user or with the user present choosing the password.
 
 ## OpenID Connect (MAZ-54)
 
