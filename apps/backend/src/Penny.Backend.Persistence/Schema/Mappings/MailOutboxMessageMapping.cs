@@ -14,7 +14,7 @@ internal sealed class MailOutboxMessageMapping : IEntityTypeConfiguration<MailOu
             table.HasCheckConstraint("ck_mail_outbox_lease", Checks.Lease);
             table.HasCheckConstraint(
                 "ck_mail_outbox_kind",
-                "(kind = 'password-reset' AND user_id IS NOT NULL AND email_invite_id IS NULL) OR (kind = 'household-invite' AND email_invite_id IS NOT NULL AND user_id IS NULL)"
+                "(kind IN ('password-reset', 'email-verification') AND user_id IS NOT NULL AND email_invite_id IS NULL) OR (kind = 'household-invite' AND email_invite_id IS NOT NULL AND user_id IS NULL)"
             );
             table.HasCheckConstraint("ck_mail_outbox_locale", Checks.In("locale", "('en','fr')"));
             table.HasCheckConstraint(

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Mail;
 using Penny.Backend.Persistence.Testing;
 
 namespace Penny.Backend.Api.Testing;
@@ -22,6 +23,7 @@ public sealed partial class TestControlsController(
     ControllableClock clock,
     FaultRegistry faults,
     AuthService auth,
+    EmailVerificationService verification,
     TestDataReset reset,
     IHostEnvironment environment
 ) : ControllerBase
@@ -50,6 +52,20 @@ public sealed partial class TestControlsController(
             return BadRequest(new ApiError("Enter the instant to pin as `now`."));
         clock.Set(now);
         return State();
+    }
+
+    // MAZ-172: marks a seeded account's email verified, as every account that existed before
+    // email verification is. Seeds register through the public API, which leaves them unverified.
+    [HttpPost("email-verified")]
+    public async Task<IActionResult> MarkEmailVerified(
+        [FromBody] TestEmailRequest body,
+        CancellationToken cancellationToken
+    )
+    {
+        if (Guard() is { } denied)
+            return denied;
+        await verification.MarkVerifiedAsync(body.Email, cancellationToken);
+        return NoContent();
     }
 
     [HttpDelete("clock")]
@@ -128,8 +144,11 @@ public sealed partial class TestControlsController(
             email,
             password,
             body?.DisplayName,
+            MailLocales.English,
             cancellationToken
         );
+        if (body?.Unverified != true)
+            await verification.MarkVerifiedAsync(email, cancellationToken);
         var authenticated = await auth.AuthenticateAsync(session.Token, cancellationToken);
         return StatusCode(
             201,

@@ -28,7 +28,8 @@ public sealed class PostgresProfileRepository(NpgsqlDataSource source) : IProfil
                     .FirstOrDefault(),
                 user.AvatarVersion,
                 user.AvatarSourceHash,
-                user.PasswordChangedAt
+                user.PasswordChangedAt,
+                user.EmailVerifiedAt
             ))
             .SingleOrDefaultAsync(cancellationToken);
     }

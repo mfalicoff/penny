@@ -63,6 +63,10 @@ export const profileSchema = z.object({
   provider: z.string().min(1).optional(),
   // When a password account last changed its password (Unix ms); absent before the first change.
   passwordChangedAt: z.number().int().optional(),
+  // MAZ-172: whether the current email is proven, and when (Unix ms; absent while unverified).
+  // Show the unverified state only while the server sends email.
+  emailVerified: z.boolean(),
+  emailVerifiedAt: z.number().int().optional(),
 });
 export type Profile = z.infer<typeof profileSchema>;
 
@@ -84,6 +88,18 @@ export const passwordResetRequestSchema = z.object({ email: z.string().min(3).ma
 /** `POST /api/auth/password-reset` body: redeem a reset code. */
 export const passwordResetSchema = z.object({ token: z.string().regex(RESET_CODE), password: z.string().min(10).max(256) });
 export type PasswordReset = z.infer<typeof passwordResetSchema>;
+
+/* ---------- email verification (MAZ-172) ---------- */
+
+/** `POST /api/auth/email-verification` body: the code from the emailed link (same format as a reset code). */
+export const emailVerificationRequestSchema = z.object({ token: z.string().regex(RESET_CODE) });
+
+/** `POST /api/auth/email-verification` answer: the address the link verified. */
+export const emailVerifiedSchema = z.object({ email: z.email() });
+
+/** `POST /api/auth/email` body: a signed-in email change, confirmed with the password. */
+export const emailChangeSchema = z.object({ email: z.string().min(3).max(254), password: z.string().max(256) });
+export type EmailChange = z.infer<typeof emailChangeSchema>;
 
 /** `PATCH /api/profile` body: absent fields change nothing; a null name clears it. */
 export const profileUpdateSchema = z.object({

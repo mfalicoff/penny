@@ -82,6 +82,7 @@ async function seedInto(state, name) {
     apiUrl: state.apiUrl,
     runTag: state.runId,
     setClock: (now) => control(state, "PUT", "clock", { now }),
+    verifyEmail: (email) => control(state, "POST", "email-verified", { email }),
   });
   // Runners read sessions and ids from here; the file is private to the run (0600).
   const { writeFileSync } = await import("node:fs");

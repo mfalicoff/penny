@@ -12,10 +12,10 @@ namespace Penny.Backend.Application.Mail;
 // 1. Claim: one short transaction leases up to BatchSize due messages to a fresh token;
 //    a crashed runner's lease expires after Lease and another runner takes over.
 // 2. Compose (per message): a message older than MaxAge, or out of attempts, fails as
-//    `expired`. Otherwise its code is issued now (a password reset code, or the
-//    invitation's code under the household lock) and the email rendered. The code never
-//    reaches the database in clear, so a retry issues a new one and the earlier email's
-//    code stops working.
+//    `expired`. Otherwise its code is issued now (a password reset or email verification
+//    code, or the invitation's code under the household lock) and the email rendered.
+//    The code never reaches the database in clear, so a retry issues a new one and the
+//    earlier email's code stops working.
 // 3. Send: one SMTP connection for the batch.
 // 4. Record (per message): sent, retry with backoff (30 s doubling to 1 h), permanent
 //    failure or dropped (nothing to send any more), then the lease is released.
@@ -28,6 +28,7 @@ public sealed class MailDeliveryRunner(
     IMailTransport transport,
     PasswordResetMailService resets,
     EmailInviteService invites,
+    EmailVerificationService verifications,
     TimeProvider clock
 )
 {
@@ -90,11 +91,20 @@ public sealed class MailDeliveryRunner(
                         claim,
                         cancellationToken
                     ),
+                    MailKinds.EmailVerification => await verifications.ComposeAsync(
+                        claim,
+                        cancellationToken
+                    ),
                     _ => null,
                 };
                 if (mail is null)
                     results[claim.Id] = MailOutcome.Dropped(
-                        claim.Kind == MailKinds.PasswordReset ? "account-gone" : "invite-withdrawn"
+                        claim.Kind switch
+                        {
+                            MailKinds.PasswordReset => "account-gone",
+                            MailKinds.EmailVerification => "already-verified",
+                            _ => "invite-withdrawn",
+                        }
                     );
                 else
                     ready.Add((claim, mail));

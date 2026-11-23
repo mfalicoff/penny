@@ -10,14 +10,16 @@ import { createHouseholdServer, type HouseholdServer } from "../tests/fakes/hous
 const ALEX = "alex@example.test";
 const CODE = "3f9a1c07e2b45d68a0c1f7e93b2d4a6c8e05f1b7d39a2c4e6f80b1d3a5c7e9f2";
 const PASSWORD = "correct horse battery";
+const VERIFY_CODE = "7d2c4e6f80b1d3a5c7e9f23f9a1c07e2b45d68a0c1f7e93b2d4a6c8e05f1b7d3";
 
 interface Api {
   signedIn: string | null;
+  verified: boolean;
   bodies: Record<string, unknown[]>;
 }
 
 async function mockAuth(context: BrowserContext, emailEnabled: boolean): Promise<Api> {
-  const api: Api = { signedIn: null, bodies: {} };
+  const api: Api = { signedIn: null, verified: false, bodies: {} };
   await context.route("**/api/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -35,6 +37,23 @@ async function mockAuth(context: BrowserContext, emailEnabled: boolean): Promise
       case "/api/auth/password-reset": {
         const body = request.postDataJSON() as { token: string };
         return body.token === CODE ? reply(200, { ok: true }) : reply(400, { error: "This reset code is invalid or has expired." });
+      }
+      // Email verification (MAZ-172).
+      case "/api/auth/register": {
+        api.signedIn = (request.postDataJSON() as { email: string }).email;
+        return reply(201, { token: "t".repeat(64), email: api.signedIn });
+      }
+      case "/api/profile":
+        return api.signedIn
+          ? reply(200, { userId: "u".repeat(32), email: api.signedIn, displayName: "Alex", nameEditable: true, avatarEditable: true, needsName: false, signIn: "password", emailVerified: api.verified })
+          : reply(401, { error: "Please sign in to continue." });
+      case "/api/auth/email-verification/resend":
+        return reply(202, { ok: true });
+      case "/api/auth/email-verification": {
+        const body = request.postDataJSON() as { token: string };
+        if (body.token !== VERIFY_CODE || api.verified) return reply(400, { error: "This verification link is invalid or has expired." });
+        api.verified = true;
+        return reply(200, { email: api.signedIn ?? ALEX });
       }
       default:
         return reply(404, { error: "Not found." });
@@ -165,4 +184,33 @@ test("invite by email: send, see the status, revoke, and the invitee joins from 
   await expect(page).toHaveURL(/\/households$/);
   await join.getByRole("button", { name: "Join household" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Apartment" })).toBeVisible();
+});
+
+test("email verification: check your email after sign-up, then the link verifies once", async ({ page, context }) => {
+  const api = await mockAuth(context, true);
+  await page.goto("/");
+  await expect(signInHeading(page)).toBeVisible();
+  await page.getByRole("button", { name: "Create an account" }).click();
+  await page.getByLabel("Name").fill("Alex");
+  await page.getByLabel("Email").fill(ALEX);
+  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Check your email" })).toBeVisible();
+  await expect(page).toHaveURL(/\/verify-email$/);
+  await expect(page.getByText(ALEX)).toBeVisible();
+  await expect(page.getByText(/Resend in/)).toBeVisible();
+  await expectAccessible(page);
+
+  // The emailed link: the code is read once and leaves the address bar.
+  await page.goto(`/verify-email#code=${VERIFY_CODE}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Your email is verified" })).toBeVisible();
+  expect(await page.evaluate(() => window.location.hash)).toBe("");
+  await expectAccessible(page);
+  expect(api.bodies["/api/auth/email-verification"]).toEqual([{ token: VERIFY_CODE }]);
+  await page.getByRole("link", { name: "Open Penny" }).click();
+  await expect(page).toHaveURL(/\/$/);
+
+  // Opening it again says so.
+  await page.goto(`/verify-email#code=${VERIFY_CODE}`);
+  await expect(page.getByRole("alert")).toHaveText(/invalid or has expired/);
 });

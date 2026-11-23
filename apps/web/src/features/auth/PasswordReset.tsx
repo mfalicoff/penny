@@ -19,7 +19,7 @@ const emailSchema = z.email().max(254);
 const INVALID_CODE = /invalid or has expired/i;
 
 /** The page's document title; these pages are outside the app shell, which sets it elsewhere. */
-function useDocumentTitle(title: string) {
+export function useDocumentTitle(title: string) {
   useEffect(() => {
     document.title = `${title} · Penny`;
   }, [title]);

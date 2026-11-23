@@ -13,5 +13,6 @@ public sealed record StoredProfile(
     string? OidcIssuer,
     string? AvatarVersion,
     byte[]? AvatarSourceHash,
-    DateTimeOffset? PasswordChangedAt = null
+    DateTimeOffset? PasswordChangedAt = null,
+    DateTimeOffset? EmailVerifiedAt = null
 );

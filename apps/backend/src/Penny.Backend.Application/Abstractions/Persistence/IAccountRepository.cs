@@ -16,6 +16,26 @@ public interface IAccountRepository
         DateTimeOffset changedAt,
         CancellationToken cancellationToken
     );
+
+    // A signed-in email change (MAZ-172): replaces the email only if the password hash is
+    // still `currentHash`, marks it unverified and deletes the account's pending
+    // verification code, in one transaction. A concurrent change of the same address
+    // waits on the unique index and loses with Duplicate.
+    Task<EmailChangeResult> TryChangeEmailAsync(
+        string userId,
+        string currentHash,
+        string newEmail,
+        CancellationToken cancellationToken
+    );
+
+    // Operator command (MAZ-172): marks the account's current email verified at
+    // `verifiedAt` unless it already is. False when nothing changed.
+    Task<bool> MarkEmailVerifiedAsync(
+        string userId,
+        DateTimeOffset verifiedAt,
+        CancellationToken cancellationToken
+    );
+
     Task<StoredUser?> FindByIdentityAsync(
         string issuer,
         string subject,

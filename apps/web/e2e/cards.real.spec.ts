@@ -315,6 +315,17 @@ async function withEmail(p: Page, invites: unknown[] = []) {
   await p.route(/\/api\/households\/[^/]+\/email-invites$/, (route) => route.fulfill({ json: { items: invites } }));
 }
 
+/** Reports the signed-in (seeded, verified) account as unverified, for the verification cards (MAZ-172). */
+async function unverified(p: Page) {
+  await p.route("**/api/profile", async (route) => {
+    const response = await route.fetch();
+    const profile = (await response.json()) as Record<string, unknown>;
+    delete profile.emailVerifiedAt;
+    await route.fulfill({ response, json: { ...profile, emailVerified: false } });
+  });
+  await p.route("**/api/auth/email-verification/resend", (route) => route.fulfill({ status: 202, json: { ok: true } }));
+}
+
 async function joinWithCode(p: Page) {
   await page(p, "/households", "Shared");
   await p.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /Join with a code/ }).click();
@@ -951,7 +962,7 @@ const cards: Record<string, Card> = {
   // Account and profile cards drafted for review (MAZ-267): none of these flows exist on the web yet.
   "iphone-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "Profile is a page styled as the sheet. The Sign-in group has no Verified mark, and Your data (export, delete account) is missing: those features aren't built yet.",
+    note: "Profile is a page styled as the sheet. Your data (export, delete account) is missing: those features aren't built yet.",
   },
   "iphone-profile-provider": { skip: { status: "blocked", note: "The full-stack seeds have no account that signs in with a provider; the read-only profile is covered by the web unit tests." } },
   "iphone-profile-photo": {
@@ -980,8 +991,8 @@ const cards: Record<string, Card> = {
   },
   "iphone-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
   "iphone-create-account-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
-  "iphone-verify-email": { skip: { status: "not-built", note: "The web has no email verification." } },
-  "iphone-unverified": { skip: { status: "not-built", note: "The web has no email verification, so sharing is never held back." } },
+  "iphone-verify-email": { skip: { status: "not-built", note: "The native app's screen. On a phone the web shows web-verify-email's page." } },
+  "iphone-unverified": { skip: { status: "not-built", note: "Sharing is never held back for an unverified email (owner decision, MAZ-172), so this state doesn't exist." } },
   "iphone-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
   "iphone-invite-email": { skip: { status: "not-built", note: "The web has no invites by email (the server sends no email)." } },
   "iphone-delete-account": { skip: { status: "not-built", note: "The web has no account deletion." } },
@@ -990,16 +1001,41 @@ const cards: Record<string, Card> = {
   "iphone-privacy": { skip: { status: "not-built", note: "The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person." } },
   "ipad-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "The Sign-in group has no Verified mark, and Your data (export, delete account) is missing: those features aren't built yet.",
+    note: "Your data (export, delete account) is missing: those features aren't built yet.",
   },
   "web-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "The Sign-in panel has no Verified mark, Your data (export, delete account) and the privacy policy footer are missing, and the section list has no Privacy or Export data: those features aren't built yet.",
+    note: "Your data (export, delete account) is missing, and the section list has no Privacy or Export data: those features aren't built yet.",
   },
   "web-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
   "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
-  "web-verify-email": { skip: { status: "not-built", note: "The web has no email verification." } },
-  "web-email-verified": { skip: { status: "not-built", note: "The web has no email verification." } },
+  "web-verify-email": {
+    note: `${EMAIL_STUBBED} The capture also reports the seeded account as unverified, since every seeded account is verified.`,
+    open: async ({ page: p }) => {
+      await withEmail(p);
+      await unverified(p);
+      await p.clock.install({ time: Date.parse(AT) });
+      await p.goto("/verify-email");
+      await expect(p.getByRole("heading", { level: 1, name: "Check your email" })).toBeVisible();
+      // Time stands still at 0:42 for the capture, while frames and timers keep running.
+      await p.clock.pauseAt(Date.parse(AT) + 19_000);
+      await p.clock.resume();
+      await p.clock.setFixedTime(Date.parse(AT) + 19_000);
+      await expect(p.getByText(/Resend in/)).toContainText("0:42");
+    },
+  },
+  "web-email-verified": {
+    note: `${EMAIL_STUBBED} The emailed link's code is answered by a stub, since the capture has no email to read it from.`,
+    open: async ({ page: p }) => {
+      await withEmail(p);
+      await p.route("**/api/auth/email-verification", async (route) => {
+        const me = await (await p.request.get("/api/auth/me")).json() as { email: string };
+        await route.fulfill({ json: { email: me.email } });
+      });
+      await p.goto(`/verify-email#code=${SAMPLE_RESET_CODE}`);
+      await expect(p.getByRole("heading", { level: 1, name: "Your email is verified" })).toBeVisible();
+    },
+  },
   "web-forgot-password": {
     note: EMAIL_STUBBED,
     open: async ({ page: p }) => {

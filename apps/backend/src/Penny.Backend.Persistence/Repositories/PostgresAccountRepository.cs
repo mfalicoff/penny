@@ -23,7 +23,13 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
         return await context
             .Users.AsNoTracking()
             .Where(user => user.Email == email)
-            .Select(user => new StoredUser(user.Id, user.Email, user.Password))
+            .Select(user => new StoredUser(
+                user.Id,
+                user.Email,
+                user.Password,
+                null,
+                user.EmailVerifiedAt
+            ))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -33,7 +39,13 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
         return await context
             .Users.AsNoTracking()
             .Where(user => user.Id == userId)
-            .Select(user => new StoredUser(user.Id, user.Email, user.Password))
+            .Select(user => new StoredUser(
+                user.Id,
+                user.Email,
+                user.Password,
+                null,
+                user.EmailVerifiedAt
+            ))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -70,6 +82,61 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
         return true;
     }
 
+    public async Task<EmailChangeResult> TryChangeEmailAsync(
+        string userId,
+        string currentHash,
+        string newEmail,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        await using var transaction = await context.Database.BeginTransactionAsync(
+            cancellationToken
+        );
+        int changed;
+        try
+        {
+            changed = await context
+                .Users.Where(user => user.Id == userId && user.Password == currentHash)
+                .ExecuteUpdateAsync(
+                    set =>
+                        set.SetProperty(user => user.Email, newEmail)
+                            .SetProperty(user => user.EmailVerifiedAt, (DateTimeOffset?)null),
+                    cancellationToken
+                );
+        }
+        catch (Exception error)
+            when ((error as PostgresException ?? error.InnerException as PostgresException)
+                    is { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: EmailIndex }
+            )
+        {
+            return EmailChangeResult.Duplicate;
+        }
+        if (changed != 1)
+            return EmailChangeResult.Stale;
+        // A code sent to the earlier address must never verify the new one.
+        await context
+            .EmailVerifications.Where(verification => verification.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return EmailChangeResult.Changed;
+    }
+
+    public async Task<bool> MarkEmailVerifiedAsync(
+        string userId,
+        DateTimeOffset verifiedAt,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        return await context
+                .Users.Where(user => user.Id == userId && user.EmailVerifiedAt == null)
+                .ExecuteUpdateAsync(
+                    set => set.SetProperty(user => user.EmailVerifiedAt, verifiedAt),
+                    cancellationToken
+                ) == 1;
+    }
+
     public async Task<StoredUser?> FindByIdentityAsync(
         string issuer,
         string subject,
@@ -84,7 +151,8 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 context.Users,
                 identity => identity.UserId,
                 user => user.Id,
-                (_, user) => new StoredUser(user.Id, user.Email, user.Password)
+                (_, user) =>
+                    new StoredUser(user.Id, user.Email, user.Password, null, user.EmailVerifiedAt)
             )
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -150,6 +218,7 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 Email = user.Email,
                 Password = user.Password,
                 DisplayName = user.DisplayName,
+                EmailVerifiedAt = user.EmailVerifiedAt,
             }
         );
         context.Ledgers.Add(
