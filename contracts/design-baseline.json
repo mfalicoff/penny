@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "25e2797a8e511ae6a79316e27c4f7246f219cee191b707b5e7399204ed3b90bf"
+      "sha256": "e8bebafeb429bb92c41b2030a1049c8985948cbc804d6199b1e2149882a8927d"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -268,6 +268,12 @@
       "entertainment": "#7A8F3A",
       "health": "#0E7490",
       "other": "#8E8A85"
+    },
+    "monogram": {
+      "note": "A person's monogram (.avatar, .pk-avatar): a top-to-bottom gradient with bold white initials, in light and dark.",
+      "from": "#A8A29E",
+      "to": "#78716C",
+      "label": "#FFFFFF"
     },
     "meaning": {
       "tint": "actions, selection and brand",
@@ -805,7 +811,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/shared-list.html",
-      "sha256": "3cea95d3654f37ac887b63b23397a85d2ea513556285696f38046bc045f8441d",
+      "sha256": "fb63ac0aa231290821322b7203a59643a52e79406b80fa6a62ce7f2f0d61e2e5",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",
@@ -943,7 +949,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/payment-stale.html",
-      "sha256": "33e2d7c59d9c7e1a9f5841602d0cd359de8058088f3d29e3545312ed42bb819b",
+      "sha256": "73ac682b10196925a8900eb01132b63a9f622ee7c45d7b0e8bf2628544990d5f",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",

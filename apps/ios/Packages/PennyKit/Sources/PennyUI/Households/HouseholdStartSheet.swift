@@ -68,9 +68,14 @@ struct HouseholdStartSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(PennyColor.background)
+            // `iphone-join-code` is drawn on the sheet's surface, with the code in a raised group.
+            .background(mode == .join ? PennyColor.surface : PennyColor.background)
             .safeAreaInset(edge: .bottom) {
-                if mode == .create { createButton }
+                if mode == .create {
+                    createButton
+                } else if otherServer == nil {
+                    joinButton
+                }
             }
             .navigationTitle(joinsTrip ? "Join a trip" : mode == .create ? "New household" : "Join a household")
             .inlineNavigationTitle()
@@ -267,19 +272,44 @@ struct HouseholdStartSheet: View {
             .accessibilityIdentifier("householdStart.error")
         }
         if otherServer == nil {
+            // `iphone-join-code`: the key tile and the title, then the code and Scan a QR code in
+            // one group, the hint, and Join household pinned to the bottom.
+            Section {
+                VStack(spacing: 14) {
+                    Image(systemName: "key")
+                        .font(.largeTitle)
+                        .foregroundStyle(PennyColor.label)
+                        .frame(width: 72, height: 72)
+                        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .accessibilityHidden(true)
+                    Text(joinsTrip ? "Join a trip" : "Join a household").font(.title2.weight(.bold))
+                        .accessibilityAddTraits(.isHeader)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 14)
+                .accessibilityIdentifier("householdStart.intro")
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
             Section {
                 TextField("10-character code", text: $codeText)
-                    .font(.title3.monospaced())
+                    .font(.title2.weight(.semibold).monospacedDigit())
+                    .tracking(3)
                     .codeEntry()
                     .focused($focused)
                     .submitLabel(.join)
                     .onSubmit { Task { await join() } }
+                    .frame(minHeight: 54)
+                    .listRowBackground(PennyColor.secondarySurface)
                     .accessibilityIdentifier("householdStart.code")
                 Button {
                     scanning = true
                 } label: {
                     Label("Scan a QR code", systemImage: "qrcode.viewfinder")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(PennyColor.tintText)
                 }
+                .listRowBackground(PennyColor.secondarySurface)
                 .accessibilityIdentifier("householdStart.scan")
             } header: {
                 Text("Invite code").cardSectionHeader()
@@ -291,16 +321,18 @@ struct HouseholdStartSheet: View {
                         : "Codes last 10 minutes and work for everyone they're shared with. Your ledger currency must "
                             + "match the household's. You only share expenses dated from the day you join.")
             }
-            Section {
-                Button {
-                    Task { await join() }
-                } label: {
-                    ProgressLabel(title: joinsTrip ? "Join trip" : "Join household", working: working)
-                }
-                .disabled(working || InviteCode(typed: codeText) == nil)
-                .accessibilityIdentifier("householdStart.joinButton")
-            }
         }
+    }
+
+    /// Join household, pinned to the bottom of the sheet as on the card.
+    private var joinButton: some View {
+        PinnedSheetButton(
+            title: working ? "Joining…" : joinsTrip ? "Join trip" : "Join household", working: working,
+            enabled: !working && InviteCode(typed: codeText) != nil, background: PennyColor.surface
+        ) {
+            Task { await join() }
+        }
+        .accessibilityIdentifier("householdStart.joinButton")
     }
 
     private func readLink() {
@@ -388,5 +420,34 @@ extension View {
         #else
             autocorrectionDisabled()
         #endif
+    }
+}
+
+/// The copper capsule pinned to the bottom of a sheet: Create household, Join household.
+struct PinnedSheetButton: View {
+    let title: String
+    let working: Bool
+    let enabled: Bool
+    var background: Color = PennyColor.background
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(title)
+                if working { ProgressView().tint(.white) }
+            }
+            .font(.body.weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: ControlSize.button)
+            .foregroundStyle(.white)
+            .background(PennyColor.tint, in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.45)
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.vertical, 8)
+        .background(background)
     }
 }

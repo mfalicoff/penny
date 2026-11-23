@@ -76,25 +76,60 @@ struct NotificationSettingsRow: View {
 struct NotificationPrompt: View {
     let push: PushNotifications
 
+    /// `iphone-shared-list`, `iphone-notifications-prompt`: the bell on a tinted tile beside the
+    /// title and explanation, then Turn on and Not now as equal capsules.
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Hear about household changes", systemImage: "bell.badge")
-                .font(.body.weight(.semibold))
-            Text(NotificationText.explanation)
-                .font(.subheadline)
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 16) {
-                Button("Turn on") { Task { await push.requestPermission() } }
-                    .buttonStyle(.borderedProminent)
-                    .accessibilityIdentifier("notifications.allow")
-                Button("Not now") { push.dismissPrompt() }
-                    .accessibilityIdentifier("notifications.notNow")
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: "bell.badge")
+                    .font(.title3)
+                    .foregroundStyle(PennyColor.tint)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        PaletteToken.tintSoft.value.color, in: RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    )
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Hear about household changes").font(.body.weight(.semibold))
+                        .accessibilityAddTraits(.isHeader)
+                    Text(NotificationText.explanation)
+                        .font(.subheadline)
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .frame(minHeight: Metrics.minTouchTarget)
+            HStack(spacing: 10) {
+                Button {
+                    Task { await push.requestPermission() }
+                } label: {
+                    Text("Turn on").promptButton(primary: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("notifications.allow")
+                Button {
+                    push.dismissPrompt()
+                } label: {
+                    Text("Not now").promptButton(primary: false)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("notifications.notNow")
+            }
         }
-        .padding(.vertical, 4)
+        .padding(18)
+        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("notifications.prompt")
+    }
+}
+
+extension View {
+    fileprivate func promptButton(primary: Bool) -> some View {
+        font(.callout.weight(.semibold))
+            .foregroundStyle(primary ? Color.white : PennyColor.label)
+            .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
+            .background(primary ? PennyColor.tint : PennyColor.fill, in: Capsule())
+            .contentShape(Capsule())
     }
 }

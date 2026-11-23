@@ -1002,7 +1002,7 @@
     {
       "id": "iphone-payment-stale",
       "source": "docs/design/penny-ios/iphone/payment-stale.html",
-      "sourceSha256": "33e2d7c59d9c7e1a9f5841602d0cd359de8058088f3d29e3545312ed42bb819b",
+      "sourceSha256": "73ac682b10196925a8900eb01132b63a9f622ee7c45d7b0e8bf2628544990d5f",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1011,12 +1011,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-payment-stale.light.png",
-          "sha256": "8897e84fd7eb26dc2298f624cc92177de45aa7e4fda6cedfc82c6f4c3142098f"
+          "sha256": "45a393eb9dfae92cb905a0598bd640b3c37abc6ff15cef14fcfba6f7706340a5"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-payment-stale.dark.png",
-          "sha256": "fdb017cf8e7dfb4bbf5c59aa8b816a719af0faeb96469f584e0b68eba8f99030"
+          "sha256": "01d04abc099c1212535f67faa6c2985091fda2cfdc284a6450c0a46cd7a27411"
         }
       ]
     },
@@ -1522,7 +1522,7 @@
     {
       "id": "iphone-shared-list",
       "source": "docs/design/penny-ios/iphone/shared-list.html",
-      "sourceSha256": "3cea95d3654f37ac887b63b23397a85d2ea513556285696f38046bc045f8441d",
+      "sourceSha256": "fb63ac0aa231290821322b7203a59643a52e79406b80fa6a62ce7f2f0d61e2e5",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1531,12 +1531,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-list.light.png",
-          "sha256": "a4e3c5e93dcc67b88cbdef389a43d90379e965022d2fcd7fb638ac76f5cb0a56"
+          "sha256": "d0b5cb0c0744c8ba80bf47f366efa7f2fecb1faeb55a680b7caa41621a3b2cdb"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-list.dark.png",
-          "sha256": "5728258212a165198e736118c808640e371bf01770538930912550abafcd68ab"
+          "sha256": "9b07f1cbd903e57c4c725ef5be0161e052a57ce7675627a859f6c61cea22de26"
         }
       ]
     },

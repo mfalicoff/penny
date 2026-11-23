@@ -41,7 +41,10 @@ public struct TripRange: Hashable, Sendable {
         case .upcoming:
             let days = start.days(since: today)
             if days == 1 { return "Tomorrow" }
-            return days <= 30 ? "In \(days) days" : "Upcoming"
+            if days <= 30 { return "In \(days) days" }
+            // `iphone-trip-personal`: "In 12 weeks", up to half a year away.
+            let weeks = days / 7
+            return weeks <= 26 ? "In \(weeks) weeks" : "Upcoming"
         }
     }
 

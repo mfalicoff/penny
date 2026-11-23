@@ -42,21 +42,29 @@ struct InviteSheet: View {
                             + "\(model.currency); new members are included in equal splits from the day they join."
                     )
                     .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 6)
                 }
-                .padding(Metrics.gutter)
+                .padding(.horizontal, 18)
+                .padding(.top, 18)
+                .padding(.bottom, Metrics.gutter)
             }
-            .background(PennyColor.background)
+            .background(PennyColor.surface)
             .navigationTitle("Invite someone")
             .inlineNavigationTitle()
             .toolbar {
+                // `iphone-invite`: Done is the copper capsule.
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(PennyColor.tint)
+                        .fontWeight(.semibold)
+                        .accessibilityIdentifier("invite.done")
                 }
             }
-            .pennySolidBars()
         }
+        .presentationBackground(PennyColor.surface)
         .task {
             model.expireInvite()
             if model.invite == nil { await create() }
@@ -82,47 +90,79 @@ struct InviteSheet: View {
     }
 }
 
+/// The invite code, as the sheet (`iphone-invite`) or the card under People
+/// (`iphone-shared-people`) draws it: the code, the time it has left, Copy and Share. The sheet
+/// adds the QR code and New code; the card's countdown is amber and its Share is the copper action.
 struct InviteCard: View {
+    enum Style { case sheet, inline }
+
     let expiresAt: Date
     let code: InviteCode
     let link: InviteLink
     let renew: () -> Void
     let copy: () -> Void
-    /// The QR code; the inline card under People leaves it to Show QR code.
-    var showsQR = true
+    var style: Style = .sheet
+    @ScaledMetric(relativeTo: .largeTitle) private var sheetCode = 40.0
+    @ScaledMetric(relativeTo: .largeTitle) private var inlineCode = 34.0
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             Text("They enter this code in Shared → Join").font(.subheadline)
                 .foregroundStyle(PennyColor.secondaryLabel)
+                .multilineTextAlignment(.center)
             Text(code.grouped)
-                .font(.largeTitle.weight(.bold).monospaced())
+                .font(.system(size: style == .sheet ? sheetCode : inlineCode, weight: .bold).monospacedDigit())
+                .tracking(style == .sheet ? 1.5 : 4)
                 .textSelection(.enabled)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+                .padding(.top, style == .sheet ? 6 : 4)
                 .accessibilityLabel("Invite code \(code.spoken)")
                 .accessibilityIdentifier("invite.code")
-            if showsQR, let image = InviteQRCode.image(for: link.url) {
+            if style == .sheet, let image = InviteQRCode.image(for: link.url) {
                 Image(image, scale: 1, label: Text("Invite QR code"))
                     .interpolation(.none)
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: 220)
-                    .padding(12)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: Metrics.rowRadius))
+                    .padding(18)
+                    .frame(width: 212, height: 212)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
+                            .stroke(PennyColor.separator, lineWidth: 0.5)
+                    )
+                    .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                    .padding(.top, 18)
                     .accessibilityLabel("QR code of the invite link. Scanning it opens Penny on the join screen.")
                     .accessibilityAddTraits(.isImage)
                     .accessibilityIdentifier("invite.qr")
             }
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 let left = expiresAt.timeIntervalSince(context.date)
-                Text(left > 0 ? "Expires in \(Self.clock(left))" : "Expired. Make a new code.")
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(left > 60 ? PennyColor.secondaryLabel : PennyColor.pending)
+                Label(left > 0 ? "Expires in \(Self.clock(left))" : "Expired. Make a new code.", systemImage: "clock")
+                    .font(style == .sheet ? .subheadline.weight(.medium) : .footnote.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(
+                        style == .inline || left <= 60 ? PennyColor.pending : PennyColor.secondaryLabel
+                    )
                     .accessibilityLabel(left > 0 ? "Expires in \(Int(left / 60) + 1) minutes" : "Expired")
                     .accessibilityIdentifier("invite.expires")
+                // The card under People has no New code until its code has expired.
+                if style == .inline, left <= 0 {
+                    Button("New code", systemImage: "repeat", action: renew)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(PennyColor.tintText)
+                        .frame(minHeight: Metrics.minTouchTarget)
+                        .accessibilityIdentifier("invite.new")
+                }
             }
-            HStack(spacing: 12) {
-                PennyButton("Copy", systemImage: "doc.on.doc", role: .secondary, action: copy)
-                    .accessibilityIdentifier("invite.copy")
+            .padding(.top, style == .sheet ? 14 : 4)
+            HStack(spacing: 10) {
+                Button(action: copy) {
+                    Label("Copy", systemImage: "doc.on.doc").inviteButton(style: style, primary: false)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("invite.copy")
                 Menu {
                     ShareLink(item: "Join my household in Penny with code \(code.grouped)") {
                         Label("Share code", systemImage: "textformat")
@@ -135,24 +175,50 @@ struct InviteCard: View {
                         }
                     }
                 } label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                        .font(.body.weight(.semibold))
-                        .frame(maxWidth: .infinity, minHeight: ControlSize.button)
-                        .background(PennyColor.tint, in: Capsule())
-                        .foregroundStyle(.white)
+                    Group {
+                        if style == .sheet {
+                            HStack(spacing: 7) {
+                                Text("Share")
+                                Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+                                    .foregroundStyle(PennyColor.secondaryLabel)
+                            }
+                        } else {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                    .inviteButton(style: style, primary: style == .inline)
                 }
                 .accessibilityIdentifier("invite.share")
             }
-            Button("New code", systemImage: "arrow.clockwise", action: renew)
+            .padding(.top, style == .sheet ? 22 : 14)
+            if style == .sheet {
+                Button(action: renew) {
+                    Label("New code", systemImage: "repeat").font(.body.weight(.semibold))
+                }
+                .foregroundStyle(PennyColor.tintText)
+                .frame(minHeight: Metrics.minTouchTarget)
+                .padding(.top, 4)
                 .accessibilityHint("Replaces this code. The old one stops working.")
                 .accessibilityIdentifier("invite.new")
+            }
         }
-        .pennyCard()
+        .frame(maxWidth: .infinity)
     }
 
     static func clock(_ seconds: TimeInterval) -> String {
         let total = Int(seconds.rounded(.up))
         let rest = total % 60
         return "\(total / 60):\(rest < 10 ? "0" : "")\(rest)"
+    }
+}
+
+extension View {
+    /// The invite's Copy and Share: equal capsules on the fill color, or copper for the card's Share.
+    fileprivate func inviteButton(style: InviteCard.Style, primary: Bool) -> some View {
+        font((style == .sheet ? Font.body : .subheadline).weight(.semibold))
+            .foregroundStyle(primary ? Color.white : PennyColor.label)
+            .frame(maxWidth: .infinity, minHeight: style == .sheet ? 50 : Metrics.minTouchTarget)
+            .background(primary ? PennyColor.tint : PennyColor.fill, in: Capsule())
+            .contentShape(Capsule())
     }
 }

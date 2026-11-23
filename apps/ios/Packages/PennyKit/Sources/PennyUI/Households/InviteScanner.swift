@@ -100,8 +100,9 @@ struct InviteScannerView: View {
                             .accessibilityIdentifier("scanner.close")
                     }
                 }
-                .pennySolidBars()
+                .background(PennyColor.surface)
         }
+        .presentationBackground(PennyColor.surface)
         .task { await model.start() }
         .accessibilityIdentifier("screen.inviteScanner")
     }
@@ -115,7 +116,8 @@ struct InviteScannerView: View {
                 CameraPreview { payload in
                     if let link = model.read(payload) { onScan(link) }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+                .overlay { Viewfinder().frame(width: 196, height: 196).accessibilityHidden(true) }
+                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
                 .accessibilityLabel("Camera viewfinder")
                 .accessibilityIdentifier("scanner.preview")
                 if case .rejected(let message) = model.state {
@@ -125,9 +127,12 @@ struct InviteScannerView: View {
                     .font(.subheadline)
                     .foregroundStyle(PennyColor.secondaryLabel)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 18)
                 typeCodeButton
             }
-            .padding(Metrics.gutter)
+            .padding(.horizontal, Metrics.gutter)
+            .padding(.top, 18)
+            .padding(.bottom, 8)
         case .denied, .unavailable:
             VStack(spacing: 16) {
                 PennyStateView(
@@ -149,10 +154,20 @@ struct InviteScannerView: View {
         }
     }
 
+    /// `iphone-invite-scanner`: a full-width capsule on the fill color, with the key.
     private var typeCodeButton: some View {
-        Button("Type the code instead") { onTypeCode() }
-            .buttonStyle(.bordered)
-            .accessibilityIdentifier("scanner.typeCode")
+        Button {
+            onTypeCode()
+        } label: {
+            Label("Type the code instead", systemImage: "key")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(PennyColor.label)
+                .frame(maxWidth: .infinity, minHeight: ControlSize.button)
+                .background(PennyColor.fill, in: Capsule())
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("scanner.typeCode")
     }
 }
 
@@ -264,3 +279,22 @@ struct SystemCameraAccess: CameraAccess {
         var body: some View { Color.black }
     }
 #endif
+
+/// The scanner's white corner marks around where the code should be (`iphone-invite-scanner`).
+private struct Viewfinder: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let side = min(proxy.size.width, proxy.size.height)
+            let arm = side * 0.2
+            Path { path in
+                for (x, y, dx, dy) in [(0.0, 0.0, 1.0, 1.0), (side, 0, -1, 1), (0, side, 1, -1), (side, side, -1, -1)] {
+                    path.move(to: CGPoint(x: x, y: y + dy * arm))
+                    path.addLine(to: CGPoint(x: x, y: y))
+                    path.addLine(to: CGPoint(x: x + dx * arm, y: y))
+                }
+            }
+            .stroke(Color.white, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+            .shadow(color: .black.opacity(0.3), radius: 3, y: 2)
+        }
+    }
+}

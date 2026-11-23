@@ -261,40 +261,57 @@ struct ShareTripSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                if let failure {
-                    Section {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Share \(trip.name)?")
+                        .font(.title2.weight(.bold))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                    if let failure {
                         StatusBanner(tone: .error, title: "Not shared", message: failure)
+                            .padding(.top, 16)
+                            .accessibilityIdentifier("shareTrip.error")
                     }
-                    .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
-                    .accessibilityIdentifier("shareTrip.error")
-                }
-                Section {
-                    point(
-                        "person.2", "A shared trip with the same name and dates",
-                        "You're the organizer and invite people with a code. It uses \(currency.rawValue).")
-                    point("lock", privateTitle, "What you added before sharing is shown only to you, under Only you.")
+                    VStack(alignment: .leading, spacing: 22) {
+                        point(
+                            "person.badge.plus", "A shared trip with the same name and dates",
+                            "You're the organizer and invite people with a code. It uses \(currency.rawValue).")
+                        point(
+                            "lock", privateTitle, "What you added before sharing is shown only to you, under Only you."
+                        )
                         .accessibilityIdentifier("shareTrip.private")
-                    point(
-                        "calendar", "Balances settle by month",
-                        "Like a household, each month is settled on its own. Add trip expenses afterwards to split "
-                            + "them with everyone.")
-                }
-                Section {
-                    Button {
-                        Task { await share() }
-                    } label: {
-                        ProgressLabel(title: "Share trip", working: working)
+                        point(
+                            "calendar", "Balances settle by month",
+                            "Each month's balance is separate, and months don't offset each other.")
                     }
-                    .disabled(working)
-                    .accessibilityIdentifier("shareTrip.confirm")
-                } footer: {
-                    Text("Sharing needs a connection. Nothing is sent until you choose Share trip.")
+                    .padding(.top, 26)
+                    .padding(.horizontal, 8)
                 }
+                .padding(.horizontal, 18)
             }
-            .scrollContentBackground(.hidden)
-            .background(PennyColor.background)
+            // `iphone-trip-share`: Share trip and the note pinned to the bottom of the sheet.
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 14) {
+                    PinnedSheetButton(
+                        title: "Share trip", working: working, enabled: !working, background: PennyColor.surface
+                    ) {
+                        Task { await share() }
+                    }
+                    .accessibilityIdentifier("shareTrip.confirm")
+                    Text("Sharing needs a connection. Nothing is sent until you choose Share trip.")
+                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 30)
+                }
+                .padding(.bottom, 8)
+                .background(PennyColor.surface)
+            }
+            .background(PennyColor.surface)
             .navigationTitle("Share \(trip.name)?")
+            .toolbar(removing: .title)
             .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -304,8 +321,9 @@ struct ShareTripSheet: View {
                         .accessibilityIdentifier("shareTrip.close")
                 }
             }
-            .pennySolidBars()
         }
+        .presentationDetents([.fraction(0.68), .large])
+        .presentationBackground(PennyColor.surface)
         .interactiveDismissDisabled(working)
         .accessibilityIdentifier("screen.shareTrip")
     }
@@ -318,16 +336,23 @@ struct ShareTripSheet: View {
         }
     }
 
+    /// A point with its copper icon on a tinted tile, as on the card.
     private func point(_ symbol: String, _ title: String, _ detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol).foregroundStyle(PennyColor.tint).frame(width: 24).accessibilityHidden(true)
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: symbol)
+                .font(.title3)
+                .foregroundStyle(PennyColor.tint)
+                .frame(width: 40, height: 40)
+                .background(
+                    PaletteToken.tintSoft.value.color, in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                )
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.body.weight(.semibold))
+                Text(title).font(.callout.weight(.semibold))
                 Text(detail).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
     }
 
