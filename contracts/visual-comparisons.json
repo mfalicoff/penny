@@ -1003,19 +1003,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-89",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No Edit button, drag handles or Drag to reorder, and the footer explains renaming and removing instead of the first-three shortcuts, which follow use on the web. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
-          }
         ]
       }
     },
