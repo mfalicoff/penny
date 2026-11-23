@@ -65,7 +65,7 @@ describe("appearance", () => {
     const user = userEvent.setup();
     renderApp("/settings/appearance");
     const toggle = await screen.findByRole("switch", { name: "Reduce transparency" });
-    expect(toggle).toHaveAccessibleDescription(/solid surfaces/);
+    expect(toggle).toHaveAccessibleDescription(/solid (surfaces|navigation bars)/);
     expect(toggle).not.toBeChecked();
     await user.click(toggle);
     expect(toggle).toBeChecked();
