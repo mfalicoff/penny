@@ -106,14 +106,12 @@ struct HouseholdPage: View {
     enum Confirmation: Identifiable, Equatable {
         case leave, archive
         case remove(WireHouseholdMember)
-        case deleteRule(WireSharedRule)
 
         var id: String {
             switch self {
             case .leave: "leave"
             case .archive: "archive"
             case .remove(let member): "remove \(member.userId)"
-            case .deleteRule(let rule): "rule \(rule.id)"
             }
         }
     }
@@ -122,6 +120,109 @@ struct HouseholdPage: View {
     private var trip: SharedTripContext? { SharedTripContext(model: model, shell: shell) }
     private var isTrip: Bool { model.household.map { $0.trip != nil } ?? opensAsTrip }
     private var noun: String { isTrip ? "trip" : "household" }
+
+    // MARK: Toolbar
+
+    /// The month pill: on a household's Expenses and Balances (and beside both panes on iPad),
+    /// and on a shared trip's Balances on iPhone, since a trip lists its expenses whatever the
+    /// month. The iPad trip, whose card has no pill, chooses the month in its … menu.
+    private var showsMonthPill: Bool {
+        guard model.household != nil else { return false }
+        if isTwoColumn { return trip == nil }
+        return trip == nil ? section != .people : section == .balances
+    }
+
+    /// History is its own clock button on Balances and People (`iphone-shared-balances`,
+    /// `iphone-shared-people`) and beside the iPad household (`ipad-shared`); on Expenses and
+    /// on the iPad trip it is in the … menu (`iphone-shared`, `iphone-trip-detail`, `ipad-trip`).
+    private var showsHistoryButton: Bool {
+        guard model.household != nil else { return false }
+        return isTwoColumn ? trip == nil : section != .expenses
+    }
+
+    /// Invite is a toolbar button where the card draws it: Expenses, and always on iPad.
+    private var showsInviteButton: Bool { canInvite && (isTwoColumn || section == .expenses) }
+
+    /// Every card but `ipad-shared` has the … menu; the iPad household keeps its actions under People.
+    private var showsMoreMenu: Bool { model.household != nil && !(isTwoColumn && trip == nil) }
+
+    /// The … menu: what the bar doesn't show, then the household's own actions.
+    private var moreMenu: some View {
+        Menu {
+            if trip != nil, !isTwoColumn, !model.isReadOnly {
+                Button("Trip expense", systemImage: "plus") { addExpense() }
+                    .accessibilityIdentifier("household.addExpense")
+            }
+            if !showsHistoryButton {
+                Button("History", systemImage: "clock") {
+                    shell.navigate { $0.push(.householdHistory(householdID: model.id)) }
+                }
+                .accessibilityIdentifier("household.history")
+            }
+            if canInvite, !showsInviteButton {
+                Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
+                    .accessibilityIdentifier("household.invite")
+            }
+            if trip != nil, isTwoColumn {
+                // `ipad-trip` has no month pill: People shows this month's balances.
+                Picker(selection: monthBinding) {
+                    ForEach(MonthPicker.months(through: MonthKey(shell.today)), id: \.self) { month in
+                        Text(MonthPicker.title(month, long: true)).tag(month)
+                    }
+                } label: {
+                    Label("Balances month", systemImage: "calendar")
+                }
+                .pickerStyle(.menu)
+                .accessibilityIdentifier("household.month")
+            }
+            householdActions
+        } label: {
+            Label("More", systemImage: "ellipsis")
+        }
+        .neutralToolbarGlyph()
+        .accessibilityIdentifier("household.more")
+    }
+
+    /// Rename or Edit trip, Leave and Archive: in the … menu, or under People on the iPad household.
+    @ViewBuilder private var householdActions: some View {
+        if let household = model.household, !model.isReadOnly {
+            Section {
+                if model.isCreator {
+                    if isTrip {
+                        Button("Edit trip", systemImage: "pencil") { editingTrip = true }
+                            .accessibilityIdentifier("tripPage.edit")
+                    } else {
+                        Button("Rename", systemImage: "pencil") {
+                            newName = household.name
+                            renaming = true
+                        }
+                        .accessibilityIdentifier("household.rename")
+                    }
+                }
+                Button(
+                    isTrip ? "Leave trip" : "Leave household", systemImage: "rectangle.portrait.and.arrow.right",
+                    role: .destructive
+                ) {
+                    confirm = .leave
+                }
+                .accessibilityIdentifier("household.leave")
+                if model.isCreator {
+                    Button(isTrip ? "Archive trip" : "Archive household", systemImage: "archivebox", role: .destructive)
+                    {
+                        confirm = .archive
+                    }
+                    .accessibilityIdentifier("household.archive")
+                }
+            }
+        }
+    }
+
+    /// The month the page shows, chosen from a menu.
+    private var monthBinding: Binding<MonthKey> {
+        Binding(
+            get: { model.month },
+            set: { month in Task { await model.show(month: month, current: MonthKey(shell.today)) } })
+    }
 
     var body: some View {
         let trip = self.trip
@@ -180,22 +281,43 @@ struct HouseholdPage: View {
                 }
             }
             .toolbar {
-                if canInvite {
+                // The month pill (MAZ-264): beside Back on iPhone (`iphone-shared`,
+                // `iphone-shared-balances`); between previous and next over both panes on iPad
+                // (`ipad-shared`).
+                if showsMonthPill {
+                    if isTwoColumn {
+                        ToolbarItem(placement: .navigation) { HouseholdMonthStep(model: model, offset: -1) }
+                        ToolbarSpacer(.fixed, placement: .navigation)
+                        ToolbarItem(placement: .navigation) { HouseholdMonthPicker(model: model, showsYear: true) }
+                        ToolbarSpacer(.fixed, placement: .navigation)
+                        ToolbarItem(placement: .navigation) { HouseholdMonthStep(model: model, offset: 1) }
+                    } else {
+                        ToolbarItem(placement: .navigation) { HouseholdMonthPicker(model: model) }
+                    }
+                }
+                if showsHistoryButton {
+                    ToolbarItem(placement: .primaryAction) {
+                        NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
+                            Label("History", systemImage: "clock")
+                        }
+                        .neutralToolbarGlyph()
+                        .accessibilityIdentifier("household.history")
+                    }
+                }
+                if showsInviteButton {
                     ToolbarItem(placement: .primaryAction) {
                         Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
                             .neutralToolbarGlyph()
                             .accessibilityIdentifier("household.invite")
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
-                        Label("History", systemImage: "clock")
-                    }
-                    .neutralToolbarGlyph()
-                    .accessibilityIdentifier("household.history")
+                if showsMoreMenu {
+                    ToolbarItem(placement: .primaryAction) { moreMenu }
                 }
-                // `ipad-shared`: + Expense is the copper action beside History and Invite.
-                if isTwoColumn, trip == nil, !model.isReadOnly, model.household != nil {
+                // `ipad-shared`: + Expense is the copper action beside History and Invite;
+                // `ipad-trip`: Trip expense after Invite and the … menu.
+                if isTwoColumn, !model.isReadOnly, model.household != nil {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
                     ToolbarItem(placement: .primaryAction) {
                         Button {
                             addExpense()
@@ -203,7 +325,7 @@ struct HouseholdPage: View {
                             // Words beside the glyph, as on the card: a toolbar Label would show the glyph only.
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
-                                Text("Expense")
+                                Text(trip == nil ? "Expense" : "Trip expense")
                             }
                             .fontWeight(.semibold)
                         }
@@ -308,28 +430,33 @@ struct HouseholdPage: View {
     @ViewBuilder
     private func mainColumn(trip: SharedTripContext?) -> some View {
         if let trip {
-            SharedTripExpenseSections(context: trip, model: model, showsShareByCategory: false)
+            // `ipad-trip`: one Expenses card, "4 shared · 1 private", with the private rows inline.
+            SharedTripExpenseSections(context: trip, model: model, combined: true)
         } else {
-            expensesSection
+            wideExpenseSections
         }
-        rulesSection
     }
 
     @ViewBuilder
     private func sideColumn(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         if let trip {
-            balancesSection
+            // `ipad-trip`: People beside the hero, each with this month's balance, then Your
+            // share by category. The month's payments to record follow.
+            tripPeopleSection
             SharedTripShareByCategory(context: trip, model: model)
+            suggestionsSection
+            overdueSections
         } else {
             Section {
                 balanceHero(alignment: .leading)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
             }
-            balancesSection
+            wideBalancesSection
             if let expense = selectedExpense { SelectedExpenseSection(expense: expense, model: model) { payment = $0 } }
+            overdueSections
+            peopleSection(household)
         }
-        peopleSection(household)
     }
 
     // MARK: Header
@@ -353,18 +480,13 @@ struct HouseholdPage: View {
     private func header(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         Section {
             if let trip {
-                VStack(spacing: 16) {
-                    SharedTripHero(context: trip, model: model)
-                    // A trip's balances settle by month under Balances, so its page leads with the
-                    // trip, as on the card, and only adds an expense from here.
-                    if !model.isReadOnly {
-                        PennyButton("Trip expense", systemImage: "plus") { addExpense() }
-                            .accessibilityIdentifier("household.addExpense")
-                    }
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
-                .listRowSeparator(.hidden)
+                // A trip's balances settle by month under Balances, so its page leads with the
+                // trip, as on the card. Trip expense is in the … menu on iPhone (the card relies
+                // on Add entry) and the toolbar's copper capsule on iPad.
+                SharedTripHero(context: trip, model: model)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                    .listRowSeparator(.hidden)
             } else if isTwoColumn {
                 // `ipad-shared`: the name large and leading with the members beside it, then the
                 // month's total. The balance leads the side column; + Expense is in the toolbar.
@@ -475,40 +597,23 @@ struct HouseholdPage: View {
         .accessibilityIdentifier("household.balance")
     }
 
-    /// The month a section shows, with the previous and next month: the header of Expenses and
-    /// Balances, as the card's "November … total" header.
+    /// The header of Expenses and Balances: the month the page shows, as the card's
+    /// "November … total" header. The month is chosen with the pill in the navigation bar.
     private func monthHeader(trailing: String) -> some View {
         monthHeader { Text(trailing).cardSectionHeader() }
     }
 
-    private func monthHeader<Trailing: View>(@ViewBuilder trailing: () -> Trailing) -> some View {
-        HStack(spacing: 4) {
-            Button("Previous month", systemImage: "chevron.left") {
-                if let previous = model.month.shifted(by: -1) {
-                    Task { await model.show(month: previous, current: MonthKey(shell.today)) }
-                }
-            }
-            .labelStyle(.iconOnly)
-            .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
-            .accessibilityIdentifier("household.previousMonth")
-            Text(HouseholdText.shortMonth(model.month))
+    private func monthHeader<Trailing: View>(
+        _ month: MonthKey? = nil, @ViewBuilder trailing: () -> Trailing
+    ) -> some View {
+        let month = month ?? model.month
+        return HStack(spacing: 8) {
+            Text(HouseholdText.shortMonth(month))
                 .cardSectionHeader()
-                .accessibilityLabel(HouseholdText.month(model.month))
-                .accessibilityIdentifier("household.month")
-            Button("Next month", systemImage: "chevron.right") {
-                if let next = model.month.shifted(by: 1) {
-                    Task { await model.show(month: next, current: MonthKey(shell.today)) }
-                }
-            }
-            .labelStyle(.iconOnly)
-            .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
-            .disabled(model.month >= MonthKey(shell.today))
-            .accessibilityIdentifier("household.nextMonth")
+                .accessibilityLabel(HouseholdText.month(month))
             Spacer()
             trailing()
         }
-        .buttonStyle(.borderless)
-        .padding(.leading, -14)
     }
 
     static func balanceLabel(_ cents: Int64) -> String {
@@ -521,10 +626,8 @@ struct HouseholdPage: View {
         case .expenses:
             if let trip {
                 SharedTripExpenseSections(context: trip, model: model)
-                rulesSection
             } else {
                 expensesSection
-                rulesSection
             }
         case .balances: balancesSection
         case .people: peopleSection(household)
@@ -533,45 +636,85 @@ struct HouseholdPage: View {
 
     // MARK: Expenses
 
+    /// The month's expenses under "November … $3,412.80 total" (`iphone-shared`). Repeating
+    /// expenses show with their cadence; their schedules are edited from Recurring.
     @ViewBuilder private var expensesSection: some View {
         let total = model.expenses.reduce(Int64(0)) { $0 + $1.totalCents }
         Section {
-            if model.expenses.isEmpty {
-                Text(
-                    model.isReadOnly
-                        ? "No expenses you shared this month."
-                        : "No shared expenses this month. Add one with Expense; everyone sees it and their share."
-                )
-                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-            }
-            ForEach(model.expenses) { expense in
-                let row = SharedExpenseRow(
-                    expense: expense, people: model.people, currency: model.currency,
-                    compactShare: isTwoColumn, cadence: cadence(of: expense))
-                if isTwoColumn {
-                    // `ipad-shared`: the expense opens beside the list, its row tinted.
-                    let selected = selectedExpense?.id == expense.id
-                    Button {
-                        selectedExpenseID = expense.id
-                    } label: {
-                        row.contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .cardRow()
-                    .listRowBackground(selected ? PaletteToken.tintSoft.value.color : PennyColor.surface)
-                    .accessibilityAddTraits(selected ? .isSelected : [])
-                    .accessibilityHint("Shows its shares beside the list")
-                    .accessibilityIdentifier("household.expense.\(expense.id)")
-                } else {
-                    NavigationLink(
-                        value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)
-                    ) { row }
-                    .cardRow()
-                    .accessibilityIdentifier("household.expense.\(expense.id)")
-                }
-            }
+            if model.expenses.isEmpty { emptyExpenses }
+            ForEach(model.expenses) { expense in expenseRow(expense) }
         } header: {
             monthHeader(trailing: "\(MoneyFormat.amount(total, currency: model.currency)) total")
+        }
+    }
+
+    /// `ipad-shared`: the list under the header groups the current month's expenses as This
+    /// week and Earlier; a past month's are one list under its name.
+    @ViewBuilder private var wideExpenseSections: some View {
+        let groups = Self.weekGroups(model.expenses, month: model.month, today: shell.today)
+        if groups.isEmpty {
+            Section {
+                emptyExpenses
+            } header: {
+                monthHeader { EmptyView() }
+            }
+        }
+        ForEach(groups, id: \.title) { group in
+            Section {
+                ForEach(group.expenses) { expense in expenseRow(expense) }
+            } header: {
+                Text(group.title).cardSectionHeader()
+            }
+        }
+    }
+
+    /// The expenses as `ipad-shared` lists them: in the current month, the last seven days as
+    /// This week, then Earlier; in any other month, one group under the month's name.
+    static func weekGroups(
+        _ expenses: [WireSharedExpense], month: MonthKey, today: CalendarDate
+    ) -> [(title: String, expenses: [WireSharedExpense])] {
+        guard !expenses.isEmpty else { return [] }
+        guard month.contains(today) else { return [(HouseholdText.shortMonth(month), expenses)] }
+        let weekStart = today.adding(days: -6)
+        let thisWeek = expenses.filter { CalendarDate.ledgerDate($0.date).map { $0 >= weekStart } ?? false }
+        let earlier = expenses.filter { expense in !thisWeek.contains { $0.id == expense.id } }
+        return [("This week", thisWeek), ("Earlier", earlier)].filter { !$0.expenses.isEmpty }
+    }
+
+    private var emptyExpenses: some View {
+        Text(
+            model.isReadOnly
+                ? "No expenses you shared this month."
+                : "No shared expenses this month. Add one with Expense; everyone sees it and their share."
+        )
+        .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+    }
+
+    @ViewBuilder
+    private func expenseRow(_ expense: WireSharedExpense) -> some View {
+        let row = SharedExpenseRow(
+            expense: expense, people: model.people, currency: model.currency,
+            compactShare: isTwoColumn, cadence: cadence(of: expense))
+        if isTwoColumn {
+            // `ipad-shared`: the expense opens beside the list, its row tinted.
+            let selected = selectedExpense?.id == expense.id
+            Button {
+                selectedExpenseID = expense.id
+            } label: {
+                row.contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .cardRow()
+            .listRowBackground(selected ? PaletteToken.tintSoft.value.color : PennyColor.surface)
+            .accessibilityAddTraits(selected ? .isSelected : [])
+            .accessibilityHint("Shows its shares beside the list")
+            .accessibilityIdentifier("household.expense.\(expense.id)")
+        } else {
+            NavigationLink(
+                value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)
+            ) { row }
+            .cardRow()
+            .accessibilityIdentifier("household.expense.\(expense.id)")
         }
     }
 
@@ -581,40 +724,10 @@ struct HouseholdPage: View {
         return RecurrenceFrequency(rawValue: rule.frequency).map(SharedFormText.frequency)
     }
 
-    @ViewBuilder private var rulesSection: some View {
-        if !model.rules.isEmpty {
-            Section {
-                ForEach(model.rules) { rule in
-                    Button {
-                        if !model.isReadOnly { form = .rule(rule) }
-                    } label: {
-                        SharedRuleRow(rule: rule, people: model.people, currency: model.currency)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        if !model.isReadOnly {
-                            Button(rule.active ? "Pause" : "Resume", systemImage: rule.active ? "pause" : "play") {
-                                Task { _ = await model.setActive(rule, !rule.active) }
-                            }
-                            Button("Delete", systemImage: "trash", role: .destructive) {
-                                confirm = .deleteRule(rule)
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("household.rule.\(rule.id)")
-                }
-            } header: {
-                Text("Repeating").cardSectionHeader()
-            } footer: {
-                Text(
-                    "Repeating expenses are added on their date with the members active that day. Pausing skips "
-                        + "the dates while paused.")
-            }
-        }
-    }
-
     // MARK: Balances
 
+    /// `iphone-shared-balances`: each member's balance under the month and its tag, the month's
+    /// suggested payments, then each overdue month with its own payments to record.
     @ViewBuilder private var balancesSection: some View {
         let recap = model.recap
         Section {
@@ -629,46 +742,71 @@ struct HouseholdPage: View {
                     .foregroundStyle(PennyColor.secondaryLabel)
             }
         } header: {
-            monthHeader { settlesTag(recap) }
+            monthHeader { settlesTag(recap, month: model.month) }
         }
-        if let recap, !recap.suggestions.isEmpty {
+        suggestionsSection
+        overdueSections
+    }
+
+    /// The month's suggested payments, or that everyone is settled.
+    @ViewBuilder private var suggestionsSection: some View {
+        if let recap = model.recap, !recap.suggestions.isEmpty {
             Section {
                 ForEach(recap.suggestions, id: \.self) { transfer in
-                    SuggestionRow(
-                        transfer: transfer, people: model.people, currency: model.currency,
-                        canRecord: canRecord(transfer), isOpen: isOpen
-                    ) {
-                        payment = .monthly(transfer, month: model.month)
-                    }
-                    .accessibilityIdentifier("household.suggestion.\(transfer.fromUserId)-\(transfer.toUserId)")
+                    suggestionRow(transfer, month: model.month, isOpen: isOpen)
                 }
             } header: {
                 Text("Suggested payments").cardSectionHeader()
             } footer: {
-                Label {
-                    if isOpen {
-                        Text("Record a payment once it has happened outside Penny. Penny doesn't move money.")
-                    } else {
-                        Text(
-                            "Monthly payments open on the last day of the month. To repay a single expense now, use **Mark as paid** on its share."
-                        )
-                    }
-                } icon: {
-                    Image(systemName: isOpen ? "checkmark.circle" : "clock")
-                }
-                .accessibilityIdentifier("household.monthlyNote")
+                monthlyNote
             }
-        } else if recap != nil {
+        } else if model.recap != nil, trip == nil || !isTwoColumn {
             Section {
                 Text("Everyone is settled for \(HouseholdText.shortMonth(model.month)).")
                     .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                     .accessibilityIdentifier("household.monthlyNote")
             }
         }
-        let overdue = (recap?.overdueMonths ?? []).filter { $0 != "\(model.month)" }
-        if !overdue.isEmpty {
+    }
+
+    private var monthlyNote: some View {
+        Label {
+            if isOpen {
+                Text("Record a payment once it has happened outside Penny. Penny doesn't move money.")
+            } else {
+                Text(
+                    "Monthly payments open on the last day of the month. To repay a single expense now, use **Mark as paid** on its share."
+                )
+            }
+        } icon: {
+            Image(systemName: isOpen ? "checkmark.circle" : "clock")
+        }
+        .accessibilityIdentifier("household.monthlyNote")
+    }
+
+    /// Each past month still waiting for payments, as its own section: "OCTOBER" with a red
+    /// Overdue tag and that month's payments, each with Record paid (`iphone-shared-balances`).
+    /// A month whose payments couldn't be read stays a link to that month.
+    @ViewBuilder private var overdueSections: some View {
+        ForEach(model.overdueRecaps, id: \.month) { recap in
+            if let month = MonthKey(recap.month) {
+                Section {
+                    ForEach(recap.suggestions, id: \.self) { transfer in
+                        suggestionRow(transfer, month: month, isOpen: true)
+                    }
+                } header: {
+                    monthHeader(month) {
+                        HouseholdTag(text: "Overdue", systemImage: "exclamationmark.circle", tone: .danger)
+                    }
+                    .accessibilityIdentifier("household.overdue.\(recap.month)")
+                }
+            }
+        }
+        let read = Set(model.overdueRecaps.map(\.month))
+        let unread = (model.recap?.overdueMonths ?? []).filter { $0 != "\(model.month)" && !read.contains($0) }
+        if !unread.isEmpty {
             CardSection("Overdue") {
-                ForEach(overdue, id: \.self) { month in
+                ForEach(unread, id: \.self) { month in
                     Button {
                         if let key = MonthKey(month) {
                             Task { await model.show(month: key, current: MonthKey(shell.today)) }
@@ -677,7 +815,7 @@ struct HouseholdPage: View {
                         HStack {
                             Text(MonthKey(month).map(HouseholdText.month) ?? month)
                             Spacer()
-                            Text("Overdue").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.pending)
+                            Text("Overdue").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.danger)
                         }
                     }
                     .accessibilityHint("Shows that month's balances")
@@ -687,17 +825,96 @@ struct HouseholdPage: View {
         }
     }
 
+    private func suggestionRow(_ transfer: WireTransfer, month: MonthKey, isOpen: Bool) -> some View {
+        SuggestionRow(
+            transfer: transfer, people: model.people, currency: model.currency,
+            canRecord: canRecord(transfer), isOpen: isOpen
+        ) {
+            payment = .monthly(transfer, month: month)
+        }
+        .accessibilityIdentifier("household.suggestion.\(transfer.fromUserId)-\(transfer.toUserId)")
+    }
+
+    /// `ipad-shared`'s Balances card: its title and tag inside, then each member with what they
+    /// pay ("pays you $110.40") beside their balance, and the note on when payments open.
+    @ViewBuilder private var wideBalancesSection: some View {
+        let recap = model.recap
+        Section {
+            HStack(spacing: 8) {
+                Text("Balances").font(.headline)
+                Spacer(minLength: 8)
+                settlesTag(recap, month: model.month)
+            }
+            .listRowSeparator(.hidden)
+            .accessibilityElement(children: .combine)
+            ForEach(recap?.balances ?? [], id: \.userId) { balance in
+                WideBalanceRow(
+                    balance: balance, people: model.people, currency: model.currency,
+                    payments: (recap?.suggestions ?? []).filter { $0.fromUserId == balance.userId },
+                    canRecord: canRecord, isOpen: isOpen
+                ) { transfer in
+                    payment = .monthly(transfer, month: model.month)
+                }
+                .accessibilityIdentifier("household.balanceRow.\(balance.userId)")
+            }
+            if recap?.balances.isEmpty ?? true {
+                Text("Nobody shared anything this month.").font(.subheadline)
+                    .foregroundStyle(PennyColor.secondaryLabel)
+            }
+            if let recap, !recap.suggestions.isEmpty {
+                Text(
+                    isOpen
+                        ? "Record a payment once it has happened outside Penny. Penny doesn't move money."
+                        : "Record paid opens on the last day of the month. Repay a single expense any time with "
+                            + "Mark as paid."
+                )
+                .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                .fixedSize(horizontal: false, vertical: true)
+                .listRowSeparator(.hidden)
+                .accessibilityIdentifier("household.monthlyNote")
+            }
+        }
+    }
+
+    /// `ipad-trip`'s People: everyone on the trip with this month's balance.
+    @ViewBuilder private var tripPeopleSection: some View {
+        let balances = model.recap?.balances ?? []
+        Section {
+            ForEach(model.people.current) { member in
+                HStack(spacing: 12) {
+                    Monogram(initials: model.people.initials(member.userId), size: 30)
+                    Text(model.people.name(member.userId)).font(.body).lineLimit(2)
+                    Spacer(minLength: 8)
+                    MemberBalance(
+                        cents: balances.first { $0.userId == member.userId }?.balanceCents ?? 0,
+                        currency: model.currency)
+                }
+                .frame(minHeight: Metrics.minTouchTarget)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("household.member.\(member.userId)")
+            }
+        } header: {
+            HStack(spacing: 8) {
+                Text("People").font(.headline).foregroundStyle(PennyColor.label).textCase(nil)
+                Spacer(minLength: 8)
+                Text("\(HouseholdText.shortMonth(model.month)) balance").font(.subheadline).textCase(nil)
+                    .foregroundStyle(PennyColor.secondaryLabel)
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+
     /// The balances header's tag (`iphone-shared-balances`): amber "Settles Nov 30" while the month
     /// waits for its payments, red Overdue once a past month still has some, green Settled when
     /// nothing is left.
     @ViewBuilder
-    private func settlesTag(_ recap: WireMonthRecap?) -> some View {
+    private func settlesTag(_ recap: WireMonthRecap?, month: MonthKey) -> some View {
         if let recap, recap.suggestions.isEmpty, !recap.balances.isEmpty {
             HouseholdTag(text: "Settled", systemImage: "checkmark", tone: .income)
-        } else if (recap?.overdueMonths ?? []).contains("\(model.month)") {
+        } else if (recap?.overdue ?? false) || (recap?.overdueMonths ?? []).contains("\(month)") {
             HouseholdTag(text: "Overdue", systemImage: "exclamationmark.circle", tone: .danger)
         } else {
-            HouseholdTag(text: HouseholdText.settles(model.month), systemImage: "clock", tone: .pending)
+            HouseholdTag(text: HouseholdText.settles(month), systemImage: "clock", tone: .pending)
         }
     }
 
@@ -772,40 +989,8 @@ struct HouseholdPage: View {
                 }
             }
         }
-        if !model.isReadOnly {
-            Section {
-                if model.isCreator {
-                    if isTrip {
-                        Button("Edit trip", systemImage: "pencil") { editingTrip = true }
-                            .accessibilityIdentifier("tripPage.edit")
-                    } else {
-                        Button("Rename", systemImage: "pencil") {
-                            newName = household.name
-                            renaming = true
-                        }
-                        .accessibilityIdentifier("household.rename")
-                    }
-                }
-                Button(
-                    isTrip ? "Leave trip" : "Leave household", systemImage: "rectangle.portrait.and.arrow.right",
-                    role: .destructive
-                ) {
-                    confirm = .leave
-                }
-                .accessibilityIdentifier("household.leave")
-                if model.isCreator {
-                    Button(isTrip ? "Archive trip" : "Archive household", systemImage: "archivebox", role: .destructive)
-                    {
-                        confirm = .archive
-                    }
-                    .accessibilityIdentifier("household.archive")
-                }
-            } footer: {
-                Text(
-                    "You can leave, or be removed, once your balance is zero in every month. Archiving needs "
-                        + "everyone settled in every month; it's final, and the history stays readable.")
-            }
-        }
+        // The iPad household has no … menu (`ipad-shared`): its actions close People.
+        if isTwoColumn, trip == nil { householdActions }
     }
 
     // MARK: Confirmations
@@ -815,7 +1000,6 @@ struct HouseholdPage: View {
         case .leave: "Leave \(model.household?.name ?? "this household")?"
         case .archive: "Archive \(model.household?.name ?? "this household")?"
         case .remove(let member): "Remove \(member.email)?"
-        case .deleteRule(let rule): "Stop repeating \(rule.title)?"
         case nil: ""
         }
     }
@@ -825,7 +1009,6 @@ struct HouseholdPage: View {
         case .leave: "Leave"
         case .archive: "Archive for everyone"
         case .remove: "Remove"
-        case .deleteRule: "Stop repeating"
         }
     }
 
@@ -840,8 +1023,6 @@ struct HouseholdPage: View {
         case .remove(let member):
             "\(member.email) stops seeing new expenses and keeps their history. They need a zero balance in every "
                 + "month first."
-        case .deleteRule:
-            "No more expenses are added from it. Expenses it already added stay."
         }
     }
 
@@ -856,8 +1037,6 @@ struct HouseholdPage: View {
             if await model.archive() == nil { await shell.refreshShared() }
         case .remove(let member):
             _ = await model.remove(member.userId)
-        case .deleteRule(let rule):
-            _ = await model.deleteRule(rule)
         }
     }
 }
@@ -945,34 +1124,6 @@ struct SharedExpenseRow: View {
         guard let me = people.meId else { return PennyColor.secondaryLabel }
         return me == expense.payerUserId && expense.totalCents > expense.share(of: me)
             ? PennyColor.income : PennyColor.secondaryLabel
-    }
-}
-
-private struct SharedRuleRow: View {
-    let rule: WireSharedRule
-    let people: HouseholdPeople
-    let currency: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            CategoryIcon(symbol: "repeat", color: rule.category.tint)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(rule.title).font(.body.weight(.semibold))
-                Text(subtitle).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-            }
-            Spacer(minLength: 8)
-            MoneyText(rule.totalCents, meaning: .neutral, currency: currency)
-        }
-        .frame(minHeight: Metrics.minTouchTarget)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
-    }
-
-    private var subtitle: String {
-        let cadence = RecurrenceFrequency(rawValue: rule.frequency).map(SharedFormText.frequency) ?? rule.frequency
-        let payer = rule.payerUserId == people.meId ? "you pay" : "\(people.name(rule.payerUserId)) pays"
-        let next = rule.active ? "next \(HouseholdText.day(rule.nextDate))" : "Paused"
-        return [cadence, payer, next].joined(separator: " · ")
     }
 }
 
@@ -1222,5 +1373,119 @@ private struct SelectedExpenseSection: View {
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("household.selectedExpense")
         }
+    }
+}
+
+// MARK: Month
+
+/// The household's month in the navigation bar (MAZ-264): "November ⌄" in the label color, as
+/// Home's, offering the current month and the eleven before it. `showsYear` gives iPad's
+/// "November 2026 ⌄" between its arrows (`ipad-shared`).
+struct HouseholdMonthPicker: View {
+    @Environment(ShellModel.self) private var shell
+    @Bindable var model: HouseholdModel
+    var showsYear = false
+
+    var body: some View {
+        let current = MonthKey(shell.today)
+        Menu {
+            Picker(
+                "Month",
+                selection: Binding(
+                    get: { model.month },
+                    set: { month in Task { await model.show(month: month, current: current) } })
+            ) {
+                ForEach(Self.months(showing: model.month, through: current), id: \.self) { month in
+                    Text(MonthPicker.title(month, long: true)).tag(month)
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(MonthPicker.title(model.month, long: showsYear))
+                Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+            }
+            .foregroundStyle(PennyColor.label)
+        }
+        .tint(PennyColor.label)
+        .accessibilityLabel("Month, \(HouseholdText.month(model.month))")
+        .accessibilityIdentifier("household.month")
+    }
+
+    /// The months the picker offers: the last twelve, plus an older one the page shows (a
+    /// notification can open one).
+    static func months(showing month: MonthKey, through current: MonthKey) -> [MonthKey] {
+        let recent = MonthPicker.months(through: current)
+        return recent.contains(month) || month > current ? recent : recent + [month]
+    }
+}
+
+/// iPad's previous and next month around the pill (`ipad-shared`). Next stops at the current month.
+struct HouseholdMonthStep: View {
+    @Environment(ShellModel.self) private var shell
+    @Bindable var model: HouseholdModel
+    let offset: Int
+
+    var body: some View {
+        let current = MonthKey(shell.today)
+        let next = model.month.shifted(by: offset).flatMap { $0 > current ? nil : $0 }
+        Button {
+            if let next { Task { await model.show(month: next, current: current) } }
+        } label: {
+            Label(
+                offset < 0 ? "Previous month" : "Next month",
+                systemImage: offset < 0 ? "chevron.backward" : "chevron.forward")
+        }
+        .tint(PennyColor.label)
+        .disabled(next == nil)
+        .accessibilityIdentifier(offset < 0 ? "household.previousMonth" : "household.nextMonth")
+    }
+}
+
+/// A member on `ipad-shared`'s Balances card: the monogram and name, what they pay this month
+/// ("pays you $110.40"), and their balance over "owes" or "gets back". Once the month's payments
+/// open, each payment the viewer is part of gets Record paid.
+private struct WideBalanceRow: View {
+    let balance: WireBalance
+    let people: HouseholdPeople
+    let currency: String
+    let payments: [WireTransfer]
+    let canRecord: (WireTransfer) -> Bool
+    let isOpen: Bool
+    let record: (WireTransfer) -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Monogram(initials: people.initials(balance.userId), size: 30)
+            Text(people.name(balance.userId)).font(.body).lineLimit(2)
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 4) {
+                ForEach(payments, id: \.self) { transfer in
+                    HStack(spacing: 8) {
+                        Text(line(transfer)).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                            .lineLimit(2)
+                        if isOpen, canRecord(transfer) {
+                            Button("Record paid") { record(transfer) }
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .frame(minHeight: 32)
+                                .background(PennyColor.tint, in: Capsule())
+                                .buttonStyle(.borderless)
+                                .fixedSize()
+                                .accessibilityIdentifier(
+                                    "household.suggestion.\(transfer.fromUserId)-\(transfer.toUserId)")
+                        }
+                    }
+                }
+            }
+            MemberBalance(cents: balance.balanceCents, currency: currency)
+        }
+        .frame(minHeight: Metrics.minTouchTarget)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "pays you $110.40", or "pays bea@example.test $18.00".
+    private func line(_ transfer: WireTransfer) -> String {
+        "pays \(people.object(transfer.toUserId)) \(MoneyFormat.amount(transfer.amountCents, currency: currency))"
     }
 }

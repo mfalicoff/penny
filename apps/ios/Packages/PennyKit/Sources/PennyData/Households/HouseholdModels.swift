@@ -177,6 +177,9 @@ public final class HouseholdModel {
     public private(set) var month: MonthKey
     public private(set) var recap: WireMonthRecap?
     public private(set) var rules: [WireSharedRule] = []
+    /// Each past month still waiting for payments, other than the one on screen, with its own
+    /// suggestions, newest first (`iphone-shared-balances` lists them under the month's own).
+    public private(set) var overdueRecaps: [WireMonthRecap] = []
     /// The newest code this device created, while it is valid.
     public private(set) var invite: WireInvite?
     /// When the invite stops working, on this device's clock: it arrived with the server's
@@ -261,6 +264,7 @@ public final class HouseholdModel {
         month = current
         monthGeneration += 1
         recap = nil
+        overdueRecaps = []
     }
 
     private func readOnce() async {
@@ -287,12 +291,33 @@ public final class HouseholdModel {
             }
             self.rules = (try? await rules) ?? []
             directory?.update(loaded.household)
+            if generation == monthGeneration { await readOverdue(generation: generation) }
             load = .loaded
         } catch is CancellationError {
             load = detail == nil ? .idle : .loaded
         } catch {
             load = .failed(HouseholdFailure(error))
         }
+    }
+
+    /// Reads each overdue month the recap names, other than the one on screen, so its payments
+    /// can be recorded where the balances list it. A month that fails to read is left out: the
+    /// page still names it through the recap, and the next refresh tries again.
+    private func readOverdue(generation: Int) async {
+        let months = (recap?.overdueMonths ?? []).compactMap(MonthKey.init).filter { $0 != month }
+        guard !months.isEmpty else {
+            overdueRecaps = []
+            return
+        }
+        var read: [MonthKey: WireMonthRecap] = [:]
+        await withTaskGroup(of: (MonthKey, WireMonthRecap?).self) { group in
+            for key in months {
+                group.addTask { [service, id] in (key, try? await service.monthRecap(householdId: id, month: key)) }
+            }
+            for await (key, answer) in group { if let answer { read[key] = answer } }
+        }
+        guard generation == monthGeneration else { return }
+        overdueRecaps = months.sorted(by: >).compactMap { read[$0] }.filter { !$0.suggestions.isEmpty }
     }
 
     /// Moves to `next` without reading it (MAZ-79: an opened notification, before the page shows;
@@ -304,6 +329,7 @@ public final class HouseholdModel {
         month = next
         monthGeneration += 1
         recap = nil
+        overdueRecaps = []
     }
 
     /// Shows another month. Answers arrive in any order; only the one for the month still on
@@ -315,10 +341,12 @@ public final class HouseholdModel {
         monthGeneration += 1
         let generation = monthGeneration
         recap = nil
+        overdueRecaps = []
         do {
             let answer = try await service.monthRecap(householdId: id, month: next)
             guard generation == monthGeneration else { return }
             recap = answer
+            await readOverdue(generation: generation)
         } catch is CancellationError {
         } catch {
             guard generation == monthGeneration else { return }

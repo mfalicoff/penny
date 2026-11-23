@@ -60,27 +60,50 @@ struct PersonalTripPage: View {
             shell.households.households.first { $0.id == id && $0.trip != nil }
         }
         List {
+            // `iphone-trip-personal`: when, the name, the dates with the Personal chip, your
+            // spending and how many expenses are dated outside the trip, then Trip expense and
+            // Share trip, centered over the trips' glow.
             Section {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(spacing: 0) {
+                    Text(range.phaseLabel(today: shell.today).uppercased())
+                        .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+                        .accessibilityIdentifier("tripPage.phase")
+                    Text(trip.name).font(.title.weight(.bold))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 2)
+                        .accessibilityAddTraits(.isHeader)
                     HStack(spacing: 8) {
-                        Text(range.phaseLabel(today: shell.today))
-                            .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
-                            .accessibilityIdentifier("tripPage.phase")
+                        Text(TripText.shortRange(range, today: shell.today))
+                            .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                         Label(
                             trip.sharedHouseholdId != nil && sharedAs == nil ? "Personal · was shared" : "Personal",
                             systemImage: "lock"
                         )
-                        .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+                        .labelStyle(TripChipLabelStyle())
                     }
-                    Text(TripText.range(range)).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                        .accessibilityIdentifier("tripPage.dates")
-                    HeroAmount("Your spending", cents: summary.total, currency: currency)
-                        .accessibilityIdentifier("tripPage.yourSpending")
-                    Text(countLine(summary, outside: outside, currency: currency))
-                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("tripPage.outside")
-                    HStack(spacing: 12) {
+                    .padding(.top, 4)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("tripPage.dates")
+                    VStack(spacing: 4) {
+                        Text(MoneyFormat.amount(summary.total, currency: currency))
+                            .modifier(HeroAmountFont())
+                            .foregroundStyle(PennyColor.label)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.4)
+                        Text("Your spending").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    }
+                    .padding(.top, 10)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("tripPage.yourSpending")
+                    if outside > 0 {
+                        Label("\(outside) outside the trip dates", systemImage: "calendar")
+                            .font(.footnote.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
+                            .labelStyle(TripChipLabelStyle(chip: false))
+                            .padding(.top, 8)
+                            .accessibilityIdentifier("tripPage.outside")
+                    }
+                    HStack(spacing: 10) {
                         PennyButton("Trip expense", systemImage: "plus") { shell.openTripExpense(trip.id) }
                             .accessibilityIdentifier("tripPage.addExpense")
                         if !shell.isDemo, shell.trips.isAvailable, trip.sharedHouseholdId == nil {
@@ -90,9 +113,11 @@ struct PersonalTripPage: View {
                             .accessibilityIdentifier("tripPage.share")
                         }
                     }
+                    .padding(.top, 16)
                 }
+                .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
             }
             .listSectionSeparator(.hidden)
 
@@ -129,20 +154,28 @@ struct PersonalTripPage: View {
                     .accessibilityIdentifier("entry.\(entry.id)")
                 }
             } header: {
-                Text("Trip expenses").cardSectionHeader()
+                HStack {
+                    Text("Trip expenses")
+                    Spacer()
+                    Text(TripText.expenses(summary.expenses.count))
+                }
+                .cardSectionHeader()
             } footer: {
                 Text(TripText.datesNote)
             }
 
             if !summary.spending.isEmpty {
+                let total = summary.spending.reduce(Int64(0)) { $0 + $1.amount }
                 CardSection("By category") {
                     ForEach(summary.spending, id: \.category.id) { item in
+                        let color = PennyColor.category(item.category.paletteColor)
                         HStack(spacing: 12) {
-                            CategoryIcon(
-                                symbol: CategoryStyle.symbol(forIonicon: item.category.icon),
-                                color: PennyColor.category(item.category.paletteColor))
-                            Text(item.category.name)
-                            Spacer()
+                            CategoryIcon(symbol: CategoryStyle.symbol(forIonicon: item.category.icon), color: color)
+                            // `iphone-trip-personal`: each category's part of your spending as a bar.
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(item.category.name)
+                                ShareBar(fraction: total > 0 ? Double(item.amount) / Double(total) : 0, color: color)
+                            }
                             MoneyText(item.amount, meaning: .neutral, currency: currency)
                         }
                         .frame(minHeight: Metrics.minTouchTarget)
@@ -153,14 +186,19 @@ struct PersonalTripPage: View {
             }
         }
         .insetGroupedList()
+        .contentMargins(.top, 0, for: .scrollContent)
+        .background(alignment: .top) { Color.clear.frame(height: 1).heroGlow(blobs: GlowBlob.trip) }
         .refreshable {
             await shell.workspace.reload()
             if trip.sharedHouseholdId != nil { await shell.households.refresh() }
         }
         .navigationTitle(trip.name)
         .toolbar {
+            // The hero leads with the name, so the bar has none (`iphone-trip-personal`).
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
             ToolbarItem(placement: .primaryAction) {
-                Button("Edit trip", systemImage: "pencil") { editing = true }
+                Button("Edit trip") { editing = true }
+                    .neutralToolbarGlyph()
                     .accessibilityIdentifier("tripPage.edit")
             }
         }
@@ -180,16 +218,6 @@ struct PersonalTripPage: View {
             }
             .environment(shell)
         }
-    }
-
-    private func countLine(_ summary: TripSummary, outside: Int, currency: String) -> String {
-        var parts = [TripText.expenses(summary.expenses.count)]
-        if outside > 0 { parts.append("\(outside) outside the trip dates") }
-        if summary.receiptTotal != summary.total {
-            parts.append(
-                "receipts \(MoneyFormat.amount(summary.receiptTotal, currency: currency)); only your share counts")
-        }
-        return parts.joined(separator: " · ")
     }
 
     /// Leaves this trip's page in the tab that shows it.
@@ -220,16 +248,18 @@ struct PersonalTripPage: View {
     }
 }
 
-/// A personal expense on a trip: its day, category, and "outside the trip dates" when it is;
-/// your share, with the receipt total when the expense is split.
+/// An expense of yours on a trip, as the trip cards draw it: the category tile, the title,
+/// "Feb 14 · Visa" (with a Before the trip or After the trip chip when it is dated outside a
+/// personal trip), then your share, unsigned, with the receipt total when the expense is split.
+/// `privateInline` is `ipad-trip`'s private row among the shared ones: "🔒 Only you · Sep 28".
 struct TripEntryRow: View {
     let entry: LedgerEntry
     let ledger: Ledger
     /// Nil for private expenses on a shared trip, where the dates are the shared trip's.
     let range: TripRange?
-    /// A private expense on a shared trip, under Only you: the trip cards draw it as the shared rows,
-    /// with the amount unsigned and "date · account" without the category.
+    /// A private expense on a shared trip.
     var onSharedTrip = false
+    var privateInline = false
 
     var body: some View {
         let category = ledger.category(id: entry.categoryId)
@@ -240,13 +270,22 @@ struct TripEntryRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.callout.weight(.semibold)).foregroundStyle(PennyColor.label)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(meta(category)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                    .fixedSize(horizontal: false, vertical: true)
+                if privateInline {
+                    Label("Only you · \(day)", systemImage: "lock")
+                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        .labelStyle(CompactLabelStyle())
+                } else {
+                    HStack(spacing: 6) {
+                        Text(meta).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let outside { Text(outside).tripChip() }
+                    }
+                }
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
                 MoneyText(
-                    entry.share, meaning: onSharedTrip ? .neutral : .expense, currency: ledger.currency.rawValue,
+                    entry.share, meaning: .neutral, currency: ledger.currency.rawValue,
                     style: .callout.weight(.semibold))
                 if entry.share != entry.total {
                     Text("of \(MoneyFormat.amount(entry.total, currency: ledger.currency.rawValue))")
@@ -257,11 +296,63 @@ struct TripEntryRow: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func meta(_ category: LedgerCategory?) -> String {
-        var parts = [DayText.date(entry.date).formatted(.dateTime.month(.abbreviated).day())]
-        if let account = entry.accountId.flatMap(ledger.account(id:)) { parts.append(account.name) }
-        if !onSharedTrip { parts.append(category?.name ?? "Unknown category") }
-        if let range, !range.contains(entry.date) { parts.append("outside the trip dates") }
-        return parts.joined(separator: " · ")
+    private var day: String { DayText.date(entry.date).formatted(.dateTime.month(.abbreviated).day()) }
+
+    /// "Feb 14 · Visa", or the category when the expense has no account.
+    private var meta: String {
+        let account = entry.accountId.flatMap(ledger.account(id:))?.name
+        return [day, account ?? ledger.category(id: entry.categoryId)?.name ?? "Unknown category"]
+            .joined(separator: " · ")
+    }
+
+    /// "Before the trip" or "After the trip" for a personal trip's expense dated outside it.
+    private var outside: String? {
+        guard let range, !range.contains(entry.date) else { return nil }
+        return entry.date < range.start ? "Before the trip" : "After the trip"
+    }
+}
+
+/// An icon and title with a tight gap, for a footnote line.
+private struct CompactLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.icon.imageScale(.small)
+            configuration.title
+        }
+    }
+}
+
+/// The trip cards' chip: a small icon and word on the fill color ("🔒 Personal"), or the icon
+/// and words alone for a line such as "1 outside the trip dates".
+struct TripChipLabelStyle: LabelStyle {
+    var chip = true
+
+    func makeBody(configuration: Configuration) -> some View {
+        let label = HStack(spacing: 4) {
+            configuration.icon.imageScale(.small)
+            configuration.title
+        }
+        if chip {
+            label
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        } else {
+            label
+        }
+    }
+}
+
+extension View {
+    /// A word on the fill color, as the trip cards' row chip ("Before the trip").
+    func tripChip() -> some View {
+        font(.caption2.weight(.semibold))
+            .foregroundStyle(PennyColor.secondaryLabel)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .fixedSize()
     }
 }

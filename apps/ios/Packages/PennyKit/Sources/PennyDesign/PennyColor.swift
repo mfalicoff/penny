@@ -57,5 +57,10 @@ public enum PennyColor {
     public static let danger = PaletteToken.danger.value.color
     public static let expense = label
 
+    /// A person's monogram: the cards' grey gradient, top to bottom, under white initials.
+    public static let monogram = LinearGradient(
+        colors: [MonogramToken.from.color, MonogramToken.to.color], startPoint: .top, endPoint: .bottom)
+    public static let monogramLabel = MonogramToken.label.color
+
     public static func category(_ category: CategoryColor) -> Color { category.value.color }
 }

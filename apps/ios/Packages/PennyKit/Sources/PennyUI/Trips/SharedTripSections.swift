@@ -97,13 +97,6 @@ struct SharedTripHero: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("tripPage.yourSpending")
             }
-            if let note {
-                Text(note).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                    .multilineTextAlignment(regular ? .leading : .center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
-                    .accessibilityIdentifier("tripPage.privateNote")
-            }
         }
         .frame(maxWidth: .infinity, alignment: regular ? .leading : .center)
     }
@@ -116,18 +109,6 @@ struct SharedTripHero: View {
         let others = count - 1
         return [dates, others > 0 ? "shared with \(TripText.people(others))" : TripText.people(count)]
             .joined(separator: " · ")
-    }
-
-    private var note: String? {
-        guard let totals = context.totals else { return nil }
-        var parts: [String] = []
-        if totals.privateShare > 0 {
-            parts.append(
-                "Your share includes \(MoneyFormat.amount(totals.privateShare, currency: model.currency)) only you "
-                    + "can see.")
-        }
-        if totals.outside > 0 { parts.append(TripText.outside(totals.outside)) }
-        return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
 
     @ViewBuilder
@@ -152,76 +133,152 @@ struct SharedTripHero: View {
     }
 }
 
-/// Expenses for a shared trip: every shared expense of the trip whatever its month (each opens
-/// its detail), then Only you.
+/// Expenses for a shared trip: every shared expense of the trip whatever its month, oldest
+/// first (each opens its detail), then your private expenses from before sharing.
+/// `iphone-trip-detail` lists them as Shared with everyone, then Only you; `ipad-trip` as one
+/// Expenses card headed "4 shared · 1 private", with the private rows marked inline.
 struct SharedTripExpenseSections: View {
     let context: SharedTripContext
     let model: HouseholdModel
-    /// Off on a wide iPad page, where Your share by category is beside the expenses.
-    var showsShareByCategory = true
+    /// `ipad-trip`'s one Expenses card.
+    var combined = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        let shared = context.expenses?.expenses ?? []
-        Section {
-            if let failure = context.expenses?.load.failure, shared.isEmpty {
-                Text(failure.message).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-            } else if shared.isEmpty, context.expenses?.load != .loading {
-                Text(
-                    model.isReadOnly
-                        ? "No shared expenses you can see on this trip."
-                        : "No shared expenses yet. Add one with Trip expense; everyone on the trip sees it and their "
-                            + "share."
-                )
-                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-            }
-            ForEach(shared) { expense in
-                NavigationLink(
-                    value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)
-                ) {
-                    SharedExpenseRow(expense: expense, people: model.people, currency: model.currency, showsDate: true)
-                }
-                .cardRow()
-                .accessibilityIdentifier("household.expense.\(expense.id)")
-            }
-        } header: {
-            HStack {
-                Text("Shared with everyone")
-                Spacer()
-                Text(TripText.expenses(shared.count))
-            }
-            .cardSectionHeader()
-            .accessibilityIdentifier("tripPage.sharedExpenses")
-        } footer: {
-            Text(
-                "Each expense is split among the people on the trip when it's added. Someone who joins later isn't "
-                    + "in earlier expenses, and people who leave keep their past shares.")
-        }
-        if let ledger = context.ledger, !context.privateEntries.isEmpty {
+        let shared = (context.expenses?.expenses ?? []).sorted { ($0.date, $0.id) < ($1.date, $1.id) }
+        let privateEntries =
+            context.ledger == nil ? [] : context.privateEntries.sorted { ($0.date, $0.id) < ($1.date, $1.id) }
+        if combined {
             Section {
-                ForEach(context.privateEntries, id: \.id) { entry in
-                    NavigationLink(value: DetailRoute.entry(id: entry.id)) {
-                        TripEntryRow(entry: entry, ledger: ledger, range: context.range, onSharedTrip: true)
-                    }
-                    .cardRow()
-                    .accessibilityIdentifier("entry.\(entry.id)")
+                emptyState(shared: shared, privateCount: privateEntries.count)
+                ForEach(shared) { sharedRow($0) }
+                ForEach(privateEntries, id: \.id) { privateRow($0, inline: true) }
+            } header: {
+                HStack(spacing: 8) {
+                    Text("Expenses").font(.headline).foregroundStyle(PennyColor.label).textCase(nil)
+                    Spacer(minLength: 8)
+                    Text(Self.counts(shared: shared.count, private: privateEntries.count))
+                        .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel).textCase(nil)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("tripPage.sharedExpenses")
+            }
+        } else {
+            Section {
+                emptyState(shared: shared, privateCount: 0)
+                ForEach(shared) { sharedRow($0) }
             } header: {
                 HStack {
-                    // The card keeps "Only you" in its own case beside the upper-case note.
-                    Label("Only you", systemImage: "lock").textCase(nil)
+                    Text("Shared with everyone")
                     Spacer()
-                    Text("from before sharing")
+                    Text(TripText.expenses(shared.count))
                 }
                 .cardSectionHeader()
-                .accessibilityIdentifier("tripPage.onlyYou")
-            } footer: {
-                Text("Only you see these. They count in your spending, not in the trip's total or anyone's balance.")
+                .accessibilityIdentifier("tripPage.sharedExpenses")
+            }
+            if !privateEntries.isEmpty {
+                Section {
+                    ForEach(privateEntries, id: \.id) { privateRow($0, inline: false) }
+                } header: {
+                    HStack {
+                        // The card keeps "Only you" in its own case beside the upper-case note.
+                        Label("Only you", systemImage: "lock").textCase(nil)
+                        Spacer()
+                        Text("from before sharing")
+                    }
+                    .cardSectionHeader()
+                    .accessibilityIdentifier("tripPage.onlyYou")
+                }
+            }
+            if sizeClass == .regular {
+                SharedTripShareByCategory(context: context, model: model)
             }
         }
-        if sizeClass == .regular, showsShareByCategory {
-            SharedTripShareByCategory(context: context, model: model)
+    }
+
+    /// "4 shared · 1 private", or "4 shared" with none of your own.
+    static func counts(shared: Int, private count: Int) -> String {
+        count > 0 ? "\(shared) shared · \(count) private" : "\(shared) shared"
+    }
+
+    @ViewBuilder
+    private func emptyState(shared: [WireSharedExpense], privateCount: Int) -> some View {
+        if let failure = context.expenses?.load.failure, shared.isEmpty {
+            Text(failure.message).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+        } else if shared.isEmpty, privateCount == 0, context.expenses?.load != .loading {
+            Text(
+                model.isReadOnly
+                    ? "No shared expenses you can see on this trip."
+                    : "No shared expenses yet. Add one with Trip expense; everyone on the trip sees it and their share."
+            )
+            .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
         }
+    }
+
+    private func sharedRow(_ expense: WireSharedExpense) -> some View {
+        NavigationLink(value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)) {
+            SharedTripExpenseRow(expense: expense, people: model.people, currency: model.currency)
+        }
+        .cardRow()
+        .accessibilityIdentifier("household.expense.\(expense.id)")
+    }
+
+    @ViewBuilder
+    private func privateRow(_ entry: LedgerEntry, inline: Bool) -> some View {
+        if let ledger = context.ledger {
+            NavigationLink(value: DetailRoute.entry(id: entry.id)) {
+                TripEntryRow(entry: entry, ledger: ledger, range: nil, onSharedTrip: true, privateInline: inline)
+            }
+            .cardRow()
+            .accessibilityIdentifier("entry.\(entry.id)")
+        }
+    }
+}
+
+/// A shared trip expense (`iphone-trip-detail`, `ipad-trip`): the category tile, the title,
+/// "Oct 2 · Sam paid · split 4 ways" (or "you paid"), then the total over your part of it
+/// ("$206.00 yours").
+struct SharedTripExpenseRow: View {
+    let expense: WireSharedExpense
+    let people: HouseholdPeople
+    let currency: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            CategoryIcon(symbol: expense.category.symbol, color: expense.category.tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(expense.title).font(.callout.weight(.semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(Self.detail(expense, people: people)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 2) {
+                MoneyText(expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
+                Text(yours).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+            }
+            .fixedSize()
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var yours: String {
+        let share = expense.share(of: people.meId)
+        return share > 0 ? "\(MoneyFormat.amount(share, currency: currency)) yours" : "Not part of your share"
+    }
+
+    /// "Oct 2 · Sam paid · split 4 ways", "Oct 8 · you paid", or "Nov 3 · Mira paid" when only
+    /// one person shares it.
+    static func detail(_ expense: WireSharedExpense, people: HouseholdPeople) -> String {
+        let ways = expense.splits.filter { $0.amountCents > 0 }.count
+        let payer: String
+        if expense.payerUserId == people.meId {
+            payer = "you paid"
+        } else {
+            let name = people.name(expense.payerUserId)
+            payer = ways > 1 ? "\(name) paid · split \(ways) ways" : "\(name) paid"
+        }
+        return "\(HouseholdText.day(expense.date)) · \(payer)"
     }
 }
 
@@ -278,7 +335,7 @@ struct SharedTripShareByCategory: View {
 }
 
 /// A category's part of a total, as the cards draw it: a thin bar on the fill color.
-private struct ShareBar: View {
+struct ShareBar: View {
     let fraction: Double
     let color: Color
 

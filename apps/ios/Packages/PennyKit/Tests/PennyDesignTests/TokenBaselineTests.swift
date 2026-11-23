@@ -36,6 +36,14 @@ struct TokenBaselineTests {
         }
     }
 
+    @Test("whenComparedWithBaseline_Monogram_ShouldMatchTheGradientAndWhiteInitials")
+    func monogram() throws {
+        let monogram = try #require(tokens["monogram"] as? [String: String])
+        #expect(try Self.parse(#require(monogram["from"])) == MonogramToken.from)
+        #expect(try Self.parse(#require(monogram["to"])) == MonogramToken.to)
+        #expect(try Self.parse(#require(monogram["label"])) == MonogramToken.label)
+    }
+
     @Test("whenCategoryColorsListed_CategoryColor_ShouldNeverReuseAMeaningColor")
     func categoriesAvoidMeaningColors() {
         let meaning: [PaletteToken] = [.tint, .income, .invest, .pending, .danger]

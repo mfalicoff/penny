@@ -117,6 +117,14 @@ nonisolated public enum CategoryColor: String, CaseIterable, Sendable {
     }
 }
 
+/// A person's monogram (`.avatar` on the cards): a top-to-bottom gradient with bold white
+/// initials, the same in light and dark.
+nonisolated public enum MonogramToken {
+    public static let from = RGBA(0xA8A29E)
+    public static let to = RGBA(0x78716C)
+    public static let label = RGBA(0xFFFFFF)
+}
+
 nonisolated public enum Metrics {
     public static let cardRadius: Double = 26
     public static let rowRadius: Double = 14
