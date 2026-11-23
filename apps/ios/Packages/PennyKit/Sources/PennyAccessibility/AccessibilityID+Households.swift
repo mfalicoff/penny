@@ -69,7 +69,6 @@ extension AccessibilityID {
         public static func balanceRow(_ userId: String) -> String { "household.balanceRow.\(userId)" }
         public static func suggestion(from: String, to: String) -> String { "household.suggestion.\(from)-\(to)" }
         public static func overdue(_ month: String) -> String { "household.overdue.\(month)" }
-        public static func rule(_ id: String) -> String { "household.rule.\(id)" }
         public static func removeMember(_ userId: String) -> String { "household.removeMember.\(userId)" }
 
         // The invite.
@@ -165,7 +164,7 @@ extension AccessibilityID {
         static let prefixes = [
             "shared.household.", "household.expense.", "household.member.", "household.balanceRow.",
             "household.suggestion.",
-            "household.overdue.", "household.rule.", "household.removeMember.", "sharedExpense.share.",
+            "household.overdue.", "household.removeMember.", "sharedExpense.share.",
             "sharedExpense.markPaid.", "sharedForm.payer.", "sharedForm.split.", "history.filter.", "history.event.",
         ]
     }
