@@ -20,7 +20,7 @@ import { ExpenseFormDialog, type FormTarget } from "./ExpenseForm";
 import { ExpensesTab } from "./ExpensesTab";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "./GroupTools";
 import { HistoryPanel } from "./HistoryPanel";
-import { byWeek, currentMonth, isCurrent, monthLabel, people } from "./model";
+import { byWeek, currentMonth, isCurrent, memberName, monthLabel, people } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab, useManageActions } from "./PeopleTab";
 import { RuleDialog } from "./RuleDialog";
@@ -200,7 +200,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
           {glow}
           <span className="avatars household-head__people" aria-hidden="true">
             {current.slice(0, 5).map((member) => (
-              <Avatar key={member.userId} name={member.email} size={44} />
+              <Avatar key={member.userId} name={memberName(member)} src={member.avatarUrl} size={44} />
             ))}
           </span>
           <div className="household-head__summary">
@@ -259,7 +259,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
                   </p>
                   <span className="avatars household-pane-head__people" aria-hidden="true">
                     {current.slice(0, 5).map((member) => (
-                      <Avatar key={member.userId} name={member.email} size={30} />
+                      <Avatar key={member.userId} name={memberName(member)} src={member.avatarUrl} size={30} />
                     ))}
                   </span>
                 </div>

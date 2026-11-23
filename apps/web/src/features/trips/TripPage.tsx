@@ -25,7 +25,7 @@ import { ExpenseFormDialog, type FormTarget } from "../households/ExpenseForm";
 import { HistoryPanel } from "../households/HistoryPanel";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "../households/GroupTools";
 import { GroupLink, type GroupSearch } from "../households/links";
-import { currentMonth, dayLabel, isCurrent, monthLabel, people } from "../households/model";
+import { currentMonth, dayLabel, isCurrent, memberName, monthLabel, people } from "../households/model";
 import type { HouseholdMember, MonthRecap } from "../../api/schemas";
 import { OnlineNotice } from "../households/OnlineNotice";
 import { PeopleTab } from "../households/PeopleTab";
@@ -469,7 +469,7 @@ function PeopleBalances({ members, balances, loading, month, view }: { members: 
           const cents = balances?.find((row) => row.userId === member.userId)?.balanceCents ?? 0;
           return (
             <li key={member.userId} className="row row--plain trip-people__row">
-              <Avatar name={member.email} size={36} />
+              <Avatar name={memberName(member)} src={member.avatarUrl} size={36} />
               <span className="row__title trip-people__name">{view.who.name(member.userId)}</span>
               <span className="row__end trip-people__balance">
                 {loading ? (
@@ -529,7 +529,7 @@ function TripPeople({ members, recap, loading, month, view }: { members: Househo
           }
           return (
             <li key={member.userId} className="trip-feature__person">
-              <Avatar name={member.email} size={30} />
+              <Avatar name={memberName(member)} src={member.avatarUrl} size={30} />
               <span className="trip-feature__who">
                 <span>{view.who.name(member.userId)}</span>
                 <span>Paid {view.money(paid.get(member.userId) ?? 0)}</span>

@@ -90,7 +90,7 @@ export function sampleHousehold(today = new Date()) {
   const household = { id: DEMO_HOUSEHOLD_ID, name: "Apartment", currency: "CAD" as const, creatorId: DEMO_ME, createdAt: created, memberCount: 2 };
   const members = [
     { userId: DEMO_ME, email: DEMO_EMAIL, joinedAt: created },
-    { userId: DEMO_HOUSEMATE, email: "housemate@penny.invalid", joinedAt: created },
+    { userId: DEMO_HOUSEMATE, email: "housemate@penny.invalid", displayName: "Jules Moreau", joinedAt: created },
   ];
   const expense = (id: string, title: string, totalCents: number, payerUserId: string, category: { name: string; icon: string; color: string }, date: string) => ({
     id,

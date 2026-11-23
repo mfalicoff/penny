@@ -146,6 +146,7 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | Setting | Default | Notes |
 | --- | --- | --- |
 | `Auth__AllowRegistration` | `true` | Password sign-up |
+| `Legal__PrivacyPolicyUrl` | unset | Your privacy policy, an absolute `https://` (or `http://`) URL without credentials. `GET /api/info` publishes it and the apps link it on sign-in, create account and Settings › Profile, opening it in the browser. Unset, they show no link. Set it before you open registration to anyone else |
 | `Auth__RateLimitPermits` / `Auth__InviteRateLimitPermits` | 40 / 20 | Sign-in attempts per client per 15 minutes / invite joins per client per 10 minutes, per process |
 | `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](../reference/authentication.md#password-reset-maz-123)) |
 | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |

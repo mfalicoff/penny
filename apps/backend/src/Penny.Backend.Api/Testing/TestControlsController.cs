@@ -124,7 +124,12 @@ public sealed partial class TestControlsController(
         var email =
             $"{label}-{number}-{RandomNumberGenerator.GetHexString(8, lowercase: true)}@penny.test";
         var password = RandomNumberGenerator.GetHexString(24, lowercase: true);
-        var session = await auth.RegisterAsync(email, password, cancellationToken);
+        var session = await auth.RegisterAsync(
+            email,
+            password,
+            body?.DisplayName,
+            cancellationToken
+        );
         var authenticated = await auth.AuthenticateAsync(session.Token, cancellationToken);
         return StatusCode(
             201,

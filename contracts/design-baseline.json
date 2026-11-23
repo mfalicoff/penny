@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "5ce006f43683b791689e39d550bce749c297222b348259a175615b1867131a69"
+      "sha256": "25e2797a8e511ae6a79316e27c4f7246f219cee191b707b5e7399204ed3b90bf"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "11691813da69022cc94ac0f62aa7af5c8ea37fde16881842b1d2478e8edf0af8"
+      "sha256": "b54a0bb2d9f48fec3d9734bd2cc70be4fa993a9776fa9a80c19bed0097dbe832"
     }
   ],
   "tokens": {
@@ -1291,7 +1291,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/sign-in.html",
-      "sha256": "d7f3436ba111ae374ac76df62fee511bbcf74141b2272ef969bdfeb243dcb4f0",
+      "sha256": "41bd50f1ab535d86e2d7b508c16e4d871f51d279079c215352122f6ea990f57e",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",
@@ -1314,7 +1314,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/create-account.html",
-      "sha256": "ac3c6672e6f8797381bb81c385d90e76a3bbf845409a0af00438a0398a038003",
+      "sha256": "bf195fbc942583edb2867b029cf3ae8763a079a36b0cc9fa54bbf174dce4348e",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",
@@ -2953,7 +2953,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/sign-in.html",
-      "sha256": "05cfeeaaeec6bc712d640d918e20c3b9bbf5987ba9769f0b6cd132c32ca29c73",
+      "sha256": "9855856fdb638fba97cc46f828ef571bc7ab516e5a2daead33d5ac9f57713651",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",

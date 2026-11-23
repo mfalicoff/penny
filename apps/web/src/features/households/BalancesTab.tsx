@@ -137,7 +137,7 @@ function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: H
         const meta = [`Paid ${view.money(member.paid)}`, `share ${view.money(member.share)}`, ...(member.repaid ? [`${view.money(member.repaid)} repaid`] : [])].join(" · ");
         return (
           <li key={row.userId} className="row">
-            <Avatar name={view.who.avatar(row.userId)} size={compact ? 32 : 36} />
+            <Avatar name={view.who.avatar(row.userId)} src={view.who.picture(row.userId)} size={compact ? 32 : 36} />
             <span className="row__main">
               <span className="row__title">{view.who.name(row.userId)}</span>
               <span className="row__meta">{meta}</span>
@@ -255,7 +255,7 @@ function TabletBalances({ view, recap, onRecord }: { view: HouseholdView; recap:
             const pays = recap.suggestions.filter((transfer) => transfer.fromUserId === row.userId);
             return (
               <li key={row.userId} className="row balance-row">
-                <Avatar name={view.who.avatar(row.userId)} size={30} />
+                <Avatar name={view.who.avatar(row.userId)} src={view.who.picture(row.userId)} size={30} />
                 <span className="balance-row__name">{view.who.name(row.userId)}</span>
                 {pays.length ? (
                   <span className="balance-row__pays">

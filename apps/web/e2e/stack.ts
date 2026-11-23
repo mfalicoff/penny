@@ -64,7 +64,8 @@ export interface TestUser {
 
 /** A new ready account from `POST /api/test/users`. */
 export async function testUser(label: string): Promise<TestUser> {
-  const user = (await control("POST", "users", { label })) as TestUser;
+  // Named (MAZ-171), so the app doesn't ask for a name.
+  const user = (await control("POST", "users", { label, displayName: `Test ${label}` })) as TestUser;
   return { email: user.email, password: user.password };
 }
 

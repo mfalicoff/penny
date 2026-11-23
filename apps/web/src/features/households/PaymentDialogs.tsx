@@ -28,13 +28,13 @@ function PaymentSummary({ view, fromUserId, toUserId, cents, detail, pill }: { v
     <div className="payment-summary" tabIndex={-1} data-pane-focus>
       <p className="payment-people">
         <span className="payment-person">
-          <Avatar name={view.who.avatar(fromUserId)} size={64} />
+          <Avatar name={view.who.avatar(fromUserId)} src={view.who.picture(fromUserId)} size={64} />
           <strong>{from}</strong>
           <span className="muted">paid</span>
         </span>
         <span className="payment-people__arrow" aria-hidden="true" />
         <span className="payment-person">
-          <Avatar name={view.who.avatar(toUserId)} size={64} />
+          <Avatar name={view.who.avatar(toUserId)} src={view.who.picture(toUserId)} size={64} />
           <strong>{to}</strong>
           <span className="muted">received</span>
         </span>

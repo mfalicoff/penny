@@ -32,6 +32,9 @@ public sealed class FakeOidcProvider : IAsyncLifetime
     public const string ClientSecret = "synthetic-client-secret";
     public const string WebRedirect = "https://penny.example.test/auth/callback";
     public const string NativeRedirect = "penny://auth/callback";
+
+    // The provider's `picture` URLs (MAZ-171); any path under /picture serves `Picture`.
+    public const string PictureUrl = Issuer + "/picture/1.png";
     private const string KeyId = "synthetic-key";
 
     private readonly RSA signingKey = RSA.Create(2048);
@@ -45,8 +48,11 @@ public sealed class FakeOidcProvider : IAsyncLifetime
     private WebApplication provider = null!;
     private int port;
     private int tokenRequests;
+    private int pictureRequests;
 
     public int TokenRequests => Volatile.Read(ref tokenRequests);
+    public int PictureRequests => Volatile.Read(ref pictureRequests);
+    public byte[]? Picture { get; set; }
     public bool Available { get; set; } = true;
     public string DiscoveryIssuer { get; set; } = Issuer;
     public bool SendsIssuer { get; set; }
@@ -83,6 +89,8 @@ public sealed class FakeOidcProvider : IAsyncLifetime
         codes.Clear();
         accessTokens.Clear();
         Interlocked.Exchange(ref tokenRequests, 0);
+        Interlocked.Exchange(ref pictureRequests, 0);
+        Picture = null;
         Available = true;
         DiscoveryIssuer = Issuer;
         SendsIssuer = false;
@@ -110,6 +118,9 @@ public sealed class FakeOidcProvider : IAsyncLifetime
         {
             services
                 .AddHttpClient(OidcProviderClient.HttpClientName)
+                .ConfigurePrimaryHttpMessageHandler(CreateHandler);
+            services
+                .AddHttpClient(ProviderPictureClient.HttpClientName)
                 .ConfigurePrimaryHttpMessageHandler(CreateHandler);
             configure?.Invoke(services);
         });
@@ -217,6 +228,16 @@ public sealed class FakeOidcProvider : IAsyncLifetime
             case "/userinfo":
                 await UserInfoAsync(context);
                 return;
+            case { } path when path.StartsWith("/picture/", StringComparison.Ordinal):
+                Interlocked.Increment(ref pictureRequests);
+                if (Picture is not { } picture)
+                {
+                    context.Response.StatusCode = 404;
+                    return;
+                }
+                context.Response.ContentType = "image/png";
+                await context.Response.Body.WriteAsync(picture, ct);
+                return;
             default:
                 context.Response.StatusCode = 503;
                 return;
@@ -296,15 +317,15 @@ public sealed class FakeOidcProvider : IAsyncLifetime
             context.Response.StatusCode = 401;
             return;
         }
-        await context.Response.WriteAsJsonAsync(
-            new Dictionary<string, object?>
-            {
-                ["sub"] = grant.UserInfoSubject ?? grant.Subject,
-                ["email"] = grant.Email,
-                ["email_verified"] = grant.UserInfoEmailVerified,
-            },
-            context.RequestAborted
-        );
+        var claims = new Dictionary<string, object?>
+        {
+            ["sub"] = grant.UserInfoSubject ?? grant.Subject,
+            ["email"] = grant.Email,
+            ["email_verified"] = grant.UserInfoEmailVerified,
+        };
+        foreach (var (name, value) in grant.UserInfoClaims)
+            claims[name] = value;
+        await context.Response.WriteAsJsonAsync(claims, context.RequestAborted);
     }
 
     private static X509Certificate2 CreateCertificate()

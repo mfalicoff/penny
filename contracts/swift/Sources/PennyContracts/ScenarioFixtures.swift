@@ -10,6 +10,8 @@ public struct SeedFixture: Codable, Equatable, Sendable {
         public var summary: String
         public var clock: String
         public var users: [String]
+        /// MAZ-171: profile names for some users; the others show their email.
+        public var displayNames: [String: String]?
         public var steps: [[String: JSONValue]]
         public var searchExpectations: [SearchExpectation]?
         public var pendingEdits: PendingEdits?

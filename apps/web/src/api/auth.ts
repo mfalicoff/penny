@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./client";
 import { sessionKey } from "./keys";
 import { expireSession } from "../auth/lifecycle";
-import { meSchema, oidcChallengeSchema, oidcConfigSchema, okSchema, sessionSchema } from "./schemas";
+import { meSchema, oidcChallengeSchema, oidcConfigSchema, okSchema, sessionSchema, type Me } from "./schemas";
 
 export interface Credentials {
   email: string;
@@ -19,7 +19,7 @@ export async function login(credentials: Credentials, signal?: AbortSignal): Pro
   return { email };
 }
 
-export async function register(credentials: Credentials, signal?: AbortSignal): Promise<{ email: string }> {
+export async function register(credentials: Credentials & { displayName?: string }, signal?: AbortSignal): Promise<{ email: string }> {
   const { email } = await apiFetch("/api/auth/register", sessionSchema, { method: "POST", body: credentials, ...(signal ? { signal } : {}) });
   return { email };
 }
@@ -58,13 +58,14 @@ export async function completeOidc(transaction: string, callbackUrl: string, sig
 }
 
 /**
- * Who the browser is signed in as: `{ email }`, or `null` when there is no valid session.
+ * Who the browser is signed in as: `{ email }` with the profile summary (MAZ-171), or `null` when
+ * there is no valid session.
  * A 401 is an answer, not a failure. Network and 5xx errors stay errors so a flaky
  * connection never signs anyone out.
  */
 export const sessionQuery = queryOptions({
   queryKey: sessionKey,
-  queryFn: async ({ signal, client }): Promise<{ email: string } | null> => {
+  queryFn: async ({ signal, client }): Promise<Me | null> => {
     try {
       return await apiFetch("/api/auth/me", meSchema, { signal });
     } catch (error) {

@@ -354,7 +354,7 @@ internal class PostgresHouseholdTransaction(
             )
         ));
 
-    // Periods of one household, optionally of one user, with the member's email.
+    // Periods of one household, optionally of one user, with the member's email and profile.
     private IQueryable<StoredMember> Periods(string householdId, string? userId) =>
         context
             .HouseholdMemberPeriods.AsNoTracking()
@@ -371,7 +371,9 @@ internal class PostgresHouseholdTransaction(
                         user.Email,
                         period.JoinedAt,
                         period.JoinedOn,
-                        period.LeftAt
+                        period.LeftAt,
+                        user.DisplayName,
+                        user.AvatarVersion
                     )
             );
 

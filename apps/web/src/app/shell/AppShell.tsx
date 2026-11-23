@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useMatches, useNavigate, useRouterState } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useId, useRef, useState, type RefObject, type SyntheticEvent } from "react";
 import { AddEntryDialog } from "../../features/entries/AddEntryDialog";
+import { NamePrompt } from "../../features/settings/NamePrompt";
 import { Button, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Banner, ServerUnreachableBanner } from "../../design/states";
@@ -178,6 +179,7 @@ export function AppShell() {
       </div>
       <TabBar pathname={pathname} />
       {adding ? <AddEntryDialog onClose={closeAdd} /> : null}
+      {demo ? null : <NamePrompt />}
     </div>
   );
 }

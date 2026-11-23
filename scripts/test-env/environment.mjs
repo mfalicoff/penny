@@ -360,6 +360,9 @@ export async function up(options = {}) {
         Auth__RateLimitPermits: "10000",
         Auth__InviteRateLimitPermits: "10000",
         Auth__AllowedOrigins: state.origins.join(","),
+        // The server publishes a privacy policy (MAZ-169), so sign-in, create account and
+        // Settings › Profile show the link the cards draw. Nothing fetches it.
+        Legal__PrivacyPolicyUrl: "https://penny.example.com/privacy",
         Recurrence__Worker: options.worker === false ? "false" : "true",
         // Receipt OCR (MAZ-125) needs Tesseract and poppler on the host; the full-stack
         // journeys do not depend on it, so it is off unless PENNY_OCR_WORKER=true.

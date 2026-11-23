@@ -25,9 +25,11 @@
   .or::before, .or::after { content: ""; flex: 1; border-top: .5px solid var(--separator); }
   .link { text-align: center; font-size: 15px; color: var(--label-2); margin-top: 18px; }
   .link b { color: var(--tint-text); font-weight: 600; }
-  .demo { position: absolute; bottom: 44px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--label); z-index: 1; display: flex; justify-content: center; }
+  .demo { position: absolute; bottom: 74px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--label); z-index: 1; display: flex; justify-content: center; }
   .demo span { display: inline-flex; align-items: center; gap: 6px; }
   .demo [data-i] { width: 18px; height: 18px; color: var(--tint); }
+  .legal { position: absolute; bottom: 40px; left: 40px; right: 40px; text-align: center; font-size: 13px; color: var(--label-2); line-height: 1.4; z-index: 1; }
+  .legal a { color: var(--label); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 </style></head>
 <body class="canvas">
 <div class="iphone">
@@ -50,6 +52,7 @@
       <p class="link">New here? <b>Create an account</b></p>
     </div>
     <div class="demo"><span><i data-i="play"></i>Take a look around with sample data</span></div>
+    <div class="legal"><a>Privacy Policy</a></div>
   </div>
   <div class="home-ind"></div>
 </div>
