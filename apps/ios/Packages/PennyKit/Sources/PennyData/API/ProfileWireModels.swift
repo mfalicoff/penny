@@ -74,7 +74,7 @@ public struct WireProfileUpdate: Encodable, Equatable, Sendable {
         case namePromptDismissed
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         if clearsName {
             try container.encodeNil(forKey: .displayName)
