@@ -345,6 +345,55 @@ final class CardCaptureTests: CardTestCase {
         }
     }
 
+    // MARK: iPhone drafted household and trip cards (MAZ-238, built in MAZ-256)
+
+    @MainActor
+    func test_whenSeeded_IphoneSharedExpenseDetail_ShouldBeCaptured() async throws {
+        try await card("iphone-shared-expense-detail") { card in
+            let seed = try card.seeded()
+            try card.penny.openHousehold(seed.household("maison"))
+            try card.penny.tap(
+                Households.expense(seed.expense("internet")), opening: AccessibilityID.Screen.householdExpense)
+            try card.penny.wait(for: Households.share(seed.userIDs["bea"] ?? ""), timeout: 20)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneJoinCode_ShouldBeCaptured() async throws {
+        try await card("iphone-join-code") { card in
+            try card.penny.openShared()
+            try card.penny.tap(Households.join, opening: Households.Screen.start)
+            // The card's typed code; the keyboard is platform chrome.
+            try card.penny.type("7F3A9C01B2", into: Households.code)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneInvite_ShouldBeCaptured() async throws {
+        try await card("iphone-invite") { card in
+            try card.penny.openHousehold(card.seeded().household("maison"))
+            try card.penny.tap(Households.invite, orIn: Households.more, opening: Households.Screen.invite)
+            try card.penny.wait(for: Households.inviteQR, timeout: 20)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneTripPersonal_ShouldBeCaptured() async throws {
+        try await card("iphone-trip-personal") { card in
+            try card.penny.openTrips()
+            try card.penny.tap(AccessibilityID.Row.trip("t-quebec"), opening: AccessibilityID.Screen.trip)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneTripShare_ShouldBeCaptured() async throws {
+        try await card("iphone-trip-share") { card in
+            try card.penny.openTrips()
+            try card.penny.tap(AccessibilityID.Row.trip("t-quebec"), opening: AccessibilityID.Screen.trip)
+            try card.penny.tap(Trips.share, opening: Trips.Screen.share)
+        }
+    }
+
     // MARK: iPhone trips
 
     @MainActor

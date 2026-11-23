@@ -503,9 +503,7 @@ struct OrganizeFormTests {
         #expect(timing.hasPrefix("Monthly · next ") && !timing.contains("Apartment"))
         #expect(
             ScheduleText.sharedRow(shared("stream", next: "2026-11-12"), today: Self.today) == "\(timing) · Apartment")
-        #expect(
-            RecurringListView.footer(hasShared: true).hasSuffix(
-                "Shared schedules count only your share; open one to change it."))
+        #expect(RecurringListView.footer(hasShared: true).hasSuffix("open their household and count only your share."))
         #expect(!RecurringListView.footer(hasShared: false).contains("Shared"))
         #expect(RecurringListView.subtitle == "Penny records these on their date.", "the card's subtitle")
     }

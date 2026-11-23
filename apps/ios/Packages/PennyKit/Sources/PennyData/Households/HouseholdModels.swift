@@ -180,6 +180,9 @@ public final class HouseholdModel {
     /// Each past month still waiting for payments, other than the one on screen, with its own
     /// suggestions, newest first (`iphone-shared-balances` lists them under the month's own).
     public private(set) var overdueRecaps: [WireMonthRecap] = []
+    /// A repeating expense to open over the page once it shows: Recurring opens a shared
+    /// schedule in its household (MAZ-256), since the page lists the expenses, not the schedules.
+    public var requestedRuleID: String?
     /// The newest code this device created, while it is valid.
     public private(set) var invite: WireInvite?
     /// When the invite stops working, on this device's clock: it arrived with the server's

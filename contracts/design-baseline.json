@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "5ce006f43683b791689e39d550bce749c297222b348259a175615b1867131a69"
+      "sha256": "5c69d7239ad3856f2f5c539f61b11b240901e11e0b200915b71f42554a380039"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -811,7 +811,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/shared-list.html",
-      "sha256": "3cea95d3654f37ac887b63b23397a85d2ea513556285696f38046bc045f8441d",
+      "sha256": "fb63ac0aa231290821322b7203a59643a52e79406b80fa6a62ce7f2f0d61e2e5",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",
@@ -949,7 +949,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/payment-stale.html",
-      "sha256": "33e2d7c59d9c7e1a9f5841602d0cd359de8058088f3d29e3545312ed42bb819b",
+      "sha256": "73ac682b10196925a8900eb01132b63a9f622ee7c45d7b0e8bf2628544990d5f",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
       "route": "/households",

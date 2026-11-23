@@ -7,7 +7,7 @@ import SwiftUI
 /// date and account. Tapping a row opens its page; swiping pauses, resumes or removes it
 /// (removal asks first); + adds a schedule. Shared schedules the account is part of (MAZ-198)
 /// sit with the expenses, marked Shared with the household's name and the account's share, and
-/// open their form here (MAZ-256), since the household page lists only the expenses they add.
+/// open their household with their form (MAZ-256: the household page no longer lists them).
 struct RecurringListView: View {
     @Environment(ShellModel.self) private var shell
     @State private var selection: ScheduleSelection?
@@ -15,8 +15,7 @@ struct RecurringListView: View {
     @State private var removing: RecurringRule?
     @State private var addingSchedule = false
     @State private var failure: SaveFailure?
-    /// A shared schedule being edited, paused or stopped here (MAZ-256).
-    @State private var editingShared: SharedSchedule?
+    /// A shared schedule being paused or stopped here (MAZ-256).
     @State private var stopping: SharedSchedule?
     @State private var sharedFailure: HouseholdFailure?
 
@@ -108,22 +107,21 @@ struct RecurringListView: View {
         } message: { schedule in
             Text("No more expenses are added to \(schedule.household.name) from it. Expenses it already added stay.")
         }
-        .sheet(item: $editingShared, onDismiss: { Task { shared = await shell.households.sharedSchedules() } }) {
-            schedule in
-            SharedScheduleEditor(schedule: schedule).environment(shell)
-        }
         .task { shared = await shell.households.sharedSchedules() }
         .accessibilityIdentifier("screen.recurring")
     }
 
     private func sharedRow(_ schedule: SharedSchedule) -> some View {
         Button {
-            editingShared = schedule
+            // Its household, with the schedule's form open over it (as the web's `?rule=`).
+            let household = schedule.household
+            shell.households.model(for: household.id)?.requestedRuleID = schedule.rule.id
+            shell.navigate { $0.open(household.trip == nil ? .household(id: household.id) : .trip(id: household.id)) }
         } label: {
             SharedScheduleRow(schedule: schedule, today: shell.today)
         }
         .buttonStyle(.plain)
-        // Edited here: the household's page lists the expenses a schedule adds, not the schedules.
+        // Paused or stopped from here too, as personal schedules are.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button("Stop repeating", systemImage: "trash", role: .destructive) { stopping = schedule }
                 .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id).remove")
@@ -135,7 +133,7 @@ struct RecurringListView: View {
             .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id).toggle")
         }
         .cardRow()
-        .accessibilityHint("Opens the repeating expense")
+        .accessibilityHint(schedule.household.trip == nil ? "Opens the household" : "Opens the trip")
         .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id)")
     }
 
@@ -202,7 +200,7 @@ struct RecurringListView: View {
 
     static func footer(hasShared: Bool) -> String {
         let personal = "Swipe a schedule to pause or remove it. Removing keeps past entries."
-        return hasShared ? personal + " Shared schedules count only your share; open one to change it." : personal
+        return hasShared ? personal + " Shared schedules open their household and count only your share." : personal
     }
 
     static func sectionTitle(_ kind: EntryKind) -> String { OrganizeText.kindPlural(kind) }
@@ -637,30 +635,5 @@ struct ScheduleDetailView: View {
     static func longDate(_ date: CalendarDate, today: CalendarDate) -> String {
         let format = Date.FormatStyle.dateTime.weekday(.abbreviated).month(.abbreviated).day()
         return DayText.date(date).formatted(date.days(since: today) < 365 ? format : format.year())
-    }
-}
-
-/// A shared schedule's form, opened from Recurring (MAZ-256): its household is read first, so
-/// the form knows the members and the viewer's part.
-private struct SharedScheduleEditor: View {
-    @Environment(ShellModel.self) private var shell
-    let schedule: SharedSchedule
-    @State private var model: HouseholdModel?
-
-    var body: some View {
-        Group {
-            if let model, model.household != nil {
-                SharedExpenseFormSheet(request: .rule(schedule.rule), model: model)
-            } else if let failure = model?.load.failure {
-                PennyStateView(.error, title: "Couldn't open \(schedule.household.name)", message: failure.message)
-            } else {
-                PennyStateView(.loading, title: "Opening \(schedule.household.name)…")
-            }
-        }
-        .task {
-            guard let loaded = shell.households.model(for: schedule.household.id) else { return }
-            if loaded.household == nil { await loaded.refresh() }
-            model = loaded
-        }
     }
 }

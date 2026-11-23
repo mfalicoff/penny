@@ -265,6 +265,8 @@ struct HouseholdPage: View {
                     await refreshTrip()
                 }
             }
+            // A schedule opened from Recurring: its form, once the rules have been read.
+            .onChange(of: "\(model.requestedRuleID ?? "")|\(model.rules.count)", initial: true) { openRequestedRule() }
             .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
             .toolbar {
                 // `iphone-shared`: no title over the hero, which already leads with the name. Balances
@@ -469,6 +471,12 @@ struct HouseholdPage: View {
         } else {
             form = .new
         }
+    }
+
+    private func openRequestedRule() {
+        guard let id = model.requestedRuleID, let rule = model.rules.first(where: { $0.id == id }) else { return }
+        model.requestedRuleID = nil
+        if !model.isReadOnly { form = .rule(rule) }
     }
 
     private func refreshTrip() async {
