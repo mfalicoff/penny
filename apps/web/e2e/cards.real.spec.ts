@@ -992,7 +992,7 @@ const cards: Record<string, Card> = {
   "iphone-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
   "iphone-create-account-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
   "iphone-verify-email": { skip: { status: "not-built", note: "The native app's screen. On a phone the web shows web-verify-email's page." } },
-  "iphone-unverified": { skip: { status: "not-built", note: "Sharing is never held back for an unverified email (owner decision, MAZ-172), so this state doesn't exist." } },
+  "iphone-unverified": { skip: { status: "not-built", note: "The native app's Shared tab reminder (MAZ-172 phase 2). The web shows the unverified state and Resend link in Settings › Profile." } },
   "iphone-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
   "iphone-invite-email": { skip: { status: "not-built", note: "The web has no invites by email (the server sends no email)." } },
   "iphone-delete-account": { skip: { status: "not-built", note: "The web has no account deletion." } },

@@ -2384,13 +2384,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-172",
-        "note": "Owner decision (MAZ-172, 2026-11-23): nothing waits for verification, so sharing is never held back and this state doesn't exist.",
+        "note": "The card now shows a reminder on the Shared tab with Resend link and Change email; sharing stays available (owner decision, MAZ-172: no feature waits for verification). Built in MAZ-172 phase 2.",
         "followUp": "MAZ-172"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-172",
-        "note": "Owner decision (MAZ-172, 2026-11-23): nothing waits for verification, so sharing is never held back and this state doesn't exist.",
+        "note": "The native app's Shared tab reminder. The web shows the unverified state and Resend link in Settings › Profile.",
         "followUp": "MAZ-172"
       }
     },
@@ -3572,21 +3572,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-172",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "The test environment has no SMTP server, so the capture stubs emailEnabled and reports the seeded account as unverified. Layout, icon tile, note, Continue to Penny and the Resend in 0:42 · Change email line match.",
-        "deviations": [
-          {
-            "summary": "The copy follows the owner's decision that nothing waits for verification (MAZ-172 comment of 2026-11-23): the note reads \"You can use Penny right away, households, trips and invites included. Verifying shows this address is yours.\" instead of saying households, trips and invites open once the email is verified",
-            "kind": "follow-up",
-            "ref": "MAZ-172"
-          }
-        ]
+        "note": "The test environment has no SMTP server, so the capture stubs emailEnabled and reports the seeded account as unverified. Layout, icon tile, the note's copy (no feature waits for verification, owner decision on MAZ-172), Continue to Penny and the Resend in 0:42 · Change email line match."
       }
     },
     {
@@ -3598,21 +3591,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-172",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "The link's code is answered by a stub in the capture. Layout, check tile, Open Penny and the other-device line match.",
-        "deviations": [
-          {
-            "summary": "The copy follows the owner's decision that nothing waits for verification (MAZ-172 comment of 2026-11-23): the line under the title reads \"<email> is confirmed as yours.\" without \"You can now create and join households and trips, and people can invite you by email.\"",
-            "kind": "follow-up",
-            "ref": "MAZ-172"
-          }
-        ]
+        "note": "The link's code is answered by a stub in the capture. Layout, check tile, the \"is confirmed as yours.\" line, Open Penny and the other-device line match."
       }
     },
     {
