@@ -40,7 +40,7 @@ The app talks to the endpoints MAZ-56–59 already serve (`contracts/openapi.jso
 
 ## Invitations
 
-- **Invite** (`invite`): the creator gets a 10-character code shown as text (two groups of five, read character by character to VoiceOver) **and** as a QR code, with a live countdown ("Expires in 9:42") and **New code**. One code works for everyone it's shared with until it expires (10 minutes) or is replaced; a new code replaces the old one. The countdown starts when the request is sent (on this device's clock), so it never runs past the server's expiry.
+- **Invite** (`invite`): the creator gets a 10-character code shown as text (grouped "4F2A 9C01 BE" as on the card, read character by character to VoiceOver) **and** as a QR code, with a live countdown ("Expires in 9:42") and **New code**. One code works for everyone it's shared with until it expires (10 minutes) or is replaced; a new code replaces the old one. The countdown starts when the request is sent (on this device's clock), so it never runs past the server's expiry.
 - **The QR code** encodes `penny://join?code=<CODE>&server=<server URL>` (percent-encoded), generated with Core Image's built-in generator. Scanning it with the iOS Camera app opens Penny on the join screen.
 - **Share** sends the code as text, the link, or the QR image through the standard share sheet; **Copy** copies the code.
 - **Join** (`join-group`): type the code (spaces, dashes and dots are ignored, any case), or **Scan a QR code**. Errors are the server's: "Invite code is invalid or expired." for an expired or replaced code, the currency rule, "You are already a member.", and the rate limit.

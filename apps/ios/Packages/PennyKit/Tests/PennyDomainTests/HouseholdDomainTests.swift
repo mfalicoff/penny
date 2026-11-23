@@ -27,7 +27,7 @@ struct InviteLinkTests {
     @Test("whenGrouped_InviteCode_ShouldReadAsTwoFivesAndTypeBack")
     func grouped() throws {
         let code = try #require(InviteCode(typed: "4F2A9C01BE"))
-        #expect(code.grouped == "4F2A9 C01BE")
+        #expect(code.grouped == "4F2A 9C01 BE")
         #expect(InviteCode(typed: code.grouped) == code)
         #expect(code.spoken.hasPrefix("4, F, 2"))
     }

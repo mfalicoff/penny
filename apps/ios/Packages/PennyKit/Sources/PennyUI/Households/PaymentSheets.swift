@@ -60,7 +60,7 @@ struct PaymentSheet: View {
         }
         // Medium sheets over the household, as `iphone-record-payment` and `iphone-payment-stale`
         // draw them; they grow to full height for larger text.
-        .presentationDetents([.fraction(0.62), .large])
+        .presentationDetents([.fraction(isStale ? 0.62 : 0.7), .large])
         .interactiveDismissDisabled(working)
         .accessibilityIdentifier(isMonthly ? "screen.recordMonthly" : "screen.recordShare")
     }

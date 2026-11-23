@@ -476,11 +476,6 @@
         ],
         "deviations": [
           {
-            "summary": "A notification prompt (Hear about household changes) sits above the list until answered",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
             "summary": "Members are shown by email and initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -500,6 +495,11 @@
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
+          },
+          {
+            "summary": "No \"Hear about household changes\" prompt: the web has no notifications (design decision recorded on MAZ-231)",
+            "kind": "follow-up",
+            "ref": "MAZ-231"
           }
         ]
       }
@@ -520,21 +520,6 @@
             "summary": "Members are shown by email and initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next), not with the card's month pill in the navigation bar",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "History (clock) is in the toolbar where the card has the … menu",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "Adds a Repeating section under the expenses",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
           }
         ]
       },
@@ -576,16 +561,6 @@
             "summary": "Members are shown by email and initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "An overdue month is a separate Overdue list of month names, not its own section with a red Overdue tag and its payments (follow-up recorded on MAZ-248)",
-            "kind": "follow-up",
-            "ref": "MAZ-248"
-          },
-          {
-            "summary": "The month is chosen in the Balances section header (previous and next), not with the card's month pill in the navigation bar",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
           }
         ]
       },
@@ -629,9 +604,9 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The invite card shows Create invite code until asked, because a new code replaces the one already shared",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
+            "summary": "The invite card shows Create invite code until asked, because a new code replaces the one already shared (decided by the owner in MAZ-256)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -675,14 +650,24 @@
         ],
         "deviations": [
           {
-            "summary": "The keypad stays visible, so the share list continues under it; amounts and percentages are typed in the Split sheet, and an equal split has no checkboxes",
+            "summary": "An equal split lists each person and their share without the card's checkboxes: an equal split always includes everyone on the date (design decision recorded on MAZ-256)",
             "kind": "follow-up",
             "ref": "MAZ-256"
           },
           {
-            "summary": "The category is a row of chips under the split, not a pill in the name field",
+            "summary": "The details row reads \"Repeat, note\": a receipt can't be attached to a shared expense yet (follow-up recorded on MAZ-256)",
             "kind": "follow-up",
             "ref": "MAZ-256"
+          },
+          {
+            "summary": "Opened from the household's Expense, the form adds Add entry's Household row before Date",
+            "kind": "follow-up",
+            "ref": "MAZ-277"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       },
@@ -729,11 +714,6 @@
             "summary": "Members are shown by email and initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "A full-height sheet, not medium",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
           }
         ]
       },
@@ -772,14 +752,9 @@
         ],
         "deviations": [
           {
-            "summary": "Names the real cause (here the same share recorded on another device) and lists only the values that changed, so the seeded state shows the share's status instead of total and share",
+            "summary": "Members are shown by email and initials from the email",
             "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "A full-height sheet, not medium",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
+            "ref": "MAZ-171"
           }
         ]
       },
@@ -905,19 +880,9 @@
         ],
         "deviations": [
           {
-            "summary": "Trip expense is a button under the hero, where the card relies on Add entry",
+            "summary": "Payers are named by their email, so a row's \"paid · split N ways\" line wraps",
             "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "History (clock) is in the toolbar where the card has the … menu",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "Shared expense rows show the payer's monogram and email, the split and \"you owe\" / \"owed\", not the category tile and \"yours\" (follow-up recorded on MAZ-249)",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
+            "ref": "MAZ-171"
           }
         ]
       },
@@ -988,11 +953,6 @@
             "summary": "The account row names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "The account's monogram is a neutral fill with initials from the email, not the cards' grey gradient with white initials (follow-up recorded on MAZ-250)",
-            "kind": "follow-up",
-            "ref": "MAZ-250"
           },
           {
             "summary": "No Notifications row (notifications follow the system permission), and Categories shows its count",
@@ -1868,9 +1828,20 @@
       "id": "iphone-shared-expense-detail",
       "view": "shared expense detail: Internet in Maison (Bea paid), October 2026",
       "native": {
-        "status": "blocked",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1918,9 +1889,13 @@
       "id": "iphone-join-code",
       "view": "join a household with an invite code",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-75",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1955,7 +1930,7 @@
       "native": {
         "status": "blocked",
         "owner": "MAZ-75",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "note": "Built to the card in MAZ-256 (rounded camera with the corner marks, the hint and Type the code instead), but the simulator has no camera, so XCUITest can't open the scanning state; it is compared on a device."
       },
       "web": {
         "status": "not-applicable",
@@ -1967,9 +1942,13 @@
       "id": "iphone-invite",
       "view": "invite sheet for Maison with its code and QR code",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-75",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2016,9 +1995,13 @@
       "id": "iphone-trip-personal",
       "view": "personal trip Québec weekend",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-76",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2056,9 +2039,13 @@
       "id": "iphone-trip-share",
       "view": "share confirmation for the personal trip Québec weekend",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-76",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2716,19 +2703,9 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next), not with the card's previous, month and next in the toolbar over both panes",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
             "summary": "Members are shown by email and initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "Balances are the iPhone sections (rows with Paid and share, then Suggested payments and Overdue), not one card with \"pays you\" on each row; the list has the month header, not This week and Earlier (follow-up recorded on MAZ-248)",
-            "kind": "follow-up",
-            "ref": "MAZ-248"
           }
         ]
       },
@@ -2777,19 +2754,9 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Trip expense is a button under the hero, not the toolbar capsule",
+            "summary": "People and the expense rows name people by their email, not their name",
             "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "The right column shows the month's Balances (with its month control), then Your share by category, then the members, not the card's People with each person's month balance beside the hero; expense rows show the payer and \"you owe\", not the category tile and \"yours\"; Expenses is two sections (Shared with everyone, then Only you) where the card has one Expenses card headed \"4 shared · 1 private\" (follow-up recorded on MAZ-249)",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
-          },
-          {
-            "summary": "History (clock) is in the toolbar where the card has the … menu",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
+            "ref": "MAZ-171"
           }
         ]
       },
@@ -2841,11 +2808,6 @@
             "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
             "kind": "follow-up",
             "ref": "MAZ-257"
-          },
-          {
-            "summary": "The account's monogram is a neutral fill with initials from the email, not the cards' grey gradient with white initials (follow-up recorded on MAZ-250)",
-            "kind": "follow-up",
-            "ref": "MAZ-250"
           },
           {
             "summary": "Preferences has no Notifications row; the app shows Notifications as its own group with a footer (follow-up recorded on MAZ-257)",
