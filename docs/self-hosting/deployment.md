@@ -204,6 +204,14 @@ Every release is forward-only. Read the release notes first: they state whether 
 3. `docker compose -f deploy/compose.yaml pull && docker compose -f deploy/compose.yaml up -d --wait`. Compose recreates `api`, which applies new migrations before it serves, then `web`. The old API keeps serving until the new one is ready only if you run more than one replica; otherwise expect a short gap.
 4. Check `/api/ready`, sign in, open a ledger and a household, and download a receipt. Watch the logs for errors ([monitoring](operations.md#monitoring)).
 
+### Upgrading to 3.0
+
+3.0 changes how the API logs in to PostgreSQL. The API now migrates the database itself on startup with one login, so the separate one-shot `migrate` service and the three logins (administrator, `penny_migrator`, `penny_runtime`) are gone. Compose reads `PENNY_DB_USER` and `PENNY_DB_PASSWORD` instead.
+
+- **Docker Compose:** follow [Single database user](#single-database-user) before you run `up`. Set `PENNY_DB_USER=penny_migrator` and `PENNY_DB_PASSWORD` to the old migration password, remove the old password variables, and run `up -d --wait --remove-orphans`.
+- **NixOS:** the module renames `migrationUser` and `migrationPasswordFile` and removes the runtime options ([NixOS](nixos.md)). On a local database it reassigns `penny_migrator`'s objects by itself.
+- **External PostgreSQL:** give the one login the API uses ownership of the `penny` schema, or keep using the old migration login as `PENNY_DB_USER`.
+
 A failed migration leaves the previous schema in place (each migration runs in its own transaction), and the API exits without serving; its log names the reason. Fix the cause and run `up` again.
 
 ### The web app
