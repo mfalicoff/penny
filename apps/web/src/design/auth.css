@@ -729,3 +729,51 @@
   color: var(--pk-label-2);
   font-size: 0.8125rem;
 }
+
+/*
+ * The privacy policy (MAZ-169): an underlined link in the label color. Create account ends with
+ * "By creating an account you agree to the Privacy Policy." (web-create-account,
+ * iphone-create-account-providers). Sign in puts the link on its own line under the demo on phones
+ * (iphone-sign-in-providers) and after the demo note on wide windows (web-sign-in-providers).
+ */
+.privacy-link {
+  color: var(--pk-label);
+  white-space: nowrap;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth__legal {
+  /* .auth__body spaces it from the buttons above. */
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.auth__privacy {
+  display: block;
+  margin-top: 10px;
+}
+
+.auth__privacy-dot {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .auth__legal {
+    font-size: 0.78125rem;
+    line-height: 1.45;
+  }
+
+  .auth__privacy {
+    display: inline;
+    margin-top: 0;
+  }
+
+  .auth__privacy-dot {
+    display: inline;
+  }
+}

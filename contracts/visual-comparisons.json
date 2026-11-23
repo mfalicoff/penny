@@ -1288,6 +1288,11 @@
             "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (decided in MAZ-239)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Shows the server's Privacy Policy link on its own line under the sample-data note, where iphone-sign-in-providers puts it; this card has no link (Design decision follow-up on MAZ-169)",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       }
@@ -1327,6 +1332,11 @@
             "summary": "A Name field comes first, as on the newer create-account cards (iphone-create-account-providers, web-create-account) that this card predates",
             "kind": "follow-up",
             "ref": "MAZ-170"
+          },
+          {
+            "summary": "Ends with “By creating an account you agree to the Privacy Policy.” as iphone-create-account-providers does; this card has no such line (Design decision follow-up on MAZ-169)",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       }
@@ -2323,7 +2333,7 @@
           "light",
           "dark"
         ],
-        "note": "Profile is a page styled as the sheet; the seeded account has no picture, so initials show.",
+        "note": "Profile is a page styled as the sheet; the seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
           {
             "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
@@ -2334,11 +2344,6 @@
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
-          },
-          {
-            "summary": "No “Your account lives on … Privacy Policy” footer",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           }
         ]
       }
@@ -2415,7 +2420,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -2431,7 +2436,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up. The name field (MAZ-171) and the privacy policy line (MAZ-169) are built.",
         "followUp": "MAZ-170"
       }
     },
@@ -3003,7 +3008,7 @@
           "light",
           "dark"
         ],
-        "note": "The seeded account has no picture, so initials show.",
+        "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
           {
             "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
@@ -3014,11 +3019,6 @@
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
-          },
-          {
-            "summary": "No “Your account lives on … Privacy Policy” footer",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           }
         ]
       }
@@ -3213,6 +3213,11 @@
             "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Shows the server's Privacy Policy link after the sample-data note, where web-sign-in-providers puts it; this card has no link (Design decision follow-up on MAZ-169)",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       }
@@ -3634,7 +3639,7 @@
           "light",
           "dark"
         ],
-        "note": "The seeded account has no picture, so initials show and the button reads Add picture.",
+        "note": "The seeded account has no picture, so initials show and the button reads Add picture. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
           {
             "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
@@ -3645,11 +3650,6 @@
             "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
             "kind": "follow-up",
             "ref": "MAZ-152"
-          },
-          {
-            "summary": "No “Your account lives on … Privacy Policy” footer",
-            "kind": "follow-up",
-            "ref": "MAZ-169"
           },
           {
             "summary": "The section list has no Privacy or Export data rows: neither page is built yet",
@@ -3670,7 +3670,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -3685,7 +3685,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up. The name field (MAZ-171) and the privacy policy line (MAZ-169) are built.",
         "followUp": "MAZ-170"
       }
     },

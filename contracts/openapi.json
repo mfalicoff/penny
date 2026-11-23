@@ -7658,6 +7658,15 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "privacyPolicyUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "maxLength": 2048,
+            "description": "The server operator's privacy policy (Legal__PrivacyPolicyUrl), an absolute http or https URL. Null when the server publishes none, and absent from servers older than this field: clients then show no privacy policy link. Clients open it in the browser."
           }
         },
         "required": [

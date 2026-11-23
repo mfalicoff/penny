@@ -24,6 +24,7 @@ import { Avatar, Button, Card, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { ErrorState, LoadingState, useToast } from "../../design/states";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
+import { AccountPrivacyFooter } from "../legal/PrivacyPolicyLink";
 import { PictureCropDialog } from "./PictureCropDialog";
 import { SectionTitle } from "./SectionTitle";
 import { useSettingsLayout } from "./SettingsLayout";
@@ -32,8 +33,9 @@ import { useSettingsLayout } from "./SettingsLayout";
  * Settings › Profile (MAZ-171): the person's picture and name, and how they sign in. Phones and
  * tablets follow `iphone-profile` and `ipad-profile` (`iphone-profile-provider` when the sign-in
  * provider manages a field); desktops follow `web-profile`. A provider-managed field is read only
- * and says which provider manages it; the server refuses a change anyway. Export, account deletion,
- * email verification and password changes belong to other issues and aren't shown yet.
+ * and says which provider manages it; the server refuses a change anyway. The privacy footer
+ * (`AccountPrivacyFooter`) closes both layouts. Export, account deletion and email verification
+ * belong to other issues and aren't shown yet.
  */
 export function ProfileSettings() {
   const email = useAccountEmail();
@@ -310,6 +312,7 @@ function ProfileEditor({ profile }: { profile: Profile }) {
           ) : null}
           {profile.signIn === "oidc" ? <p className="profile__note">You sign in to Penny with {providerName(profile)}. Your account has no password.</p> : null}
         </Card>
+        <AccountPrivacyFooter demo={false} />
         {extras}
       </div>
     );
@@ -390,6 +393,7 @@ function ProfileEditor({ profile }: { profile: Profile }) {
         </div>
         {profile.signIn === "oidc" ? <p className="group-note">You sign in to Penny with {providerName(profile)}. Your account has no password.</p> : null}
       </section>
+      <AccountPrivacyFooter demo={false} />
       {extras}
     </div>
   );
