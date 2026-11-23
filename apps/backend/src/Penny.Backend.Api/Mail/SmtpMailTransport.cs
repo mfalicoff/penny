@@ -12,8 +12,12 @@ namespace Penny.Backend.Api.Mail;
 // authentication. Outcomes are reason codes only: SMTP status codes or the failing step,
 // never the server's text, which may echo the address. MailKit logs nothing unless given
 // a protocol logger, and none is given.
-public sealed class SmtpMailTransport(SmtpSettings settings)
-    : Penny.Backend.Application.Mail.IMailTransport
+// `validateCertificate` replaces the platform's certificate check; only tests pass one
+// (to trust their local server's throwaway certificate).
+public sealed class SmtpMailTransport(
+    SmtpSettings settings,
+    System.Net.Security.RemoteCertificateValidationCallback? validateCertificate = null
+) : Penny.Backend.Application.Mail.IMailTransport
 {
     public async Task<IReadOnlyList<MailOutcome>> SendAsync(
         IReadOnlyList<OutgoingMail> messages,
@@ -22,6 +26,8 @@ public sealed class SmtpMailTransport(SmtpSettings settings)
     {
         var outcomes = new MailOutcome[messages.Count];
         using var client = new SmtpClient { Timeout = (int)settings.Timeout.TotalMilliseconds };
+        if (validateCertificate is not null)
+            client.ServerCertificateValidationCallback = validateCertificate;
         var connected = await ConnectAsync(client, cancellationToken);
         if (connected is not null)
         {

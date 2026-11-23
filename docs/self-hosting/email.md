@@ -1,6 +1,6 @@
 # Email delivery (optional)
 
-Penny can send two kinds of email through your own mail server or provider: **password reset links** and **household and trip invitations**. Email is off by default. A server without email settings works exactly as before: resets use an operator-issued code ([password reset](../reference/authentication.md#password-reset-maz-123)) and people share invite codes themselves.
+Penny can send two kinds of email through any SMTP server or provider: **password reset links** and **household and trip invitations**. Email is off by default. A server without email settings works exactly as before: resets use an operator-issued code ([password reset](../reference/authentication.md#password-reset-maz-123)) and people share invite codes themselves.
 
 `GET /api/info` tells the apps which flow to show (`emailEnabled`). With email on, the sign-in screen's "Forgot password?" asks for an email, and a household's Invite can send an email. With it off, the apps offer the reset-code and shared-code flows.
 
@@ -39,20 +39,41 @@ TLS certificates are checked against the system's trusted certificates. A server
 
 Invalid settings stop the API before it listens, with a message naming the setting. Email settings without `Email__Smtp__Host` also stop it, so a half-done setup is never silently ignored.
 
-Example for a provider's submission port:
+Penny speaks plain SMTP and has no provider-specific code, so any SMTP relay works through these settings alone.
+
+### Example: Cloudflare Email Service
+
+Hosted Penny sends through Cloudflare Email Service. Its SMTP sending is in **beta**, and sending to any recipient (not only your own verified addresses) needs the Workers Paid plan. Follow Cloudflare's [Send emails](https://developers.cloudflare.com/email-service/get-started/send-emails/) guide; in short:
+
+1. The sending domain must use Cloudflare DNS.
+2. In the Cloudflare dashboard, open **Compute › Email Service › Email Sending** and **Onboard Domain**. Cloudflare adds the DNS records itself: an MX record for bounces and SPF under `cf-bounce`, DKIM, and DMARC under `_dmarc`. DNS can take up to 24 hours, usually minutes.
+3. Create an API token with the **Email Sending: Edit** permission, in the same account that onboarded the domain.
+4. Configure Penny with implicit TLS on port 465, the literal username `api_token`, and the token as the password:
 
 ```sh
 # deploy/api.env (mode 0600)
-Email__Smtp__Host=smtp.example-provider.com
-Email__Smtp__Username=penny@example.com
-Email__Smtp__Password=…from your provider…
+Email__Smtp__Host=smtp.mx.cloudflare.net
+Email__Smtp__Security=tls
+Email__Smtp__Port=465
+Email__Smtp__Username=api_token
+Email__Smtp__Password=…your Cloudflare API token…
 Email__From=penny@example.com
 Email__AppUrl=https://penny.example.com
 ```
 
+`Email__From` must be an address on the onboarded domain. Cloudflare also offers a REST API and a Workers binding for sending; Penny uses neither.
+
+### Example: Resend
+
+[Resend](https://resend.com/docs/send-with-smtp) works the same way once its domain verification records are in your DNS: host `smtp.resend.com`, `Email__Smtp__Security=tls` on port 465 (or `starttls` on 587), the username `resend` and a Resend API key as the password.
+
+### Your own mail server
+
+Point `Email__Smtp__Host` at it with `starttls` on 587 (or `tls` on 465) and a mailbox's credentials. A relay on the same machine can be used without TLS: `Email__Smtp__Host=127.0.0.1` and `Email__Smtp__Security=none`.
+
 ## SPF, DKIM and DMARC
 
-Mail from your domain is far more likely to arrive if receiving servers can check it came from you:
+Mail from your domain is far more likely to arrive if receiving servers can check it came from you. With Cloudflare Email Service, onboarding the domain adds all three records for you (above); check them under the domain's DNS records. With another provider:
 
 - **SPF:** your domain's SPF record (a TXT record) must include your provider's sending servers, as your provider documents (for example `v=spf1 include:_spf.example-provider.com ~all`).
 - **DKIM:** turn on DKIM signing at your provider for the `Email__From` domain and publish the key record it gives you. Penny doesn't sign mail itself; the provider does.
