@@ -1744,6 +1744,30 @@
       "view": "web password reset by email, link sent"
     },
     {
+      "specimen": "web-forgot-password-request",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "web password reset by email, request the link"
+    },
+    {
+      "specimen": "web-password-reset-link",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "web set a new password from the emailed link"
+    },
+    {
       "specimen": "web-invite-email",
       "platform": "Web",
       "appearances": [

@@ -2465,6 +2465,27 @@
       ]
     },
     {
+      "id": "web-forgot-password-request",
+      "source": "docs/design/penny-ios/web/forgot-password-request.html",
+      "sourceSha256": "39d98160c72380f87a7f87b5db69a554f8bdaeece07af74a1c2c86472c3bb317",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-forgot-password-request.light.png",
+          "sha256": "33ecce05e7a2e05fe2ae43b81e803f4a5065ff2b193edab91d78b63f945b67a3"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-forgot-password-request.dark.png",
+          "sha256": "f54f650fd0cdec35d65cbc53826ba001a31948d506485c092dc5c660777d4705"
+        }
+      ]
+    },
+    {
       "id": "web-forgot-password",
       "source": "docs/design/penny-ios/web/forgot-password.html",
       "sourceSha256": "d1a364d1d04901764fdaa7a6529c596f1a7beb3211e3af10d3897f200a708a69",
@@ -2629,6 +2650,27 @@
           "appearance": "dark",
           "file": "previews/web-monitoring-prompt.dark.png",
           "sha256": "aa26c1cb50df5879e80209b417363536da0cce44b8d75822ea340b9e7626d254"
+        }
+      ]
+    },
+    {
+      "id": "web-password-reset-link",
+      "source": "docs/design/penny-ios/web/password-reset-link.html",
+      "sourceSha256": "993df6252354a48b79af7c3c2b9c4c63c41005f8d17d16a292156914a2234761",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-password-reset-link.light.png",
+          "sha256": "d0e36e89d55f60909116549cb7f53be4bc501e5028a0460b55e0662aaddb01f7"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-password-reset-link.dark.png",
+          "sha256": "f030aa0668673e4ad34e2c2130cc244b862971a3ce6111dea8de305a89b971f1"
         }
       ]
     },

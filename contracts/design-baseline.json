@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "9762d0352f9b8b176071163317a52ecec985c17a5675ae0298757de9ee7f82d4"
+      "sha256": "66755a41a2e5b1a8fed5d80ab9cd327a583f8397b95c426a280118d58df7dbbe"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "25e2797a8e511ae6a79316e27c4f7246f219cee191b707b5e7399204ed3b90bf"
+      "sha256": "e008aac532128c0b15085f7fc50ea9ad9c8254faa1fcf9cf5400adcd7564407b"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "b54a0bb2d9f48fec3d9734bd2cc70be4fa993a9776fa9a80c19bed0097dbe832"
+      "sha256": "7d10c7604174ec3615acefed4fbc442eba4706f1ba6de2545360dc119274bfd4"
     }
   ],
   "tokens": {
@@ -3621,6 +3621,52 @@
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/forgot-password.html",
       "sha256": "d1a364d1d04901764fdaa7a6529c596f1a7beb3211e3af10d3897f200a708a69",
+      "nativeIssue": "MAZ-124",
+      "webIssue": "MAZ-124",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-forgot-password-request",
+      "name": "Request a password reset",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/forgot-password-request.html",
+      "sha256": "39d98160c72380f87a7f87b5db69a554f8bdaeece07af74a1c2c86472c3bb317",
+      "nativeIssue": "MAZ-124",
+      "webIssue": "MAZ-124",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-password-reset-link",
+      "name": "Set a new password from the link",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/password-reset-link.html",
+      "sha256": "993df6252354a48b79af7c3c2b9c4c63c41005f8d17d16a292156914a2234761",
       "nativeIssue": "MAZ-124",
       "webIssue": "MAZ-124",
       "route": "/auth/callback",

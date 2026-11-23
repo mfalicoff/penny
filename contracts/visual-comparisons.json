@@ -3732,6 +3732,36 @@
       }
     },
     {
+      "id": "web-forgot-password-request",
+      "view": "web password reset by email, request the link",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-124",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-124) for the owner's review. The web has no password reset by email yet.",
+        "followUp": "MAZ-124"
+      }
+    },
+    {
+      "id": "web-password-reset-link",
+      "view": "web set a new password from the emailed link",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-124",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-124) for the owner's review. The web has no password reset by email yet.",
+        "followUp": "MAZ-124"
+      }
+    },
+    {
       "id": "web-invite-email",
       "view": "web household invite by email dialog",
       "native": {

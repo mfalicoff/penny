@@ -976,6 +976,8 @@ const cards: Record<string, Card> = {
   "web-verify-email": { skip: { status: "not-built", note: "The web has no email verification." } },
   "web-email-verified": { skip: { status: "not-built", note: "The web has no email verification." } },
   "web-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
+  "web-forgot-password-request": { skip: { status: "not-built", note: "The web has no password reset by email: it has no Forgot password page to ask for the link." } },
+  "web-password-reset-link": { skip: { status: "not-built", note: "The web has no password reset by email: it has no page for the emailed link." } },
   "web-invite-email": { skip: { status: "not-built", note: "The web has no invites by email (the server sends no email)." } },
   "web-delete-account": { skip: { status: "not-built", note: "The web has no account deletion." } },
   "web-export-all": { skip: { status: "not-built", note: "The web has no Export data pane." } },
