@@ -49,6 +49,8 @@ public enum AccessibilityID {
         public static let entryExtras = "screen.entryExtras"
         /// Add entry's Household: personal, or a household to split with.
         public static let householdPicker = "screen.householdPicker"
+        /// The delete confirmation sheet (`delete-confirm` card, MAZ-255).
+        public static let deleteConfirm = "screen.deleteConfirm"
         // Accounts, categories and schedules (MAZ-74).
         public static let accountForm = "screen.accountForm"
         public static let categoryForm = "screen.categoryForm"
@@ -64,7 +66,7 @@ public enum AccessibilityID {
             home, activity, shared, household, householdExpense, trips, trip, addEntry, settings, appearance, currency,
             appLock, recurring, accounts, categories, lock,
             editEntry, entryDetail, activityFilters, categoryPicker, accountPicker, datePicker, split, entryExtras,
-            householdPicker,
+            householdPicker, deleteConfirm,
             accountForm, categoryForm, schedule, scheduleForm,
             moneyFlow, insights, calendar, categorySpending,
         ]
@@ -313,9 +315,17 @@ public enum AccessibilityID {
         /// iPad: the detail beside the list before an entry is chosen.
         public static let noSelection = "activity.noSelection"
         public static let deleteConfirm = "deleteEntry.confirm"
+        /// Activity's own search field (MAZ-255): the bottom bar on iPhone, under the title on iPad.
+        public static let search = "activity.search"
+        /// iPhone: the bottom bar's back button, × while searching (`activity`, `search-empty`).
+        public static let searchBack = "activity.searchBack"
+        public static let searchClear = "activity.searchClear"
+        public static let searchBar = "activity.searchBar"
         public static func kindFilter(_ rawValue: String) -> String { "activity.filter.\(rawValue)" }
 
-        static let all = [filters, totals, searchEmpty, noSelection, deleteConfirm, add]
+        static let all = [
+            filters, totals, searchEmpty, noSelection, deleteConfirm, add, search, searchBack, searchClear, searchBar,
+        ]
         static let prefixes = ["activity.filter."]
     }
 

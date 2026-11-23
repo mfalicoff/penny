@@ -92,6 +92,9 @@ public enum SidebarItem: Hashable, Sendable {
 public struct ShellRoute: Equatable, Sendable {
     public private(set) var tab: AppTab
     public private(set) var paths: [AppTab: [DetailRoute]]
+    /// The tab shown before the current one: where Activity's back button leads on iPhone, where
+    /// its search bar takes the tab bar's place (`activity` card, MAZ-255).
+    public private(set) var previousTab: AppTab = .home
     public var isSettingsPresented: Bool
     public var settingsPath: [SettingsRoute]
     public var isAddEntryPresented: Bool
@@ -128,8 +131,13 @@ public struct ShellRoute: Equatable, Sendable {
 
     /// The person chose a tab. Choosing the current one pops it to its root.
     public mutating func select(_ next: AppTab) {
-        if next == tab { paths[next] = [] }
+        if next == tab { paths[next] = [] } else { previousTab = tab }
         tab = next
+    }
+
+    /// Back to the tab shown before (Home when it was the same tab).
+    public mutating func selectPrevious() {
+        select(previousTab == tab ? .home : previousTab)
     }
 
     /// Shows a page inside the current tab.
@@ -146,6 +154,7 @@ public struct ShellRoute: Equatable, Sendable {
     /// Back leads to Home under it.
     public mutating func openFromCalendar(_ route: DetailRoute) {
         isCalendarPresented = false
+        if tab != .home { previousTab = tab }
         tab = .home
         paths[.home, default: []].append(route)
     }
@@ -213,6 +222,7 @@ public struct ShellRoute: Equatable, Sendable {
         pendingHouseholdStart = nil
         settingsPath = []
         isAddEntryPresented = false
+        if next != tab { previousTab = tab }
         tab = next
         paths[next] = path
     }

@@ -851,6 +851,21 @@
   cursor: inherit;
 }
 
+.entry-trip--shared {
+  height: 58px;
+}
+
+.entry-trip__name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.entry-trip__sub {
+  font-size: 13px;
+  color: var(--pk-label-2);
+}
+
 .entry-trip > .icon {
   color: var(--pk-label-2);
 }

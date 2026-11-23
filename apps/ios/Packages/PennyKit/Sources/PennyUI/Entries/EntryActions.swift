@@ -49,8 +49,10 @@ enum EntrySummary {
     }
 }
 
-/// The delete confirmation (`delete-entry` card) for one entry, shared by Activity's swipe
-/// action and the entry detail. Deleting is never one tap: it always asks first.
+/// The delete confirmation (`delete-confirm` card) for one entry, shared by Activity's swipe
+/// action and the entry detail: the entry's tile, "Delete “Groceries”?" with "$48.90 · Nov 6 ·
+/// Main chequing", what deleting does, then Delete entry and Cancel. Deleting is never one tap:
+/// it always asks first.
 struct DeleteEntryConfirmation: ViewModifier {
     @Environment(ShellModel.self) private var shell
     @Binding var entry: LedgerEntry?
@@ -60,17 +62,10 @@ struct DeleteEntryConfirmation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog(
-                entry.map { "Delete “\($0.title)”?" } ?? "Delete entry?",
-                isPresented: Binding(get: { entry != nil }, set: { if !$0 { entry = nil } }),
-                titleVisibility: .visible, presenting: entry
-            ) { target in
-                Button("Delete entry", role: .destructive) { delete(target) }
-                    .accessibilityIdentifier("deleteEntry.confirm")
-                Button("Cancel", role: .cancel) {}
-                    .accessibilityIdentifier("deleteEntry.cancel")
-            } message: { target in
-                Text(Self.message(target))
+            .sheet(isPresented: Binding(get: { entry != nil }, set: { if !$0 { entry = nil } })) {
+                if let target = entry {
+                    DeleteConfirmationSheet(subject: subject(target)) { delete(target) }
+                }
             }
             .alert(
                 "Couldn't delete",
@@ -85,6 +80,28 @@ struct DeleteEntryConfirmation: ViewModifier {
     static func message(_ entry: LedgerEntry) -> String {
         let base = "It's removed from your activity and totals. You can undo right after."
         return entry.recurringId == nil ? base : "\(base) Its schedule keeps running; pause it in Recurring."
+    }
+
+    /// "$48.90 · Nov 6 · Main chequing": the total, the day and the account, as on the card.
+    static func detail(total: Int64, date: CalendarDate, place: String?, currency: String) -> String {
+        let day = DayText.date(date).formatted(.dateTime.month(.abbreviated).day())
+        return ([MoneyFormat.amount(total, currency: currency), day] + [place].compactMap { $0 })
+            .joined(separator: " · ")
+    }
+
+    private func subject(_ target: LedgerEntry) -> DeleteConfirmationSheet.Subject {
+        let ledger = shell.workspace.load.ledger
+        let category = ledger?.category(id: target.categoryId)
+        return DeleteConfirmationSheet.Subject(
+            title: target.title,
+            detail: Self.detail(
+                total: target.total, date: target.date,
+                place: target.accountId.flatMap { ledger?.account(id: $0) }?.name,
+                currency: shell.currency),
+            symbol: EntryText.tileSymbol(target.kind, category: category),
+            color: EntryText.tileColor(target.kind, category: category, id: target.categoryId),
+            noteSymbol: target.recurringId == nil ? "arrow.uturn.backward" : "repeat",
+            note: Self.message(target), confirmTitle: "Delete entry")
     }
 
     private func delete(_ target: LedgerEntry) {
@@ -103,9 +120,128 @@ struct DeleteEntryConfirmation: ViewModifier {
     }
 }
 
+/// A shared expense to delete for everyone (`delete-confirm` card), from Activity's row or the
+/// expense's own page.
+struct SharedDeleteRequest: Identifiable, Equatable {
+    let householdId: String
+    let expenseId: String
+    let title: String
+    let total: Int64
+    let date: CalendarDate
+    let householdName: String
+    let symbol: String
+    let color: Color
+    var id: String { "\(householdId):\(expenseId)" }
+
+    init(
+        householdId: String, expenseId: String, title: String, total: Int64, date: CalendarDate,
+        householdName: String, symbol: String, color: Color
+    ) {
+        self.householdId = householdId
+        self.expenseId = expenseId
+        self.title = title
+        self.total = total
+        self.date = date
+        self.householdName = householdName
+        self.symbol = symbol
+        self.color = color
+    }
+
+    /// Activity's shared row; nil for a personal row.
+    init?(_ entry: ReportEntry, report: LedgerReport) {
+        guard case .shared(let household, let expense) = entry.source else { return nil }
+        let category = report.categories.first { $0.id == entry.categoryId }
+        self.init(
+            householdId: household, expenseId: expense, title: entry.title, total: entry.total, date: entry.date,
+            householdName: entry.householdName ?? "", symbol: EntryText.tileSymbol(entry.kind, category: category),
+            color: EntryText.tileColor(entry.kind, category: category, id: entry.categoryId))
+    }
+
+    /// "This expense is shared. Deleting it removes it for bea@example.test and jo@example.test too,
+    /// and recalculates November balances."
+    static func note(others: [String], month: String) -> String {
+        let people: String =
+            switch others.count {
+            case 0: "everyone in the household"
+            case 1: others[0]
+            default: others.dropLast().joined(separator: ", ") + " and " + others[others.count - 1]
+            }
+        return "This expense is shared. Deleting it removes it for \(people) too, and recalculates \(month) balances."
+    }
+}
+
+/// Confirms deleting a shared expense for everyone, then deletes the latest version of it. The
+/// server refuses an expense someone has repaid; the alert says why.
+struct SharedDeleteConfirmation: ViewModifier {
+    @Environment(ShellModel.self) private var shell
+    @Binding var request: SharedDeleteRequest?
+    var onDeleted: () -> Void = {}
+    @State private var failure: String?
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $request) { target in
+                DeleteConfirmationSheet(subject: subject(target)) { delete(target) }
+                    .task { await shell.households.model(for: target.householdId)?.refresh() }
+            }
+            .alert(
+                "Couldn't delete",
+                isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(failure ?? "")
+            }
+    }
+
+    private func subject(_ target: SharedDeleteRequest) -> DeleteConfirmationSheet.Subject {
+        let people = shell.households.model(for: target.householdId)?.people
+        let current = people?.current ?? []
+        let others = current.filter { $0.userId != people?.meId }.map(\.email)
+        let month = MonthPicker.title(MonthKey(target.date), long: false)
+        let currency = shell.households.model(for: target.householdId)?.currency ?? shell.currency
+        return DeleteConfirmationSheet.Subject(
+            title: target.title,
+            detail: DeleteEntryConfirmation.detail(
+                total: target.total, date: target.date,
+                place: target.householdName.isEmpty ? nil : target.householdName,
+                currency: currency),
+            symbol: target.symbol, color: target.color,
+            members: current.map { HouseholdPeople.initials(email: $0.email) },
+            noteSymbol: "person.2", note: SharedDeleteRequest.note(others: others, month: month),
+            confirmTitle: "Delete for everyone")
+    }
+
+    private func delete(_ target: SharedDeleteRequest) {
+        guard let model = shell.households.model(for: target.householdId) else {
+            failure = "Shared expenses need your account."
+            return
+        }
+        Task {
+            switch await model.loadExpense(target.expenseId) {
+            case .success(let expense):
+                if let refused = await model.deleteExpense(expense) {
+                    failure = refused.message
+                } else {
+                    await shell.activityShared.refresh(shell.activityFilters.period)
+                    onDeleted()
+                }
+            case .failure(let refused):
+                failure = refused.message
+            }
+        }
+    }
+}
+
 extension View {
     func deleteEntryConfirmation(_ entry: Binding<LedgerEntry?>, onDeleted: @escaping () -> Void = {}) -> some View {
         modifier(DeleteEntryConfirmation(entry: entry, onDeleted: onDeleted))
+    }
+
+    func sharedDeleteConfirmation(_ request: Binding<SharedDeleteRequest?>, onDeleted: @escaping () -> Void = {})
+        -> some View
+    {
+        modifier(SharedDeleteConfirmation(request: request, onDeleted: onDeleted))
     }
 
     /// A decimal amount field: the decimal pad on iOS.

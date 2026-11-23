@@ -13,9 +13,20 @@ struct AuthViewTests {
         #expect(SignOutButton.title(pending: 2, host: "penny.example.test") == "2 changes haven’t synced")
         #expect(SignOutButton.title(pending: 1, host: "penny.example.test") == "1 change hasn’t synced")
         #expect(SignOutButton.message(pending: 2, host: "penny.example.test").contains("these 2 would be lost"))
-        #expect(SignOutButton.title(pending: 0, host: "penny.example.test") == "Sign out of penny.example.test?")
+        #expect(SignOutButton.title(pending: 0, host: "penny.example.test") == "Sign out of Penny?")
         #expect(
             SignOutButton.message(pending: 0, host: "penny.example.test").contains("stay safe on penny.example.test"))
+    }
+
+    @Test("whenOnAnIPad_SignOutMessage_ShouldNameTheIPadNotTheDevice")
+    func deviceName() {
+        #expect(
+            SignOutButton.message(pending: 0, host: "penny.example.test", device: "iPad")
+                == "Signing out removes your entries from this iPad. Synced entries stay safe on penny.example.test.")
+        #expect(
+            SignOutButton.message(pending: 1, host: "penny.example.test", device: "iPhone")
+                == "Signing out removes your entries from this iPhone. Synced entries stay safe on "
+                + "penny.example.test; this one would be lost.")
     }
 
     @Test("whenServerChipHasAChangeButton_ServerChip_ShouldLabelTheServerOnItsOwn")

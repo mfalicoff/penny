@@ -184,24 +184,12 @@
       "id": "iphone-activity",
       "view": "activity list, October 2026",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Search is the system searchable field in the navigation bar, and the month is a toolbar menu",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          },
-          {
-            "summary": "Adds a Spent · Came in · Invested totals line and chevrons on rows",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -235,19 +223,12 @@
       "id": "iphone-search-empty",
       "view": "search with no results in expenses",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Search is the system searchable field at the top, and adds the totals line and a server-search note",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -271,19 +252,12 @@
       "id": "iphone-add-expense",
       "view": "new expense draft: $74.40 Dinner with friends on Visa",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "A Household row leads and pushes Account, Split and Receipt under the keypad",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -307,19 +281,12 @@
       "id": "iphone-add-income",
       "view": "new income draft: $3,200.00 Payday into Everyday chequing on Oct 30, after today, so expected",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The keypad stays up and covers the rows",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -343,24 +310,12 @@
       "id": "iphone-entry-extras",
       "view": "entry draft with a photo receipt attached and the receipt, repeat and trip rows open",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Shared trips are listed below personal trips with \"Shared · N people\", and picking one opens the shared expense form",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          },
-          {
-            "summary": "The card's Household row after Trip (added in MAZ-277) isn't in the iOS More details sheet yet",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -384,19 +339,12 @@
       "id": "iphone-split",
       "view": "entry draft split equally between 3 people",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Split is a full sheet with the system number pad over the form, not a stacked half sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -485,29 +433,12 @@
       "id": "iphone-delete-confirm",
       "view": "delete the shared Internet expense for everyone confirmation",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
-          },
-          {
-            "summary": "The confirmation has no category icon, amount · date · account line or members, which a system dialog can't show",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          },
-          {
-            "summary": "Delete for everyone is confirmed over the shared expense's detail: Activity offers delete only on personal rows (follow-up from MAZ-253)",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
-          }
         ]
       },
       "web": {
@@ -1318,11 +1249,6 @@
             "ref": "MAZ-250"
           },
           {
-            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          },
-          {
             "summary": "Reduce transparency's description says the device's own setting covers the tab bar and the bars' buttons, which iOS keeps as system glass; the card says the switch covers the navigation and toolbars (design decision recorded on MAZ-250)",
             "kind": "follow-up",
             "ref": "MAZ-250"
@@ -1365,19 +1291,12 @@
       "id": "iphone-app-lock",
       "view": "app lock settings",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
@@ -1482,11 +1401,6 @@
             "summary": "A pushed page with back, not a sheet",
             "kind": "follow-up",
             "ref": "MAZ-257"
-          },
-          {
-            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
           }
         ]
       },
@@ -1665,24 +1579,9 @@
         ],
         "deviations": [
           {
-            "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
-          },
-          {
-            "summary": "The confirmation has no icon tile or Sync, then sign out, which a system dialog can't show",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          },
-          {
             "summary": "The Sign out row has no red icon tile: it follows the settings card, which draws it as centered red text (the two cards disagree; design decision)",
             "kind": "follow-up",
             "ref": "MAZ-252"
-          },
-          {
-            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
           }
         ]
       },
@@ -1700,10 +1599,20 @@
       "id": "iphone-sign-out-plain",
       "view": "sign out confirmation with nothing waiting to sync",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-68",
-        "note": "iOS shows the system sign-out confirmation, which has no icon tile; the custom confirmation is MAZ-255, and the Cards test plan has no state for this card yet.",
-        "followUp": "MAZ-255"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The Sign out row has no red icon tile: it follows the settings card, which draws it as centered red text (the two cards disagree; design decision)",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
+          }
+        ]
       },
       "web": {
         "status": "matches",
@@ -1719,9 +1628,13 @@
       "id": "iphone-activity-filters",
       "view": "activity filters sheet: October 2026, expenses, Groceries & dining",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-73",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1764,9 +1677,13 @@
       "id": "iphone-activity-searching",
       "view": "activity search for coffee while the server search is still running",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-73",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1869,9 +1786,13 @@
       "id": "iphone-account-picker",
       "view": "account picker from a new expense: Everyday chequing selected",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-73",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -1884,9 +1805,13 @@
       "id": "iphone-household-picker",
       "view": "household picker from a new expense: Personal, Maison and Lisbon trip",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-73",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -1899,9 +1824,13 @@
       "id": "iphone-edit-entry",
       "view": "edit entry: 🎉 Party supplies, September 2026",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-73",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2722,11 +2651,6 @@
             "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "Search in the toolbar with a month menu and the totals line, not the card's large title, search field and chips",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
           }
         ]
       },
@@ -2744,19 +2668,12 @@
       "id": "ipad-add-entry",
       "view": "iPad new expense form sheet",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The details put a Household row before Date; the card has it after Trip (MAZ-277)",
-            "kind": "follow-up",
-            "ref": "MAZ-255"
-          }
         ]
       },
       "web": {
