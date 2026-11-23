@@ -95,6 +95,36 @@ docker exec <api-container> dotnet Penny.Backend.Api.dll reset-password person@e
 
 Clients: the web app's "Forgot password?" opens `/forgot-password` (asks for an email) when the server sends email and `/reset-password` (enter the code and a new password) when it doesn't; the emailed link opens `/reset-password` with the code filled in (MAZ-124). The native app's screens are MAZ-68's. The endpoint can also be called directly, for example `curl -X POST https://penny.example.com/api/auth/password-reset -H 'Content-Type: application/json' -d @reset.json` with `{"token":"…","password":"…"}` in a private file, by the user or with the user present choosing the password.
 
+## Email verification (MAZ-172)
+
+Verification records that an account's email address is proven: `users.email_verified_at`, shown as `emailVerified` and `emailVerifiedAt` on `GET /api/profile`. **Nothing waits for it**: an unverified account can do everything a verified one can, including inviting people and being invited (owner decision, 2026-11-23). It matters later for linking a password account to a sign-in provider and for abuse controls.
+
+| Account | Verified |
+| --- | --- |
+| Existed before this change | Yes: the migration `AddEmailVerification` marks every existing row verified |
+| Signs in with a provider (OIDC) | Yes, at creation: the provider must say the email is verified (`email_verified: true`) |
+| New password account | Not until its emailed link is opened, or an operator runs `verify-email` |
+| Changed its email | No: an email change clears it and sends a new link |
+
+| Step | Behavior |
+| --- | --- |
+| Send | While the server sends email, registration and an email change queue a `mail_outbox` row (`email-verification`, account id, SHA-256 of the address, language; no address or code). The mail worker issues the code when it sends: 32 random bytes as hex, SHA-256 stored in `email_verifications` with the address it was sent to, valid for 48 hours, one per account, replacing any earlier one. The email links to `<Email__AppUrl>/verify-email#code=<code>`. A row whose account is verified by then is dropped unsent. |
+| Verify | `POST /api/auth/email-verification` with `{token}`, anonymous (the link may be opened on any device), sharing the sign-in rate limit and origin policy. The code is consumed in one transaction; it verifies only while unexpired and while the account still has the address it was sent to, and keeps an earlier verification time. Missing, malformed, unknown, used, superseded, expired and changed-address codes all get `400 This verification link is invalid or has expired.` Success answers `200 {email}`. It works while email is off too, for links sent before. |
+| Resend | `POST /api/auth/email-verification/resend`, signed in, no body. Always `202 {ok:true}`: nothing is queued for a verified account, while an earlier email is unsent, within 60 seconds of the last one, or past `Email__RecipientMessagesPerDay` / `Email__AccountMessagesPerDay`. `404 This server doesn't send email.` while email is off. |
+| Change email | `POST /api/auth/email` with `{email, password}`, signed in, sharing the sign-in rate limit. Password accounts only (`403 Your sign-in provider manages your email. Change it with your provider.`). The address follows the sign-up rule (`400 Enter a valid email address.`); a wrong password is `400 Your current password is incorrect.` and the session stays; an address another account uses is `409 Another account already uses this email.`, as at registration. One transaction replaces the email (only if the password hash is unchanged), clears the verification and deletes the pending code, so a code sent to the earlier address never verifies the new one. Then a new link is queued. Sessions stay. Answers the updated profile. |
+
+**Without email.** When `Email__Smtp__Host` is unset, verification is off: nothing is queued, resend answers 404, and the apps show no unverified state or Resend (they read `emailEnabled` on `/api/info`). New password accounts stay unverified until an operator marks them:
+
+```sh
+bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- verify-email person@example.com
+dotnet Penny.Backend.Api.dll verify-email person@example.com
+docker exec <api-container> dotnet Penny.Backend.Api.dll verify-email person@example.com
+```
+
+It uses `ConnectionStrings__Postgres` only, prints nothing on stdout and a confirmation on stderr ("Marked…" or "already verified"), and exits `1` for usage errors, an invalid or unknown email (named on the console only) or a database failure. Nothing it prints contains the address.
+
+**Clients.** After creating a password account on a server that sends email, the web app opens `/verify-email` ("Check your email": the address, Continue to Penny, Resend after a minute, Change email). The emailed link opens `/verify-email#code=…`; the code is kept in memory and dropped from the address bar, then redeemed once ("Your email is verified", or a refused-link message with Send a new link when signed in). Settings › Profile shows **Verified** beside the email, or, while the server sends email, **Not verified** with **Resend link**.
+
 ## OpenID Connect (MAZ-54)
 
 `GET /api/auth/oidc`, `POST /api/auth/oidc/start` and `POST /api/auth/oidc/complete` keep the status codes, messages and shapes of the contract. Clients start an attempt, open `authorizationUrl` in the system browser or a popup, and post the `transaction` they kept plus the full `callbackUrl` they received.

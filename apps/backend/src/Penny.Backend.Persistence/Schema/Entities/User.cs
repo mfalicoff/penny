@@ -25,4 +25,9 @@ public sealed class User
     // When the password last changed (signed-in change or operator reset); null before the
     // first change.
     public DateTimeOffset? PasswordChangedAt { get; set; }
+
+    // When the account's current email was proven (MAZ-172): an emailed link was opened, the
+    // sign-in provider said so, or an operator marked it. Null while unverified; an email
+    // change clears it.
+    public DateTimeOffset? EmailVerifiedAt { get; set; }
 }

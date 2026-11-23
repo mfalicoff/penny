@@ -168,7 +168,8 @@ public sealed class ProfileService(
                 && !profile.NamePromptDismissed,
             profile.OidcIssuer is null ? SignInMethod.Password : SignInMethod.Oidc,
             profile.OidcIssuer is { } issuer ? ProviderLabel(issuer) : null,
-            profile.OidcIssuer is null ? profile.PasswordChangedAt : null
+            profile.OidcIssuer is null ? profile.PasswordChangedAt : null,
+            profile.EmailVerifiedAt
         );
 
     // The configured display name of the account's own provider, found by its issuer, so

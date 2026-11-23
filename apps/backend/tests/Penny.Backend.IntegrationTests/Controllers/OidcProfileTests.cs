@@ -29,6 +29,8 @@ public sealed class OidcProfileTests(ApiFixture fixture, FakeOidcProvider provid
         profile.GetProperty("needsName").GetBoolean().ShouldBeFalse();
         profile.GetProperty("signIn").GetString().ShouldBe("oidc");
         profile.GetProperty("provider").GetString().ShouldBe("Synthetic SSO");
+        // The provider said the email is verified (MAZ-172).
+        profile.GetProperty("emailVerified").GetBoolean().ShouldBeTrue();
 
         // The API refuses a change, and the name stays.
         using (var change = await PatchAsync(client, token, new { displayName = "Someone" }))
