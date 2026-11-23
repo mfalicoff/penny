@@ -2336,3 +2336,165 @@ a.row:hover {
   border-top: 0.5px solid var(--pk-separator);
   background: var(--pk-surface-2);
 }
+
+/* ---------- invite by email (card web-invite-email, MAZ-124) ---------- */
+.invite-email {
+  display: grid;
+  gap: 12px;
+}
+
+.invite-email__form {
+  display: grid;
+  gap: 6px;
+}
+
+.invite-email__label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.invite-email__invited .invite-email__label {
+  margin: 6px 0 6px;
+  padding-bottom: 6px;
+  border-bottom: 0.5px solid var(--pk-separator);
+}
+
+.invite-email__send {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.invite-email__send input {
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.90625rem;
+}
+
+.invite-email__send input:focus {
+  outline: none;
+  background: var(--pk-surface);
+  box-shadow: inset 0 0 0 1.5px var(--pk-tint), 0 0 0 4px var(--pk-tint-soft);
+}
+
+.invite-email__send input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--pk-danger);
+}
+
+.invite-email__send .wbtn {
+  min-height: 40px;
+}
+
+.invite-email__hint {
+  margin: 2px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.invite-email__empty {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.invite-email__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--pk-separator);
+  font-size: 0.875rem;
+}
+
+.invite-row:first-child {
+  border-top: 0;
+}
+
+.invite-row__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.invite-row__main {
+  display: grid;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.invite-row__email {
+  overflow-wrap: anywhere;
+}
+
+.invite-row__detail {
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+}
+
+/* The row's … is a square kit button, not the navigation bar's round glass tool. */
+.invite-row .more-menu > .group-tool {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+  backdrop-filter: none;
+}
+
+@media (pointer: coarse) {
+  .invite-row .more-menu > .group-tool {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.invite-email__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-tint-text);
+  font: 600 0.84375rem var(--pk-font);
+  cursor: pointer;
+}
+
+.invite-email__switch:hover {
+  text-decoration: underline;
+}
+
+.invite-email__switch .icon {
+  color: var(--pk-tint-text);
+}
+
+/* The code flow inside the dialog keeps its card, without a second surface around it. */
+.pk-dialog__body > .invite-code {
+  box-shadow: none;
+  padding: 6px 0;
+}

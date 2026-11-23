@@ -297,6 +297,24 @@ async function sharedExpense(run: Run) {
 }
 
 /** Join a household with the cards' invite code typed in. */
+/** The cards' sample reset code (synthetic). */
+const SAMPLE_RESET_CODE = "3f9a1c07e2b45d68a0c1f7e93b2d4a6c8e05f1b7d39a2c4e6f80b1d3a5c7e9f2";
+const EMAIL_STUBBED = "The test environment has no SMTP server, so the capture stubs /api/info emailEnabled and the email endpoints (MAZ-124).";
+
+/**
+ * Email delivery for one capture (MAZ-124): the test environment sends no email, so /api/info
+ * reports it on, the reset request answers its 202, and the household's invitations by email are
+ * the card's sample rows. Every other request reaches the real API.
+ */
+async function withEmail(p: Page, invites: unknown[] = []) {
+  await p.route("**/api/info", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...((await response.json()) as object), emailEnabled: true } });
+  });
+  await p.route("**/api/auth/password-reset/request", (route) => route.fulfill({ status: 202, json: { ok: true } }));
+  await p.route(/\/api\/households\/[^/]+\/email-invites$/, (route) => route.fulfill({ json: { items: invites } }));
+}
+
 async function joinWithCode(p: Page) {
   await page(p, "/households", "Shared");
   await p.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /Join with a code/ }).click();
@@ -910,7 +928,14 @@ const cards: Record<string, Card> = {
       await expectAlexOctober(p);
     },
   },
-  "web-password-reset": { skip: { status: "not-built", note: "The web has no password reset: the server takes an operator-issued reset code (POST /api/auth/password-reset) and sends no email." } },
+  "web-password-reset": {
+    open: async ({ page: p }) => {
+      await p.goto("/reset-password");
+      await expect(p.getByRole("heading", { level: 1, name: "Set a new password" })).toBeVisible();
+      await p.getByLabel("Reset code").fill(SAMPLE_RESET_CODE);
+      await p.getByLabel("New password").fill("password");
+    },
+  },
   "web-export": { skip: { status: "not-built", note: "The web has no Export data yet (Settings has no Export row)." } },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
@@ -975,8 +1000,55 @@ const cards: Record<string, Card> = {
   "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
   "web-verify-email": { skip: { status: "not-built", note: "The web has no email verification." } },
   "web-email-verified": { skip: { status: "not-built", note: "The web has no email verification." } },
-  "web-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
-  "web-invite-email": { skip: { status: "not-built", note: "The web has no invites by email (the server sends no email)." } },
+  "web-forgot-password": {
+    note: EMAIL_STUBBED,
+    open: async ({ page: p }) => {
+      await withEmail(p);
+      await p.clock.install({ time: Date.parse(AT) });
+      await p.goto("/forgot-password");
+      await p.clock.pauseAt(Date.parse(AT) + 5_000);
+      await p.getByLabel("Email").fill("alex@example.test");
+      await p.getByRole("button", { name: "Send reset link" }).click();
+      await expect(p.getByText("Check your email")).toBeVisible();
+      await p.clock.runFor(18_000);
+      // Time stands still at 0:42 for the capture, while frames and timers keep running.
+      await p.clock.resume();
+      await p.clock.setFixedTime(Date.parse(AT) + 23_000);
+      await expect(p.getByRole("button", { name: /^Resend in/ })).toContainText("0:42");
+    },
+  },
+  "web-forgot-password-request": {
+    note: EMAIL_STUBBED,
+    open: async ({ page: p }) => {
+      await withEmail(p);
+      await p.goto("/forgot-password");
+      await expect(p.getByRole("heading", { level: 1, name: "Reset your password" })).toBeVisible();
+      await p.getByLabel("Email").fill("alex@example.test");
+    },
+  },
+  "web-password-reset-link": {
+    note: EMAIL_STUBBED,
+    open: async ({ page: p }) => {
+      await withEmail(p);
+      await p.goto(`/reset-password#code=${SAMPLE_RESET_CODE}`);
+      await expect(p.getByRole("heading", { level: 1, name: "Set a new password" })).toBeVisible();
+      await p.getByLabel("New password").fill("password");
+    },
+  },
+  "web-invite-email": {
+    note: EMAIL_STUBBED,
+    open: async (run) => {
+      await withEmail(run.page, [
+        { id: "ei-1", email: "jo.s@example.com", status: "waiting", createdAt: Date.parse(AT) - 3_600_000, sentAt: Date.parse(AT) - 3_600_000, expiresAt: Date.parse(AT) + 68 * 3_600_000 },
+        { id: "ei-2", email: "alex.k@example.com", status: "expired", createdAt: Date.parse(AT) - 5 * 86_400_000, sentAt: Date.parse(AT) - 5 * 86_400_000, expiresAt: Date.parse(AT) - 2 * 86_400_000 },
+      ]);
+      await maison(run);
+      await run.page.getByRole("button", { name: "Invite", exact: true }).click();
+      const dialog = run.page.getByRole("dialog", { name: "Invite to Maison" });
+      await expect(dialog.getByText("jo.s@example.com")).toBeVisible();
+      await dialog.getByLabel("Email").fill("sam@example.com");
+    },
+  },
   "web-delete-account": { skip: { status: "not-built", note: "The web has no account deletion." } },
   "web-export-all": { skip: { status: "not-built", note: "The web has no Export data pane." } },
   "web-privacy": { skip: { status: "not-built", note: "The web has no Privacy pane: telemetry is on or off for the whole server, with no switches for the person." } },

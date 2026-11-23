@@ -6,6 +6,11 @@ import {
   auditEventSchema,
   balanceSchema,
   credentialsSchema,
+  emailInviteInputSchema,
+  emailInviteListSchema,
+  emailInviteSchema,
+  passwordResetRequestSchema,
+  passwordResetSchema,
   expenseInputSchema,
   expensePaymentSchema,
   expenseUpdateSchema,
@@ -48,6 +53,7 @@ import {
   searchResponseSchema,
   sessionSchema,
 } from "./schemas";
+import { serverInfoSchema } from "./info";
 
 interface OpenApiSchema {
   properties?: Record<string, { enum?: string[]; anyOf?: unknown[]; minimum?: number; maximum?: number; minLength?: number; maxLength?: number }>;
@@ -86,6 +92,12 @@ const models: [string, z.ZodType][] = [
   ["HouseholdInput", householdInputSchema],
   ["Join", joinSchema],
   ["Invite", inviteSchema],
+  ["EmailInviteInput", emailInviteInputSchema],
+  ["EmailInvite", emailInviteSchema],
+  ["EmailInviteList", emailInviteListSchema],
+  ["PasswordResetRequest", passwordResetRequestSchema],
+  ["PasswordReset", passwordResetSchema],
+  ["ServerInfo", serverInfoSchema],
   ["ExpenseInput", expenseInputSchema],
   ["ExpenseUpdate", expenseUpdateSchema],
   ["Expense", sharedExpenseSchema],

@@ -32,12 +32,59 @@ public interface IHouseholdTransaction
     // Signed per-month amounts from live expenses, splits and reimbursements.
     Task<IReadOnlyList<BalanceContribution>> BalancesAsync(string householdId);
 
+    // The household's shared code, or else an emailed invitation's unused, unrevoked code.
     Task<StoredInvite?> FindInviteAsync(string codeHash);
 
     // Deletes the household's earlier invites and stores this one.
     Task ReplaceInviteAsync(string householdId, string codeHash, DateTimeOffset expiresAt);
 
-    Task DeleteInvitesAsync(string householdId);
+    // Archive: deletes the shared code and revokes every emailed invitation, finishing
+    // their unsent emails.
+    Task DeleteInvitesAsync(string householdId, DateTimeOffset now);
+
+    // Emailed invitations (MAZ-124). Revoked ones are left out of the list.
+    Task<IReadOnlyList<StoredEmailInvite>> EmailInvitesAsync(string householdId);
+
+    Task<StoredEmailInvite?> FindEmailInviteAsync(string inviteId);
+
+    // Creates the household's invitation for `email`, or requests it again: clears its
+    // failed, joined and revoked marks and records `now` as the latest request. The
+    // earlier code keeps working until the new email issues its own.
+    Task<StoredEmailInvite> RequestEmailInviteAsync(
+        string inviteId,
+        string householdId,
+        string invitedBy,
+        string email,
+        DateTimeOffset now
+    );
+
+    // Stores the hash of the code an invitation email is about to carry.
+    Task IssueEmailInviteCodeAsync(string inviteId, string codeHash, DateTimeOffset expiresAt);
+
+    // Clears the code (it joins once) and records the join.
+    Task MarkEmailInviteJoinedAsync(string inviteId, DateTimeOffset joinedAt);
+
+    // Clears the code, marks the invitation revoked and finishes its unsent emails.
+    Task RevokeEmailInviteAsync(string inviteId, DateTimeOffset now);
+
+    // Messages created since `since` for the account and for the recipient, after locking
+    // the account's user row (lock order: household, then users).
+    Task<(int Account, int Recipient)> CountRecentMailAsync(
+        string accountId,
+        string recipientHash,
+        DateTimeOffset since
+    );
+
+    // Queues an invitation email; earlier unsent emails for the invitation finish as
+    // superseded, so one request sends one email.
+    Task EnqueueInviteMailAsync(
+        string messageId,
+        string inviteId,
+        string accountId,
+        string recipientHash,
+        string locale,
+        DateTimeOffset now
+    );
 
     Task AddHouseholdAsync(StoredHousehold household);
 

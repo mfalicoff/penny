@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-22",
+  "reviewedAt": "2026-11-23",
   "cards": [
     {
       "id": "system-foundations",
@@ -3460,10 +3460,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-84",
-        "note": "The web has no password reset: the server takes an operator-issued reset code (POST /api/auth/password-reset) and has no reset screen.",
-        "followUp": "MAZ-238"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3684,10 +3687,49 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no password reset by email (the server sends no email).",
-        "followUp": "MAZ-124"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      }
+    },
+    {
+      "id": "web-forgot-password-request",
+      "view": "web password reset by email, request the link",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-124",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "matches",
+        "owner": "MAZ-124",
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      }
+    },
+    {
+      "id": "web-password-reset-link",
+      "view": "web set a new password from the emailed link",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-124",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "matches",
+        "owner": "MAZ-124",
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3699,10 +3741,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no invites by email (the server sends no email).",
-        "followUp": "MAZ-124"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

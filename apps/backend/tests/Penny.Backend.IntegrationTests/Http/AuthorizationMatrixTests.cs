@@ -212,7 +212,8 @@ public sealed class AuthorizationMatrixTests(ApiFixture fixture) : SharedRecurre
             .Replace("{expenseId}", Uri.EscapeDataString(expenseId), StringComparison.Ordinal)
             .Replace("{ruleId}", Uri.EscapeDataString(ruleId), StringComparison.Ordinal)
             .Replace("{userId}", Uri.EscapeDataString(userId), StringComparison.Ordinal)
-            .Replace("{month}", month, StringComparison.Ordinal);
+            .Replace("{month}", month, StringComparison.Ordinal)
+            .Replace("{inviteId}", "unknown", StringComparison.Ordinal);
 
     private static HttpRequestMessage Request(
         HttpMethod method,

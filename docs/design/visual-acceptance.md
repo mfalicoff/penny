@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
-The 145 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 147 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (288 images: 143 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (292 images: 145 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -252,12 +252,26 @@ Screens that follow an existing card instead of getting their own:
 
 - **Names and pictures in households, trips, balances and history:** the cards already draw names and gray monograms (`iphone-shared`, `iphone-shared-people`, `iphone-shared-balances`, `iphone-history`, `ipad-shared`, `web-household`, the trip cards). A picture fills the same circle; with no picture the monogram uses the name's initials, and with no name the email is shown, as today.
 - **Choosing a picture:** the photo menu (Take photo, Choose photo, Remove picture), the photo picker and the web's file chooser are platform chrome; then `iphone-profile-photo` (in a dialog on the web).
-- **Setting a new password from the emailed link:** `web-password-reset` without the Reset code field, since the link carries the token. The link opens the web app on any device.
+- **Setting a new password from the emailed link:** `web-password-reset-link` (MAZ-124 below). The link opens the web app on any device.
 - **Opening the verification link:** `web-email-verified` in the browser. The apps pick up the verified state at their next sync and drop `iphone-unverified`'s banner.
 - **Change email:** a one-field page in `iphone-profile`'s style. A changed email is unverified again and gets `iphone-verify-email`.
 - **The Settings entries:** `iphone-settings`'s profile card opens `iphone-profile`; Privacy is an extra row in Preferences, as `ipad-profile` draws it, and an extra section on the web, as `web-profile` draws it.
 - **iPad and phone-width web:** iPad sign-in, create account, verification, reset, invite, deletion, export, privacy and the monitoring prompt use the iPhone cards as form sheets, as iPad sign-in does today; the web at phone width uses the iPhone cards.
 - **An Apple account that hid its name:** `iphone-name-prompt`.
+
+## Drafted cards: email delivery (MAZ-124, 2026-11-22)
+
+With email delivery configured on the server, the web password reset gets the two steps MAZ-267 left to `web-password-reset`. Both are drafted in the split sign-in layout, light and dark, for the owner's review.
+
+| Step | Card |
+| --- | --- |
+| Ask for a reset link: Email, Send reset link, and "Have a reset code from your server's administrator? Enter it", which opens `web-password-reset` | `web-forgot-password-request` |
+| Link sent: Check your email, Resend in 0:42 | `web-forgot-password` |
+| Set a new password from the emailed link: no Email or Reset code field, since the link carries the token, and the note that every signed-in device is signed out | `web-password-reset-link` |
+
+The request step says the same thing whether or not the email has an account, as `web-forgot-password` does. Without email on the server, sign-in has no Forgot password and `web-password-reset` stays the only reset.
+
+Owner decision (2026-11-23): none of the three web reset cards shows the server chip, because the web uses the server it was opened from, as on `web-sign-in`. `web-password-reset` has no Email field, because a reset with a code takes only the code and the new password.
 
 ## Review scenarios
 

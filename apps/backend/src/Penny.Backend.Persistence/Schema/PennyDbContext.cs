@@ -37,6 +37,8 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<PushDevice> PushDevices => Set<PushDevice>();
     public DbSet<PushOutboxMessage> PushOutbox => Set<PushOutboxMessage>();
     public DbSet<PushDelivery> PushDeliveries => Set<PushDelivery>();
+    public DbSet<MailOutboxMessage> MailOutbox => Set<MailOutboxMessage>();
+    public DbSet<HouseholdEmailInvite> HouseholdEmailInvites => Set<HouseholdEmailInvite>();
     public DbSet<SearchDocument> SearchDocuments => Set<SearchDocument>();
     public DbSet<ReceiptText> ReceiptTexts => Set<ReceiptText>();
     public DbSet<ReceiptTextChunk> ReceiptTextChunks => Set<ReceiptTextChunk>();

@@ -17,8 +17,9 @@ export function CreateHouseholdDialog({ onClose }: { onClose: () => void }) {
   return <StartDialog initial="create" onClose={onClose} />;
 }
 
-export function JoinHouseholdDialog({ onClose }: { onClose: () => void }) {
-  return <StartDialog initial="join" onClose={onClose} />;
+/** `initialCode`: an emailed invitation's code (MAZ-124), filled in for the person to accept. */
+export function JoinHouseholdDialog({ onClose, initialCode }: { onClose: () => void; initialCode?: string }) {
+  return <StartDialog initial="join" onClose={onClose} initialCode={initialCode} />;
 }
 
 /** Join a shared trip with a code (MAZ-93). The same join as a household; the code decides which. */
@@ -35,7 +36,7 @@ export function JoinTripDialog({ onClose }: { onClose: () => void }) {
  * currency, and joining needs the same currency, as the server enforces. Failures keep what was
  * typed and say why.
  */
-function StartDialog({ initial, onClose }: { initial: Mode; onClose: () => void }) {
+function StartDialog({ initial, onClose, initialCode }: { initial: Mode; onClose: () => void; initialCode?: string | undefined }) {
   const [mode, setMode] = useState<Mode>(initial);
   return (
     <Dialog title={mode === "create" ? "New household" : "Join a household"} onClose={onClose}>
@@ -50,7 +51,7 @@ function StartDialog({ initial, onClose }: { initial: Mode; onClose: () => void 
           { value: "join", label: "Join" },
         ]}
       />
-      {mode === "create" ? <CreateForm onClose={onClose} /> : <JoinForm onClose={onClose} />}
+      {mode === "create" ? <CreateForm onClose={onClose} /> : <JoinForm onClose={onClose} initialCode={initialCode} />}
     </Dialog>
   );
 }
@@ -164,12 +165,12 @@ function CreateForm({ onClose }: { onClose: () => void }) {
   );
 }
 
-function JoinForm({ onClose, trip = false }: { onClose: () => void; trip?: boolean }) {
+function JoinForm({ onClose, trip = false, initialCode }: { onClose: () => void; trip?: boolean; initialCode?: string | undefined }) {
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const toast = useToast();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode ?? "");
   const [invalid, setInvalid] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
   const codeId = useId();

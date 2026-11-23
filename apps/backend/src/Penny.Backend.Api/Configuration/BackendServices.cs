@@ -9,6 +9,7 @@ using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.InboundMail;
+using Penny.Backend.Api.Mail;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Api.Push;
 using Penny.Backend.Api.Receipts;
@@ -24,6 +25,7 @@ using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.InboundMail;
 using Penny.Backend.Application.Ledgers;
+using Penny.Backend.Application.Mail;
 using Penny.Backend.Application.Profiles;
 using Penny.Backend.Application.Push;
 using Penny.Backend.Application.Receipts;
@@ -116,6 +118,10 @@ public static class BackendServices
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
         AddReceiptTextServices(builder.Services, OcrOptions.Read(configuration));
         AddPushServices(builder.Services, PushOptions.Read(configuration), controls);
+        AddMailServices(
+            builder.Services,
+            EmailOptions.Read(configuration, AuthOptions.Read(configuration))
+        );
         AddInboundMailServices(
             builder.Services,
             InboundMailOptions.Read(configuration),
@@ -239,6 +245,28 @@ public static class BackendServices
             _ = new LocalReceiptTextExtractor(ocr.Engine).Engine;
             services.AddHostedService<InboundMailWorker>();
         }
+    }
+
+    // Email delivery (MAZ-124): the policy, outbox and email flows always exist (and answer
+    // 404 while email is off); the SMTP transport and runner only when `Email__Smtp__Host`
+    // is set, the worker unless `Email__Worker=false`.
+    private static void AddMailServices(IServiceCollection services, EmailOptions email)
+    {
+        services.AddSingleton(email);
+        services.AddSingleton(email.Policy);
+        services.AddSingleton<IMailOutbox, PostgresMailOutbox>();
+        services.AddSingleton<PasswordResetMailService>();
+        services.AddSingleton<EmailInviteService>();
+        if (email.Smtp is not { } smtp)
+            return;
+        services.AddSingleton<IMailTransport>(new SmtpMailTransport(smtp));
+        services.AddSingleton<MailDeliveryRunner>();
+        if (email.Worker)
+            services.AddHostedService(provider => new MailDeliveryWorker(
+                provider.GetRequiredService<MailDeliveryRunner>(),
+                TimeSpan.FromSeconds(email.PollSeconds),
+                provider.GetRequiredService<ILogger<MailDeliveryWorker>>()
+            ));
     }
 
     // Push devices and delivery (MAZ-61): registration always; the outbox worker unless

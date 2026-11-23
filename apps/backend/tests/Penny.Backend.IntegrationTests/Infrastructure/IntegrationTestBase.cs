@@ -16,12 +16,15 @@ public abstract class IntegrationTestBase(ApiFixture fixture) : IAsyncLifetime
 
     // Never stores cookies: tests send session cookies and bearer tokens explicitly.
     protected HttpClient Client { get; private set; } = null!;
+
+    // The host the client talks to; suites with their own settings (email) override it.
+    protected virtual WebApplicationFactory<Program> ApiHost => Fixture.Factory;
     protected static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     public async ValueTask InitializeAsync()
     {
         await Fixture.ResetAsync(Ct);
-        Client = CreateClient(Fixture.Factory);
+        Client = CreateClient(ApiHost);
     }
 
     public ValueTask DisposeAsync()

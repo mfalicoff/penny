@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../../api/client";
 import { householdDetailQuery, householdExpensesQuery, householdsQuery, monthRecapQuery } from "../../api/households";
+import { useEmailEnabled } from "../../api/info";
 import { usePageTitle, usePageTitleStyle } from "../../app/shell/pageTitle";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
@@ -23,6 +24,7 @@ import { describeLoadError } from "../households/errors";
 import { ExpenseDetailDialog } from "../households/ExpenseDetail";
 import { ExpenseFormDialog, type FormTarget } from "../households/ExpenseForm";
 import { HistoryPanel } from "../households/HistoryPanel";
+import { InviteEmailDialog } from "../households/InviteEmailDialog";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "../households/GroupTools";
 import { GroupLink, type GroupSearch } from "../households/links";
 import { currentMonth, dayLabel, isCurrent, memberName, monthLabel, people } from "../households/model";
@@ -249,6 +251,8 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const expenses = useQuery({ ...householdExpensesQuery(email, householdId), enabled: isTrip });
   const [form, setForm] = useState<FormTarget | null>(search.add ? { kind: "new" } : null);
   const [editing, setEditing] = useState(false);
+  const emailEnabled = useEmailEnabled();
+  const [inviting, setInviting] = useState(false);
   const [openPrivate, setOpenPrivate] = useState<Transaction | null>(null);
   const wide = useMediaQuery(WIDE);
   // The desktop (`web-trip`); a touch tablet from 1100px keeps the iPad card (`ipad-trip`).
@@ -308,7 +312,10 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   return (
     <div className="page trips">
       <GroupToolbar ownAdd lead={tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next ?? currentMonth() }); }} /> : null}>
-        {view.canWrite && view.creator ? (
+        {view.canWrite && view.creator && emailEnabled ? (
+          // MAZ-124: with email on the server, Invite opens Invite by email, titled with the trip.
+          <ToolButton icon="person-add" label="Invite" labelled={desktop} onClick={() => { setInviting(true); }} />
+        ) : view.canWrite && view.creator ? (
           <GroupLink route="trips" householdId={householdId} search={linkSearch({ tab: "people" })} className={toolClass({ labelled: desktop })}>
             <ToolContent icon="person-add" label="Invite" labelled={desktop} />
           </GroupLink>
@@ -452,6 +459,7 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
         />
       ) : null}
       {editing ? <TripFormDialog target={{ kind: "shared", household }} onClose={() => { setEditing(false); }} /> : null}
+      {inviting && emailEnabled ? <InviteEmailDialog view={view} onClose={() => { setInviting(false); }} /> : null}
       {openPrivate ? <EntryDetailDialog entry={openPrivate} onClose={() => { setOpenPrivate(null); }} /> : null}
     </div>
   );

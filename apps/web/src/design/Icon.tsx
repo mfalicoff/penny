@@ -25,3 +25,18 @@ export function Icon({ name, size = 22, label, weight = 36 }: IconProps) {
     />
   );
 }
+
+/**
+ * The cards' envelope (`web-forgot-password`, `web-invite-email`). The kit's Ionicons set has no
+ * mail glyph, so the cards draw Ionicons' `mail-outline` inline; this is the same drawing.
+ */
+export function MailIcon({ size = 20 }: { size?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size, ["--sw" as string]: "32px" }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        <rect x="48" y="96" width="416" height="320" rx="40" ry="40" style={{ fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "var(--sw,32px)" }} />
+        <polyline points="112 160 256 272 400 160" style={{ fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "var(--sw,32px)" }} />
+      </svg>
+    </span>
+  );
+}
