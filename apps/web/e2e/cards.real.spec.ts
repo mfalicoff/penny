@@ -929,7 +929,6 @@ const cards: Record<string, Card> = {
     },
   },
   "web-password-reset": {
-    note: "The API takes no email, so the page has no Email field.",
     open: async ({ page: p }) => {
       await p.goto("/reset-password");
       await expect(p.getByRole("heading", { level: 1, name: "Set a new password" })).toBeVisible();

@@ -261,7 +261,7 @@ Screens that follow an existing card instead of getting their own:
 
 ## Drafted cards: email delivery (MAZ-124, 2026-11-22)
 
-With email delivery configured on the server, the web password reset gets the two steps MAZ-267 left to `web-password-reset`. Both are drafted in the split sign-in layout, light and dark, for the owner's review; the web hasn't built them.
+With email delivery configured on the server, the web password reset gets the two steps MAZ-267 left to `web-password-reset`. Both are drafted in the split sign-in layout, light and dark, for the owner's review.
 
 | Step | Card |
 | --- | --- |
@@ -270,6 +270,8 @@ With email delivery configured on the server, the web password reset gets the tw
 | Set a new password from the emailed link: no Email or Reset code field, since the link carries the token, and the note that every signed-in device is signed out | `web-password-reset-link` |
 
 The request step says the same thing whether or not the email has an account, as `web-forgot-password` does. Without email on the server, sign-in has no Forgot password and `web-password-reset` stays the only reset.
+
+Owner decision (2026-11-23): none of the three web reset cards shows the server chip, because the web uses the server it was opened from, as on `web-sign-in`. `web-password-reset` has no Email field, because a reset with a code takes only the code and the new password.
 
 ## Review scenarios
 

@@ -2467,7 +2467,7 @@
     {
       "id": "web-forgot-password-request",
       "source": "docs/design/penny-ios/web/forgot-password-request.html",
-      "sourceSha256": "39d98160c72380f87a7f87b5db69a554f8bdaeece07af74a1c2c86472c3bb317",
+      "sourceSha256": "d635c679f311d5368aa9442bc50e39343b7655e5c820546b6de83a4103c8cc5b",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2476,12 +2476,12 @@
         {
           "appearance": "light",
           "file": "previews/web-forgot-password-request.light.png",
-          "sha256": "33ecce05e7a2e05fe2ae43b81e803f4a5065ff2b193edab91d78b63f945b67a3"
+          "sha256": "815e4f9c1183aaba04956f4c023312926880513c3230c052cd20e6b0592890e9"
         },
         {
           "appearance": "dark",
           "file": "previews/web-forgot-password-request.dark.png",
-          "sha256": "f54f650fd0cdec35d65cbc53826ba001a31948d506485c092dc5c660777d4705"
+          "sha256": "07040ea8705f6dbab30af5329b4a60a4e6357f6fb8fbff960e3cf5be3ee9c6bf"
         }
       ]
     },
@@ -2656,7 +2656,7 @@
     {
       "id": "web-password-reset-link",
       "source": "docs/design/penny-ios/web/password-reset-link.html",
-      "sourceSha256": "993df6252354a48b79af7c3c2b9c4c63c41005f8d17d16a292156914a2234761",
+      "sourceSha256": "c2bfe5e08ae56e81d89b2ca9c551855687d9dd2d455b1c712e831de9e85967e5",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2665,19 +2665,19 @@
         {
           "appearance": "light",
           "file": "previews/web-password-reset-link.light.png",
-          "sha256": "d0e36e89d55f60909116549cb7f53be4bc501e5028a0460b55e0662aaddb01f7"
+          "sha256": "01bff7b19763c800570647a3ebf4fb0312aa520f154ce7ace960fd121b70b19e"
         },
         {
           "appearance": "dark",
           "file": "previews/web-password-reset-link.dark.png",
-          "sha256": "f030aa0668673e4ad34e2c2130cc244b862971a3ce6111dea8de305a89b971f1"
+          "sha256": "7190a82e3c31cc797c6321d02ac132ff08c03ec2c41f2df4e68c63dc0ecbb7ab"
         }
       ]
     },
     {
       "id": "web-password-reset",
       "source": "docs/design/penny-ios/web/password-reset.html",
-      "sourceSha256": "60ace124203e463a3d33cc229cc9f368d00965412f22a8d30ef778cd6c685bf7",
+      "sourceSha256": "aa85c2c906ceedb28828244026dedd79ecf36417b3633d24395790660f28149e",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2686,12 +2686,12 @@
         {
           "appearance": "light",
           "file": "previews/web-password-reset.light.png",
-          "sha256": "594c2cb147468ec1cd6db661ffc48ea376dc40c4c6ae9b4406b1c3e229f34a8b"
+          "sha256": "c516e5bfbbccb2956d2ec966d0912e4a5ffa4e9b16973a7353ba54cd93f07149"
         },
         {
           "appearance": "dark",
           "file": "previews/web-password-reset.dark.png",
-          "sha256": "d683993c29f59ac5fc70046ae7086226f95dd3bdef72ec09d34d7f39948a7804"
+          "sha256": "76cd09fd73ed3eba7d4cc47968cbf1d82e3752155cae27c5127d6381f294697d"
         }
       ]
     },

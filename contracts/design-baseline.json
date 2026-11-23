@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "5d27be2c99f3df2a2f2e8f7ffa2ce054d6ddbce0b90746ebed3d3808e034b5ad"
+      "sha256": "2b12cbd98e517fb10be377f4372961b7dfaf3f3b169c2939a175d233e1f243f7"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "7d10c7604174ec3615acefed4fbc442eba4706f1ba6de2545360dc119274bfd4"
+      "sha256": "a846d8c2d482cb8de7b0a784b71da9b4b87404754cab39599f6116f0a91c99c3"
     }
   ],
   "tokens": {
@@ -3304,7 +3304,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/password-reset.html",
-      "sha256": "60ace124203e463a3d33cc229cc9f368d00965412f22a8d30ef778cd6c685bf7",
+      "sha256": "aa85c2c906ceedb28828244026dedd79ecf36417b3633d24395790660f28149e",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",
@@ -3649,7 +3649,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/forgot-password-request.html",
-      "sha256": "39d98160c72380f87a7f87b5db69a554f8bdaeece07af74a1c2c86472c3bb317",
+      "sha256": "d635c679f311d5368aa9442bc50e39343b7655e5c820546b6de83a4103c8cc5b",
       "nativeIssue": "MAZ-124",
       "webIssue": "MAZ-124",
       "route": "/auth/callback",
@@ -3672,7 +3672,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/password-reset-link.html",
-      "sha256": "993df6252354a48b79af7c3c2b9c4c63c41005f8d17d16a292156914a2234761",
+      "sha256": "c2bfe5e08ae56e81d89b2ca9c551855687d9dd2d455b1c712e831de9e85967e5",
       "nativeIssue": "MAZ-124",
       "webIssue": "MAZ-124",
       "route": "/auth/callback",

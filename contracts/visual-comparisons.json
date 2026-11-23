@@ -3460,24 +3460,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-84",
         "capture": "1520x980",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No server chip (penny.example.com · Change) above the title: the web always uses the server it was opened from, as on web-sign-in (MAZ-234), but that adaptation is approved only for web-sign-in",
-            "kind": "follow-up",
-            "ref": "MAZ-124"
-          },
-          {
-            "summary": "No Email field above Reset code: POST /api/auth/password-reset takes only the code and the new password, so the page asks for no email",
-            "kind": "follow-up",
-            "ref": "MAZ-124"
-          }
         ]
       }
     },
@@ -3717,19 +3705,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-124",
         "capture": "1520x980",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No server chip (penny.example.com · Change) above the title: the web always uses the server it was opened from, as on web-sign-in (MAZ-234), but that adaptation is approved only for web-sign-in",
-            "kind": "follow-up",
-            "ref": "MAZ-124"
-          }
         ]
       }
     },
@@ -3742,19 +3723,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-124",
         "capture": "1520x980",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No server chip (penny.example.com · Change) above the title: the web always uses the server it was opened from, as on web-sign-in (MAZ-234), but that adaptation is approved only for web-sign-in",
-            "kind": "follow-up",
-            "ref": "MAZ-124"
-          }
         ]
       }
     },
