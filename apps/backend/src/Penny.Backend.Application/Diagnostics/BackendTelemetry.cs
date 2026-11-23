@@ -17,6 +17,7 @@ public static class BackendTelemetry
     public const string ReceiptTextJob = "receipt.text";
     public const string InboundMailJob = "inbound.mail";
     public const string ReceiptCleanupJob = "receipt.cleanup";
+    public const string MailDeliveryJob = "mail.delivery";
 
     public const string JobAttribute = "penny.job";
     public const string ItemsAttribute = "penny.job.items";

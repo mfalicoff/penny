@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as MoneyFlowRouteImport } from './routes/money-flow'
 import { Route as ReceiptsRouteImport } from './routes/receipts'
 import { Route as RecurringRouteImport } from './routes/recurring'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -47,9 +50,19 @@ const CategoriesRoute = CategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MoneyFlowRoute = MoneyFlowRouteImport.update({
@@ -65,6 +78,11 @@ const ReceiptsRoute = ReceiptsRouteImport.update({
 const RecurringRoute = RecurringRouteImport.update({
   id: '/recurring',
   path: '/recurring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRouteRoute = SettingsRouteRouteImport.update({
@@ -149,10 +167,13 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRouteRouteWithChildren
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/insights': typeof InsightsRoute
+  '/join': typeof JoinRoute
   '/money-flow': typeof MoneyFlowRoute
   '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
@@ -172,10 +193,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/insights': typeof InsightsRoute
+  '/join': typeof JoinRoute
   '/money-flow': typeof MoneyFlowRoute
   '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
@@ -197,10 +221,13 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRouteRouteWithChildren
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/insights': typeof InsightsRoute
+  '/join': typeof JoinRoute
   '/money-flow': typeof MoneyFlowRoute
   '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
@@ -223,10 +250,13 @@ export interface FileRouteTypes {
     | '/settings'
     | '/accounts'
     | '/categories'
+    | '/forgot-password'
     | '/insights'
+    | '/join'
     | '/money-flow'
     | '/receipts'
     | '/recurring'
+    | '/reset-password'
     | '/transactions'
     | '/auth/callback'
     | '/entries/new'
@@ -246,10 +276,13 @@ export interface FileRouteTypes {
     | '/'
     | '/accounts'
     | '/categories'
+    | '/forgot-password'
     | '/insights'
+    | '/join'
     | '/money-flow'
     | '/receipts'
     | '/recurring'
+    | '/reset-password'
     | '/transactions'
     | '/auth/callback'
     | '/entries/new'
@@ -270,10 +303,13 @@ export interface FileRouteTypes {
     | '/settings'
     | '/accounts'
     | '/categories'
+    | '/forgot-password'
     | '/insights'
+    | '/join'
     | '/money-flow'
     | '/receipts'
     | '/recurring'
+    | '/reset-password'
     | '/transactions'
     | '/auth/callback'
     | '/entries/new'
@@ -295,10 +331,13 @@ export interface RootRouteChildren {
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
   AccountsRoute: typeof AccountsRoute
   CategoriesRoute: typeof CategoriesRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   InsightsRoute: typeof InsightsRoute
+  JoinRoute: typeof JoinRoute
   MoneyFlowRoute: typeof MoneyFlowRoute
   ReceiptsRoute: typeof ReceiptsRoute
   RecurringRoute: typeof RecurringRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TransactionsRoute: typeof TransactionsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   EntriesNewRoute: typeof EntriesNewRoute
@@ -332,11 +371,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/insights': {
       id: '/insights'
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/money-flow': {
@@ -358,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/recurring'
       fullPath: '/recurring'
       preLoaderRoute: typeof RecurringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -495,10 +555,13 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
   AccountsRoute: AccountsRoute,
   CategoriesRoute: CategoriesRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   InsightsRoute: InsightsRoute,
+  JoinRoute: JoinRoute,
   MoneyFlowRoute: MoneyFlowRoute,
   ReceiptsRoute: ReceiptsRoute,
   RecurringRoute: RecurringRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TransactionsRoute: TransactionsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   EntriesNewRoute: EntriesNewRoute,

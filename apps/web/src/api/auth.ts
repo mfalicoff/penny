@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./client";
 import { sessionKey } from "./keys";
 import { expireSession } from "../auth/lifecycle";
-import { meSchema, oidcChallengeSchema, oidcConfigSchema, okSchema, sessionSchema, type Me } from "./schemas";
+import { meSchema, oidcChallengeSchema, oidcConfigSchema, okSchema, sessionSchema, type Me, type PasswordReset } from "./schemas";
 
 export interface Credentials {
   email: string;
@@ -32,6 +32,22 @@ export async function logout(): Promise<void> {
     if (error instanceof ApiError && error.status === 401) return;
     throw error;
   }
+}
+
+/**
+ * Asks for a reset email (MAZ-124). The server answers the same 202 whether or not the address
+ * has an account; a 404 means it doesn't send email (any more).
+ */
+export async function requestPasswordReset(email: string, signal?: AbortSignal): Promise<void> {
+  await apiFetch("/api/auth/password-reset/request", okSchema, { method: "POST", body: { email }, ...(signal ? { signal } : {}) });
+}
+
+/**
+ * Redeems a reset code, from the operator or the emailed link, with a new password. The server
+ * signs every device out and issues no session, so the person signs in again afterwards.
+ */
+export async function resetPassword(input: PasswordReset, signal?: AbortSignal): Promise<void> {
+  await apiFetch("/api/auth/password-reset", okSchema, { method: "POST", body: input, ...(signal ? { signal } : {}) });
 }
 
 export const oidcConfigQuery = queryOptions({

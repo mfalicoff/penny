@@ -182,6 +182,8 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-verify-email` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-verify-email`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-email-verified` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-verify-email`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-forgot-password` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-forgot-password`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-forgot-password-request` | — | Web-only draft reference (MAZ-124): native behavior is traced through `iphone-forgot-password`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-password-reset-link` | — | Web-only draft reference (MAZ-124): the emailed link opens the web app on any device, so there is no native screen; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-invite-email` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-invite-email`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-delete-account` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-delete-account`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-export-all` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-export-all`; the browser journeys are MAZ-96 | Not applicable to native |

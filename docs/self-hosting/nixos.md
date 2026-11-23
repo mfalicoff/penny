@@ -118,6 +118,8 @@ programs.penny.settings = {
     Label = "Single sign-on";
   };
   Push.Apns = { TeamId = "ABCDE12345"; KeyId = "XYZ987"; Topic = "com.example.penny"; };
+  # Optional email (docs/self-hosting/email.md); the SMTP password goes in environmentFiles.
+  Email = { Smtp.Host = "smtp.example.com"; Smtp.Username = "penny@example.com"; From = "penny@example.com"; AppUrl = "https://penny.example.com"; };
   Database.MaxPoolSize = 20;
   Logging.LogLevel.Default = "Warning";
   OTEL_EXPORTER_OTLP_ENDPOINT = "http://127.0.0.1:4317";
@@ -128,6 +130,7 @@ programs.penny.environmentFiles = [ "/run/secrets/penny.env" ];
 # /run/secrets/penny.env:
 #   Oidc__ClientSecret=...
 #   Push__Apns__PrivateKey=-----BEGIN PRIVATE KEY-----\n...
+#   Email__Smtp__Password=...
 ```
 
 `settings` ends up in the Nix store, which is world-readable. Put anything secret in `environmentFiles`.

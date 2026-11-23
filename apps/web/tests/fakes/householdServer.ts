@@ -94,6 +94,17 @@ const err = (status: number, error: string): FakeResponse => ({ status, body: { 
 const ok = (body: unknown, status = 200): FakeResponse => ({ status, body });
 const utcDay = (instant: number) => new Date(instant).toISOString().slice(0, 10);
 
+/** An invitation by email as the fake keeps it (the wire shape plus its household). */
+export interface FakeEmailInvite {
+  id: string;
+  householdId: string;
+  email: string;
+  status: "sending" | "waiting" | "expired" | "joined" | "failed";
+  createdAt: number;
+  sentAt: number | null;
+  expiresAt: number | null;
+}
+
 export function createHouseholdServer(options: { now?: () => number } = {}) {
   let sequence = 0;
   const nextId = (prefix: string) => `${prefix}${String(++sequence).padStart(4, "0")}`;
@@ -103,6 +114,11 @@ export function createHouseholdServer(options: { now?: () => number } = {}) {
     households: [] as { id: string; name: string; currency: string; creatorId: string; createdAt: number; archived: boolean; trip?: { startDate: string; endDate: string } }[],
     periods: [] as Period[],
     invites: [] as { code: string; householdId: string; expiresAt: number }[],
+    /** Whether the fake server sends email (MAZ-124); off by default, like a server without SMTP. */
+    emailEnabled: false,
+    /** Answers every new invitation email with the daily-limit 429. */
+    emailLimitReached: false,
+    emailInvites: [] as FakeEmailInvite[],
     expenses: [] as FakeExpense[],
     rules: [] as FakeRule[],
     reimbursements: [] as FakeReimbursement[],
@@ -434,6 +450,39 @@ export function createHouseholdServer(options: { now?: () => number } = {}) {
       state.invites.push(invite);
       audit(found.id, me.id, "invite.created", null, { expiresAt: invite.expiresAt });
       return ok({ code: invite.code, expiresAt: invite.expiresAt }, 201);
+    }
+    if (parts[2] === "email-invites") {
+      // Invitations by email (MAZ-124): only while the fake "sends email", and only for the creator.
+      if (!state.emailEnabled) return err(404, "This server doesn't send email.");
+      if (!writable) return err(404, "Household not found.");
+      if (!creator) return err(403, "Only the household creator can manage members.");
+      const mine = () => state.emailInvites.filter((item) => item.householdId === found.id);
+      const wire = (invite: FakeEmailInvite) => ({ id: invite.id, email: invite.email, status: invite.status, createdAt: invite.createdAt, sentAt: invite.sentAt, expiresAt: invite.expiresAt });
+      if (parts.length === 3 && method === "GET") return ok({ items: mine().sort((a, b) => b.createdAt - a.createdAt).map(wire) });
+      if (parts.length === 3 && method === "POST") {
+        const address = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address) || address.length > 254) return err(400, "Enter a valid email address.");
+        if (state.emailLimitReached) return err(429, "Too many invitation emails today. Try again tomorrow, or share a code instead.");
+        const sent = state.now();
+        const invite: FakeEmailInvite = { id: nextId("ei"), householdId: found.id, email: address, status: "waiting", createdAt: sent, sentAt: sent, expiresAt: sent + 72 * 3_600_000 };
+        state.emailInvites.push(invite);
+        audit(found.id, me.id, "invite.emailed", null, { expiresAt: invite.expiresAt });
+        return ok(wire(invite), 202);
+      }
+      const invite = mine().find((item) => item.id === parts[3]);
+      if (!invite) return err(404, "Invitation not found.");
+      if (parts.length === 5 && parts[4] === "resend" && method === "POST") {
+        if (invite.status === "joined") return err(409, "They already joined with this invitation.");
+        if (state.emailLimitReached) return err(429, "Too many invitation emails today. Try again tomorrow, or share a code instead.");
+        Object.assign(invite, { status: "waiting", sentAt: state.now(), expiresAt: state.now() + 72 * 3_600_000 });
+        audit(found.id, me.id, "invite.emailed", null, { expiresAt: invite.expiresAt });
+        return ok(wire(invite), 202);
+      }
+      if (parts.length === 4 && method === "DELETE") {
+        state.emailInvites = state.emailInvites.filter((item) => item !== invite);
+        audit(found.id, me.id, "invite.revoked", { expiresAt: invite.expiresAt }, null);
+        return ok({ ok: true });
+      }
     }
     if (parts[2] === "leave" && method === "POST") {
       if (!writable) return err(404, "Household not found.");

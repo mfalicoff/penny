@@ -194,7 +194,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     throw new BackendFailure(FailureKind.Conflict, UnsettledArchive);
                 var now = Now();
                 await store.ArchiveAsync(householdId, now);
-                await store.DeleteInvitesAsync(householdId);
+                await store.DeleteInvitesAsync(householdId, now);
                 // Search (MAZ-121): nothing to write. Archiving keeps history readable, and
                 // search evaluates membership periods in the query itself.
                 await AuditAsync(
@@ -240,8 +240,9 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             cancellationToken
         );
 
-    // Invites admit any number of accounts until they expire (10 minutes) or
-    // a new invite replaces them; joining never consumes the code.
+    // Shared codes admit any number of accounts until they expire (10 minutes) or a new
+    // code replaces them; joining never consumes them. An emailed invitation (MAZ-124)
+    // joins once: the join clears its code in the same transaction.
     public async Task<HouseholdView> JoinAsync(
         string userId,
         JsonElement? body,
@@ -264,7 +265,8 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                 // under it proves it was not replaced or revoked in the meantime.
                 if (
                     !await store.LockAsync(householdId)
-                    || await store.FindInviteAsync(codeHash) is null
+                    || await store.FindInviteAsync(codeHash) is not { } current
+                    || current.ExpiresAt <= now
                 )
                     throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
                 var household = await store.FindAsync(householdId, includeArchived: false)
@@ -284,6 +286,8 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     now,
                     MembershipDates.JoinedOn(now, input.TimezoneOffsetMinutes)
                 );
+                if (current.EmailInviteId is { } emailInviteId)
+                    await store.MarkEmailInviteJoinedAsync(emailInviteId, now);
                 // Search (MAZ-121): nothing to write. Search evaluates this period in the
                 // query itself, so access starts exactly when this transaction commits.
                 await AuditAsync(
@@ -361,7 +365,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
 
     // A current member of an unarchived household, holding the
     // household lock for the rest of the unit.
-    private static async Task<StoredHousehold> RequireMemberAsync(
+    internal static async Task<StoredHousehold> RequireMemberAsync(
         IHouseholdTransaction store,
         string householdId,
         string userId
@@ -378,7 +382,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         throw new BackendFailure(FailureKind.NotFound, NotFound);
     }
 
-    private static async Task<StoredHousehold> RequireCreatorAsync(
+    internal static async Task<StoredHousehold> RequireCreatorAsync(
         IHouseholdTransaction store,
         string householdId,
         string userId
@@ -407,7 +411,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                 ?? throw new InvalidOperationException("Household disappeared inside its lock.")
         );
 
-    private static Task AuditAsync(
+    internal static Task AuditAsync(
         IHouseholdTransaction store,
         string householdId,
         string actorId,
@@ -429,10 +433,10 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         );
 
     // Route values that PostgreSQL text cannot hold match no household or member.
-    private static bool Storable(string id) => LedgerText.IsStorable(id);
+    internal static bool Storable(string id) => LedgerText.IsStorable(id);
 
     // Ids are 16 random bytes as lower-case hex.
-    private static string NewId() => RandomNumberGenerator.GetHexString(32, lowercase: true);
+    internal static string NewId() => RandomNumberGenerator.GetHexString(32, lowercase: true);
 
     private DateTimeOffset Now() => MembershipDates.Truncate(clock.GetUtcNow());
 }

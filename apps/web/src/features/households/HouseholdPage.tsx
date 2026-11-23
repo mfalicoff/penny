@@ -3,6 +3,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
+import { useEmailEnabled } from "../../api/info";
 import type { HouseholdDetail, MonthRecap } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { usePageTitle, usePageTitleStyle } from "../../app/shell/pageTitle";
@@ -20,6 +21,7 @@ import { ExpenseFormDialog, type FormTarget } from "./ExpenseForm";
 import { ExpensesTab } from "./ExpensesTab";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "./GroupTools";
 import { HistoryPanel } from "./HistoryPanel";
+import { InviteEmailDialog } from "./InviteEmailDialog";
 import { byWeek, currentMonth, isCurrent, memberName, monthLabel, people } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab, useManageActions } from "./PeopleTab";
@@ -93,6 +95,8 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   const wide = useMediaQuery(WIDE);
   const touch = useMediaQuery(TOUCH_TABLET);
   const [form, setForm] = useState<FormTarget | null>(null);
+  const emailEnabled = useEmailEnabled();
+  const [inviting, setInviting] = useState(false);
   const recordHintId = useId();
   const who = people(detail, email);
   const view = householdView(householdId, detail, who, month, archived);
@@ -183,7 +187,10 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
             <ToolContent icon="time" label="History" />
           </Link>
         ) : null}
-        {inviteInBar ? (
+        {inviteInBar && emailEnabled ? (
+          // MAZ-124: with email on the server, Invite opens Invite by email (card `web-invite-email`).
+          <ToolButton icon="person-add" label="Invite" labelled onClick={() => { setInviting(true); }} />
+        ) : inviteInBar ? (
           <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "people" })} className={toolClass({ labelled: true })}>
             <ToolContent icon="person-add" label="Invite" labelled />
           </Link>
@@ -296,6 +303,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
       )}
 
       {wide ? null : manage.dialogs}
+      {inviting && emailEnabled ? <InviteEmailDialog view={view} onClose={() => { setInviting(false); }} /> : null}
       {inlineExpense ? null : expenseDetail}
       {search.rule && !form ? <RuleDialog view={view} ruleId={search.rule} onEdit={(rule) => { setForm({ kind: "rule", rule }); }} onClose={closeRule} /> : null}
       {form?.kind === "new" ? (

@@ -147,6 +147,85 @@ namespace Penny.Backend.Persistence.Migrations
                     b.ToTable("household_audit", "penny");
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.HouseholdEmailInvite", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .UseCollation("C");
+
+                    b.Property<string>("CodeHash")
+                        .HasColumnType("text")
+                        .HasColumnName("code_hash")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset?>("FailedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("failed_at");
+
+                    b.Property<string>("HouseholdId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("household_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("InvitedBy")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("invited_by")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CodeHash")
+                        .IsUnique()
+                        .HasFilter("code_hash IS NOT NULL");
+
+                    b.HasIndex("InvitedBy");
+
+                    b.HasIndex("HouseholdId", "Email")
+                        .IsUnique();
+
+                    b.ToTable("household_email_invites", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_household_email_invites_code", "(code_hash IS NULL) = (expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_household_email_invites_code_hash", "code_hash IS NULL OR code_hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_household_email_invites_email", "length(email) BETWEEN 3 AND 254");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.HouseholdExpense", b =>
                 {
                     b.Property<string>("Id")
@@ -1143,6 +1222,120 @@ namespace Penny.Backend.Persistence.Migrations
                             t.HasCheckConstraint("ck_ledger_trips_id", "length(id) BETWEEN 1 AND 100");
 
                             t.HasCheckConstraint("ck_ledger_trips_name", "length(name) BETWEEN 1 AND 80");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.MailOutboxMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .UseCollation("C");
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_id")
+                        .UseCollation("C");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EmailInviteId")
+                        .HasColumnType("text")
+                        .HasColumnName("email_invite_id")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind")
+                        .UseCollation("C");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<string>("LeaseOwner")
+                        .HasColumnType("text")
+                        .HasColumnName("lease_owner")
+                        .UseCollation("C");
+
+                    b.Property<string>("LeaseToken")
+                        .HasColumnType("text")
+                        .HasColumnName("lease_token")
+                        .UseCollation("C");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("locale")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<string>("RecipientHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("recipient_hash")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("EmailInviteId");
+
+                    b.HasIndex("NextAttemptAt")
+                        .HasDatabaseName("ix_mail_outbox_due")
+                        .HasFilter("finished_at IS NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("AccountId", "CreatedAt")
+                        .HasDatabaseName("ix_mail_outbox_account");
+
+                    b.HasIndex("RecipientHash", "CreatedAt")
+                        .HasDatabaseName("ix_mail_outbox_recipient");
+
+                    b.ToTable("mail_outbox", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_mail_outbox_attempts", "attempts >= 0");
+
+                            t.HasCheckConstraint("ck_mail_outbox_kind", "(kind = 'password-reset' AND user_id IS NOT NULL AND email_invite_id IS NULL) OR (kind = 'household-invite' AND email_invite_id IS NOT NULL AND user_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_mail_outbox_lease", "(lease_owner IS NULL) = (lease_token IS NULL) AND (lease_token IS NULL) = (lease_expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_mail_outbox_locale", "locale IN ('en','fr')");
+
+                            t.HasCheckConstraint("ck_mail_outbox_recipient_hash", "recipient_hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_mail_outbox_sent", "sent_at IS NULL OR finished_at IS NOT NULL");
                         });
                 });
 
@@ -2272,6 +2465,19 @@ namespace Penny.Backend.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.HouseholdEmailInvite", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .IsRequired();
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("InvitedBy")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.HouseholdExpense", b =>
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
@@ -2486,6 +2692,22 @@ namespace Penny.Backend.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.MailOutboxMessage", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .IsRequired();
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.HouseholdEmailInvite", null)
+                        .WithMany()
+                        .HasForeignKey("EmailInviteId");
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.OidcIdentity", b =>

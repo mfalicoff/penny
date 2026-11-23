@@ -29,6 +29,7 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 | Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](../reference/shared-recurrence.md)) |
 | Push delivery | `Push__Worker` | Drains the notification outbox to APNs ([push](../reference/push.md)) |
 | Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](../reference/search.md)) |
+| Mail delivery | `Email__Worker` | Sends queued password reset and invitation emails, when email is configured ([email delivery](email.md)) |
 | Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
 
 Supported topologies:
@@ -151,7 +152,8 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](../reference/authentication.md#password-reset-maz-123)) |
 | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
 | `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](../reference/push.md)) |
-| `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker` | `true` | [Workers](#background-workers) |
+| `Email__Smtp__Host`, `Email__Smtp__Security`, `Email__Smtp__Port`, `Email__Smtp__Username`, `Email__Smtp__Password`, `Email__From`, `Email__AppUrl` | off | Password reset and invitation emails through your SMTP provider ([email delivery](email.md)). The password is a secret |
+| `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker`, `Email__Worker` | `true` | [Workers](#background-workers) |
 | `Ocr__Languages` | `eng+fra` | Tesseract languages for receipt text; each needs its language data, checked at startup ([receipt OCR](operations.md#receipt-text-ocr)) |
 | `Ocr__Concurrency` / `Ocr__TimeoutSeconds` / `Ocr__MaxPages` / `Ocr__MaxFileMegabytes` / `Ocr__MaxAttempts` | 1 / 120 / 10 / 10 / 4 | Receipt text bounds per process |
 | `Ocr__EngineMemoryMegabytes` | 1024 | Memory (address space) of each OCR engine process, enforced with `prlimit` ([receipt OCR](operations.md#receipt-text-ocr)) |
