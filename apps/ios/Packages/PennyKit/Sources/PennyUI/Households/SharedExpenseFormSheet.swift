@@ -117,6 +117,7 @@ private struct SharedExpenseForm: View {
     @State private var overlay: SharedFormOverlay?
     /// The Household sheet's choice, applied once the sheet has gone (`nil` inside: Personal).
     @State private var pendingHousehold: String??
+    @State private var amountActive = true
 
     var body: some View {
         NavigationStack {
@@ -124,24 +125,31 @@ private struct SharedExpenseForm: View {
                 VStack(spacing: 16) {
                     banners
                     amount
-                    TextField("What was it for?", text: $form.draft.title)
-                        .nameEntry()
-                        .focused($focus, equals: .title)
-                        .submitLabel(.done)
-                        .font(.body)
-                        .padding(.horizontal, 14)
-                        .frame(minHeight: Metrics.minTouchTarget)
-                        .background(
-                            PennyColor.surface,
-                            in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
-                        )
-                        .accessibilityLabel("Name")
-                        .accessibilityIdentifier("sharedForm.title")
-                    payerAndSplit
-                    yourShare
-                    categories
-                    rows
-                    notes
+                    // `iphone-shared-expense-add`: the category is a pill in the name field.
+                    HStack(spacing: 8) {
+                        TextField("What was it for?", text: $form.draft.title)
+                            .nameEntry()
+                            .focused($focus, equals: .title)
+                            .submitLabel(.done)
+                            .font(.body)
+                            .accessibilityLabel("Name")
+                            .accessibilityIdentifier("sharedForm.title")
+                        categoryPill
+                    }
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .background(
+                        PennyColor.surface,
+                        in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+                    )
+                    Group {
+                        payerAndSplit
+                        yourShare
+                        rows
+                        notes
+                    }
+                    // Choosing anything below the name puts the keypad away, so the shares show.
+                    .simultaneousGesture(TapGesture().onEnded { amountActive = false })
                 }
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.vertical, 12)
@@ -231,6 +239,8 @@ private struct SharedExpenseForm: View {
         .interactiveDismissDisabled(form.hasChanges || form.isSaving)
         .sensoryFeedback(.error, trigger: form.refusedCount)
         .onAppear {
+            // Editing opens on the whole form; a new expense opens on the amount.
+            if form.draft.original != nil { amountActive = false }
             // iPad types the amount in a field; iPhone uses the keypad, so nothing needs focus.
             if sizeClass == .regular, restored || form.draft.original == nil {
                 focus = restored ? (form.draft.focus ?? .amount) : .amount
@@ -259,7 +269,10 @@ private struct SharedExpenseForm: View {
     private var participants: [WireHouseholdMember] { form.participants }
     private var locked: Bool { form.draft.isPaidExpense }
     private var viewerId: String? { form.viewerId }
-    private var showsKeypad: Bool { sizeClass != .regular && focus != .title && !locked }
+    /// The keypad shows while the amount is being typed: a new expense starts there, tapping the
+    /// amount brings it back, and the name or any other choice puts it away (MAZ-256: it no longer
+    /// covers the shares).
+    private var showsKeypad: Bool { sizeClass != .regular && amountActive && focus != .title && !locked }
 
     private func save() async {
         focus = nil
@@ -342,6 +355,7 @@ private struct SharedExpenseForm: View {
             } else {
                 Button {
                     focus = nil
+                    amountActive = true
                 } label: {
                     AmountDisplay(text: form.draft.amountText, kind: .expense, currency: model.currency)
                 }
@@ -363,22 +377,28 @@ private struct SharedExpenseForm: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// The ledger's most used expense categories as chips, as in Add entry. The expense keeps a
-    /// category the ledger no longer has until another is chosen.
-    @ViewBuilder private var categories: some View {
-        if let ledger {
-            VStack(alignment: .leading, spacing: 4) {
-                EntryCategoryChips(
-                    kind: .expense, selection: categoryId(in: ledger), ledger: ledger, more: { overlay = .category })
-                if !ledger.categories.contains(where: { $0.kind == .expense && $0.name == form.draft.category.name }) {
-                    Label(form.draft.category.name, systemImage: form.draft.category.symbol)
-                        .font(.footnote)
-                        .foregroundStyle(PennyColor.secondaryLabel)
-                        .accessibilityLabel("Category \(form.draft.category.name)")
-                }
-            }
-            .accessibilityIdentifier("sharedForm.category")
+    /// The category as a pill in the name field (`iphone-shared-expense-add`); it opens the
+    /// category picker. The expense keeps a category the ledger no longer has until another is chosen.
+    private var categoryPill: some View {
+        Button {
+            focus = nil
+            amountActive = false
+            overlay = .category
+        } label: {
+            Label(form.draft.category.name, systemImage: form.draft.category.symbol)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(PennyColor.label)
+                .lineLimit(1)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(PennyColor.fill, in: Capsule())
+                .fixedSize()
         }
+        .buttonStyle(.plain)
+        .disabled(ledger == nil)
+        .accessibilityLabel("Category, \(form.draft.category.name)")
+        .accessibilityHint("Opens the categories")
+        .accessibilityIdentifier("sharedForm.category")
     }
 
     /// Chips and the picker work with ledger ids; the shared expense keeps the category by value.

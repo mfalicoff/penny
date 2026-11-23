@@ -341,7 +341,7 @@ final class CardCaptureTests: CardTestCase {
     func test_whenSeeded_IphoneHistory_ShouldBeCaptured() async throws {
         try await card("iphone-history") { card in
             try card.penny.openHousehold(card.seeded().household("maison"))
-            try card.penny.tap(Households.history, opening: Households.Screen.history)
+            try card.penny.tap(Households.history, orIn: Households.more, opening: Households.Screen.history)
         }
     }
 

@@ -58,6 +58,9 @@ struct PaymentSheet: View {
             }
             .pennySolidBars()
         }
+        // Medium sheets over the household, as `iphone-record-payment` and `iphone-payment-stale`
+        // draw them; they grow to full height for larger text.
+        .presentationDetents([.fraction(0.62), .large])
         .interactiveDismissDisabled(working)
         .accessibilityIdentifier(isMonthly ? "screen.recordMonthly" : "screen.recordShare")
     }

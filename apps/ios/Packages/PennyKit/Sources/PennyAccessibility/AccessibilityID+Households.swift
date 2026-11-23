@@ -93,6 +93,8 @@ extension AccessibilityID {
         public static let expenseEdit = "sharedExpense.edit"
         public static let expenseDelete = "sharedExpense.delete"
         public static let expenseHistory = "sharedExpense.history"
+        public static let expenseMore = "sharedExpense.more"
+        public static let expenseRule = "sharedExpense.rule"
         public static func share(_ userId: String) -> String { "sharedExpense.share.\(userId)" }
         public static func markPaid(_ userId: String) -> String { "sharedExpense.markPaid.\(userId)" }
 
@@ -152,6 +154,7 @@ extension AccessibilityID {
                 monthlyNote, inviteCode, inviteQR, inviteExpires, inviteShare, inviteCopy, inviteNew, inviteDone,
                 scannerPreview,
                 scannerDenied, scannerTypeCode, scannerClose, expenseTotal, expenseShare, expenseEdit, expenseDelete,
+                expenseMore, expenseRule,
                 expenseHistory, formAmount, formTitle, formDate, formMode, formYourShare, formAccount, formNote,
                 formRepeat, formSave, formClose, formCategory, formActive, formProblem, formError, formReviewLatest,
                 formRestoredDraft,
