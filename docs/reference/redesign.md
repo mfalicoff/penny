@@ -72,7 +72,7 @@ The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF P
 
 The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios/shell.md). Adaptations from the cards:
 
-- **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
+- **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column, beside the sidebar, as `ipad-settings` draws them (checked in MAZ-257). In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
 - **Lock after** (Immediately, 1 minute, 5 minutes on `iphone-app-lock`) is MAZ-133 and not in this build; the lock applies immediately.
 - **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.
 - Screens owned by feature issues (households and other later work) show a named "not available yet" state, and every route still lands on its destination. Home, Insights, the money flow, the calendar and the iPad dashboard panels arrived with MAZ-77 (below). On the web, Home, Insights and the money flow arrived with MAZ-92.
