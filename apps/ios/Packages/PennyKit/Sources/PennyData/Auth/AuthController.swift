@@ -168,16 +168,27 @@ public final class AuthController {
         try await passwordSignIn(email: email, password: password, method: .password)
     }
 
-    /// `POST /api/auth/register`, then signed in.
-    public func register(email: String, password: String) async throws(AuthFailure) {
-        try await passwordSignIn(email: email, password: password, method: .registration)
+    /// `POST /api/auth/register` with the name asked at sign-up (MAZ-171), then signed in. A nil
+    /// or blank name sends none.
+    public func register(email: String, password: String, displayName: String? = nil) async throws(AuthFailure) {
+        try await passwordSignIn(email: email, password: password, displayName: displayName, method: .registration)
     }
 
-    private func passwordSignIn(email: String, password: String, method: SignInMethod) async throws(AuthFailure) {
+    private func passwordSignIn(
+        email: String, password: String, displayName: String? = nil, method: SignInMethod
+    ) async throws(AuthFailure) {
         let (server, previous) = try beginSignIn()
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !password.isEmpty else {
             throw AuthFailure(.invalidInput, "Enter your email and password.")
+        }
+        var name: String?
+        if method == .registration {
+            switch DisplayName.validate(displayName ?? "") {
+            case .valid(let valid): name = valid
+            case .empty: name = nil
+            case .invalid(let message): throw AuthFailure(.invalidInput, message)
+            }
         }
         if method == .registration, !(10...256).contains(password.utf16.count) {
             throw AuthFailure(.invalidInput, "Use a password of 10–256 characters.")
@@ -189,7 +200,8 @@ public final class AuthController {
         let session: ServerSession
         do {
             if method == .registration {
-                session = try await client.register(credentials)
+                session = try await client.register(
+                    WireRegistration(email: trimmed, password: password, displayName: name))
             } else {
                 session = try await client.login(credentials)
             }
@@ -460,7 +472,8 @@ public final class AuthController {
         let config = try? await client.oidcConfiguration()
         return ServerCheck(
             server: server, version: info.version, singleSignOn: config?.enabled,
-            singleSignOnLabel: config?.enabled == true ? Self.label(config?.label) : nil)
+            singleSignOnLabel: config?.enabled == true ? Self.label(config?.label) : nil,
+            privacyPolicy: info.privacyPolicy)
     }
 
     /// Makes a checked server the one sign-in uses. Only while signed out: a signed-in
@@ -469,7 +482,7 @@ public final class AuthController {
         guard state.canChangeServer else {
             throw AuthFailure(.busy, "Sync your entries and sign out before changing servers.")
         }
-        let saved = SavedServer(server: check.server, version: check.version)
+        let saved = SavedServer(server: check.server, version: check.version, privacyPolicy: check.privacyPolicy)
         do { try preferences.setSavedServer(saved) } catch {
             throw AuthFailure(.storage, "Could not save the server on this device. Your previous server is unchanged.")
         }
@@ -485,6 +498,20 @@ public final class AuthController {
             case (false, _): .unavailable
             default: .unknown
             }
+    }
+
+    /// Reads `/api/info` again for the privacy policy link (MAZ-169), so a server that starts or
+    /// stops publishing one, or a default server that was never checked, shows the right link.
+    /// Kept with the saved server, so Settings still links it offline. A failure changes nothing.
+    public func refreshServerInfo() async {
+        guard let current = server else { return }
+        guard let info = try? await anonymousClient(current.server, timeout: Self.probeTimeout).info() else { return }
+        guard var saved = server, saved.server == current.server else { return }
+        let policy = info.privacyPolicy
+        guard saved.privacyPolicy != policy else { return }
+        saved.privacyPolicy = policy
+        try? preferences.setSavedServer(saved)
+        server = saved
     }
 
     // MARK: Plumbing

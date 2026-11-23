@@ -212,8 +212,8 @@ struct DeleteConfirmationSheet: View {
         let detail: String
         let symbol: String
         let color: Color
-        /// A shared expense's members, as monograms.
-        var members: [String] = []
+        /// A shared expense's members, as pictures or monograms.
+        var members: [PersonFace] = []
         let noteSymbol: String
         let note: String
         let confirmTitle: String
@@ -242,7 +242,7 @@ struct DeleteConfirmationSheet: View {
                 }
                 Spacer(minLength: 8)
                 if !subject.members.isEmpty {
-                    MonogramStack(initials: subject.members, size: 30)
+                    MonogramStack(faces: subject.members, size: 30)
                 }
             }
             HStack(alignment: .top, spacing: 12) {

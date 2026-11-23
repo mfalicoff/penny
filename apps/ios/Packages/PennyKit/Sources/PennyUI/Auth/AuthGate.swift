@@ -79,6 +79,12 @@ struct AuthGate: View {
                                     APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
                                 },
                                 email: account.email)
+                            // Names and pictures (MAZ-171).
+                            let profiles = auth.client.map {
+                                APIProfileService(client: $0) { auth.sessionDidExpire(for: account) }
+                            }
+                            shell.profile = ProfileModel(service: profiles)
+                            shell.avatars = AvatarStore(service: profiles)
                             shell.widgets = services.widgets
                             shell.now = services.now
                             return shell
@@ -211,23 +217,15 @@ struct SignedOutFlow: View {
                 InviteSignInCard(auth: auth)
             }
             .safeAreaInset(edge: .bottom) {
-                if let onTryDemo, showsTryDemo {
-                    Button(action: onTryDemo) {
-                        // The card: label-colored text after an outlined copper play icon.
-                        Label {
-                            Text("Take a look around with sample data")
-                                .foregroundStyle(PennyColor.label)
-                        } icon: {
-                            Image(systemName: "play")
-                                .foregroundStyle(PennyColor.tintText)
+                if showsTryDemo {
+                    VStack(spacing: 0) {
+                        if let onTryDemo { tryDemo(onTryDemo) }
+                        // MAZ-169: the server's privacy policy, under the sample-data link.
+                        if auth.server != nil, let policy = auth.server?.privacyPolicy {
+                            PrivacyPolicyLink(url: policy)
                         }
-                        .font(.subheadline.weight(.semibold))
-                        .frame(minHeight: Metrics.minTouchTarget)
                     }
-                    .buttonStyle(.plain)
                     .padding(.bottom, 8)
-                    .accessibilityHint("Opens a temporary demo. Nothing is saved.")
-                    .accessibilityIdentifier("auth.tryDemo")
                 }
             }
             .navigationDestination(for: Route.self) { route in
@@ -249,5 +247,23 @@ struct SignedOutFlow: View {
                 keyboardShown = false
             }
         #endif
+    }
+
+    private func tryDemo(_ onTryDemo: @escaping () -> Void) -> some View {
+        Button(action: onTryDemo) {
+            // The card: label-colored text after an outlined copper play icon.
+            Label {
+                Text("Take a look around with sample data")
+                    .foregroundStyle(PennyColor.label)
+            } icon: {
+                Image(systemName: "play")
+                    .foregroundStyle(PennyColor.tintText)
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(minHeight: Metrics.minTouchTarget)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens a temporary demo. Nothing is saved.")
+        .accessibilityIdentifier("auth.tryDemo")
     }
 }

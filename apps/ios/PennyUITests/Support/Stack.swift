@@ -109,7 +109,22 @@ struct Stack {
         guard let id = body["userId"] as? String, let email = body["email"] as? String,
             let password = body["password"] as? String, let token = body["token"] as? String
         else { throw StackError.malformed("POST /api/test/users") }
+        try await skipNamePrompt(token: token)
         return TestAccount(userID: id, email: email, password: password, token: token)
+    }
+
+    /// "Not now" on the name prompt (MAZ-171), so a test account without a name opens on Home.
+    func skipNamePrompt(token: String) async throws {
+        _ = try await send(
+            "PATCH", configuration.apiURL.appending(path: "api/profile"), body: ["namePromptDismissed": true],
+            token: token)
+    }
+
+    /// Sets or clears (`nil`) the account's display name (MAZ-171).
+    func setDisplayName(_ name: String?, token: String) async throws {
+        _ = try await send(
+            "PATCH", configuration.apiURL.appending(path: "api/profile"),
+            body: ["displayName": name.map { $0 as Any } ?? NSNull()], token: token)
     }
 
     func setClock(_ iso: String) async throws { _ = try await control("PUT", "clock", body: ["now": iso]) }

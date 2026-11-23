@@ -156,7 +156,7 @@ struct AuditRow: View {
             day: { HouseholdText.instant($0).formatted(.dateTime.month(.abbreviated).day()) },
             group: isTrip ? "trip" : "household")
         HStack(alignment: .top, spacing: 12) {
-            Monogram(initials: people.initials(event.actorId))
+            Monogram(face: people.face(event.actorId))
                 .overlay(alignment: .bottomTrailing) { AuditBadge(kind: AuditBadge.Kind(event)).offset(x: 4, y: 4) }
             VStack(alignment: .leading, spacing: 2) {
                 Text(Self.emphasized(description)).font(.subheadline)

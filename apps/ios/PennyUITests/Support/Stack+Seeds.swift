@@ -117,11 +117,18 @@ extension Stack {
         let firstClock = steps.lazy.compactMap { $0["clock"] as? String }.first ?? finalClock
         try await setClock(firstClock)
 
+        // MAZ-171: some users have a profile name, as scripts/test-env/seed.mjs gives them.
+        let names = definition["displayNames"] as? [String: String] ?? [:]
         for alias in aliases {
             let email = "\(alias).\(tag)@penny.test"
             let password = UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(24).lowercased()
-            let body = try await api("POST", "/api/auth/register", body: ["email": email, "password": password])
+            var registration = ["email": email, "password": password]
+            if let name = names[alias] { registration["displayName"] = name }
+            let body = try await api("POST", "/api/auth/register", body: registration)
             guard let token = body["token"] as? String else { throw StackError.malformed("POST /api/auth/register") }
+            // A user without a name would be asked for one over Home; tests that want the prompt
+            // (the iphone-name-prompt card) clear the name themselves.
+            if names[alias] == nil { try await skipNamePrompt(token: token) }
             context.users[alias] = .init(email: (body["email"] as? String) ?? email, password: password, token: token)
         }
 

@@ -377,7 +377,9 @@ describe("shared expense form", () => {
     const rows = within(shares).getAllByRole("listitem").map((row) => row.textContent);
     expect(rows).toEqual([expect.stringContaining("$33.34"), expect.stringContaining("$33.33"), expect.stringContaining("$33.33")]);
     expect(form.querySelector(".your-share")).toHaveTextContent("$33.34");
-    // As on the card: everyone on the date is checked in, and an equal split shows no status box.
+    // As on the card: everyone on the date is included, with no checkbox to untick (MAZ-171), and an
+    // equal split shows no status box.
+    expect(shares.querySelector(".split-row__check, input[type=checkbox]")).toBeNull();
     expect(shares).toHaveAccessibleDescription(/Everyone who was a member on the expense date is included/);
     expect(within(form).queryByText(/Split equally/)).not.toBeInTheDocument();
     expect(form.querySelector(".your-share")).toHaveTextContent("Your share · in your spending");

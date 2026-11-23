@@ -154,7 +154,7 @@ private struct FeaturedTrip: View {
                 }
                 Spacer(minLength: 8)
                 if case .shared(let household, _) = card.kind {
-                    MonogramStack(initials: shell.households.memberInitials[household.id] ?? [], size: 30)
+                    MonogramStack(faces: shell.households.memberFaces[household.id] ?? [], size: 30)
                 }
             }
             HStack(alignment: .lastTextBaseline) {

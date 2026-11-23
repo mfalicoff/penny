@@ -73,6 +73,32 @@ final class ShellModel {
     /// The current instant ("2 min ago", a month's payment window), from `AppServices.now`.
     @ObservationIgnored var now: () -> Date = { Date() }
 
+    // MARK: Profile (MAZ-171)
+
+    /// The account's name and picture, the name prompt and Settings › Profile. Without a service
+    /// (the demo, previews) it shows nothing and the account is named by its email.
+    var profile = ProfileModel(service: nil)
+    /// Everyone's pictures, loaded once per URL with the account's session.
+    var avatars = AvatarStore(fetch: nil)
+
+    /// The account's name: its display name, else its email; "Demo account" in the demo.
+    var accountName: String {
+        guard let account else { return "Demo account" }
+        return profile.displayName ?? account.email
+    }
+
+    /// The iPad sidebar's short name (`ipad-*` cards): the first word of the name, else the email.
+    var accountShortName: String {
+        guard account != nil, let name = profile.displayName else { return accountName }
+        return name.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? name
+    }
+
+    /// The account's picture, else its monogram ("D" in the demo).
+    var accountFace: PersonFace {
+        guard account != nil else { return PersonFace(initials: "D") }
+        return PersonFace(initials: HouseholdPeople.initials(name: accountName), avatarUrl: profile.avatarUrl)
+    }
+
     // MARK: Households (MAZ-75)
 
     /// The Shared tab's households and their page models (none in the demo).

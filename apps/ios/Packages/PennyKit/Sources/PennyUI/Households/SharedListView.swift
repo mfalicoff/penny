@@ -124,7 +124,7 @@ struct SharedView: View {
                 ) {
                     HouseholdRow(
                         household: household, balance: directory.balances[household.id],
-                        initials: directory.memberInitials[household.id] ?? [])
+                        faces: directory.memberFaces[household.id] ?? [])
                 }
                 .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
                 .accessibilityIdentifier("shared.household.\(household.id)")
@@ -189,7 +189,7 @@ struct ActionRow: View {
 private struct HouseholdRow: View {
     let household: WireHousehold
     let balance: Int64?
-    let initials: [String]
+    let faces: [PersonFace]
 
     var body: some View {
         HStack(spacing: 14) {
@@ -198,7 +198,7 @@ private struct HouseholdRow: View {
                 Text(household.name).font(.body.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
-                    MonogramStack(initials: initials, size: 26)
+                    MonogramStack(faces: faces, size: 26)
                     Text(subtitle).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                 }
             }

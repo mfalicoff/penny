@@ -1480,7 +1480,7 @@
     {
       "id": "iphone-shared-expense-add",
       "source": "docs/design/penny-ios/iphone/shared-expense-add.html",
-      "sourceSha256": "fb5c5f71a646fd264d6cca99954df0c2b73fd99a5552f9595c4a3d574a76dfdf",
+      "sourceSha256": "3aa6a7e7d00c31bb8a2854f7e8d761b6387590acb57d16b2092dd6fca255711c",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1489,12 +1489,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-expense-add.light.png",
-          "sha256": "cb54fa6be3635129e40c3014102f68a374b86fe78f742c591c4876076c2e189b"
+          "sha256": "c772a50604ebffe6cb13c4fed9b21b0550d9a3b65508b046a933e4a3440c0644"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-shared-expense-add.dark.png",
-          "sha256": "f547cbf2ca6fd119249b0cc54ef86a188fd3477d9866c633e5436ec605d7681f"
+          "sha256": "97991520a2e7672437430ba39fd938be6ab430a8549caed471c4317e98c61f78"
         }
       ]
     },

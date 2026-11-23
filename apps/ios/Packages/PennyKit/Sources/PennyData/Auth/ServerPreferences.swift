@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 public import PennyDomain
 import Synchronization
 
@@ -8,13 +8,17 @@ public struct SavedServer: Codable, Equatable, Sendable {
     public var server: ServerURL
     /// The version `/api/info` reported when the server was verified, if it was.
     public var version: String?
+    /// The privacy policy `/api/info` last published (MAZ-169), kept so Settings can link it
+    /// offline. Nil when the server publishes none.
+    public var privacyPolicy: URL?
 
-    public init(server: ServerURL, version: String? = nil) {
+    public init(server: ServerURL, version: String? = nil, privacyPolicy: URL? = nil) {
         self.server = server
         self.version = version
+        self.privacyPolicy = privacyPolicy
     }
 
-    private enum CodingKeys: String, CodingKey { case url, version }
+    private enum CodingKeys: String, CodingKey { case url, version, privacyPolicyUrl }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -23,12 +27,14 @@ public struct SavedServer: Codable, Equatable, Sendable {
             throw DecodingError.dataCorruptedError(forKey: .url, in: container, debugDescription: "Invalid server URL")
         }
         version = try container.decodeIfPresent(String.self, forKey: .version)
+        privacyPolicy = PrivacyPolicy.url(try? container.decodeIfPresent(String.self, forKey: .privacyPolicyUrl))
     }
 
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(server.url.absoluteString, forKey: .url)
         try container.encodeIfPresent(version, forKey: .version)
+        try container.encodeIfPresent(privacyPolicy?.absoluteString, forKey: .privacyPolicyUrl)
     }
 }
 

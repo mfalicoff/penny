@@ -170,7 +170,7 @@ struct TripFormSheet: View {
                     } label: {
                         HStack(spacing: 10) {
                             Monogram(
-                                initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "",
+                                face: shell.accountFace,
                                 size: 30)
                             Text("You")
                         }

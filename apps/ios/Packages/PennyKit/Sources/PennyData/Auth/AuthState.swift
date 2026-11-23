@@ -1,3 +1,4 @@
+public import Foundation
 public import PennyDomain
 
 /// Where sign-in stands. Transitions (see docs/ios/authentication.md):
@@ -83,11 +84,18 @@ public struct ServerCheck: Equatable, Sendable {
     public let singleSignOn: Bool?
     public let singleSignOnLabel: String?
 
-    public init(server: ServerURL, version: String, singleSignOn: Bool?, singleSignOnLabel: String?) {
+    /// MAZ-169: the server's privacy policy, when it publishes one.
+    public let privacyPolicy: URL?
+
+    public init(
+        server: ServerURL, version: String, singleSignOn: Bool?, singleSignOnLabel: String?,
+        privacyPolicy: URL? = nil
+    ) {
         self.server = server
         self.version = version
         self.singleSignOn = singleSignOn
         self.singleSignOnLabel = singleSignOnLabel
+        self.privacyPolicy = privacyPolicy
     }
 
     public var isEncrypted: Bool { server.url.scheme == "https" }

@@ -198,11 +198,57 @@ public struct WireSession: Decodable, Equatable, Sendable {
 
 public struct WireMe: Codable, Equatable, Sendable {
     public var email: String
+    /// MAZ-171: absent on servers older than profiles.
+    public var userId: String?
+    /// The person's display name; absent when they have none (show the email).
+    public var displayName: String?
+    /// Same-origin picture URL (`/api/users/<id>/avatar?v=<version>`); absent without a picture.
+    public var avatarUrl: String?
+    /// Ask "What should people call you?" once. Older servers send nothing: don't ask.
+    public var needsName: Bool?
+
+    public init(
+        email: String, userId: String? = nil, displayName: String? = nil, avatarUrl: String? = nil,
+        needsName: Bool? = nil
+    ) {
+        self.email = email
+        self.userId = userId
+        self.displayName = displayName
+        self.avatarUrl = avatarUrl
+        self.needsName = needsName
+    }
 }
 
 public struct WireServerInfo: Codable, Equatable, Sendable {
     public var name: String
     public var version: String
+    /// MAZ-169: the operator's privacy policy (`Legal__PrivacyPolicyUrl`). Absent on older servers
+    /// and `null` when none is set. Read it through `privacyPolicy`, which drops anything that
+    /// isn't an absolute http(s) URL.
+    public var privacyPolicyUrl: String?
+
+    public init(name: String, version: String, privacyPolicyUrl: String? = nil) {
+        self.name = name
+        self.version = version
+        self.privacyPolicyUrl = privacyPolicyUrl
+    }
+
+    public var privacyPolicy: URL? { PrivacyPolicy.url(privacyPolicyUrl) }
+}
+
+/// The privacy policy link's rule (MAZ-169), as on the web: only an absolute http or https URL
+/// with a host and no credentials becomes a link, so a bad value never opens anything else.
+public enum PrivacyPolicy {
+    public static let maxLength = 2048
+
+    public static func url(_ text: String?) -> URL? {
+        guard let text, !text.isEmpty, text.utf16.count <= maxLength,
+            let url = URL(string: text), let scheme = url.scheme?.lowercased(),
+            scheme == "https" || scheme == "http", let host = url.host, !host.isEmpty,
+            url.user == nil, url.password == nil
+        else { return nil }
+        return url
+    }
 }
 
 struct WireOk: Decodable, Sendable {
