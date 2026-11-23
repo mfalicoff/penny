@@ -409,9 +409,12 @@ struct RecentSection: View {
                     .frame(minHeight: Metrics.minTouchTarget)
                     .accessibilityLabel("See all activity")
             }
+            // The entry the save toast is about is tinted in its category color while the toast
+            // shows (`iphone-saved-toast`, MAZ-257).
             EntryList(
                 entries: entries, report: report, currency: report.ledger.currency.rawValue,
-                empty: "Nothing this month yet. New entries show up here.")
+                empty: "Nothing this month yet. New entries show up here.",
+                highlighted: shell.toast?.summary.entryId)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home.recent")

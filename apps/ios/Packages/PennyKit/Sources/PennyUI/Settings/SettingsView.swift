@@ -5,8 +5,8 @@ import SwiftUI
 
 /// Settings (`settings` card): the account and its sync status, which opens the server's details;
 /// Manage (Recurring, Accounts, Categories: the old More tab, iPhone only, as on iPad they are in
-/// the sidebar); Preferences (Appearance, Currency, the lock); the read-only server; and Sign out,
-/// or Leave demo. A sheet from Home on iPhone, the detail column on iPad.
+/// the sidebar); Preferences (Appearance, Currency, the lock, notifications); the read-only server;
+/// and Sign out, or Leave demo. A sheet from Home on iPhone, the detail column on iPad.
 struct SettingsView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(AppearanceModel.self) private var appearance
@@ -37,7 +37,8 @@ struct SettingsView: View {
                 CardSection("Manage") {
                     row(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
                     row(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
-                    row(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
+                    // No count on Categories, as on the card (MAZ-257).
+                    row(.categories, symbol: "tag", value: nil)
                 }
             }
             Section {
@@ -47,11 +48,23 @@ struct SettingsView: View {
                 row(
                     .appLock, symbol: "lock", value: lock.isEnabled ? "On" : "Off", title: Self.lockTitle(lock.biometry)
                 )
+                // MAZ-79: household notifications, for an account only; the last Preferences row
+                // on the cards (MAZ-257).
+                if shell.account != nil, let push {
+                    NotificationSettingsRow(push: push).cardSettingsRow()
+                }
             } header: {
                 Text("Preferences").cardSectionHeader()
             } footer: {
+                let notificationProblem =
+                    shell.account == nil
+                    ? nil
+                    : push.flatMap { NotificationText.problem(permission: $0.permission, status: $0.registrar.status) }
                 // The iPad card has no footnote here (the web's tablet layout leaves it out too).
-                if currencyLocked, !shell.route.settingsIsColumn { Text(CurrencyPolicy.settingsFootnote) }
+                let currencyNote =
+                    currencyLocked && !shell.route.settingsIsColumn ? CurrencyPolicy.settingsFootnote : nil
+                let notes = [currencyNote, notificationProblem].compactMap { $0 }
+                if !notes.isEmpty { Text(notes.joined(separator: "\n\n")) }
             }
             if let account = shell.account {
                 // MAZ-184: emailed receipts, only when the server takes them.
@@ -83,14 +96,6 @@ struct SettingsView: View {
                         Text("Emailed receipts").cardSectionHeader()
                     } footer: {
                         if !shell.receiptInbox.isAvailable { Text(InboxText.offline) }
-                    }
-                }
-                if let push {
-                    // MAZ-79: household notifications, for an account only.
-                    Section {
-                        NotificationSettingsRow(push: push).cardSettingsRow()
-                    } footer: {
-                        Text(NotificationText.footer(permission: push.permission, status: push.registrar.status))
                     }
                 }
                 Section {

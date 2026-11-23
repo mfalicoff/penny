@@ -305,6 +305,16 @@ struct NotificationTests {
         #expect(!other.offersPrompt, "Not now hides the Shared tab's offer")
     }
 
+    @Test("whenNothingNeedsThePerson_NotificationText_ShouldShowOnlyTheChevronAsOnTheCards")
+    func settingsRowAllWell() {
+        // iphone-settings, ipad-settings: the Notifications row has no value and Preferences no note.
+        for permission in [PushPermission.notDetermined, .allowed] {
+            #expect(NotificationText.value(permission: permission, status: .registered) == nil)
+            #expect(NotificationText.problem(permission: permission, status: .registered) == nil)
+        }
+        #expect(NotificationText.problem(permission: .denied, status: .registered)?.contains("iOS Settings") == true)
+    }
+
     @Test("whenAPNsIsUnavailable_PushNotifications_ShouldSaySoAndKeepTheAppWorking")
     func unavailable() async throws {
         let system = FakeNotificationSystem()
@@ -315,6 +325,8 @@ struct NotificationTests {
         push.didFailToRegister()
         #expect(push.registrar.status == .unavailable)
         #expect(NotificationText.value(permission: .allowed, status: .unavailable) == "Unavailable")
+        #expect(
+            NotificationText.problem(permission: .allowed, status: .unavailable)?.contains("couldn't set up") == true)
         await push.didRegister(deviceToken: Data(count: 4))
         #expect(push.registrar.status == .unavailable, "a token APNs would never issue is refused")
         #expect(server.calls.isEmpty)

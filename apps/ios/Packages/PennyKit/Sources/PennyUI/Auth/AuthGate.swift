@@ -187,15 +187,17 @@ struct ShellHost: View {
     }
 }
 
-/// Sign in, create an account and choose a server, with the temporary demo at the bottom.
+/// Sign in, create an account and choose a server, with the temporary demo at the bottom. Changing
+/// the server opens a sheet with a grabber and Close (`iphone-server-connect`, MAZ-257).
 struct SignedOutFlow: View {
     let auth: AuthController
     var onTryDemo: (() -> Void)?
 
-    enum Route: Hashable { case createAccount, server, forgotPassword(email: String), resetPassword }
+    enum Route: Hashable { case createAccount, forgotPassword(email: String), resetPassword }
 
     @State private var path: [Route] = []
     @State private var keyboardShown = false
+    @State private var changingServer = false
 
     /// The demo link rides above the keyboard, where it covered Sign in while typing at every
     /// text size (MAZ-82 audit at AX-XXXL, MAZ-179 at the default size); it steps aside until the
@@ -209,7 +211,7 @@ struct SignedOutFlow: View {
                     ServerConnectView(auth: auth) {}
                 } else {
                     SignInView(
-                        auth: auth, mode: .signIn, onChangeServer: { path.append(.server) },
+                        auth: auth, mode: .signIn, onChangeServer: { changingServer = true },
                         onSwitchMode: { path.append(.createAccount) },
                         onForgotPassword: { path.append(.forgotPassword(email: $0)) })
                 }
@@ -234,8 +236,6 @@ struct SignedOutFlow: View {
                 case .createAccount:
                     SignInView(
                         auth: auth, mode: .createAccount, onChangeServer: {}, onSwitchMode: { path.removeAll() })
-                case .server:
-                    ServerConnectView(auth: auth) { path.removeAll() }
                 case .forgotPassword(let email):
                     ForgotPasswordView(
                         auth: auth, initialEmail: email,
@@ -245,6 +245,22 @@ struct SignedOutFlow: View {
                 }
             }
             .pennySolidBars()
+        }
+        .sheet(isPresented: $changingServer) {
+            NavigationStack {
+                ServerConnectView(auth: auth) {
+                    changingServer = false
+                    path.removeAll()
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close", systemImage: "xmark") { changingServer = false }
+                            .accessibilityIdentifier("server.close")
+                    }
+                }
+                .pennySolidBars()
+            }
+            .presentationDragIndicator(.visible)
         }
         #if canImport(UIKit)
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in

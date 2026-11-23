@@ -269,6 +269,8 @@ struct EntryList: View {
     let currency: String
     let empty: String
     var open: ((DetailRoute) -> Void)?
+    /// A row tinted in its category color at 10% (the entry the save toast is about).
+    var highlighted: String?
 
     var body: some View {
         if entries.isEmpty {
@@ -279,26 +281,41 @@ struct EntryList: View {
         } else {
             LazyVStack(spacing: 0) {
                 ForEach(entries) { entry in
-                    if entry.scheduled {
-                        EntryRow(entry: entry, report: report, currency: currency)
-                    } else if let open {
-                        Button {
-                            open(ActivityRoute.destination(entry))
-                        } label: {
-                            EntryRow(entry: entry, report: report, currency: currency)
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        NavigationLink(value: ActivityRoute.destination(entry)) {
-                            EntryRow(entry: entry, report: report, currency: currency)
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    row(entry).background(tint(entry))
                     if entry.id != entries.last?.id { Divider().padding(.leading, 64) }
                 }
             }
+            .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+            .animation(.easeOut(duration: 0.3), value: highlighted)
             .background(
                 PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        }
+    }
+
+    @ViewBuilder
+    private func tint(_ entry: ReportEntry) -> some View {
+        if entry.id == highlighted, case .personal = entry.source {
+            let category = report.categories.first { $0.id == entry.categoryId }
+            EntryText.tileColor(entry.kind, category: category, id: entry.categoryId).opacity(0.1)
+        }
+    }
+
+    @ViewBuilder
+    private func row(_ entry: ReportEntry) -> some View {
+        if entry.scheduled {
+            EntryRow(entry: entry, report: report, currency: currency)
+        } else if let open {
+            Button {
+                open(ActivityRoute.destination(entry))
+            } label: {
+                EntryRow(entry: entry, report: report, currency: currency)
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(value: ActivityRoute.destination(entry)) {
+                EntryRow(entry: entry, report: report, currency: currency)
+            }
+            .buttonStyle(.plain)
         }
     }
 }

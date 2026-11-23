@@ -39,7 +39,7 @@ enum EntrySummary {
         let currency = ledger.currency.rawValue
         return ChangeSummary(
             title: title, detail: "\(category) · \(MoneyFormat.amount(entry.share, currency: currency))",
-            kind: entry.kind, categoryId: entry.categoryId)
+            kind: entry.kind, categoryId: entry.categoryId, entryId: entry.id)
     }
 
     static func deleted(_ entry: LedgerEntry, currency: String) -> ChangeSummary {

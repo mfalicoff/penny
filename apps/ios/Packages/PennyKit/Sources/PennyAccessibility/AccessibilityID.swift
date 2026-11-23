@@ -133,9 +133,10 @@ public enum AccessibilityID {
         public static let use = "server.use"
         public static let checkAgain = "server.checkAgain"
         public static let clear = "server.clear"
+        public static let close = "server.close"
         public static let infoURL = "serverInfo.url"
 
-        static let all = [url, check, verified, use, checkAgain, clear, infoURL]
+        static let all = [url, check, verified, use, checkAgain, clear, close, infoURL]
     }
 
     /// The iPhone tab bar. `tab(_:)` takes an `AppTab` raw value.
