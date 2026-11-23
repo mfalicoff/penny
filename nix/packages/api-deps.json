@@ -30,6 +30,11 @@
     "hash": "sha256-EXvojddPu+9JKgOG9NSQgUTfWq1RpOYw7adxDPKDJ6o="
   },
   {
+    "pname": "MailKit",
+    "version": "4.18.2",
+    "hash": "sha256-y/cZhRYPJK6AorAgqWhweCoWBr2mzxEw/lXXNbKdI1U="
+  },
+  {
     "pname": "Microsoft.AspNetCore.OpenApi",
     "version": "10.0.15",
     "hash": "sha256-AhwLxQ8+h3z4/9XTu6BmaVBYRAb2kZDYc15DFpwh/Ok="
