@@ -103,20 +103,12 @@ struct ScheduleFormSheet: View {
                     .accessibilityIdentifier("scheduleForm.title")
             }
             LabeledContent("Amount") {
-                HStack(spacing: 0) {
-                    Spacer(minLength: 0)
-                    // The card's "$75.00": the currency's symbol before the typed amount.
-                    if !model.draft.amount.isEmpty {
-                        Text(currencySymbol).monospacedDigit().accessibilityHidden(true)
-                    }
-                    TextField("0.00", text: $model.draft.amount)
-                        .fixedSize()
-                        .scheduleMoneyEntry()
-                        .monospacedDigit()
-                        .multilineTextAlignment(.trailing)
-                        .accessibilityLabel("Amount")
-                        .accessibilityIdentifier("scheduleForm.amount")
-                }
+                TextField("0.00", text: $model.draft.amount)
+                    .scheduleMoneyEntry()
+                    .monospacedDigit()
+                    .multilineTextAlignment(.trailing)
+                    .accessibilityLabel("Amount")
+                    .accessibilityIdentifier("scheduleForm.amount")
             }
             if model.draft.kind == .expense {
                 Picker("Your share", selection: $model.draft.split) {
@@ -210,13 +202,6 @@ struct ScheduleFormSheet: View {
                         + "shorter months use their last day."
                     : "Changes apply to future occurrences. Recorded entries keep their original details.")
         }
-    }
-
-    /// The ledger currency's symbol as amounts show it ("$" for CAD here).
-    private var currencySymbol: String {
-        let currency = shell.workspace.load.ledger?.currency.rawValue ?? "CAD"
-        return MoneyFormat.amount(0, currency: currency)
-            .filter { !$0.isNumber && $0 != "." && $0 != "," && !$0.isWhitespace }
     }
 
     private enum AccountChoice: Hashable {

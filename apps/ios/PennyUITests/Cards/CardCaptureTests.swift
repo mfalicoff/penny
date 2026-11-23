@@ -802,13 +802,12 @@ final class CardCaptureTests: CardTestCase {
         try await card("iphone-schedule-form") { card in
             try card.penny.openSettingsPage("recurring", screen: AccessibilityID.Screen.recurring)
             try card.penny.tap(AccessibilityID.Organize.addSchedule, opening: AccessibilityID.Screen.scheduleForm)
-            // The card's draft: a monthly Internet expense of $75.00, with the keyboard away.
-            try card.penny.type("Internet", into: "scheduleForm.title")
+            // The card's draft: a monthly Internet expense of $75.00, with the keyboard away. The
+            // decimal pad has no Return, so the name goes last and its Return puts the keyboard away.
             try card.penny.type("75.00", into: "scheduleForm.amount")
-            // The decimal pad has no Return: drag the form down to put it away (interactive dismiss).
-            card.penny.app.collectionViews.firstMatch.swipeDown()
+            try card.penny.type("Internet\n", into: "scheduleForm.title")
             guard card.penny.app.keyboards.firstMatch.waitForNonExistence(timeout: 3) else {
-                throw UIExpectationFailed(description: "the keypad stayed up")
+                throw UIExpectationFailed(description: "Return did not put the keyboard away")
             }
         }
     }
