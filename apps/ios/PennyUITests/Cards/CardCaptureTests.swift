@@ -805,7 +805,11 @@ final class CardCaptureTests: CardTestCase {
             // The card's draft: a monthly Internet expense of $75.00, with the keyboard away.
             try card.penny.type("Internet", into: "scheduleForm.title")
             try card.penny.type("75.00", into: "scheduleForm.amount")
-            card.penny.hideKeyboard()
+            // The decimal pad has no Return: drag the form down to put it away (interactive dismiss).
+            card.penny.app.collectionViews.firstMatch.swipeDown()
+            guard card.penny.app.keyboards.firstMatch.waitForNonExistence(timeout: 3) else {
+                throw UIExpectationFailed(description: "the keypad stayed up")
+            }
         }
     }
 

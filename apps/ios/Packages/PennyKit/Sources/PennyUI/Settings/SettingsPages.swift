@@ -212,7 +212,7 @@ struct CurrencySettingsView: View {
                                     HStack(spacing: 4) {
                                         Text(currency.rawValue).font(.body.weight(.semibold))
                                         if locked, selected {
-                                            Image(systemName: "lock.fill").font(.caption)
+                                            Image(systemName: "lock").font(.footnote)
                                                 .accessibilityLabel("Locked")
                                         }
                                     }
@@ -231,6 +231,8 @@ struct CurrencySettingsView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        // The card's two-line rows, tighter than a list's default.
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .disabled(lockReason != nil && !selected)
                         .accessibilityAddTraits(selected ? .isSelected : [])
                         .accessibilityIdentifier("currency.\(currency.rawValue)")
@@ -243,6 +245,8 @@ struct CurrencySettingsView: View {
                 }
             }
             .insetGroupedList()
+            // The list sits right under the bar, as on the card.
+            .contentMargins(.top, 8, for: .scrollContent)
         }
         .background(PennyColor.background)
         .navigationTitle("Currency")

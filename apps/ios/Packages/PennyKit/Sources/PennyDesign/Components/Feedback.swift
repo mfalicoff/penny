@@ -91,7 +91,7 @@ public struct StatusBanner<Action: View>: View {
         case .error: "exclamationmark.circle.fill"
         case .warning: "exclamationmark.circle"
         case .info: "info.circle"
-        case .demo: "play.circle"
+        case .demo: "play"
         }
     }
 
@@ -108,7 +108,9 @@ public struct StatusBanner<Action: View>: View {
         case .offline: PennyColor.surface
         case .error: PaletteToken.dangerSoft.value.color
         case .warning, .info: PaletteToken.pendingSoft.value.color
-        case .demo: PaletteToken.tintSoft.value.color
+        // The demo card (MAZ-257): copper at 13% over the surface, opaque, so Home's glow
+        // doesn't show through and darken it.
+        case .demo: PennyColor.surface.mix(with: PennyColor.tint, by: 0.13)
         }
     }
 }

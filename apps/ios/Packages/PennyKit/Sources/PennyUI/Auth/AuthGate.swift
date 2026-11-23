@@ -255,6 +255,7 @@ struct SignedOutFlow: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Close", systemImage: "xmark") { changingServer = false }
+                            .neutralToolbarGlyph()
                             .accessibilityIdentifier("server.close")
                     }
                 }

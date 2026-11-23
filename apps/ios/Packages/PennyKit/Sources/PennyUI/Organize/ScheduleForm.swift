@@ -56,6 +56,10 @@ struct ScheduleFormSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            // The segmented control sits right under the bar, as on the card.
+            .contentMargins(.top, 0, for: .scrollContent)
+            .scrollDismissesKeyboard(.interactively)
+            .scheduleSectionSpacing()
             .background(PennyColor.background)
             .disabled(model.isSaving)
             .navigationTitle(model.title)
@@ -83,6 +87,7 @@ struct ScheduleFormSheet: View {
             .pennySolidBars()
         }
         .tint(PennyColor.tint)
+        .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(model.isSaving)
         .accessibilityIdentifier("screen.scheduleForm")
     }
@@ -98,12 +103,20 @@ struct ScheduleFormSheet: View {
                     .accessibilityIdentifier("scheduleForm.title")
             }
             LabeledContent("Amount") {
-                TextField("0.00", text: $model.draft.amount)
-                    .scheduleMoneyEntry()
-                    .monospacedDigit()
-                    .multilineTextAlignment(.trailing)
-                    .accessibilityLabel("Amount")
-                    .accessibilityIdentifier("scheduleForm.amount")
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    // The card's "$75.00": the currency's symbol before the typed amount.
+                    if !model.draft.amount.isEmpty {
+                        Text(currencySymbol).monospacedDigit().accessibilityHidden(true)
+                    }
+                    TextField("0.00", text: $model.draft.amount)
+                        .fixedSize()
+                        .scheduleMoneyEntry()
+                        .monospacedDigit()
+                        .multilineTextAlignment(.trailing)
+                        .accessibilityLabel("Amount")
+                        .accessibilityIdentifier("scheduleForm.amount")
+                }
             }
             if model.draft.kind == .expense {
                 Picker("Your share", selection: $model.draft.split) {
@@ -112,6 +125,7 @@ struct ScheduleFormSheet: View {
                     Text("An amount").tag(Money.SplitMode.amount)
                     Text("A percentage").tag(Money.SplitMode.percent)
                 }
+                .tint(PennyColor.secondaryLabel)
                 .accessibilityIdentifier("scheduleForm.split")
                 if model.draft.split != .full {
                     TextField(Self.sharePrompt(model.draft.split), text: $model.draft.shareInput)
@@ -168,6 +182,7 @@ struct ScheduleFormSheet: View {
                 Divider()
                 Label("New account…", systemImage: "plus").tag(AccountChoice.new)
             }
+            .tint(PennyColor.secondaryLabel)
             .accessibilityIdentifier("scheduleForm.account")
             DatePicker(
                 model.isNew ? "First date" : "Next date",
@@ -184,6 +199,7 @@ struct ScheduleFormSheet: View {
             ) {
                 ForEach(RecurrenceFrequency.allCases, id: \.self) { Text(ScheduleText.frequency($0)).tag($0) }
             }
+            .tint(PennyColor.secondaryLabel)
             .accessibilityIdentifier("scheduleForm.frequency")
         } header: {
             Text("Schedule").cardSectionHeader()
@@ -194,6 +210,13 @@ struct ScheduleFormSheet: View {
                         + "shorter months use their last day."
                     : "Changes apply to future occurrences. Recorded entries keep their original details.")
         }
+    }
+
+    /// The ledger currency's symbol as amounts show it ("$" for CAD here).
+    private var currencySymbol: String {
+        let currency = shell.workspace.load.ledger?.currency.rawValue ?? "CAD"
+        return MoneyFormat.amount(0, currency: currency)
+            .filter { !$0.isNumber && $0 != "." && $0 != "," && !$0.isWhitespace }
     }
 
     private enum AccountChoice: Hashable {
@@ -230,6 +253,15 @@ struct ScheduleFormSheet: View {
 }
 
 extension View {
+    /// The card's compact gaps between groups (iOS only; the host tests build for macOS).
+    fileprivate func scheduleSectionSpacing() -> some View {
+        #if os(iOS)
+            listSectionSpacing(.compact)
+        #else
+            self
+        #endif
+    }
+
     /// A money field: the decimal keypad on iOS.
     func scheduleMoneyEntry() -> some View {
         #if os(iOS)
