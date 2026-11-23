@@ -11,4 +11,8 @@ public sealed record FakeOidcGrant
     public bool WrongSigningKey { get; init; }
     public string? UserInfoSubject { get; init; }
     public object? UserInfoEmailVerified { get; init; } = true;
+
+    // Extra UserInfo claims (MAZ-171: providers that put `name` and `picture` only there).
+    public IReadOnlyDictionary<string, object?> UserInfoClaims { get; init; } =
+        new Dictionary<string, object?>();
 }

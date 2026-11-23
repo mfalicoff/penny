@@ -28,7 +28,51 @@ export const credentialsSchema = z.object({
 // The token is validated only as non-empty: the browser discards it, so a format change there
 // must not fail a sign-in the server already completed.
 export const sessionSchema = z.object({ token: z.string().min(1), email: z.email() });
-export const meSchema = z.object({ email: z.email() });
+/* ---------- profiles (MAZ-171) ---------- */
+
+/** A display name: trimmed, 1 to 60 UTF-16 units, no control characters. Display only, never identity. */
+const displayName = z.string().min(1).max(60);
+/** Same-origin `/api/users/<id>/avatar?v=<version>`, loaded with the session cookie. */
+const avatarUrl = z.string().regex(/^\/api\/users\/[^/?#]+\/avatar\?v=[0-9a-f]{32}$/);
+
+/**
+ * `GET /api/auth/me`: who is signed in, with the profile summary the shell shows. Servers before
+ * profiles send only `email`, so the rest is optional.
+ */
+export const meSchema = z.object({
+  email: z.email(),
+  userId: id.optional(),
+  displayName: displayName.optional(),
+  avatarUrl: avatarUrl.optional(),
+  needsName: z.boolean().optional(),
+});
+export type Me = z.infer<typeof meSchema>;
+
+/** `GET`, `PATCH /api/profile`, `PUT` and `DELETE /api/profile/avatar`. */
+export const profileSchema = z.object({
+  userId: id,
+  email: z.email(),
+  displayName: displayName.optional(),
+  avatarUrl: avatarUrl.optional(),
+  // False when the sign-in provider sends the field: read only, refreshed at each sign-in.
+  nameEditable: z.boolean(),
+  avatarEditable: z.boolean(),
+  needsName: z.boolean(),
+  signIn: z.enum(["password", "oidc"]),
+  // The configured name of the account's own provider; absent: "your sign-in provider".
+  provider: z.string().min(1).optional(),
+});
+export type Profile = z.infer<typeof profileSchema>;
+
+/** `PATCH /api/profile` body: absent fields change nothing; a null name clears it. */
+export const profileUpdateSchema = z.object({
+  displayName: z.string().max(1000).nullable().optional(),
+  namePromptDismissed: z.literal(true).optional(),
+});
+export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
+
+/** `POST /api/auth/register` body: the credentials and the optional name asked at sign-up. */
+export const registrationSchema = credentialsSchema.extend({ displayName: z.string().max(1000).optional() });
 
 export const oidcConfigSchema = z.object({ enabled: z.boolean(), label: z.string().optional() });
 export const oidcStartSchema = z.object({ redirectUri: z.url() });
@@ -157,6 +201,9 @@ export const householdMemberSchema = z.object({
   joinedOn: isoDate.optional(),
   // Absent for current members.
   leftAt: instant.optional(),
+  // MAZ-171: absent when the member has none; show the email and initials instead.
+  displayName: displayName.optional(),
+  avatarUrl: avatarUrl.optional(),
 });
 export type HouseholdMember = z.infer<typeof householdMemberSchema>;
 

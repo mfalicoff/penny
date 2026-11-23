@@ -113,6 +113,12 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/receipt-inbox", "get"),
                 ("/api/receipt-inbox/{id}", "delete"),
                 ("/api/receipt-inbox/{id}/done", "post"),
+                // Display names and pictures (MAZ-171).
+                ("/api/profile", "get"),
+                ("/api/profile", "patch"),
+                ("/api/profile/avatar", "put"),
+                ("/api/profile/avatar", "delete"),
+                ("/api/users/{userId}/avatar", "get"),
             }
         )
         {

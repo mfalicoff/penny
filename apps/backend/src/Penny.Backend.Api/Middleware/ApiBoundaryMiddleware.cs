@@ -21,7 +21,10 @@ public sealed partial class ApiBoundaryMiddleware(
         context.Items[ClientCancellation] = context.RequestAborted;
         context.Response.OnStarting(() =>
         {
-            context.Response.Headers.CacheControl = "no-store";
+            // Private by default. Only a versioned profile picture (MAZ-171) sets its own,
+            // still private, caching.
+            if (string.IsNullOrEmpty(context.Response.Headers.CacheControl))
+                context.Response.Headers.CacheControl = "no-store";
             context.Response.Headers.XContentTypeOptions = "nosniff";
             return Task.CompletedTask;
         });

@@ -1,5 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { apiFetch } from "../api/client";
 import { isPrivateKey, sessionKey, sessionNoticeKey } from "../api/keys";
+import { meSchema, type Me } from "../api/schemas";
 import { draftStore } from "../features/entries/drafts";
 
 export type SessionNotice = "expired" | null;
@@ -29,6 +31,14 @@ export async function beginSession(queryClient: QueryClient, email: string): Pro
   if (previous?.email !== email) clearPrivateData(queryClient);
   queryClient.setQueryData(sessionKey, { email });
   queryClient.setQueryData(sessionNoticeKey, null);
+  // Sign-in answers only the email: `/me` adds the name, picture and name prompt (MAZ-171). Best
+  // effort: a failure here leaves the session as it is and the next check fills them in.
+  void apiFetch("/api/auth/me", meSchema).then(
+    (me) => {
+      queryClient.setQueryData<Me | null>(sessionKey, (current) => (current?.email === email && me.email === email ? me : current));
+    },
+    () => undefined,
+  );
 }
 
 /** The user signed out (the server session is already gone). */

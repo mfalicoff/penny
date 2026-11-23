@@ -525,6 +525,19 @@
   font-weight: 700;
 }
 
+/* A person's picture (MAZ-171) fills the circle. */
+.pk-avatar--picture {
+  overflow: hidden;
+  background: var(--pk-fill);
+}
+
+.pk-avatar--picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* ---------- money ---------- */
 .money {
   white-space: nowrap;

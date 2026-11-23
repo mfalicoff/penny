@@ -49,6 +49,12 @@ interface Card {
 
 // ---- Navigation through the app's own UI ----
 
+async function profilePane(p: Page) {
+  await p.goto("/settings/profile");
+  await expect(p.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Alex Martin");
+}
+
+
 async function home(page: Page, path = "/") {
   await page.goto(path);
   await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
@@ -142,8 +148,8 @@ async function recordAlexShare(run: Run) {
   await run.page.getByRole("list", { name: "Expenses" }).getByRole("link", { name: /^Internet/ }).click();
   // Recording a share retitles the dialog Record payment, as the card's sheet is titled.
   const dialog = run.page.getByRole("dialog", { name: /^(Internet|Record payment)$/ });
-  const alex = run.seed?.users.alex?.email ?? "";
-  await dialog.getByRole("button", { name: `Mark ${alex}'s share as paid` }).click();
+  // alex is seeded with a display name (MAZ-171), so the buttons use it.
+  await dialog.getByRole("button", { name: "Mark Alex Martin's share as paid" }).click();
   const confirm = dialog.getByRole("button", { name: "Mark $40.00 as paid" });
   await expect(confirm).toBeVisible();
   return { dialog, confirm };
@@ -640,6 +646,7 @@ const cards: Record<string, Card> = {
       await p.getByRole("button", { name: "Create an account" }).click();
       await expect(p.getByRole("button", { name: /Create account/ })).toBeVisible();
       // The card's draft: an email and a 13-character password, three of four strength steps.
+      await p.getByLabel("Name").fill("Max Falicoff");
       await p.getByLabel("Email").fill("max@example.com");
       await p.getByLabel("Password", { exact: true }).fill("penny-sample1");
       await p.getByLabel("Password", { exact: true }).blur();
@@ -917,12 +924,37 @@ const cards: Record<string, Card> = {
   "web-receipt-email-settings": {},
 
   // Account and profile cards drafted for review (MAZ-267): none of these flows exist on the web yet.
-  "iphone-profile": { skip: { status: "not-built", note: "The web has no editable profile: no display name, picture, sign-in rows or Your data section." } },
-  "iphone-profile-provider": { skip: { status: "not-built", note: "The web has no Google sign-in and no profile from a provider." } },
-  "iphone-profile-photo": { skip: { status: "not-built", note: "The web has no profile picture." } },
-  "iphone-name-prompt": { skip: { status: "not-built", note: "The web has no display name or name prompt." } },
+  "iphone-profile": {
+    open: ({ page: p }) => profilePane(p),
+    note: "Profile is a page styled as the sheet. The Sign-in group has no Verified mark or Change password, and Your data (export, delete account) is missing: those features aren't built yet.",
+  },
+  "iphone-profile-provider": { skip: { status: "blocked", note: "The full-stack seeds have no account that signs in with a provider; the read-only profile is covered by the web unit tests." } },
+  "iphone-profile-photo": {
+    fresh: true,
+    open: async ({ page: p }) => {
+      await profilePane(p);
+      const chooser = p.waitForEvent("filechooser");
+      await p.getByRole("button", { name: "Add picture" }).last().click();
+      await (await chooser).setFiles({ name: "portrait.png", mimeType: "image/png", buffer: syntheticPng(900, 1200) });
+      await expect(p.getByRole("dialog", { name: "Move and scale" })).toBeVisible();
+      await expect(p.getByRole("button", { name: "Choose" })).toBeEnabled();
+    },
+    note: "With a mouse the subtitle reads \"Scroll to zoom, drag to move\"; touch screens get the card's words.",
+  },
+  "iphone-name-prompt": {
+    fresh: true,
+    open: async ({ page: p }) => {
+      // The card's account has no name yet: clear alex's seeded one, then open Home.
+      await p.goto("/settings/profile");
+      await expect(p.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Alex Martin");
+      expect(await p.evaluate(async () => (await fetch("/api/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ displayName: null }) })).status)).toBe(200);
+      await home(p);
+      const prompt = p.getByRole("dialog", { name: "What should people call you?" });
+      await prompt.getByLabel("Name").fill("Max");
+    },
+  },
   "iphone-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
-  "iphone-create-account-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up, name field or privacy policy line." } },
+  "iphone-create-account-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
   "iphone-verify-email": { skip: { status: "not-built", note: "The web has no email verification." } },
   "iphone-unverified": { skip: { status: "not-built", note: "The web has no email verification, so sharing is never held back." } },
   "iphone-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
@@ -931,10 +963,16 @@ const cards: Record<string, Card> = {
   "iphone-export-all": { skip: { status: "not-built", note: "The web has no full data export." } },
   "iphone-monitoring-prompt": { skip: { status: "not-built", note: "The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt." } },
   "iphone-privacy": { skip: { status: "not-built", note: "The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person." } },
-  "ipad-profile": { skip: { status: "not-built", note: "The web has no editable profile." } },
-  "web-profile": { skip: { status: "not-built", note: "The web has Settings › Profile shows only the signed-in email: no name, picture, sign-in or Your data sections." } },
+  "ipad-profile": {
+    open: ({ page: p }) => profilePane(p),
+    note: "The Sign-in group has no Verified mark or Change password, and Your data (export, delete account) is missing: those features aren't built yet.",
+  },
+  "web-profile": {
+    open: ({ page: p }) => profilePane(p),
+    note: "The Sign-in panel has no Verified mark or Change password, Your data (export, delete account) and the privacy policy footer are missing, and the section list has no Privacy or Export data: those features aren't built yet.",
+  },
   "web-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
-  "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up, name field or privacy policy line." } },
+  "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
   "web-verify-email": { skip: { status: "not-built", note: "The web has no email verification." } },
   "web-email-verified": { skip: { status: "not-built", note: "The web has no email verification." } },
   "web-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },

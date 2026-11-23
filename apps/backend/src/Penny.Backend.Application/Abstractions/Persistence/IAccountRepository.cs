@@ -8,7 +8,6 @@ public interface IAccountRepository
         string subject,
         CancellationToken cancellationToken
     );
-    Task<string?> FindEmailAsync(string userId, CancellationToken cancellationToken);
 
     // Replaces the hash only if it is still `currentHash`, so a concurrent change wins.
     Task UpdatePasswordAsync(

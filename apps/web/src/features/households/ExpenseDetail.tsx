@@ -411,7 +411,7 @@ function PanelShares({ view, expense, onRecord }: { view: HouseholdView; expense
         }
         return (
           <li key={split.userId} className="detail-share">
-            <Avatar name={view.who.avatar(split.userId)} size={28} />
+            <Avatar name={view.who.avatar(split.userId)} src={view.who.picture(split.userId)} size={28} />
             <span className="detail-share__name">
               {view.who.name(split.userId)}
               {payer ? <span className="detail-share__tag">payer</span> : null}
@@ -455,7 +455,7 @@ function CompactShares({ view, expense, onRecord }: { view: HouseholdView; expen
           }
           return (
             <li key={split.userId} className="row expense-share">
-              <Avatar name={view.who.avatar(split.userId)} size={30} />
+              <Avatar name={view.who.avatar(split.userId)} src={view.who.picture(split.userId)} size={30} />
               <span className="expense-share__name">
                 {view.who.name(split.userId)}
                 {payer ? " · payer" : ""}
@@ -511,7 +511,7 @@ function DeleteSharedDialog({ view, expense, onCancel, onDeleted }: { view: Hous
       aside={
         <span className="confirm-sheet__people">
           {members.map((userId) => (
-            <Avatar key={userId} name={view.who.name(userId)} size={34} />
+            <Avatar key={userId} name={view.who.avatar(userId)} src={view.who.picture(userId)} size={34} />
           ))}
         </span>
       }

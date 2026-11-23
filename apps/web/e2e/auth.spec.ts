@@ -127,6 +127,7 @@ test("account creation reports a taken email on the email field", async ({ page,
   await mockApi(context);
   await page.goto("/");
   await page.getByRole("button", { name: "Create an account" }).click();
+  await page.getByLabel("Name").fill("Alex Martin");
   await fillCredentials(page, "taken@example.test", "correct horse battery");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("alert")).toContainText("already exists");

@@ -6,6 +6,7 @@ using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Observability;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Profiles;
 
 namespace Penny.Backend.Api.Controllers;
 
@@ -14,12 +15,14 @@ namespace Penny.Backend.Api.Controllers;
 [ProducesResponseType<ApiError>(500)]
 public sealed class AuthController(
     AuthService auth,
+    ProfileService profiles,
     PasswordResetService resets,
     AuthOptions options,
     TimeProvider clock
 ) : ControllerBase
 {
     private static readonly string[] ResetFields = ["token", "password"];
+    private static readonly string[] RegisterFields = ["email", "password", "displayName"];
 
     [AllowAnonymous]
     [EnableRateLimiting(AuthRateLimit.Policy)]
@@ -34,8 +37,13 @@ public sealed class AuthController(
     {
         var session = await Measured.SignInAsync(Measured.Registration, async () =>
         {
-            var (email, password) = await CredentialsBody.ReadAsync(Request, cancellationToken);
-            return await auth.RegisterAsync(email, password, cancellationToken);
+            // `displayName` is optional (MAZ-171); older apps send only the credentials.
+            var fields = await JsonStringFields.ReadAsync(
+                Request,
+                RegisterFields,
+                cancellationToken
+            );
+            return await auth.RegisterAsync(fields[0], fields[1], fields[2], cancellationToken);
         });
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return StatusCode(201, new SessionResponse(session.Token, session.Email));
@@ -82,7 +90,7 @@ public sealed class AuthController(
     [ProducesResponseType<MeResponse>(200)]
     [ProducesResponseType<ApiError>(401)]
     public async Task<ActionResult<MeResponse>> Me(CancellationToken cancellationToken) =>
-        Ok(new MeResponse(await auth.EmailAsync(User.Session().UserId, cancellationToken)));
+        Ok(MeResponse.From(await profiles.GetAsync(User.Session().UserId, cancellationToken)));
 
     [HttpPost("logout", Name = "postApiAuthLogout")]
     [ProducesResponseType<OkResponse>(200)]

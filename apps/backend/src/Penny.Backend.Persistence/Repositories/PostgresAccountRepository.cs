@@ -46,16 +46,6 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<string?> FindEmailAsync(string userId, CancellationToken cancellationToken)
-    {
-        await using var context = PennyDbContext.Create(source);
-        return await context
-            .Users.AsNoTracking()
-            .Where(user => user.Id == userId)
-            .Select(user => user.Email)
-            .SingleOrDefaultAsync(cancellationToken);
-    }
-
     public async Task UpdatePasswordAsync(
         string userId,
         string currentHash,
@@ -116,6 +106,7 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 Id = user.Id,
                 Email = user.Email,
                 Password = user.Password,
+                DisplayName = user.DisplayName,
             }
         );
         context.Ledgers.Add(

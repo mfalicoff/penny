@@ -12,7 +12,7 @@ import type { HouseholdView } from "./context";
 import { describeSharedError } from "./errors";
 import type { MoreItem } from "./GroupTools";
 import { groupListPath } from "./links";
-import { dayLabel, isCurrent, localDate, monthLabel, shortDate } from "./model";
+import { dayLabel, isCurrent, localDate, memberName, monthLabel, shortDate } from "./model";
 
 type Pending = { kind: "remove"; member: HouseholdMember } | { kind: "pick" } | { kind: "leave" } | { kind: "archive" } | { kind: "rename" } | null;
 
@@ -80,9 +80,9 @@ export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: Ho
           <ul className="shared-group__rows" aria-label="Members">
             {current.map((member) => (
               <li key={member.userId} className="row">
-                <Avatar name={member.email} size={36} />
+                <Avatar name={memberName(member)} src={member.avatarUrl} size={36} />
                 <span className="row__main">
-                  <span className="row__title">{member.userId === view.who.meId ? `${member.email} (you)` : member.email}</span>
+                  <span className="row__title">{member.userId === view.who.meId ? `${memberName(member)} (you)` : memberName(member)}</span>
                   <span className="row__meta">
                     {member.userId === household.creatorId ? "Created" : "Joined"} {joinedLabel(member)}
                   </span>
@@ -111,9 +111,9 @@ export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: Ho
             <ul className="shared-group__rows" aria-label="Former members">
               {former.map((member) => (
                 <li key={member.userId} className="row">
-                  <Avatar name={member.email} size={36} />
+                  <Avatar name={memberName(member)} src={member.avatarUrl} size={36} />
                   <span className="row__main">
-                    <span className="row__title">{member.email}</span>
+                    <span className="row__title">{memberName(member)}</span>
                     <span className="row__meta">Left {member.leftAt ? shortDate(localDate(new Date(member.leftAt))) : ""}. Their past expenses stay.</span>
                   </span>
                 </li>
@@ -280,13 +280,13 @@ function RemoveDialog({ view, member, onClose }: { view: HouseholdView; member: 
     mutationFn: () => removeMember(view.householdId, member.userId),
     onSuccess: async () => {
       await refreshHousehold(queryClient, email, view.householdId);
-      toast.show({ title: `${member.email} was removed`, detail: "Their past expenses stay in the household." });
+      toast.show({ title: `${memberName(member)} was removed`, detail: "Their past expenses stay in the household." });
       onClose();
     },
   });
   return (
     <ConfirmDialog
-      title={`Remove ${member.email}?`}
+      title={`Remove ${memberName(member)}?`}
       description="They leave future expenses. Their past expenses and history stay. They must be settled in every month first."
       confirm="Remove member"
       busy={remove.isPending}
@@ -432,8 +432,8 @@ function PickMemberDialog({ members, onPick, onClose }: { members: HouseholdMemb
         {members.map((member) => (
           <li key={member.userId}>
             <button type="button" className="row" onClick={() => { onPick(member); }}>
-              <Avatar name={member.email} size={32} />
-              <span className="row__title">{member.email}</span>
+              <Avatar name={memberName(member)} src={member.avatarUrl} size={32} />
+              <span className="row__title">{memberName(member)}</span>
             </button>
           </li>
         ))}

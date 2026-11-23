@@ -122,6 +122,7 @@ const Seeds = z.strictObject({
     summary: z.string(),
     clock: z.iso.datetime(),
     users: z.array(z.string().regex(/^[a-z]+$/)).min(1),
+    displayNames: z.record(z.string().regex(/^[a-z]+$/), z.string().min(1).max(60)).optional(),
     steps: z.array(Step),
     searchExpectations: z.array(SearchExpectation).optional(),
     pendingEdits: z.strictObject({

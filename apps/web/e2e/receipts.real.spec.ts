@@ -22,6 +22,8 @@ async function register(browser: Browser, baseURL: string | undefined, label: st
   const page = await context.newPage();
   const response = await page.request.post("/api/auth/register", { data: { email, password: PASSWORD } });
   expect(response.status()).toBe(201);
+  // No name, so the app would ask for one (MAZ-171): skip it, so members keep showing emails.
+  expect((await page.request.patch("/api/profile", { data: { namePromptDismissed: true } })).status()).toBe(200);
   return { email, context, page };
 }
 
