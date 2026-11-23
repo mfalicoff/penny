@@ -3,12 +3,14 @@ import { useId, useRef, useState, type SyntheticEvent } from "react";
 import { z } from "zod";
 import { login, oidcConfigQuery, register, type Credentials } from "../../api/auth";
 import { ApiError } from "../../api/client";
+import { DISPLAY_NAME_MAX, normalizeDisplayName, PROFILE_MESSAGES } from "../../api/profile";
 import { useSessionNotice } from "../../auth/account";
 import { beginSession } from "../../auth/lifecycle";
 import { OidcError, signInWithPopup, signInWithRedirect } from "../../auth/oidc";
 import { startDemo } from "../../demo/demo";
 import { cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { PrivacyPolicyLink, useHasPrivacyPolicy } from "../legal/PrivacyPolicyLink";
 
 type Mode = "sign-in" | "create-account";
 
@@ -86,6 +88,7 @@ export function AuthScreen() {
           ) : null}
           <CredentialsForm key={mode} mode={mode} />
           <SsoButton />
+          {creating ? <CreateAccountLegal /> : null}
           <p className="auth__switch">
             {creating ? "Already have an account? " : "New here? "}
             <button
@@ -108,16 +111,17 @@ export function AuthScreen() {
 function CredentialsForm({ mode }: { mode: Mode }) {
   const queryClient = useQueryClient();
   const creating = mode === "create-account";
-  const ids = { email: useId(), password: useId(), emailError: useId(), passwordError: useId(), formError: useId(), requirement: useId() };
+  const ids = { name: useId(), nameError: useId(), email: useId(), password: useId(), emailError: useId(), passwordError: useId(), formError: useId(), requirement: useId() };
   const [password, setPassword] = useState("");
+  const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; email?: string; password?: string }>({});
   const [formError, setFormError] = useState<string | null>(null);
 
   const submit = useMutation({
     mutationKey: ["auth", mode],
-    mutationFn: (credentials: Credentials) => (creating ? register(credentials) : login(credentials)),
+    mutationFn: (credentials: Credentials & { displayName?: string }) => (creating ? register(credentials) : login(credentials)),
     onSuccess: ({ email }) => beginSession(queryClient, email),
     onError: (error) => {
       setFormError(describeAuthError(error));
@@ -138,13 +142,22 @@ function CredentialsForm({ mode }: { mode: Mode }) {
     const email = typeof data.get("email") === "string" ? (data.get("email") as string).trim() : "";
     const password = typeof data.get("password") === "string" ? (data.get("password") as string) : "";
 
-    const errors: { email?: string; password?: string } = {};
+    const rawName = typeof data.get("displayName") === "string" ? (data.get("displayName") as string) : "";
+    // The name asked at sign-up (MAZ-171): needed here, though the server accepts accounts without one.
+    const displayName = creating ? normalizeDisplayName(rawName) : null;
+
+    const errors: { name?: string; email?: string; password?: string } = {};
+    if (creating && !displayName) errors.name = rawName.trim() ? PROFILE_MESSAGES.name : "Enter your name.";
     if (!emailSchema.safeParse(email).success) errors.email = "Enter a valid email address.";
     if (!passwordSchema.safeParse(password).success) {
       errors.password = creating ? "Use 10 to 256 characters." : "Enter your password (10 to 256 characters).";
     }
     setFieldErrors(errors);
     setFormError(null);
+    if (errors.name) {
+      nameRef.current?.focus();
+      return;
+    }
     if (errors.email) {
       emailRef.current?.focus();
       return;
@@ -153,7 +166,7 @@ function CredentialsForm({ mode }: { mode: Mode }) {
       passwordRef.current?.focus();
       return;
     }
-    submit.mutate({ email, password });
+    submit.mutate(displayName ? { email, password, displayName } : { email, password });
   }
 
   return (
@@ -164,6 +177,22 @@ function CredentialsForm({ mode }: { mode: Mode }) {
         </p>
       ) : null}
       <div className="auth__group">
+        {creating ? (
+          <div className="auth__field">
+            <label htmlFor={ids.name}>Name</label>
+            <input
+              ref={nameRef}
+              id={ids.name}
+              name="displayName"
+              type="text"
+              autoComplete="name"
+              maxLength={DISPLAY_NAME_MAX + 20}
+              required
+              aria-invalid={fieldErrors.name ? true : undefined}
+              aria-describedby={fieldErrors.name ? ids.nameError : undefined}
+            />
+          </div>
+        ) : null}
         <div className="auth__field">
           <label htmlFor={ids.email}>Email</label>
           <input
@@ -202,6 +231,11 @@ function CredentialsForm({ mode }: { mode: Mode }) {
           />
         </div>
       </div>
+      {fieldErrors.name ? (
+        <span className="field__error" id={ids.nameError}>
+          {fieldErrors.name}
+        </span>
+      ) : null}
       {fieldErrors.email ? (
         <span className="field__error" id={ids.emailError}>
           {fieldErrors.email}
@@ -360,6 +394,19 @@ function SsoButton() {
 }
 
 /**
+ * "By creating an account you agree to the Privacy Policy." under the ways to create an account
+ * (web-create-account, iphone-create-account-providers). Hidden when the server publishes no policy.
+ */
+function CreateAccountLegal() {
+  if (!useHasPrivacyPolicy()) return null;
+  return (
+    <p className="auth__legal">
+      By creating an account you agree to the <PrivacyPolicyLink />.
+    </p>
+  );
+}
+
+/**
  * Temporary demo (MAZ-85): sample data in this tab only, without an account. Pinned to the bottom
  * of the form side with the play icon, as on iphone-sign-in and web-sign-in, with the note that
  * the demo saves nothing (web-sign-in, MAZ-234).
@@ -380,10 +427,24 @@ function DemoButton() {
         <Icon name="play" size={18} />
         Take a look around with sample data
       </button>
-      <p id={hintId} className="field__hint">
-        Sample data in this tab only. Nothing is saved or sent to your server.
+      {/* The privacy link follows the note on wide windows (web-sign-in-providers) and gets its own line on phones (iphone-sign-in-providers). It stays out of the button's description. */}
+      <p className="field__hint">
+        <span id={hintId}>Sample data in this tab only. Nothing is saved or sent to your server.</span>
+        <SignInPrivacy />
       </p>
     </div>
+  );
+}
+
+function SignInPrivacy() {
+  if (!useHasPrivacyPolicy()) return null;
+  return (
+    <span className="auth__privacy">
+      <span className="auth__privacy-dot" aria-hidden="true">
+        {" · "}
+      </span>
+      <PrivacyPolicyLink />
+    </span>
   );
 }
 

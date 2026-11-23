@@ -398,7 +398,7 @@
     {
       "id": "iphone-create-account",
       "source": "docs/design/penny-ios/iphone/create-account.html",
-      "sourceSha256": "ac3c6672e6f8797381bb81c385d90e76a3bbf845409a0af00438a0398a038003",
+      "sourceSha256": "bf195fbc942583edb2867b029cf3ae8763a079a36b0cc9fa54bbf174dce4348e",
       "viewport": {
         "w": 482,
         "h": 954
@@ -407,12 +407,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-create-account.light.png",
-          "sha256": "aff08583aa9e2fd58f7c7e9df8bdb0c5aed9ef8ab29b534d77c96d0d64b2c59c"
+          "sha256": "9e86c3747fee4e04f7974e1c297b17d0a7811c279fd7cb4fb58f28c795d4c928"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-create-account.dark.png",
-          "sha256": "4471860100858ff831932ea3e4a49cfedba2292260e2c0a41d755aec8c17b59e"
+          "sha256": "ff820d9944d8dc747b62b8eda5b750ba39681d62deb075e1a76d7836e771f791"
         }
       ]
     },
@@ -1627,7 +1627,7 @@
     {
       "id": "iphone-sign-in",
       "source": "docs/design/penny-ios/iphone/sign-in.html",
-      "sourceSha256": "d7f3436ba111ae374ac76df62fee511bbcf74141b2272ef969bdfeb243dcb4f0",
+      "sourceSha256": "41bd50f1ab535d86e2d7b508c16e4d871f51d279079c215352122f6ea990f57e",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1636,12 +1636,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-in.light.png",
-          "sha256": "6636abd01410fd7a8e89dd4866be9567ec68c8beef1a8593e0180414c0258a7a"
+          "sha256": "c3224053c025d88ea7247e1ee32f86f1af421ef06817fea8f30e1804c0167767"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-in.dark.png",
-          "sha256": "141cfa1381dd22e73ff2242f6e0a1aa4ac2db91a37c3668da983d0de1c5c5611"
+          "sha256": "572f01f9d381cb1878adf16921a41b39a39b72f3a51ecdf0ff7f438dc0e7699a"
         }
       ]
     },
@@ -2971,7 +2971,7 @@
     {
       "id": "web-sign-in",
       "source": "docs/design/penny-ios/web/sign-in.html",
-      "sourceSha256": "05cfeeaaeec6bc712d640d918e20c3b9bbf5987ba9769f0b6cd132c32ca29c73",
+      "sourceSha256": "9855856fdb638fba97cc46f828ef571bc7ab516e5a2daead33d5ac9f57713651",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2980,12 +2980,12 @@
         {
           "appearance": "light",
           "file": "previews/web-sign-in.light.png",
-          "sha256": "7427bd508a72a358253eba32c74b45a8e754b86c4b53729f0e7aff5e52146553"
+          "sha256": "4ec5ffe3e15a582e8cbd95318b67b6b9bc8e4d9174fedc4c6763c33cf5b05cbe"
         },
         {
           "appearance": "dark",
           "file": "previews/web-sign-in.dark.png",
-          "sha256": "1c50b4de677324cdb95cb31462fcbfec2f055aaeee99a24997a8124a15e68ede"
+          "sha256": "1287150ca33f5c6c401fa21eabe08ffba2892d96dc21c91c0d58021810908e99"
         }
       ]
     },

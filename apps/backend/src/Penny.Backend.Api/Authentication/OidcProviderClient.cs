@@ -13,6 +13,7 @@ using Penny.Backend.Api.Configuration;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Profiles;
 
 namespace Penny.Backend.Api.Authentication;
 
@@ -107,16 +108,72 @@ public sealed class OidcProviderClient : IOidcProvider
         );
         var subject = Text(claims, "sub") ?? throw Rejected();
         // Some providers only expose email through UserInfo; its subject must match.
-        var profile = claims.TryGetProperty("email", out _)
-            ? claims
-            : await UserInfoAsync(configuration, accessToken, subject, cancellationToken);
+        var fromUserInfo = !claims.TryGetProperty("email", out _);
+        var profile = fromUserInfo
+            ? await UserInfoAsync(configuration, accessToken, subject, cancellationToken)
+            : claims;
         var email = Credentials.NormalizeProviderEmail(Text(profile, "email")) ?? throw Rejected();
         if (
             !profile.TryGetProperty("email_verified", out var verified)
             || verified.ValueKind != JsonValueKind.True
         )
             throw Rejected();
-        return new(Text(claims, "iss") ?? throw Rejected(), subject, email);
+        var tokenIssuer = Text(claims, "iss") ?? throw Rejected();
+        // Name and picture (MAZ-171): from the ID token, else from UserInfo. Reading UserInfo
+        // only for them is best effort and never fails the sign-in.
+        var person =
+            HasProfile(claims) ? claims
+            : fromUserInfo ? profile
+            : await OptionalUserInfoAsync(configuration, accessToken, subject, cancellationToken);
+        return new(
+            tokenIssuer,
+            subject,
+            email,
+            person is { } found ? ProviderProfileOf(found) : null
+        );
+    }
+
+    private static readonly string[] ProfileClaims =
+    [
+        "name",
+        "given_name",
+        "family_name",
+        "picture",
+    ];
+
+    private static bool HasProfile(JsonElement claims) =>
+        ProfileClaims.Any(name => Text(claims, name) is not null);
+
+    private static ProviderProfile ProviderProfileOf(JsonElement claims) =>
+        new(
+            DisplayName.FromProvider(
+                Text(claims, "name"),
+                Text(claims, "given_name"),
+                Text(claims, "family_name")
+            ),
+            Text(claims, "picture")
+        );
+
+    private async Task<JsonElement?> OptionalUserInfoAsync(
+        OpenIdConnectConfiguration configuration,
+        string accessToken,
+        string subject,
+        CancellationToken cancellationToken
+    )
+    {
+        if (string.IsNullOrEmpty(configuration.UserInfoEndpoint))
+            return null;
+        try
+        {
+            return await UserInfoAsync(configuration, accessToken, subject, cancellationToken);
+        }
+        catch (Exception error)
+            when (error is not OperationCanceledException
+                || !cancellationToken.IsCancellationRequested
+            )
+        {
+            return null;
+        }
     }
 
     private async Task<OpenIdConnectConfiguration> DiscoverAsync(

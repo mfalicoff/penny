@@ -12,6 +12,7 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public const string HistoryTable = "__EFMigrationsHistory";
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserAvatar> UserAvatars => Set<UserAvatar>();
     public DbSet<OidcIdentity> OidcIdentities => Set<OidcIdentity>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<OidcAttempt> OidcAttempts => Set<OidcAttempt>();

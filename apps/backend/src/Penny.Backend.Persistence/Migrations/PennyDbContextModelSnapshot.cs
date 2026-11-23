@@ -19,7 +19,7 @@ namespace Penny.Backend.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("penny")
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
@@ -2160,11 +2160,43 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("id")
                         .UseCollation("C");
 
+                    b.Property<bool>("AvatarFromProvider")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("avatar_from_provider");
+
+                    b.Property<byte[]>("AvatarSourceHash")
+                        .HasColumnType("bytea")
+                        .HasColumnName("avatar_source_hash");
+
+                    b.Property<string>("AvatarVersion")
+                        .HasColumnType("text")
+                        .HasColumnName("avatar_version")
+                        .UseCollation("C");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text")
+                        .HasColumnName("display_name")
+                        .UseCollation("C");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email")
                         .UseCollation("C");
+
+                    b.Property<bool>("NameFromProvider")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("name_from_provider");
+
+                    b.Property<bool>("NamePromptDismissed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("name_prompt_dismissed");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -2172,12 +2204,51 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("password")
                         .UseCollation("C");
 
+                    b.Property<DateTimeOffset?>("PasswordChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("password_changed_at");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("users", "penny");
+                    b.ToTable("users", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_users_avatar_source_hash", "avatar_source_hash IS NULL OR length(avatar_source_hash) = 32");
+
+                            t.HasCheckConstraint("ck_users_avatar_version", "avatar_version IS NULL OR avatar_version ~ '^[0-9a-f]{32}$'");
+
+                            t.HasCheckConstraint("ck_users_display_name", "display_name IS NULL OR length(display_name) BETWEEN 1 AND 60");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.UserAvatar", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Mime")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("mime")
+                        .UseCollation("C");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("user_avatars", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_user_avatars_content", "length(content) BETWEEN 1 AND 1048576");
+
+                            t.HasCheckConstraint("ck_user_avatars_mime", "mime = 'image/webp'");
+                        });
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Household", b =>
@@ -2545,6 +2616,15 @@ namespace Penny.Backend.Persistence.Migrations
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.UserAvatar", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithOne()
+                        .HasForeignKey("Penny.Backend.Persistence.Schema.Entities.UserAvatar", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

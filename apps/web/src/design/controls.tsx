@@ -1,4 +1,4 @@
-import { useId, type ButtonHTMLAttributes, type ReactNode, type Ref } from "react";
+import { useId, useState, type ButtonHTMLAttributes, type ReactNode, type Ref } from "react";
 import { Icon, type IconName } from "./Icon";
 
 /**
@@ -171,11 +171,29 @@ export function Badge({ tone = "neutral", icon, children }: { tone?: Tone; icon?
   );
 }
 
-/** Gray monogram, like iOS Contacts (kit `Avatar`). Decorative next to a visible name. */
-export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
+/**
+ * Gray monogram, like iOS Contacts (kit `Avatar`), or the person's picture (MAZ-171) when they have
+ * one. Decorative next to a visible name. A picture that fails to load falls back to the initials.
+ */
+export function Avatar({ name, src, size = 32 }: { name: string; src?: string | undefined; size?: number }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const picture = src && failed !== src ? src : undefined;
   return (
-    <span className="pk-avatar" aria-hidden="true" style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}>
-      {initials(name)}
+    <span className={cx("pk-avatar", picture && "pk-avatar--picture")} aria-hidden="true" style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}>
+      {picture ? (
+        <img
+          src={picture}
+          alt=""
+          width={size}
+          height={size}
+          decoding="async"
+          onError={() => {
+            setFailed(picture);
+          }}
+        />
+      ) : (
+        initials(name)
+      )}
     </span>
   );
 }

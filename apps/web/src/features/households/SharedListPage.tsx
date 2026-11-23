@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
-import type { Household } from "../../api/schemas";
+import type { Household, HouseholdMember } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Avatar } from "../../design/controls";
@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { GroupToolbar, ToolButton } from "./GroupTools";
 import { CreateHouseholdDialog, JoinHouseholdDialog } from "./StartDialogs";
 import { describeLoadError } from "./errors";
-import { currentMonth, findMe, isCurrent, monthLabel, shortRange } from "./model";
+import { currentMonth, findMe, isCurrent, memberName, monthLabel, shortRange } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 
 /**
@@ -42,7 +42,7 @@ export function SharedListPage() {
     const recap = recaps[index]?.data;
     // A month with nothing shared has no row for you: you're settled there.
     const balance = me && recap ? (recap.balances.find((row) => row.userId === me.userId)?.balanceCents ?? 0) : undefined;
-    return { household, members: members.filter(isCurrent).map((member) => member.email), balance };
+    return { household, members: members.filter(isCurrent), balance };
   });
 
   const start = (
@@ -121,8 +121,8 @@ export function SharedListPage() {
 
 interface GroupRow {
   household: Household;
-  /** Current members' emails, for the avatars. */
-  members: string[];
+  /** Current members, for the avatars. */
+  members: HouseholdMember[];
   /** Your balance this month, once known. */
   balance: number | undefined;
 }
@@ -172,7 +172,7 @@ function GroupSection({ title, rows }: { title: string; rows: GroupRow[] }) {
                 <span className="group-row__meta">
                   <span className="avatars" aria-hidden="true">
                     {members.slice(0, 4).map((member) => (
-                      <Avatar key={member} name={member} size={26} />
+                      <Avatar key={member.userId} name={memberName(member)} src={member.avatarUrl} size={26} />
                     ))}
                   </span>
                   {household.trip ? shortRange(household.trip.startDate, household.trip.endDate) : `${String(household.memberCount)} ${household.memberCount === 1 ? "member" : "members"}`}

@@ -454,11 +454,6 @@
             "summary": "Delete confirms in a centered dialog over the entry dialog, not a bottom sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Members are named and initialled by email, not by name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -488,19 +483,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -548,11 +536,6 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -599,11 +582,6 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -644,11 +622,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
           {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
@@ -704,11 +677,6 @@
             "summary": "Opened from Add entry or the household's Shared expense, the form ends with Add entry's Household choice, which the card doesn't show",
             "kind": "follow-up",
             "ref": "MAZ-277"
-          },
-          {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -750,11 +718,6 @@
             "summary": "Record payment is a dialog over the household",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -784,19 +747,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -861,11 +817,6 @@
             "summary": "History is a panel of the household (?tab=history), not its own screen (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -930,11 +881,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Payers are named by their email, not the person's name, so a row's \"paid · split N ways\" line wraps",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
           {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
@@ -1024,11 +970,6 @@
             "summary": "Settings has no Notifications row: the web has no notifications (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
-          },
-          {
-            "summary": "The profile card names the account by its email, not the person’s name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -1321,6 +1262,11 @@
             "summary": "The sample-data link sits under the other links, not pinned to the bottom",
             "kind": "follow-up",
             "ref": "MAZ-257"
+          },
+          {
+            "summary": "No Privacy Policy link under the sample-data link",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       },
@@ -1355,12 +1301,19 @@
       "id": "iphone-create-account",
       "view": "registration (unique test user)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No “By creating an account you agree to the Privacy Policy.” line under Create account",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
+          }
         ]
       },
       "web": {
@@ -1381,6 +1334,11 @@
             "summary": "Create account offers SSO under an or divider, and its button names the server's configured provider (Continue with Single sign-on) (decided in MAZ-234)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "A Name field comes first, as on the newer create-account cards (iphone-create-account-providers, web-create-account) that this card predates",
+            "kind": "follow-up",
+            "ref": "MAZ-170"
           }
         ]
       }
@@ -2366,14 +2324,30 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no editable profile: no display name, picture, sign-in rows or Your data section.",
+        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
         "followUp": "MAZ-171"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no editable profile: no display name, picture, sign-in rows or Your data section.",
-        "followUp": "MAZ-171"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Profile is a page styled as the sheet; the seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
+        "deviations": [
+          {
+            "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
+            "kind": "follow-up",
+            "ref": "MAZ-172"
+          },
+          {
+            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       }
     },
     {
@@ -2382,14 +2356,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no Google sign-in and no profile from a provider.",
+        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
         "followUp": "MAZ-171"
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Google sign-in and no profile from a provider.",
-        "followUp": "MAZ-171"
+        "note": "The full-stack seeds have no account that signs in with a provider, so the read-only profile can't be captured; the web unit tests cover it."
       }
     },
     {
@@ -2398,14 +2371,24 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no profile picture.",
+        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
         "followUp": "MAZ-171"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no profile picture.",
-        "followUp": "MAZ-171"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "With a mouse the subtitle reads “Scroll to zoom, drag to move” instead of “Pinch to zoom, drag to move”; touch screens show the card’s words (decided by the owner in MAZ-171)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
@@ -2414,14 +2397,17 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no display name or name prompt.",
+        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
         "followUp": "MAZ-171"
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no display name or name prompt.",
-        "followUp": "MAZ-171"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -2436,7 +2422,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -2452,7 +2438,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up. The name field (MAZ-171) and the privacy policy line (MAZ-169) are built.",
         "followUp": "MAZ-170"
       }
     },
@@ -2614,19 +2600,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "1194x834",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -2742,11 +2721,6 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -2802,11 +2776,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The sidebar footer, People and the expense rows name people by their email, not their name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
           {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
@@ -2879,11 +2848,6 @@
             "ref": "MAZ-231"
           },
           {
-            "summary": "The profile card names the account by its email with the sync state under it, not the person’s name over the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "Appearance has no Text size row: text follows the browser (decided in MAZ-239)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -2897,11 +2861,6 @@
             "summary": "The Reduce transparency row says “your device’s”, not “your iPad’s” (decided in MAZ-239)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, not the person’s name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -3040,14 +2999,30 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no editable profile.",
+        "note": "Phase 2 of MAZ-171: the API, contract and Swift wire models are ready; the iOS screens aren't built yet.",
         "followUp": "MAZ-171"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no editable profile.",
-        "followUp": "MAZ-171"
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
+        "deviations": [
+          {
+            "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
+            "kind": "follow-up",
+            "ref": "MAZ-172"
+          },
+          {
+            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       }
     },
     {
@@ -3059,19 +3034,12 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3119,19 +3087,12 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3153,11 +3114,6 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email, with initials from the email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          },
-          {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -3174,19 +3130,12 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-93",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer and Paid by name people by their email, not their name; the long email pushes the Only you pill under its title",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3211,11 +3160,6 @@
             "summary": "The section list has no Export data: the web has no export yet (follow-up recorded on MAZ-239)",
             "kind": "follow-up",
             "ref": "MAZ-239"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, not the person’s name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -3284,19 +3228,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email, with initials from the email, and the sidebar footer names the account by its email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3309,19 +3246,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email, with initials from the email, and the sidebar footer names the account by its email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3334,19 +3264,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-93",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Members are shown by email, with initials from the email, and the sidebar footer names the account by its email",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3359,19 +3282,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-90",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3384,19 +3300,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-89",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3409,19 +3318,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-89",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3446,11 +3348,6 @@
             "summary": "The section list has no Export data item (follow-up recorded on MAZ-239)",
             "kind": "follow-up",
             "ref": "MAZ-239"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
           }
         ]
       }
@@ -3464,19 +3361,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-90",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3514,19 +3404,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person’s name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3564,19 +3447,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-87",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
-            "kind": "follow-up",
-            "ref": "MAZ-171"
-          }
         ]
       }
     },
@@ -3753,10 +3629,31 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has Settings › Profile shows only the signed-in email: no name, picture, sign-in or Your data sections.",
-        "followUp": "MAZ-171"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The seeded account has no picture, so initials show and the button reads Add picture. The footer with the server and the Privacy Policy link is built (MAZ-169).",
+        "deviations": [
+          {
+            "summary": "The Sign-in group has no Verified mark: the web has no email verification yet",
+            "kind": "follow-up",
+            "ref": "MAZ-172"
+          },
+          {
+            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          },
+          {
+            "summary": "The section list has no Privacy or Export data rows: neither page is built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       }
     },
     {
@@ -3770,7 +3667,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -3785,7 +3682,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up. The name field (MAZ-171) and the privacy policy line (MAZ-169) are built.",
         "followUp": "MAZ-170"
       }
     },

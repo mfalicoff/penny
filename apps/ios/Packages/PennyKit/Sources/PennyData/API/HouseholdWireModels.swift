@@ -53,16 +53,31 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
     /// no time zone offset.
     public var joinedOn: String?
     public var leftAt: Int64?
+    /// MAZ-171: the member's display name; absent when they have none (show the email).
+    public var displayName: String?
+    /// MAZ-171: the same-origin URL of the member's picture, loaded with the session; absent
+    /// when they have none (show initials from the name, else the email).
+    public var avatarUrl: String?
 
     public var id: String { userId }
     public var isCurrent: Bool { leftAt == nil }
 
-    public init(userId: String, email: String, joinedAt: Int64, joinedOn: String? = nil, leftAt: Int64? = nil) {
+    public init(
+        userId: String,
+        email: String,
+        joinedAt: Int64,
+        joinedOn: String? = nil,
+        leftAt: Int64? = nil,
+        displayName: String? = nil,
+        avatarUrl: String? = nil
+    ) {
         self.userId = userId
         self.email = email
         self.joinedAt = joinedAt
         self.joinedOn = joinedOn
         self.leftAt = leftAt
+        self.displayName = displayName
+        self.avatarUrl = avatarUrl
     }
 }
 

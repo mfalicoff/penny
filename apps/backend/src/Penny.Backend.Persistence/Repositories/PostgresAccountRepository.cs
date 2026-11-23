@@ -27,6 +27,49 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<StoredUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
+    {
+        await using var context = PennyDbContext.Create(source);
+        return await context
+            .Users.AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user => new StoredUser(user.Id, user.Email, user.Password))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> TryChangePasswordAsync(
+        string userId,
+        string currentHash,
+        string newHash,
+        string keepTokenHash,
+        DateTimeOffset changedAt,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        await using var transaction = await context.Database.BeginTransactionAsync(
+            cancellationToken
+        );
+        var changed = await context
+            .Users.Where(user => user.Id == userId && user.Password == currentHash)
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(user => user.Password, newHash)
+                        .SetProperty(user => user.PasswordChangedAt, changedAt),
+                cancellationToken
+            );
+        if (changed != 1)
+            return false;
+        // Push devices registered to the revoked sessions cascade in the database.
+        await context
+            .Sessions.Where(session =>
+                session.UserId == userId && session.TokenHash != keepTokenHash
+            )
+            .ExecuteDeleteAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<StoredUser?> FindByIdentityAsync(
         string issuer,
         string subject,
@@ -43,16 +86,6 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 user => user.Id,
                 (_, user) => new StoredUser(user.Id, user.Email, user.Password)
             )
-            .SingleOrDefaultAsync(cancellationToken);
-    }
-
-    public async Task<string?> FindEmailAsync(string userId, CancellationToken cancellationToken)
-    {
-        await using var context = PennyDbContext.Create(source);
-        return await context
-            .Users.AsNoTracking()
-            .Where(user => user.Id == userId)
-            .Select(user => user.Email)
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -116,6 +149,7 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 Id = user.Id,
                 Email = user.Email,
                 Password = user.Password,
+                DisplayName = user.DisplayName,
             }
         );
         context.Ledgers.Add(

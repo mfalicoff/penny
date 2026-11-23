@@ -149,6 +149,7 @@ describe("password sign-in", () => {
     renderApp("/");
     await user.click(await screen.findByRole("button", { name: "Create an account" }));
     expect(screen.getByRole("heading", { level: 1, name: "Make yourself at home" })).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Name"), "Alex Martin");
     await user.type(screen.getByLabelText("Email"), "alex@example.test");
     await user.type(screen.getByLabelText("Password"), PASSWORD);
     await user.click(screen.getByRole("button", { name: "Create account" }));
@@ -190,6 +191,7 @@ describe("password sign-in", () => {
     const user = userEvent.setup();
     renderApp("/");
     await user.click(await screen.findByRole("button", { name: "Create an account" }));
+    await user.type(screen.getByLabelText("Name"), "New Person");
     await user.type(screen.getByLabelText("Email"), "new@example.test");
     await user.type(screen.getByLabelText("Password"), PASSWORD);
     await user.click(screen.getByRole("button", { name: "Create account" }));

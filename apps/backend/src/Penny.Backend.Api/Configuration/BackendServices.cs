@@ -16,6 +16,7 @@ using Penny.Backend.Api.Search;
 using Penny.Backend.Api.Testing;
 using Penny.Backend.Application.Abstractions.InboundMail;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Abstractions.Profiles;
 using Penny.Backend.Application.Abstractions.Receipts;
 using Penny.Backend.Application.Abstractions.Search;
 using Penny.Backend.Application.Abstractions.Security;
@@ -23,12 +24,14 @@ using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.InboundMail;
 using Penny.Backend.Application.Ledgers;
+using Penny.Backend.Application.Profiles;
 using Penny.Backend.Application.Push;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
 using Penny.Backend.Persistence.InboundMail;
+using Penny.Backend.Persistence.Profiles;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Repositories;
 using Penny.Backend.Persistence.Search;
@@ -49,6 +52,7 @@ public static class BackendServices
             BackendOptions.ReadBounded(configuration, "Database:CommandTimeoutSeconds", 5, 1, 30)
         );
         builder.Services.AddSingleton(options);
+        builder.Services.AddSingleton(LegalOptions.Read(configuration));
         var controls = AddTestControls(builder);
         builder.Services.AddSingleton(_ => database.CreateDataSource());
         // First hosted service: migrate before workers and Kestrel start.
@@ -322,6 +326,8 @@ public static class BackendServices
         if (ocr.Worker)
             _ = extractor.Engine;
         services.AddSingleton<IReceiptTextExtractor>(extractor);
+        // Profile pictures (MAZ-171) use the same sandboxed libvips programs.
+        services.AddSingleton<IAvatarImageProcessor>(new AvatarImageProcessor(ocr.Engine));
         services.AddSingleton<IReceiptTextRepository, PostgresReceiptTextRepository>();
         services.AddSingleton<ReceiptTextService>();
         if (ocr.Worker)
@@ -388,32 +394,54 @@ public static class BackendServices
                 new SocketsHttpHandler
                 {
                     AllowAutoRedirect = false,
-                    // Full-stack test runs only: also trust the local provider's
-                    // throwaway certificate, pinned by its SHA-256 (MAZ-62).
-                    SslOptions = controls.OidcCertificateHash is { } pinned
-                        ? new System.Net.Security.SslClientAuthenticationOptions
-                        {
-                            RemoteCertificateValidationCallback = (_, certificate, _, errors) =>
-                                errors == System.Net.Security.SslPolicyErrors.None
-                                || (
-                                    certificate is not null
-                                    && string.Equals(
-                                        certificate.GetCertHashString(
-                                            System.Security.Cryptography.HashAlgorithmName.SHA256
-                                        ),
-                                        pinned,
-                                        StringComparison.OrdinalIgnoreCase
-                                    )
-                                ),
-                        }
-                        : new System.Net.Security.SslClientAuthenticationOptions(),
+                    SslOptions = ProviderSsl(controls),
                 }
             )
             .RemoveAllLoggers();
+        // Provider pictures (MAZ-171): no cookies, at most three https redirects, 5 seconds.
+        services
+            .AddHttpClient(ProviderPictureClient.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(5);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = true,
+                    MaxAutomaticRedirections = 3,
+                    UseCookies = false,
+                    SslOptions = ProviderSsl(controls),
+                }
+            )
+            .RemoveAllLoggers();
+        services.AddSingleton<IProviderPictureSource, ProviderPictureClient>();
         services.AddSingleton<IOidcProvider, OidcProviderClient>();
         services.AddSingleton<IOidcAttemptRepository, PostgresOidcAttemptRepository>();
         services.AddSingleton<OidcService>();
     }
+
+    // Full-stack test runs only: also trust the local provider's throwaway certificate,
+    // pinned by its SHA-256 (MAZ-62).
+    private static System.Net.Security.SslClientAuthenticationOptions ProviderSsl(
+        TestControlOptions controls
+    ) =>
+        controls.OidcCertificateHash is { } pinned
+            ? new System.Net.Security.SslClientAuthenticationOptions
+            {
+                RemoteCertificateValidationCallback = (_, certificate, _, errors) =>
+                    errors == System.Net.Security.SslPolicyErrors.None
+                    || (
+                        certificate is not null
+                        && string.Equals(
+                            certificate.GetCertHashString(
+                                System.Security.Cryptography.HashAlgorithmName.SHA256
+                            ),
+                            pinned,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    ),
+            }
+            : new System.Net.Security.SslClientAuthenticationOptions();
 
     // Shared by the HTTP host and the `reset-password` maintenance command.
     public static PasswordResetPolicy PasswordResetPolicyFor(AuthOptions auth) =>
@@ -430,6 +458,8 @@ public static class BackendServices
         services.AddSingleton<IPasswordHasher>(_ => new IdentityPasswordHasher());
         services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
         services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
+        services.AddSingleton<IProfileRepository, PostgresProfileRepository>();
+        services.AddSingleton<ProfileService>();
         services.AddSingleton<AuthService>();
         services.AddSingleton(PasswordResetPolicyFor(auth));
         services.AddSingleton<IPasswordResetRepository, PostgresPasswordResetRepository>();

@@ -7,7 +7,7 @@ import { usePageTitle, usePageTitleStyle, useTopbarSlot } from "../../app/shell/
 import { InboxNavItem, SyncLine, useRecurringCount } from "../../app/shell/Sidebar";
 import { TABLET, TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { usePreferences, type Theme } from "../../app/preferences";
-import { useAccountEmail } from "../../auth/account";
+import { useAccountEmail, useAccountMe } from "../../auth/account";
 import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { Avatar, cx } from "../../design/controls";
 import { Icon, type IconName } from "../../design/Icon";
@@ -103,7 +103,7 @@ function SectionList({ layout }: { layout: SettingsLayoutKind }) {
 
   return (
     <>
-      <ProfileCard />
+      <ProfileCard layout={layout} />
       {layout === "phone" ? <ManageGroup /> : null}
       <nav aria-label="Settings sections" className="settings__nav">
         {/* The iPad card has no footnote under Preferences; the iPhone card does. */}
@@ -121,17 +121,22 @@ function SectionList({ layout }: { layout: SettingsLayoutKind }) {
   );
 }
 
-/** Who is signed in and whether the ledger is synced; opens Profile. */
-function ProfileCard() {
+/**
+ * Who is signed in, by name (else email, MAZ-171), with their picture; opens Profile. Phones add
+ * whether the ledger is synced (card `iphone-settings`), tablets the email under the name
+ * (card `ipad-settings`).
+ */
+function ProfileCard({ layout }: { layout: SettingsLayoutKind }) {
   const email = useAccountEmail();
+  const me = useAccountMe();
   const demo = useIsDemo();
-  const name = demo ? "Demo" : email;
+  const name = demo ? "Demo" : (me.displayName ?? email);
   return (
     <Link to="/settings/profile" className="settings__profile" activeOptions={{ exact: true }}>
-      <span className="visually-hidden">Profile,</span> <Avatar name={name} size={52} />
+      <span className="visually-hidden">Profile,</span> <Avatar name={name} src={demo ? undefined : me.avatarUrl} size={52} />
       <span className="settings__profile-body">
         <span className="settings__profile-name">{name}</span>
-        <SyncLine />
+        {layout === "tablet" && !demo ? <span className="settings__profile-email">{email}</span> : <SyncLine />}
       </span>
       <Icon name="chevron-forward" size={16} />
     </Link>

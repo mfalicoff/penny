@@ -71,8 +71,34 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         var identity = await info.Content.ReadFromJsonAsync<JsonElement>(Ct);
         identity.GetProperty("name").GetString().ShouldBe("penny");
         identity.GetProperty("version").GetString().ShouldBe(ServerInfo.CurrentVersion);
+        identity.GetProperty("privacyPolicyUrl").ValueKind.ShouldBe(JsonValueKind.Null);
         using var ready = await Client.GetAsync("/api/ready", Ct);
         ready.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task whenPrivacyPolicyConfigured_Info_ShouldPublishOperatorUrl()
+    {
+        await using var factory = Fixture.Factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Legal:PrivacyPolicyUrl", "https://penny.example.com/privacy")
+        );
+        using var client = factory.CreateClient();
+        using var info = await client.GetAsync("/api/info", Ct);
+        info.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await info.Content.ReadFromJsonAsync<JsonElement>(Ct))
+            .GetProperty("privacyPolicyUrl")
+            .GetString()
+            .ShouldBe("https://penny.example.com/privacy");
+    }
+
+    [Fact]
+    public async Task whenPrivacyPolicyUrlInvalid_CreateHost_ShouldIdentifySetting()
+    {
+        await using var factory = Fixture.Factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Legal:PrivacyPolicyUrl", "javascript:alert(1)")
+        );
+        var error = Should.Throw<InvalidOperationException>(() => factory.CreateClient());
+        error.Message.ShouldContain("Legal__PrivacyPolicyUrl");
     }
 
     [Theory]
