@@ -18,6 +18,7 @@ const API_VERSION = /^v\d{1,2}$/;
 // Fingerprinted bundles (/assets/index-Bx3a9.js) so stack traces stay readable.
 const ASSET = /^[\w.-]+\.(?:js|mjs|css|map|woff2?|ttf|svg|png|json)$/;
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s"'<>`]+/g;
+const CODE_IN_TEXT = /([?#&])(code|token|state)=[^\s&#"'<>`]+/gi;
 
 function scrubPath(path: string): string {
   return path
@@ -45,6 +46,8 @@ export function scrubUrl(value: string): string {
 export function scrubText(text: string): string {
   return text
     .replace(URL_IN_TEXT, (url) => scrubUrl(url))
+    // Codes and tokens after a path without an origin, such as `/reset-password#code=…` (MAZ-124).
+    .replace(CODE_IN_TEXT, "$1$2=<code>")
     .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "<email>")
     .replace(/"[^"]*"|'[^']*'|`[^`]*`|“[^”]*”/g, "<text>")
     .replace(/(?<![\w:/.-])[-+]?\d[\d,.]*(?![\w])/g, "<n>");

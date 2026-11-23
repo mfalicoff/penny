@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useId, useRef, useState, type SyntheticEvent } from "react";
+import { Link } from "@tanstack/react-router";
+import { useId, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { z } from "zod";
 import { login, oidcConfigQuery, register, type Credentials } from "../../api/auth";
 import { ApiError } from "../../api/client";
+import { useEmailEnabled } from "../../api/info";
 import { DISPLAY_NAME_MAX, normalizeDisplayName, PROFILE_MESSAGES } from "../../api/profile";
 import { useSessionNotice } from "../../auth/account";
 import { beginSession } from "../../auth/lifecycle";
@@ -34,27 +36,7 @@ export function AuthScreen() {
   const creating = mode === "create-account";
 
   return (
-    <div className="auth">
-      {/* Wide windows only (card web-sign-in); phones open straight on the form, as on iphone-sign-in. */}
-      <section className="auth__brand" aria-label="About Penny">
-        <div className="auth__glow" aria-hidden="true" />
-        <p className="brand auth__logo">
-          <span className="logo">
-            <Icon name="leaf" size={18} weight={40} />
-          </span>
-          <span>penny.</span>
-        </p>
-        <p className="auth__tagline">
-          A little more clarity <br />
-          about your money.
-        </p>
-        <p className="auth__sub">Personal and shared expenses on your own server. Penny never connects to your bank.</p>
-        <BrandPreview />
-      </section>
-      <main className={cx("auth__form", creating && "auth__form--create")} id="main" tabIndex={-1}>
-        {/* Phones: the copper glow behind the header and, on sign-in, the brand tile (iphone-sign-in, iphone-create-account). */}
-        <div className="auth__phone-glow" aria-hidden="true" />
-        <div className="auth__body">
+    <AuthFrame className={cx(creating && "auth__form--create")} footer={creating ? null : <DemoButton />}>
           {/* iphone-create-account: a round glass Back to sign in above the title. */}
           {creating ? (
             <button
@@ -85,6 +67,10 @@ export function AuthScreen() {
             <p className="notice" role="status">
               Your session ended. Sign in again to continue. Changes waiting to sync are kept on this device.
             </p>
+          ) : notice === "password-reset" ? (
+            <p className="notice" role="status">
+              Your password changed and every device was signed out. Sign in with the new password.
+            </p>
           ) : null}
           <CredentialsForm key={mode} mode={mode} />
           <SsoButton />
@@ -101,8 +87,39 @@ export function AuthScreen() {
               {creating ? "Sign in" : "Create an account"}
             </button>
           </p>
-        </div>
-        {creating ? null : <DemoButton />}
+    </AuthFrame>
+  );
+}
+
+/**
+ * The split sign-in layout (cards `web-sign-in`, `web-forgot-password-request`,
+ * `web-password-reset`): the brand panel on wide windows and the form on its solid panel, or the
+ * form alone over the copper glow on phones. `footer` is pinned to the bottom of the form side.
+ */
+export function AuthFrame({ className, footer, children }: { className?: string | undefined; footer?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="auth">
+      {/* Wide windows only (card web-sign-in); phones open straight on the form, as on iphone-sign-in. */}
+      <section className="auth__brand" aria-label="About Penny">
+        <div className="auth__glow" aria-hidden="true" />
+        <p className="brand auth__logo">
+          <span className="logo">
+            <Icon name="leaf" size={18} weight={40} />
+          </span>
+          <span>penny.</span>
+        </p>
+        <p className="auth__tagline">
+          A little more clarity <br />
+          about your money.
+        </p>
+        <p className="auth__sub">Personal and shared expenses on your own server. Penny never connects to your bank.</p>
+        <BrandPreview />
+      </section>
+      <main className={cx("auth__form", className)} id="main" tabIndex={-1}>
+        {/* Phones: the copper glow behind the header and, on sign-in, the brand tile (iphone-sign-in, iphone-create-account). */}
+        <div className="auth__phone-glow" aria-hidden="true" />
+        <div className="auth__body">{children}</div>
+        {footer}
       </main>
     </div>
   );
@@ -210,7 +227,15 @@ function CredentialsForm({ mode }: { mode: Mode }) {
           />
         </div>
         <div className="auth__field">
-          <label htmlFor={ids.password}>Password</label>
+          {creating ? (
+            <label htmlFor={ids.password}>Password</label>
+          ) : (
+            // `web-sign-in-providers`: Forgot password? at the end of the label row.
+            <span className="auth__label-row">
+              <label htmlFor={ids.password}>Password</label>
+              <ForgotPasswordLink />
+            </span>
+          )}
           <input
             ref={passwordRef}
             id={ids.password}
@@ -251,6 +276,20 @@ function CredentialsForm({ mode }: { mode: Mode }) {
         {submit.isPending ? (creating ? "Creating account…" : "Signing in…") : creating ? "Create account" : "Sign in"}
       </button>
     </form>
+  );
+}
+
+/**
+ * Forgot password? (MAZ-124) asks for a reset link by email. A server that sends no email shows no
+ * link (`web-sign-in`): its administrator gives the person a reset code for `/reset-password`.
+ */
+function ForgotPasswordLink() {
+  const emailEnabled = useEmailEnabled();
+  if (!emailEnabled) return null;
+  return (
+    <Link to="/forgot-password" className="auth__forgot">
+      Forgot password?
+    </Link>
   );
 }
 

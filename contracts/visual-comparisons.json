@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-22",
+  "reviewedAt": "2026-11-23",
   "cards": [
     {
       "id": "system-foundations",
@@ -3501,10 +3501,25 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-84",
-        "note": "The web has no password reset: the server takes an operator-issued reset code (POST /api/auth/password-reset) and has no reset screen.",
-        "followUp": "MAZ-238"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No server chip (penny.example.com · Change) above the title: the web always uses the server it was opened from, as on web-sign-in (MAZ-234), but that adaptation is approved only for web-sign-in",
+            "kind": "follow-up",
+            "ref": "MAZ-124"
+          },
+          {
+            "summary": "No Email field above Reset code: POST /api/auth/password-reset takes only the code and the new password, so the page asks for no email",
+            "kind": "follow-up",
+            "ref": "MAZ-124"
+          }
+        ]
       }
     },
     {
@@ -3725,10 +3740,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no password reset by email (the server sends no email).",
-        "followUp": "MAZ-124"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3740,10 +3758,20 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-124) for the owner's review. The web has no password reset by email yet.",
-        "followUp": "MAZ-124"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No server chip (penny.example.com · Change) above the title: the web always uses the server it was opened from, as on web-sign-in (MAZ-234), but that adaptation is approved only for web-sign-in",
+            "kind": "follow-up",
+            "ref": "MAZ-124"
+          }
+        ]
       }
     },
     {
@@ -3755,10 +3783,20 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-124) for the owner's review. The web has no password reset by email yet.",
-        "followUp": "MAZ-124"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No server chip (penny.example.com · Change) above the title: the web always uses the server it was opened from, as on web-sign-in (MAZ-234), but that adaptation is approved only for web-sign-in",
+            "kind": "follow-up",
+            "ref": "MAZ-124"
+          }
+        ]
       }
     },
     {
@@ -3770,10 +3808,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no invites by email (the server sends no email).",
-        "followUp": "MAZ-124"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

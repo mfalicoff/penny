@@ -129,6 +129,11 @@ describe("audit sentences", () => {
     });
     expect(describeAudit(event("member.joined", null, { userId: "b" }), name, money, "trip").summary).toBe("bea@example.test joined the trip");
   });
+
+  it("describes invitations by email without naming the address", () => {
+    expect(describeAudit(event("invite.emailed", null, { expiresAt: 1_800_000_000_000 }, "a"), name, money)).toMatchObject({ summary: "You emailed an invitation", changes: [] });
+    expect(describeAudit(event("invite.revoked", { expiresAt: 1_800_000_000_000 }, null), name, money).summary).toBe("bea@example.test revoked an invitation");
+  });
 });
 
 describe("staleChange names why a share payment went stale", () => {

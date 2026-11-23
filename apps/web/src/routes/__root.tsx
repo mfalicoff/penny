@@ -5,6 +5,7 @@ import { usePageTitle } from "../app/shell/pageTitle";
 import { AuthGate } from "../auth/account";
 import { Button } from "../design/controls";
 import { EmptyState, ToastProvider } from "../design/states";
+import { PendingJoin } from "../features/households/PendingJoin";
 import { OfflineLedgerProvider } from "../offline/OfflineLedgerProvider";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -13,10 +14,16 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   errorComponent: RouteError,
 });
 
-/** Everything but the OIDC callback needs a signed-in account; the callback finishes sign-in itself. */
+/**
+ * Pages that work without an account: the OIDC callback finishes sign-in itself, and password
+ * reset (MAZ-123, MAZ-124) is for people who can't sign in.
+ */
+const PUBLIC_PATHS = new Set(["/auth/callback", "/forgot-password", "/reset-password"]);
+
+/** Everything but the public pages needs a signed-in account. */
 function RootLayout() {
-  const isCallback = useRouterState({ select: (state) => state.location.pathname === "/auth/callback" });
-  if (isCallback) return <Outlet />;
+  const isPublic = useRouterState({ select: (state) => PUBLIC_PATHS.has(state.location.pathname) });
+  if (isPublic) return <Outlet />;
   return (
     <AuthGate>
       {/* Inside the gate, so a toast (and its Undo) never outlives the session it belongs to. */}
@@ -24,6 +31,8 @@ function RootLayout() {
         {/* The account's durable offline ledger (MAZ-87), one per signed-in account. */}
         <OfflineLedgerProvider>
           <AppShell />
+          {/* An emailed invitation's code (MAZ-124) opens the join dialog once signed in. */}
+          <PendingJoin />
         </OfflineLedgerProvider>
       </ToastProvider>
     </AuthGate>

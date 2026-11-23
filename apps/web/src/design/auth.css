@@ -663,6 +663,13 @@
     border-radius: 12px;
   }
 
+  /* The cards' focused field: the solid surface with a copper ring and a soft halo. */
+  .auth__field:focus-within {
+    outline-color: transparent;
+    background: var(--pk-surface);
+    box-shadow: inset 0 0 0 1.5px var(--pk-tint), 0 0 0 4px var(--pk-tint-soft);
+  }
+
   .auth__field label {
     font-weight: 400;
   }
@@ -775,5 +782,188 @@
 
   .auth__privacy-dot {
     display: inline;
+  }
+}
+
+/*
+ * Forgot password? at the end of the password label row (web-sign-in-providers, MAZ-124): small
+ * copper text, with a hit area that reaches the 44px minimum without moving the label.
+ */
+.auth__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth__forgot {
+  position: relative;
+  /* At least 24px tall itself (WCAG 2.5.8) without moving the label row. */
+  margin: -6px -8px;
+  padding: 6px 8px;
+  color: var(--pk-tint-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Touch screens get the full 44px; the label row is short, so the target reaches above the field. */
+@media (pointer: coarse) {
+  .auth__forgot::after {
+    position: absolute;
+    inset: -16px -2px 0;
+    content: "";
+  }
+}
+
+/* Focus on the link outlines the link, not the whole field. */
+.auth__field:has(.auth__forgot:focus-visible) {
+  outline: none;
+}
+
+.auth__forgot:hover {
+  text-decoration: underline;
+}
+
+.auth__forgot:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/*
+ * Password reset (MAZ-123, MAZ-124; cards web-forgot-password-request, web-forgot-password,
+ * web-password-reset, web-password-reset-link): the sign-in layout with the title and fields
+ * left-aligned, the administrator's-code line and Back to sign in centered under the form.
+ */
+.auth__form--reset .auth__lede {
+  line-height: 1.45;
+}
+
+.auth__alt {
+  margin: 6px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.auth__alt-link,
+.auth__back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  color: var(--pk-tint-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth__alt-link {
+  min-height: 0;
+  padding: 12px 4px;
+  margin: -12px 0;
+}
+
+.auth__back-link {
+  gap: 4px;
+  justify-self: center;
+  margin-top: 2px;
+  font-size: 0.875rem;
+}
+
+.auth__alt-link:hover,
+.auth__back-link:hover {
+  text-decoration: underline;
+}
+
+.auth__sent {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.auth__sent p {
+  margin: 0;
+}
+
+.auth__sent strong {
+  display: block;
+  font-weight: 600;
+}
+
+.auth__sent span:not(.icon) {
+  color: var(--pk-label-2);
+}
+
+.auth__sent-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--pk-tint-soft);
+  color: var(--pk-tint);
+}
+
+.auth__sent-icon .icon {
+  color: var(--pk-tint);
+}
+
+.button.auth__resend {
+  min-height: 46px;
+  border-radius: 12px;
+  background: var(--pk-surface);
+  color: var(--pk-label);
+  box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+  font-size: 0.96875rem;
+}
+
+.button.auth__resend--waiting,
+.button.auth__resend--waiting[aria-disabled="true"] {
+  opacity: 1;
+  color: var(--pk-label-3);
+  cursor: default;
+}
+
+.auth__resend .pk-num {
+  margin-left: 0.35em;
+}
+
+.auth__cta {
+  min-height: 46px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+.auth__field input.auth__code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "• At least 10 characters" under the new password (web-password-reset): a small filled dot until met. */
+.auth__requirement--reset {
+  margin: -4px 6px 0;
+}
+
+.auth__requirement--reset .auth__requirement-dot {
+  width: 6px;
+  height: 6px;
+  margin: 0 4px;
+  border: 0;
+  background: var(--pk-label-3);
+}
+
+@media (min-width: 900px) {
+  .auth__form--reset .auth__fields .button[type="submit"] {
+    margin-top: 6px;
   }
 }

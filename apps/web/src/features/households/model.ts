@@ -313,6 +313,13 @@ export function describeAudit(event: AuditEvent, name: (userId: string) => strin
     case "invite.created":
       summary = `${actor} created an invite code`;
       break;
+    // Invitations by email (MAZ-124). The audit keeps no address, so neither does the line.
+    case "invite.emailed":
+      summary = `${actor} emailed an invitation`;
+      break;
+    case "invite.revoked":
+      summary = `${actor} revoked an invitation`;
+      break;
     case "member.joined":
       emphasis = [name(text(after.userId, event.actorId))];
       summary = `${emphasis[0] ?? ""} joined the ${group}`;

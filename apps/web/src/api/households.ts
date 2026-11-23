@@ -4,6 +4,8 @@ import { apiFetch } from "./client";
 import { userKey } from "./keys";
 import {
   auditEventSchema,
+  emailInviteListSchema,
+  emailInviteSchema,
   householdDetailSchema,
   householdSchema,
   inviteSchema,
@@ -119,6 +121,24 @@ export function normalizeInviteCode(code: string): string {
 export const renameHousehold = (householdId: string, name: string) =>
   apiFetch(base(householdId), householdEnvelope, { method: "PATCH", body: { name } });
 export const createInvite = (householdId: string) => apiFetch(`${base(householdId)}/invites`, inviteSchema, { method: "POST" });
+
+/* ---------- invitations by email (MAZ-124) ---------- */
+
+/** The creator's invitations by email. Only asked for while the server sends email. */
+export const emailInvitesQuery = (email: string, householdId: string) =>
+  queryOptions({
+    queryKey: [...householdKey(email, householdId), "email-invites"],
+    queryFn: ({ signal }) => apiFetch(`${base(householdId)}/email-invites`, emailInviteListSchema, { signal }),
+    select: (data) => data.items,
+  });
+
+export const sendEmailInvite = (householdId: string, address: string) =>
+  apiFetch(`${base(householdId)}/email-invites`, emailInviteSchema, { method: "POST", body: { email: address } });
+export const resendEmailInvite = (householdId: string, inviteId: string) =>
+  apiFetch(`${base(householdId)}/email-invites/${segment(inviteId)}/resend`, emailInviteSchema, { method: "POST" });
+export const revokeEmailInvite = (householdId: string, inviteId: string) =>
+  apiFetch(`${base(householdId)}/email-invites/${segment(inviteId)}`, okSchema, { method: "DELETE" });
+
 export const leaveHousehold = (householdId: string) => apiFetch(`${base(householdId)}/leave`, okSchema, { method: "POST" });
 export const removeMember = (householdId: string, userId: string) =>
   apiFetch(`${base(householdId)}/members/${segment(userId)}`, okSchema, { method: "DELETE" });

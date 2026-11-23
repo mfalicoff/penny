@@ -1,15 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
-import { archiveHousehold, createInvite, forgetHousehold, leaveHousehold, refreshHousehold, removeMember, renameHousehold } from "../../api/households";
-import type { HouseholdMember, Invite, MonthRecap } from "../../api/schemas";
+import { useId, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
+import { archiveHousehold, forgetHousehold, leaveHousehold, refreshHousehold, removeMember, renameHousehold } from "../../api/households";
+import { useEmailEnabled } from "../../api/info";
+import type { HouseholdMember, MonthRecap } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { Avatar, Button, Card } from "../../design/controls";
-import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeSharedError } from "./errors";
+import { InviteEmailDialog } from "./InviteEmailDialog";
+import { InviteCard } from "./InviteCode";
 import type { MoreItem } from "./GroupTools";
 import { groupListPath } from "./links";
 import { dayLabel, isCurrent, localDate, memberName, monthLabel, shortDate } from "./model";
@@ -69,6 +71,9 @@ export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: Ho
   const membersId = useId();
   const inviteId = useId();
   const formerId = useId();
+  // Invitations by email (MAZ-124) while the server sends email; codes otherwise, as before.
+  const emailEnabled = useEmailEnabled();
+  const [emailing, setEmailing] = useState(false);
 
   return (
     <div className="household-columns">
@@ -97,7 +102,7 @@ export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: Ho
             <div className="shared-group__head">
               <h2 id={inviteId}>Invite someone</h2>
             </div>
-            <InviteCard view={view} />
+            <InviteCard view={view} onEmail={emailEnabled ? () => { setEmailing(true); } : undefined} />
           </section>
         ) : null}
         <p className="shared-note">
@@ -137,6 +142,7 @@ export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: Ho
         </div>
       ) : null}
       {actions.dialogs}
+      {emailing && emailEnabled ? <InviteEmailDialog view={view} onClose={() => { setEmailing(false); }} /> : null}
     </div>
   );
 }
@@ -145,89 +151,6 @@ export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: Ho
 function joinedLabel(member: HouseholdMember): string {
   const day = member.joinedOn ?? localDate(new Date(member.joinedAt));
   return day.slice(0, 4) === localDate().slice(0, 4) ? shortDate(day) : dayLabel(day, true).replace(/^\w+, /, "");
-}
-
-/** Groups the 10-character code for reading aloud and typing: "7F3A9 C01B2". */
-export const formatInviteCode = (code: string) => `${code.slice(0, 5)} ${code.slice(5)}`;
-
-function useNow(active: boolean) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!active) return;
-    const timer = window.setInterval(() => { setNow(Date.now()); }, 1000);
-    return () => { window.clearInterval(timer); };
-  }, [active]);
-  return now;
-}
-
-/**
- * Invite someone: a code that works for 10 minutes and admits anyone who has it until it expires
- * or is replaced. The card's code, amber countdown and Copy; the web has no share sheet (MAZ-229).
- */
-function InviteCard({ view }: { view: HouseholdView }) {
-  const [invite, setInvite] = useState<Invite | null>(null);
-  const [copied, setCopied] = useState(false);
-  const now = useNow(invite !== null);
-  const create = useMutation({
-    mutationKey: ["households", "invite"],
-    mutationFn: () => createInvite(view.householdId),
-    onSuccess: (next) => {
-      setInvite(next);
-      setCopied(false);
-    },
-  });
-  const remaining = invite ? Math.max(0, invite.expiresAt - now) : 0;
-  const expired = invite !== null && remaining === 0;
-  const clock = `${String(Math.floor(remaining / 60_000))}:${String(Math.floor((remaining % 60_000) / 1000)).padStart(2, "0")}`;
-
-  return (
-    <div className="invite-code">
-      {create.isError ? <SaveErrorBanner message={describeSharedError(create.error).message} /> : null}
-      {invite && !expired ? (
-        <>
-          <span className="invite-code__hint">They enter this code in Shared → Join</span>
-          <span className="invite-code__value" aria-label={`Invite code ${invite.code.split("").join(" ")}`}>
-            {formatInviteCode(invite.code)}
-          </span>
-          <span className="invite-code__expires">
-            <Icon name="time" size={14} />
-            Expires in {clock}
-          </span>
-          <div className="invite-code__actions">
-            <Button
-              icon="copy"
-              onClick={() => {
-                void navigator.clipboard
-                  .writeText(invite.code)
-                  .then(() => { setCopied(true); })
-                  .catch(() => { setCopied(false); });
-              }}
-            >
-              Copy
-            </Button>
-          </div>
-          <span role="status" className="muted">
-            {copied ? "Copied" : ""}
-          </span>
-        </>
-      ) : (
-        <>
-          {expired ? (
-            <p role="status" className="invite-code__hint">
-              That code expired. Create a new one when the person is ready to join.
-            </p>
-          ) : (
-            <p className="invite-code__hint">Create a code when the person is ready. It works for 10 minutes, and a new code replaces the old one.</p>
-          )}
-          <div className="invite-code__actions">
-            <Button variant="primary" icon="person-add" busy={create.isPending} onClick={() => { create.mutate(); }}>
-              {expired ? "Create a new code" : "Create invite code"}
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
-  );
 }
 
 function ConfirmDialog({

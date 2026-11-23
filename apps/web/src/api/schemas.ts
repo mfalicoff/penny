@@ -73,6 +73,18 @@ export const passwordChangeSchema = z.object({
 });
 export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 
+/* ---------- password reset (MAZ-124) ---------- */
+
+/** A reset code: 64 lowercase hex characters, from the operator or from the emailed link. */
+export const RESET_CODE = /^[a-f0-9]{64}$/;
+
+/** `POST /api/auth/password-reset/request` body: a signed-out request for a reset email. */
+export const passwordResetRequestSchema = z.object({ email: z.string().min(3).max(254) });
+
+/** `POST /api/auth/password-reset` body: redeem a reset code. */
+export const passwordResetSchema = z.object({ token: z.string().regex(RESET_CODE), password: z.string().min(10).max(256) });
+export type PasswordReset = z.infer<typeof passwordResetSchema>;
+
 /** `PATCH /api/profile` body: absent fields change nothing; a null name clears it. */
 export const profileUpdateSchema = z.object({
   displayName: z.string().max(1000).nullable().optional(),
@@ -224,6 +236,21 @@ export type HouseholdInput = z.infer<typeof householdInputSchema>;
 export const joinSchema = z.object({ code: z.string().regex(/^[A-Fa-f0-9]{10}$/), timezoneOffsetMinutes: tzOffset.optional() });
 export const inviteSchema = z.object({ code: z.string().regex(/^[A-F0-9]{10}$/), expiresAt: instant });
 export type Invite = z.infer<typeof inviteSchema>;
+
+/** Invitations by email (MAZ-124): what the creator sent, newest first. Times are Unix ms. */
+export const emailInviteStatusSchema = z.enum(["sending", "waiting", "expired", "joined", "failed"]);
+export type EmailInviteStatus = z.infer<typeof emailInviteStatusSchema>;
+export const emailInviteInputSchema = z.object({ email: z.string().min(3).max(254) });
+export const emailInviteSchema = z.object({
+  id,
+  email: z.string().min(3).max(254),
+  status: emailInviteStatusSchema,
+  createdAt: instant,
+  sentAt: instant.nullable(),
+  expiresAt: instant.nullable(),
+});
+export type EmailInvite = z.infer<typeof emailInviteSchema>;
+export const emailInviteListSchema = z.object({ items: z.array(emailInviteSchema) });
 
 export const sharedCategorySchema = z.object({
   name: z.string().min(1).max(50),

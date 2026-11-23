@@ -16,6 +16,14 @@ describe("scrubUrl", () => {
     expect(scrubUrl("/api/auth/password-reset")).toBe("/api/auth/password-reset");
   });
 
+  it("drops the codes in the emailed reset and invitation links (MAZ-124)", () => {
+    const reset = "3f9a1c07e2b45d68a0c1f7e93b2d4a6c8e05f1b7d39a2c4e6f80b1d3a5c7e9f2";
+    expect(scrubUrl(`https://penny.example.com/reset-password#code=${reset}`)).toBe("https://penny.example.com/reset-password");
+    expect(scrubUrl(`/reset-password#code=${reset}`)).toBe("/reset-password");
+    expect(scrubUrl("https://penny.example.com/join#code=7F3A9C01B2")).toBe("https://penny.example.com/join");
+    expect(scrubText(`Failed at https://penny.example.com/join#code=7F3A9C01B2 and /reset-password#code=${reset}`)).not.toMatch(/7F3A9C01B2|3f9a1c07/);
+  });
+
   it("keeps asset file names so stack traces stay readable", () => {
     expect(scrubUrl("https://penny.example.com/assets/index-Bx3a9_q.js")).toBe("https://penny.example.com/assets/index-Bx3a9_q.js");
   });
