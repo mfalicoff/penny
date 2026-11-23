@@ -62,6 +62,17 @@ struct ShellTests {
         #expect(SyncText.line(shell.workspace.sync) == "Demo · changes are temporary")
     }
 
+    @Test("whenTheLedgerRuleLocksTheCurrency_CurrencyPage_ShouldUseTheCardsFootnote")
+    func currencyFooter() {
+        // iphone-currency: the same sentence as Settings' Preferences footnote.
+        #expect(
+            CurrencySettingsView.footer(LedgerRuleError.currencyLocked.message) == CurrencyPolicy.settingsFootnote)
+        #expect(
+            CurrencySettingsView.footer("Currency is locked while you're in a household.")?.contains("household")
+                == true)
+        #expect(CurrencySettingsView.footer(nil) == nil)
+    }
+
     @Test("whenTheLedgerHasEntriesOrAHousehold_CurrencyPolicy_ShouldLockWithTheAPIsReason")
     func currencyLock() {
         let empty = Ledger()
