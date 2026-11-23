@@ -72,6 +72,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         identity.GetProperty("name").GetString().ShouldBe("penny");
         identity.GetProperty("version").GetString().ShouldBe(ServerInfo.CurrentVersion);
         identity.GetProperty("privacyPolicyUrl").ValueKind.ShouldBe(JsonValueKind.Null);
+        identity.GetProperty("emailEnabled").GetBoolean().ShouldBeFalse();
         using var ready = await Client.GetAsync("/api/ready", Ct);
         ready.StatusCode.ShouldBe(HttpStatusCode.OK);
     }

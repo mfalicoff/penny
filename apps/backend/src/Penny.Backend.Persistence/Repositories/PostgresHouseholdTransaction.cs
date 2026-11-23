@@ -214,9 +214,7 @@ internal class PostgresHouseholdTransaction(
         ?? await context
             .HouseholdEmailInvites.AsNoTracking()
             .Where(invite =>
-                invite.CodeHash == codeHash
-                && invite.JoinedAt == null
-                && invite.RevokedAt == null
+                invite.CodeHash == codeHash && invite.JoinedAt == null && invite.RevokedAt == null
             )
             .Select(invite => new StoredInvite(
                 invite.HouseholdId,
@@ -354,7 +352,9 @@ internal class PostgresHouseholdTransaction(
     public async Task RevokeEmailInviteAsync(string inviteId, DateTimeOffset now)
     {
         await FinishInviteMailAsync(
-            context.HouseholdEmailInvites.Where(invite => invite.Id == inviteId).Select(invite => invite.Id),
+            context
+                .HouseholdEmailInvites.Where(invite => invite.Id == inviteId)
+                .Select(invite => invite.Id),
             now,
             "revoked"
         );
@@ -402,7 +402,9 @@ internal class PostgresHouseholdTransaction(
     )
     {
         await FinishInviteMailAsync(
-            context.HouseholdEmailInvites.Where(invite => invite.Id == inviteId).Select(invite => invite.Id),
+            context
+                .HouseholdEmailInvites.Where(invite => invite.Id == inviteId)
+                .Select(invite => invite.Id),
             now,
             "superseded"
         );

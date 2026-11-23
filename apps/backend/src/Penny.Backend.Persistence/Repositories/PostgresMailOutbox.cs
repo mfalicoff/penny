@@ -171,14 +171,16 @@ public sealed class PostgresMailOutbox(NpgsqlDataSource source) : IMailOutbox
                 );
                 break;
             case MailOutcomeKind.Sent:
+                // A message superseded or revoked meanwhile keeps its finish time and reason;
+                // the send still happened.
                 await message.ExecuteUpdateAsync(
-                    set => set.SetProperty(row => row.SentAt, now),
-                    cancellationToken
-                );
-                await open.ExecuteUpdateAsync(
                     set =>
-                        set.SetProperty(row => row.FinishedAt, now)
-                            .SetProperty(row => row.LastError, (string?)null),
+                        set.SetProperty(row => row.SentAt, now)
+                            .SetProperty(
+                                row => row.LastError,
+                                row => row.FinishedAt == null ? null : row.LastError
+                            )
+                            .SetProperty(row => row.FinishedAt, row => row.FinishedAt ?? now),
                     cancellationToken
                 );
                 break;

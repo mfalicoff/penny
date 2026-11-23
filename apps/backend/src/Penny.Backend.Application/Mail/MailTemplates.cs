@@ -126,10 +126,10 @@ public static class MailTemplates
 
     private static string Host(string appUrl) => new Uri(appUrl).Authority;
 
-    private static int Hours(TimeSpan lifetime) => Math.Max(1, (int)Math.Round(lifetime.TotalHours));
+    private static int Hours(TimeSpan lifetime) =>
+        Math.Max(1, (int)Math.Round(lifetime.TotalHours));
 
     private static string Plural(int count, string one, string many) => count == 1 ? one : many;
 
-    private static string Lines(params string[] lines) =>
-        string.Join("\n", lines) + "\n";
+    private static string Lines(params string[] lines) => string.Join("\n", lines) + "\n";
 }

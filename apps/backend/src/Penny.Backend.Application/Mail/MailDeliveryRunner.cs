@@ -72,7 +72,10 @@ public sealed class MailDeliveryRunner(
         var ready = new List<(MailClaim Claim, OutgoingMail Mail)>();
         foreach (var claim in claims)
         {
-            BackendTelemetry.JobPickedUp(BackendTelemetry.MailDeliveryJob, claimedAt - claim.CreatedAt);
+            BackendTelemetry.JobPickedUp(
+                BackendTelemetry.MailDeliveryJob,
+                claimedAt - claim.CreatedAt
+            );
             if (claim.CreatedAt < claimedAt - MaxAge || claim.Attempts >= MaxAttempts)
             {
                 results[claim.Id] = MailOutcome.Permanent("expired");
@@ -83,7 +86,10 @@ public sealed class MailDeliveryRunner(
                 var mail = claim.Kind switch
                 {
                     MailKinds.PasswordReset => await resets.ComposeAsync(claim, cancellationToken),
-                    MailKinds.HouseholdInvite => await invites.ComposeAsync(claim, cancellationToken),
+                    MailKinds.HouseholdInvite => await invites.ComposeAsync(
+                        claim,
+                        cancellationToken
+                    ),
                     _ => null,
                 };
                 if (mail is null)
@@ -105,7 +111,10 @@ public sealed class MailDeliveryRunner(
             IReadOnlyList<MailOutcome>? sent;
             try
             {
-                sent = await transport.SendAsync([.. ready.Select(item => item.Mail)], cancellationToken);
+                sent = await transport.SendAsync(
+                    [.. ready.Select(item => item.Mail)],
+                    cancellationToken
+                );
             }
             catch (Exception error) when (error is not OperationCanceledException)
             {

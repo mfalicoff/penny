@@ -27,7 +27,15 @@ public sealed record EmailOptions(
         var host = configuration["Email:Smtp:Host"]?.Trim();
         if (string.IsNullOrEmpty(host))
         {
-            foreach (var key in new[] { "Email:From", "Email:AppUrl", "Email:Smtp:Username", "Email:Smtp:Password" })
+            foreach (
+                var key in new[]
+                {
+                    "Email:From",
+                    "Email:AppUrl",
+                    "Email:Smtp:Username",
+                    "Email:Smtp:Password",
+                }
+            )
                 if (!string.IsNullOrEmpty(configuration[key]))
                     throw new InvalidOperationException(
                         $"{Setting(key)} is set but Email__Smtp__Host is not. Set Email__Smtp__Host to turn email on, or remove the email settings."
@@ -35,7 +43,9 @@ public sealed record EmailOptions(
             return new(MailPolicy.Off, null, worker, poll);
         }
         if (Uri.CheckHostName(host) == UriHostNameType.Unknown)
-            throw new InvalidOperationException("Email__Smtp__Host must be a host name or IP address.");
+            throw new InvalidOperationException(
+                "Email__Smtp__Host must be a host name or IP address."
+            );
         var security = configuration["Email:Smtp:Security"]?.Trim().ToLowerInvariant() switch
         {
             null or "" or "starttls" => SmtpSecurity.StartTls,
@@ -63,7 +73,9 @@ public sealed record EmailOptions(
         );
         var username = Optional(configuration["Email:Smtp:Username"]);
         // Passwords are used exactly as given.
-        var password = configuration["Email:Smtp:Password"] is { Length: > 0 } secret ? secret : null;
+        var password = configuration["Email:Smtp:Password"] is { Length: > 0 } secret
+            ? secret
+            : null;
         if ((username is null) != (password is null))
             throw new InvalidOperationException(
                 "Set both Email__Smtp__Username and Email__Smtp__Password, or neither."
@@ -85,11 +97,19 @@ public sealed record EmailOptions(
             throw new InvalidOperationException(
                 "Email__AppUrl must be one of Auth__AllowedOrigins, so emailed links open the web app this server trusts."
             );
-        var timeout = BackendOptions.ReadBounded(configuration, "Email:Smtp:TimeoutSeconds", 30, 5, 300);
+        var timeout = BackendOptions.ReadBounded(
+            configuration,
+            "Email:Smtp:TimeoutSeconds",
+            30,
+            5,
+            300
+        );
         var policy = new MailPolicy(
             true,
             appUrl,
-            TimeSpan.FromHours(BackendOptions.ReadBounded(configuration, "Email:InviteHours", 72, 1, 336)),
+            TimeSpan.FromHours(
+                BackendOptions.ReadBounded(configuration, "Email:InviteHours", 72, 1, 336)
+            ),
             BackendOptions.ReadBounded(configuration, "Email:RecipientMessagesPerDay", 5, 1, 1000),
             BackendOptions.ReadBounded(configuration, "Email:AccountMessagesPerDay", 20, 1, 10_000)
         );

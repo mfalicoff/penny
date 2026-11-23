@@ -11,15 +11,34 @@ namespace Penny.Backend.IntegrationTests.Infrastructure;
 public abstract partial class EmailTestBase(ApiFixture fixture, EmailHost email)
     : HouseholdTestBase(fixture)
 {
-    protected EmailHost Email { get; } = email;
+    protected EmailHost Email { get; } = InitialState(email);
 
-    protected override WebApplicationFactory<Program> Host => Email.Factory;
+    private static EmailHost InitialState(EmailHost email)
+    {
+        email.Smtp.Reset();
+        email.Factory.Clock.Set(Noon);
+        return email;
+    }
+
+    protected override WebApplicationFactory<Program> ApiHost => Email.Factory;
 
     protected FakeSmtpServer Smtp => Email.Smtp;
 
     protected void MailAt(DateTimeOffset instant) => Email.Factory.Clock.Set(instant);
 
-    protected async Task<int> DeliverAsync() => await Email.Runner.RunUntilIdleAsync(Ct);
+    protected async Task<int> DeliverAsync()
+    {
+        var sent = 0;
+        for (var pass = 0; pass < 100; pass++)
+        {
+            var run = await Email.Runner.RunOnceAsync(Ct);
+            run.Failures.ShouldBeEmpty();
+            sent += run.Sent;
+            if (run.Claimed == 0)
+                break;
+        }
+        return sent;
+    }
 
     protected Task<HttpResponseMessage> RequestResetAsync(string email) =>
         SendAsync(HttpMethod.Post, "/api/auth/password-reset/request", null, new { email });

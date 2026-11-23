@@ -37,8 +37,20 @@ public sealed class FakeSmtpServer : IAsyncDisposable
             replies.Enqueue(reply);
     }
 
+    // Forgets received messages and pending refusals and comes back up (between tests).
+    public void Reset()
+    {
+        Received.Clear();
+        replies.Clear();
+        Down = false;
+    }
+
     public IReadOnlyList<(string Recipient, MimeMessage Message)> To(string recipient) =>
-        [.. Received.Where(item => string.Equals(item.Recipient, recipient, StringComparison.Ordinal))];
+        [
+            .. Received.Where(item =>
+                string.Equals(item.Recipient, recipient, StringComparison.Ordinal)
+            ),
+        ];
 
     public async ValueTask DisposeAsync()
     {
@@ -61,7 +73,12 @@ public sealed class FakeSmtpServer : IAsyncDisposable
             {
                 client = await listener.AcceptTcpClientAsync(stopping.Token);
             }
-            catch (Exception error) when (error is OperationCanceledException or SocketException or ObjectDisposedException)
+            catch (Exception error)
+                when (error
+                        is OperationCanceledException
+                            or SocketException
+                            or ObjectDisposedException
+                )
             {
                 return;
             }
@@ -78,7 +95,11 @@ public sealed class FakeSmtpServer : IAsyncDisposable
         {
             var stream = client.GetStream();
             using var reader = new StreamReader(stream, Encoding.ASCII);
-            await using var writer = new StreamWriter(stream, Encoding.ASCII) { NewLine = "\r\n", AutoFlush = true };
+            await using var writer = new StreamWriter(stream, Encoding.ASCII)
+            {
+                NewLine = "\r\n",
+                AutoFlush = true,
+            };
             await writer.WriteLineAsync("220 fake.test ESMTP");
             string? recipient = null;
             while (await reader.ReadLineAsync(stopping.Token) is { } line)
@@ -110,15 +131,30 @@ public sealed class FakeSmtpServer : IAsyncDisposable
                     case "DATA":
                         await writer.WriteLineAsync("354 End data with <CR><LF>.<CR><LF>");
                         var data = new StringBuilder();
-                        while (await reader.ReadLineAsync(stopping.Token) is { } dataLine && dataLine != ".")
-                            data.Append(dataLine.StartsWith("..", StringComparison.Ordinal) ? dataLine[1..] : dataLine).Append("\r\n");
+                        while (
+                            await reader.ReadLineAsync(stopping.Token) is { } dataLine
+                            && dataLine != "."
+                        )
+                            data.Append(
+                                    dataLine.StartsWith("..", StringComparison.Ordinal)
+                                        ? dataLine[1..]
+                                        : dataLine
+                                )
+                                .Append("\r\n");
                         if (replies.TryDequeue(out var refusal))
                         {
                             await writer.WriteLineAsync(refusal);
                             break;
                         }
-                        using (var bytes = new MemoryStream(Encoding.UTF8.GetBytes(data.ToString())))
-                            Received.Enqueue((recipient ?? "", await MimeMessage.LoadAsync(bytes, stopping.Token)));
+                        using (
+                            var bytes = new MemoryStream(Encoding.UTF8.GetBytes(data.ToString()))
+                        )
+                            Received.Enqueue(
+                                (
+                                    recipient ?? "",
+                                    await MimeMessage.LoadAsync(bytes, stopping.Token)
+                                )
+                            );
                         await writer.WriteLineAsync("250 OK queued");
                         break;
                     case "QUIT":
@@ -130,6 +166,12 @@ public sealed class FakeSmtpServer : IAsyncDisposable
                 }
             }
         }
-        catch (Exception error) when (error is IOException or SocketException or OperationCanceledException or ObjectDisposedException) { }
+        catch (Exception error)
+            when (error
+                    is IOException
+                        or SocketException
+                        or OperationCanceledException
+                        or ObjectDisposedException
+            ) { }
     }
 }

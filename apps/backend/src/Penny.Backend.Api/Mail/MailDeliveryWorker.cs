@@ -56,7 +56,13 @@ public sealed partial class MailDeliveryWorker(
         Level = LogLevel.Information,
         Message = "Mail pass: {Sent} sent, {Retried} retrying, {Failed} failed, {Dropped} no longer needed"
     )]
-    private static partial void Delivered(ILogger logger, int sent, int retried, int failed, int dropped);
+    private static partial void Delivered(
+        ILogger logger,
+        int sent,
+        int retried,
+        int failed,
+        int dropped
+    );
 
     [LoggerMessage(
         Level = LogLevel.Warning,

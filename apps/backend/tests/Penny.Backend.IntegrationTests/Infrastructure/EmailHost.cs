@@ -29,14 +29,20 @@ public sealed class EmailHost(ApiFixture fixture) : IAsyncLifetime
             new Dictionary<string, string>
             {
                 ["Email:Smtp:Host"] = "127.0.0.1",
-                ["Email:Smtp:Port"] = Smtp.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Email:Smtp:Port"] = Smtp.Port.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture
+                ),
                 ["Email:Smtp:Security"] = "none",
                 ["Email:Smtp:TimeoutSeconds"] = "5",
                 ["Email:From"] = "penny@example.test",
                 ["Email:AppUrl"] = AppUrl,
                 ["Email:Worker"] = "false",
-                ["Email:RecipientMessagesPerDay"] = RecipientLimit.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ["Email:AccountMessagesPerDay"] = AccountLimit.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Email:RecipientMessagesPerDay"] = RecipientLimit.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture
+                ),
+                ["Email:AccountMessagesPerDay"] = AccountLimit.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture
+                ),
                 ["Logging:LogLevel:Default"] = "Information",
             },
             services =>

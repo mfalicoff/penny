@@ -24,12 +24,7 @@ public sealed class OperationsController(
     [HttpGet("info", Name = "getApiInfo")]
     public ActionResult<ServerInfo> Info() =>
         Ok(
-            new ServerInfo(
-                "penny",
-                ServerInfo.CurrentVersion,
-                legal.PrivacyPolicyUrl,
-                mail.Enabled
-            )
+            new ServerInfo("penny", ServerInfo.CurrentVersion, legal.PrivacyPolicyUrl, mail.Enabled)
         );
 
     [HttpGet("ready", Name = "getApiReady")]

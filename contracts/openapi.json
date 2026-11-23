@@ -619,9 +619,9 @@
     },
     "/api/auth/password-reset": {
       "post": {
-        "summary": "Redeem an operator-issued password reset code",
+        "summary": "Redeem a password reset code",
         "operationId": "postApiAuthPasswordReset",
-        "description": "MAZ-123. A server operator issues a single-use code with the `reset-password EMAIL` maintenance command and delivers it out of band; there is no email delivery. Redeeming it stores the new password as an ASP.NET Core Identity hash and revokes every session of the account; no session is issued, so the user then signs in normally. The request names no email, so responses never reveal whether an account exists. Unknown, malformed, used, superseded and expired codes share one 400 message. Shares the sign-in rate limit; the origin policy applies. See docs/reference/authentication.md#password-reset.",
+        "description": "MAZ-123. Redeems a single-use reset code: one an operator issued with the `reset-password EMAIL` maintenance command and delivered out of band, or one from the link a reset email carries (MAZ-124, POST /api/auth/password-reset/request; the link is `<Email__AppUrl>/reset-password#code=<code>`). Redeeming it stores the new password as an ASP.NET Core Identity hash and revokes every session of the account; no session is issued, so the user then signs in normally. The request names no email, so responses never reveal whether an account exists. Unknown, malformed, used, superseded and expired codes share one 400 message. Shares the sign-in rate limit; the origin policy applies. See docs/reference/authentication.md#password-reset.",
         "x-owner": "MAZ-123",
         "security": [],
         "requestBody": {
@@ -1479,7 +1479,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Joins with a shared invite code (any number of accounts until it expires after 10 minutes or a new code replaces it) or an emailed invitation's code (MAZ-124: once, until Email__InviteHours after it was sent). Both are 10 upper-case hex characters and answer `Invite code is invalid or expired.` alike when unusable."
       }
     },
     "/api/households/trips": {
@@ -5446,6 +5447,513 @@
           }
         }
       }
+    },
+    "/api/auth/password-reset/request": {
+      "post": {
+        "summary": "Ask for a password reset email",
+        "operationId": "postApiAuthPasswordResetRequest",
+        "description": "MAZ-124. A signed-out user asks for a reset by email. The answer is 202 `{ok:true}` whether or not the address has an account, whether an earlier email is still waiting to be sent and whether the daily limits (Email__RecipientMessagesPerDay, Email__AccountMessagesPerDay) are reached: nothing tells them apart. The email is sent outside the request by the mail worker, with a link to `<Email__AppUrl>/reset-password#code=<code>`: the same single-use code as the operator command, valid for Auth__PasswordResetHours and replacing any earlier one. Redeem it with POST /api/auth/password-reset. Shares the sign-in rate limit; the origin policy applies. See docs/reference/authentication.md#password-reset-by-email.",
+        "x-owner": "MAZ-124",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted; an email is sent if the address has an account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`Enter a valid email address.` or `Invalid JSON.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`This server doesn't send email.` while email is off: ask the operator for a reset code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (shared with sign-in).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/households/{id}/email-invites": {
+      "get": {
+        "summary": "List invitations by email",
+        "operationId": "getApiHouseholdsIdEmailInvites",
+        "x-owner": "MAZ-124",
+        "description": "MAZ-124. Unrevoked invitations, newest request first. Invitations by email are for the household's or trip's creator, like shared codes. The email carries `<Email__AppUrl>/join#code=<code>` and the code itself: an invite code like a shared one (10 upper-case hex characters, stored as SHA-256) that is issued when the email is sent, works for Email__InviteHours and joins once. The invitee still joins with POST /api/households/join, so they accept it. See docs/reference/households.md#invitations-by-email.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailInviteList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`Only the household creator can manage members.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`This server doesn't send email.` while email is off (`emailEnabled` false on /api/info), or the household or invitation is not found or not visible to this account (`Household not found.`, `Invitation not found.`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Invite by email",
+        "operationId": "postApiHouseholdsIdEmailInvites",
+        "x-owner": "MAZ-124",
+        "description": "MAZ-124. Stores the invitation and queues its email in one transaction; the mail worker sends it later, so a slow or failing mail server never blocks or rolls back the request. Inviting an address that already has an invitation resends it. Invitations by email are for the household's or trip's creator, like shared codes. The email carries `<Email__AppUrl>/join#code=<code>` and the code itself: an invite code like a shared one (10 upper-case hex characters, stored as SHA-256) that is issued when the email is sent, works for Email__InviteHours and joins once. The invitee still joins with POST /api/households/join, so they accept it. See docs/reference/households.md#invitations-by-email.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailInviteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Queued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailInvite"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`Enter a valid email address.` or `Invalid JSON.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`Only the household creator can manage members.` or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`This server doesn't send email.` while email is off (`emailEnabled` false on /api/info), or the household or invitation is not found or not visible to this account (`Household not found.`, `Invitation not found.`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`Too many invitation emails today. Try again tomorrow, or share a code instead.`: the inviter or the address reached its daily limit (Email__AccountMessagesPerDay, Email__RecipientMessagesPerDay).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ]
+      }
+    },
+    "/api/households/{id}/email-invites/{inviteId}/resend": {
+      "post": {
+        "summary": "Resend an invitation email",
+        "operationId": "postApiHouseholdsIdEmailInvitesInviteIdResend",
+        "x-owner": "MAZ-124",
+        "description": "MAZ-124. Queues a new email with a new code; the earlier email's code stops working once the new one is sent. Invitations by email are for the household's or trip's creator, like shared codes. The email carries `<Email__AppUrl>/join#code=<code>` and the code itself: an invite code like a shared one (10 upper-case hex characters, stored as SHA-256) that is issued when the email is sent, works for Email__InviteHours and joins once. The invitee still joins with POST /api/households/join, so they accept it. See docs/reference/households.md#invitations-by-email.",
+        "responses": {
+          "202": {
+            "description": "Queued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailInvite"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`Only the household creator can manage members.` or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`This server doesn't send email.` while email is off (`emailEnabled` false on /api/info), or the household or invitation is not found or not visible to this account (`Household not found.`, `Invitation not found.`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`They already joined with this invitation.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`Too many invitation emails today. Try again tomorrow, or share a code instead.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "inviteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ]
+      }
+    },
+    "/api/households/{id}/email-invites/{inviteId}": {
+      "delete": {
+        "summary": "Revoke an invitation by email",
+        "operationId": "deleteApiHouseholdsIdEmailInvitesInviteId",
+        "x-owner": "MAZ-124",
+        "description": "MAZ-124. Its code stops working and an email not yet sent is not sent. Invitations by email are for the household's or trip's creator, like shared codes. The email carries `<Email__AppUrl>/join#code=<code>` and the code itself: an invite code like a shared one (10 upper-case hex characters, stored as SHA-256) that is issued when the email is sent, works for Email__InviteHours and joins once. The invitee still joins with POST /api/households/join, so they accept it. See docs/reference/households.md#invitations-by-email.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`Only the household creator can manage members.` or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`This server doesn't send email.` while email is off (`emailEnabled` false on /api/info), or the household or invitation is not found or not visible to this account (`Household not found.`, `Invitation not found.`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "inviteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5515,7 +6023,7 @@
           "token": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
-            "description": "The 64-character lowercase hex reset code issued by the operator."
+            "description": "The 64-character lowercase hex reset code: issued by the operator, or carried by the emailed link (MAZ-124)."
           },
           "password": {
             "type": "string",
@@ -7667,6 +8175,10 @@
             "format": "uri",
             "maxLength": 2048,
             "description": "The server operator's privacy policy (Legal__PrivacyPolicyUrl), an absolute http or https URL. Null when the server publishes none, and absent from servers older than this field: clients then show no privacy policy link. Clients open it in the browser."
+          },
+          "emailEnabled": {
+            "type": "boolean",
+            "description": "MAZ-124. Whether the server sends email (Email__Smtp__Host is set). When true, clients offer password reset by email and invitations by email; when false, or absent on servers older than this field, they fall back to codes: an operator-issued reset code and shared invite codes."
           }
         },
         "required": [
@@ -8254,6 +8766,99 @@
         "required": [
           "currentPassword",
           "newPassword"
+        ]
+      },
+      "PasswordResetRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "EmailInviteInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "EmailInvite": {
+        "type": "object",
+        "description": "MAZ-124. An invitation sent by email. The address is normalized (trimmed, lower case).",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "sending",
+              "waiting",
+              "expired",
+              "joined",
+              "failed"
+            ],
+            "description": "`sending`: queued, or a resend not yet sent. `waiting`: sent, unused and unexpired. `expired`: its code expired. `joined`: someone joined with it. `failed`: the mail server refused it for good."
+          },
+          "createdAt": {
+            "type": "integer",
+            "description": "Unix milliseconds."
+          },
+          "sentAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "When its latest email was sent, Unix milliseconds."
+          },
+          "expiresAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "When the emailed code stops working (Email__InviteHours after sending), Unix milliseconds; null before the first email and after joining."
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "status",
+          "createdAt",
+          "sentAt",
+          "expiresAt"
+        ]
+      },
+      "EmailInviteList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailInvite"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       }
     }

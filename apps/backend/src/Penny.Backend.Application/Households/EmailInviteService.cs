@@ -139,7 +139,11 @@ public sealed class EmailInviteService(
                 if (
                     household is null
                     || inviter is not { IsCurrent: true }
-                    || !string.Equals(household.CreatorId, invite.InvitedBy, StringComparison.Ordinal)
+                    || !string.Equals(
+                        household.CreatorId,
+                        invite.InvitedBy,
+                        StringComparison.Ordinal
+                    )
                 )
                     return null;
                 var now = Now();
