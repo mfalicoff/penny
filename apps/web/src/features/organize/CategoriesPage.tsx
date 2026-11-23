@@ -76,7 +76,7 @@ export function CategoriesPage({ kind, onKindChange }: { kind: Kind; onKindChang
               />
             ))}
           </ul>
-          <p className="group-note">A category that entries use can be renamed or recolored at any time; to remove it, move its entries to another {kindLabels[kind].toLowerCase()} category.</p>
+          <p className="group-note">Your three most used categories appear as shortcuts when you add an entry.</p>
         </section>
       )}
       {form ? (
