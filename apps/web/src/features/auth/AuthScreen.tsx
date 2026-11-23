@@ -9,6 +9,7 @@ import { OidcError, signInWithPopup, signInWithRedirect } from "../../auth/oidc"
 import { startDemo } from "../../demo/demo";
 import { cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { PrivacyPolicyLink, useHasPrivacyPolicy } from "../legal/PrivacyPolicyLink";
 
 type Mode = "sign-in" | "create-account";
 
@@ -86,6 +87,7 @@ export function AuthScreen() {
           ) : null}
           <CredentialsForm key={mode} mode={mode} />
           <SsoButton />
+          {creating ? <CreateAccountLegal /> : null}
           <p className="auth__switch">
             {creating ? "Already have an account? " : "New here? "}
             <button
@@ -360,6 +362,19 @@ function SsoButton() {
 }
 
 /**
+ * "By creating an account you agree to the Privacy Policy." under the ways to create an account
+ * (web-create-account, iphone-create-account-providers). Hidden when the server publishes no policy.
+ */
+function CreateAccountLegal() {
+  if (!useHasPrivacyPolicy()) return null;
+  return (
+    <p className="auth__legal">
+      By creating an account you agree to the <PrivacyPolicyLink />.
+    </p>
+  );
+}
+
+/**
  * Temporary demo (MAZ-85): sample data in this tab only, without an account. Pinned to the bottom
  * of the form side with the play icon, as on iphone-sign-in and web-sign-in, with the note that
  * the demo saves nothing (web-sign-in, MAZ-234).
@@ -380,10 +395,24 @@ function DemoButton() {
         <Icon name="play" size={18} />
         Take a look around with sample data
       </button>
-      <p id={hintId} className="field__hint">
-        Sample data in this tab only. Nothing is saved or sent to your server.
+      {/* The privacy link follows the note on wide windows (web-sign-in-providers) and gets its own line on phones (iphone-sign-in-providers). It stays out of the button's description. */}
+      <p className="field__hint">
+        <span id={hintId}>Sample data in this tab only. Nothing is saved or sent to your server.</span>
+        <SignInPrivacy />
       </p>
     </div>
+  );
+}
+
+function SignInPrivacy() {
+  if (!useHasPrivacyPolicy()) return null;
+  return (
+    <span className="auth__privacy">
+      <span className="auth__privacy-dot" aria-hidden="true">
+        {" · "}
+      </span>
+      <PrivacyPolicyLink />
+    </span>
   );
 }
 

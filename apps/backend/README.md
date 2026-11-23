@@ -127,6 +127,7 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | `Backend__RequestTimeoutSeconds` | 30; bounded 1–300; deadline cancels work and returns 503/Retry-After |
 | `Backend__ShutdownTimeoutSeconds` | 30; bounded 1–300; host drains existing requests within this bound |
 | `Auth__AllowRegistration` | `true` |
+| `Legal__PrivacyPolicyUrl` | Unset (no link). The operator's privacy policy, an absolute `http://` or `https://` URL of at most 2048 characters without credentials; `GET /api/info` publishes it as `privacyPolicyUrl` for the clients to link. Invalid values fail startup naming the setting |
 | `Auth__SecureCookies` | `false`. Set `true` behind HTTPS |
 | `Auth__AllowedOrigins` | `http://localhost:4173,http://127.0.0.1:4173` (the web dev server). Exact `scheme://host[:port]` origins |
 | `Auth__TrustedProxies` | Empty (trust no forwarding headers); comma-separated proxy IPs/CIDRs whose `X-Forwarded-For` is honored |

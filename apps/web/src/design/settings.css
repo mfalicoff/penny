@@ -853,3 +853,33 @@
     margin-top: 1px;
   }
 }
+
+/* Settings › Profile's footer (web-profile, iphone-profile): where the account lives, and the privacy policy (MAZ-169). */
+.privacy-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  line-height: 1.4;
+}
+
+.privacy-footer .icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.privacy-link.privacy-link--tint {
+  color: var(--pk-tint-text);
+  text-decoration: none;
+}
+
+.privacy-link.privacy-link--tint:hover {
+  text-decoration: underline;
+}
+
+.settings--phone .privacy-footer,
+.settings--tablet .privacy-footer {
+  padding: 7px 16px 0;
+}

@@ -1,6 +1,7 @@
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Avatar, Card } from "../../design/controls";
+import { AccountPrivacyFooter } from "../legal/PrivacyPolicyLink";
 import { SectionTitle } from "./SectionTitle";
 
 /**
@@ -24,6 +25,7 @@ export function ProfileSettings() {
           </div>
         </div>
       </Card>
+      <AccountPrivacyFooter demo={demo} />
     </>
   );
 }

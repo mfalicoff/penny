@@ -1428,6 +1428,11 @@
             "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (decided in MAZ-239)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Shows the server's Privacy Policy link on its own line under the sample-data note, where iphone-sign-in-providers puts it; this card has no link (Design decision follow-up on MAZ-169)",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       }
@@ -1462,6 +1467,11 @@
             "summary": "Create account offers SSO under an or divider, and its button names the server's configured provider (Continue with Single sign-on) (decided in MAZ-234)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Ends with “By creating an account you agree to the Privacy Policy.” as iphone-create-account-providers does; this card has no such line (Design decision follow-up on MAZ-169)",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       }
@@ -2507,7 +2517,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -2523,7 +2533,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up or name field. The privacy policy line is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -3354,6 +3364,11 @@
             "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Shows the server's Privacy Policy link after the sample-data note, where web-sign-in-providers puts it; this card has no link (Design decision follow-up on MAZ-169)",
+            "kind": "follow-up",
+            "ref": "MAZ-169"
           }
         ]
       }
@@ -3838,7 +3853,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-171",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has Settings › Profile shows only the signed-in email: no name, picture, sign-in or Your data sections.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has Settings › Profile shows only the signed-in email: no name, picture, sign-in or Your data sections. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "followUp": "MAZ-171"
       }
     },
@@ -3853,7 +3868,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },
@@ -3868,7 +3883,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up or name field. The privacy policy line is built (MAZ-169).",
         "followUp": "MAZ-170"
       }
     },

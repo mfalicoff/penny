@@ -49,6 +49,7 @@ public static class BackendServices
             BackendOptions.ReadBounded(configuration, "Database:CommandTimeoutSeconds", 5, 1, 30)
         );
         builder.Services.AddSingleton(options);
+        builder.Services.AddSingleton(LegalOptions.Read(configuration));
         var controls = AddTestControls(builder);
         builder.Services.AddSingleton(_ => database.CreateDataSource());
         // First hosted service: migrate before workers and Kestrel start.

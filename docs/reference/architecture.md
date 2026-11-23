@@ -25,7 +25,7 @@ Shared allocation, historical membership, recurrence, monthly settlement, reimbu
 
 ## ADR 003: versioning
 
-Accept validated v4 ledgers only and return `{revision,ledger}`; any other version gets 400. There is no client-version header or minimum build; do not invent a 426 gate for existing routes. Future incompatible changes require negotiated capabilities and coordinated clients. Tolerate additive response fields; never save unknown ledger versions destructively. `/api/info` remains public `{name:"penny",version}` for credential-free signed-out server verification.
+Accept validated v4 ledgers only and return `{revision,ledger}`; any other version gets 400. There is no client-version header or minimum build; do not invent a 426 gate for existing routes. Future incompatible changes require negotiated capabilities and coordinated clients. Tolerate additive response fields; never save unknown ledger versions destructively. `/api/info` remains public `{name:"penny",version,privacyPolicyUrl}` for credential-free signed-out server verification; `privacyPolicyUrl` is the operator's `Legal__PrivacyPolicyUrl` or null, and is absent from older servers.
 
 Never send credentials to a candidate server. Device-local biometric lock conceals dialogs/content on inactive/background transitions, fails closed on preference read failure and preserves drafts. Web omits lock/server selection.
 
