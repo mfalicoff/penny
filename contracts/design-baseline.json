@@ -269,6 +269,12 @@
       "health": "#0E7490",
       "other": "#8E8A85"
     },
+    "monogram": {
+      "note": "A person's monogram (.avatar, .pk-avatar): a top-to-bottom gradient with bold white initials, in light and dark.",
+      "from": "#A8A29E",
+      "to": "#78716C",
+      "label": "#FFFFFF"
+    },
     "meaning": {
       "tint": "actions, selection and brand",
       "income": "income, money left and owed to you",
