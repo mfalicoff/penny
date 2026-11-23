@@ -19,6 +19,7 @@
   .grp-h { font-size: 13px; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; padding: 22px 20px 8px; }
   .srow { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 52px; font-size: 16px; position: relative; }
   .srow + .srow::before { content: ""; position: absolute; top: 0; left: 60px; right: 0; border-top: .5px solid var(--separator); }
+  .srow + .srow.noi::before { left: 16px; }
   .srow .ic { width: 30px; height: 30px; border-radius: 8px; }
   .srow .ic [data-i] { width: 17px; height: 17px; }
   .srow .v { margin-left: auto; color: var(--label-2); }
@@ -34,7 +35,7 @@
     <div class="list">
       <div class="srow"><div class="ic" style="background:#8E8A85"><i data-i="server"></i></div>Server<span class="v">penny.example.com</span></div>
       <div class="srow"><div class="ic" style="background:#8E8A85"><i data-i="cloud-offline"></i></div>Sync<span class="v">2 waiting</span></div>
-      <div class="srow" style="color:var(--danger)"><div class="ic" style="background:var(--danger)"><i data-i="log-out"></i></div>Sign out</div>
+      <div class="srow noi" style="justify-content:center;color:var(--danger);font-weight:500">Sign out</div>
     </div>
   </div>
   <div class="scrim"></div>
