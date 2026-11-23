@@ -51,7 +51,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-insights` | `OverviewJourneyTests`, `AccessibilityAuditTests` | Category drill-down; audited in every variant | Covered |
 | `iphone-calendar` | `OverviewJourneyTests`, `ScreenshotTests` | The calendar sheet over Home: day selection, Today, Close | Covered |
 | `iphone-activity` | `EntryJourneyTests`, `SearchJourneyTests`, `AccessibilityAuditTests` | Day rows, kind filters keep totals, server totals after each write | Covered |
-| `iphone-search-empty` | `SearchJourneyTests`, `KeyboardLayoutTests` | No-match query shows the empty state; with the keyboard up it stays clear of the totals and the server-results line | Covered |
+| `iphone-search-empty` | `SearchJourneyTests`, `KeyboardLayoutTests`, `CardCaptureTests` | No-match query in the bottom search bar shows the empty state with the active filters as removable chips; with the keyboard up it stays clear of the spoken totals and server-results line | Covered |
 | `iphone-add-expense` | `SmokeJourneyTests`, `EntryJourneyTests`, `AccessibilityAuditTests` | Keypad entry, server write, keyboard-safe Save at XXXL | Covered; duplicate-submit tapping is unit-tested only (EntryFlowTests) |
 | `iphone-add-income` | `EntryJourneyTests` | Income via the kind segment, server share and totals | Covered |
 | `iphone-entry-extras` | `ReceiptJourneyTests` | Receipt group of More details | Partly: repeat and trip rows have no UI journey here (unit-tested) |
@@ -90,7 +90,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-save-error` | `EntryJourneyTests` | HTTP 500 on sync keeps the entry and syncs once | Partly: the form's Couldn't save banner (local write failure) is unit-tested only |
 | `iphone-saved-toast` | — | The toast is unit-tested (EntryFlowTests); it shows for 4 s during dismissal, which XCTest's idle waits outlast | Gap: not asserted in a UI journey |
 | `iphone-sign-out` | `AuthJourneyTests` | Pending change asks and syncs first | Covered |
-| `iphone-sign-out-plain` | `AuthJourneyTests` | Sign out with nothing waiting asks once and signs out | Partly: the system confirmation has no icon tile yet (MAZ-255) |
+| `iphone-sign-out-plain` | `AuthJourneyTests`, `CardCaptureTests` | Sign out with nothing waiting asks once in Penny's confirmation and signs out | Covered |
 | `iphone-receipt-inbox` | — | Filter and cursor, the expiry notice and discard are unit-tested (ReceiptInboxTests in PennyKit) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
 | `iphone-receipt-inbox-item` | — | Email-first order, the preselected attachment and the discard counts are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
 | `iphone-receipt-attach-file` | — | The preselected first attachment is unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
@@ -126,12 +126,12 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-receipt-attach-confirm` | — | Web-only reference: native behavior is traced through `ipad-receipt-attach-confirm`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-receipt-attached-toast` | — | Web-only reference: native behavior is traced through `ipad-receipt-attached-toast`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-receipt-email-settings` | — | Web-only reference: native behavior is traced through `ipad-receipt-email-settings`; the browser journeys are MAZ-96 | Not applicable to native |
-| `iphone-activity-filters` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `iphone-activity-searching` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-activity-filters` | `CardCaptureTests` | Filters sheet over Activity with Expenses chosen (MAZ-255) | Partly: captured; filtering is unit-tested |
+| `iphone-activity-searching` | `SearchJourneyTests`, `CardCaptureTests` | A held-back server search shows Searching your server… without local rows (MAZ-255) | Covered |
 | `iphone-home-explore` | `OverviewJourneyTests`, `CardCaptureTests` | Expected income and Explore your month under Recent; the calendar row opens the calendar sheet (MAZ-254) | Covered |
-| `iphone-account-picker` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `iphone-household-picker` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `iphone-edit-entry` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-account-picker` | `CardCaptureTests`, `EntryJourneyTests` | Account picker from a new expense (MAZ-255) | Covered |
+| `iphone-household-picker` | `CardCaptureTests` | Household from More details: Personal, then the households and shared trips (MAZ-255) | Partly: moving a draft to a household is unit-tested |
+| `iphone-edit-entry` | `EntryJourneyTests`, `CardCaptureTests` | Edit from the entry detail: Edit entry title, the entry-only footnote (MAZ-255) | Covered |
 | `iphone-shared-expense-detail` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-join-code` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-invite-scanner` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |

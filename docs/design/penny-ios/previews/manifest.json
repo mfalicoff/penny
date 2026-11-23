@@ -566,7 +566,7 @@
     {
       "id": "iphone-entry-extras",
       "source": "docs/design/penny-ios/iphone/entry-extras.html",
-      "sourceSha256": "86956d1ac9466c9b0f840d8e415f7b9fc3f92d68323ed969e75c27a4f4d4b923",
+      "sourceSha256": "1e4df686b45f83e43dc6122dae87ee0724c61863b9675c5930e47fd575bd962d",
       "viewport": {
         "w": 482,
         "h": 954
@@ -575,12 +575,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-entry-extras.light.png",
-          "sha256": "a65fb2b1d6b2be3b40ae3e618dc94e0b5b9838f3cdc35bf0fef1fe6b8e4d7324"
+          "sha256": "fe9500d5dde8cd022889f18bf0c6e6d592514f1251cc174699b5fa000ed67a2a"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-entry-extras.dark.png",
-          "sha256": "2d9fe12d093c95b6e0fe0b27364ab4db89e72fe23885acda2bed88d38bca711c"
+          "sha256": "d7d183b7ade21318a685961e428802057044354850748a16de69d85002e26535"
         }
       ]
     },

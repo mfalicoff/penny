@@ -69,8 +69,20 @@ struct ActivityFiltersSheet: View {
                         Picker("Category", selection: $shell.activityFilters.categoryId) {
                             Text("All categories").tag(String?.none)
                             ForEach(ledger.categoriesByUse(kind), id: \.id) { category in
-                                Label(category.name, systemImage: EntryText.symbol(category))
-                                    .tag(String?.some(category.id))
+                                // The category's own tile, as on `iphone-activity-filters`.
+                                HStack(spacing: 12) {
+                                    Image(systemName: EntryText.symbol(category))
+                                        .font(.callout.weight(.medium))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 30, height: 30)
+                                        .background(
+                                            EntryText.color(category, id: category.id),
+                                            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        )
+                                        .accessibilityHidden(true)
+                                    Text(category.name)
+                                }
+                                .tag(String?.some(category.id))
                             }
                         }
                         .pickerStyle(.inline)
@@ -87,16 +99,22 @@ struct ActivityFiltersSheet: View {
                         shell.activityFilters.clearNarrowing()
                         shell.activityFilters.period = .month(shell.month)
                     }
+                    .foregroundStyle(PennyColor.label)
                     .accessibilityIdentifier("filters.clear")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    // The copper check (`iphone-activity-filters`).
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(PennyColor.tint)
                         .accessibilityIdentifier("filters.done")
                 }
             }
             .pennySolidBars()
         }
-        .presentationDetents([.medium, .large])
+        // Full height on a solid background, as on `iphone-activity-filters`.
+        .presentationDetents([.large])
+        .presentationBackground(PennyColor.background)
         .accessibilityIdentifier("screen.activityFilters")
     }
 

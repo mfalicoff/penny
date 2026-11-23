@@ -74,6 +74,18 @@ struct ShellRouteTests {
         #expect(route.path(for: .trips) == [.trip(id: "t1")])
     }
 
+    @Test("whenLeavingActivity_ShellRoute_ShouldGoBackToTheTabShownBefore")
+    func selectPrevious() {
+        var route = ShellRoute()
+        route.select(.trips)
+        route.select(.activity)
+        route.selectPrevious()
+        #expect(route.tab == .trips)
+        var fresh = ShellRoute(tab: .activity)
+        fresh.selectPrevious()
+        #expect(fresh.tab == .home)
+    }
+
     @Test("whenCurrentTabIsChosenAgain_ShellRoute_ShouldReturnToItsRoot")
     func reselectPopsToRoot() {
         var route = ShellRoute(tab: .shared)

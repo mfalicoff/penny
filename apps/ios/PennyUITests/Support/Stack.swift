@@ -59,6 +59,8 @@ struct FaultRule: Sendable {
     var pathPrefix: String?
     var status: Int?
     var abort = false
+    /// Holds the answer back this long (`activity-searching`: the server search still running).
+    var delayMs: Int?
     var times: Int?
 
     /// Every request to `pathPrefix` fails as if the network dropped.
@@ -72,6 +74,7 @@ struct FaultRule: Sendable {
         if let pathPrefix { rule["pathPrefix"] = pathPrefix }
         if let status { rule["status"] = status }
         if abort { rule["abort"] = true }
+        if let delayMs { rule["delayMs"] = delayMs }
         if let times { rule["times"] = times }
         return rule
     }

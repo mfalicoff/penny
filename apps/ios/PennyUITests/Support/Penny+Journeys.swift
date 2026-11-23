@@ -50,10 +50,13 @@ extension Penny {
 
     // MARK: Activity
 
-    /// The system search field of the current screen. On iPhone it can sit collapsed in the
-    /// navigation bar until the list is pulled down; on iOS 26+ it can also be a toolbar
-    /// button that expands into the field.
+    /// The search field of the current screen: Activity's own (`activity.search`, at the bottom on
+    /// iPhone and under the title on iPad, MAZ-255), or a system search field, which on iPhone
+    /// can sit collapsed in the navigation bar until the list is pulled down, and on iOS 26+ can
+    /// also be a toolbar button that expands into the field.
     func searchField() throws -> XCUIElement {
+        let activity = app.textFields.matching(identifier: AccessibilityID.Activity.search).firstMatch
+        if activity.waitForExistence(timeout: 3) { return activity }
         let field = app.searchFields.firstMatch
         if field.waitForExistence(timeout: 3) { return field }
         let list = app.collectionViews.firstMatch
@@ -79,6 +82,17 @@ extension Penny {
 
     /// Clears the search field and dismisses the search (the field's Cancel/Close button).
     func endSearch() {
+        let back = app.buttons.matching(identifier: AccessibilityID.Activity.searchBack).firstMatch
+        let activity = app.textFields.matching(identifier: AccessibilityID.Activity.search).firstMatch
+        if activity.exists {
+            if Device.isPad {
+                let clear = app.buttons.matching(identifier: AccessibilityID.Activity.searchClear).firstMatch
+                if clear.exists { clear.tap() }
+            } else if back.exists, back.label == "Cancel search" {
+                back.tap()
+            }
+            return
+        }
         let field = app.searchFields.firstMatch
         guard field.exists else { return }
         let clear = field.buttons.firstMatch

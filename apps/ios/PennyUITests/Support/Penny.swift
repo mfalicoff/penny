@@ -254,6 +254,12 @@ struct Penny {
     private func tabButton(_ title: String, id: String) throws -> XCUIElement {
         // The cards' tab bar (`PennyTabBar`, MAZ-254), not the system's: found by identifier.
         let byID = app.buttons.matching(identifier: id).firstMatch
+        // On iPhone, Activity's root shows its search bar in the tab bar's place (`activity` card,
+        // MAZ-255): its back button (× while searching) leads back to the tabs.
+        let back = app.buttons.matching(identifier: AccessibilityID.Activity.searchBack).firstMatch
+        for _ in 0..<2 where !byID.waitForExistence(timeout: 2) && back.exists {
+            back.tap()
+        }
         guard byID.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "No \(title) tab")
         }
@@ -291,7 +297,19 @@ struct Penny {
     /// whichever control the amount actually is rather than the device. The shared expense form
     /// has the same amount and keypad (`into: AccessibilityID.Households.formAmount`).
     func enterAmount(_ amount: String, into id: String = AccessibilityID.EntryForm.amount) throws {
-        if try wait(for: id).elementType == .textField {
+        let target = try wait(for: id)
+        if target.elementType == .textField {
+            try type(amount, into: id)
+            return
+        }
+        // iPhone income has no keypad (`iphone-add-income`, MAZ-255): its formatted amount turns
+        // into a field when tapped.
+        if id == AccessibilityID.EntryForm.amount, !element(AccessibilityID.EntryForm.keypad("1")).exists {
+            target.tap()
+            let field = app.textFields.matching(identifier: id).firstMatch
+            guard field.waitForExistence(timeout: Penny.timeout) else {
+                throw UIExpectationFailed(description: "The amount did not turn into a field")
+            }
             try type(amount, into: id)
             return
         }
@@ -354,7 +372,14 @@ struct Penny {
     /// controls without identifiers). Skips the element that opened the dialog when it has the
     /// same label.
     func dialogButton(_ label: String) throws -> XCUIElement {
-        let button = app.buttons.matching(NSPredicate(format: "label == %@ AND identifier == ''", label)).firstMatch
+        // System dialogs' buttons have no identifier; Penny's own confirmations (sign-out, delete,
+        // MAZ-255) name theirs under `signOut.` and `deleteEntry.`.
+        let button = app.buttons.matching(
+            NSPredicate(
+                format:
+                    "label == %@ AND (identifier == '' OR identifier BEGINSWITH 'signOut.' OR identifier BEGINSWITH 'deleteEntry.')",
+                label)
+        ).firstMatch
         guard button.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "No \"\(label)\" dialog button")
         }

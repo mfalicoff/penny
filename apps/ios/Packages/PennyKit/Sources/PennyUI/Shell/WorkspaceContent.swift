@@ -189,6 +189,12 @@ enum DayText {
 }
 
 extension View {
+    /// Leaves the title out of the navigation bar when the screen draws its own.
+    @ViewBuilder
+    func toolbarTitleHidden(_ hidden: Bool) -> some View {
+        if hidden { toolbar(removing: .title) } else { self }
+    }
+
     /// Inline navigation titles on iOS; nothing on the macOS host.
     func toolbarTitleDisplayModeInline() -> some View {
         #if os(iOS)

@@ -198,18 +198,66 @@ final class CardCaptureTests: CardTestCase {
 
     @MainActor
     func test_whenSeeded_IphoneDeleteConfirm_ShouldBeCaptured() async throws {
-        try await card(
-            "iphone-delete-confirm",
-            note:
-                "The card deletes a shared expense (Delete for everyone) from Activity; Activity offers delete only on "
-                + "personal rows, so the shared Internet expense is deleted from its detail, opened from Activity"
-        ) { card in
+        try await card("iphone-delete-confirm") { card in
+            // The shared Internet expense, swiped in Activity (MAZ-255).
             let seed = try card.seeded()
             let internet = "household:\(try seed.household("maison")):\(try seed.expense("internet"))"
             try card.penny.openActivity()
-            try card.penny.waitForEntry(internet).tap()
-            try card.penny.tap(Households.expenseDelete)
+            try card.penny.waitForEntry(internet).swipeLeft()
+            try card.penny.tap(AccessibilityID.Journeys.rowDelete)
             _ = try card.penny.dialogButton("Delete for everyone")
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneEditEntry_ShouldBeCaptured() async throws {
+        try await card("iphone-edit-entry") { card in
+            try card.penny.openSeptemberEntry("p-party")
+            try card.penny.tap(AccessibilityID.Journeys.detailEdit)
+            try card.penny.wait(for: AccessibilityID.Screen.editEntry)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneAccountPicker_ShouldBeCaptured() async throws {
+        try await card("iphone-account-picker", freshSeedPerAppearance: true) { card in
+            try card.penny.openAddEntry()
+            try card.penny.tapFormRow(AccessibilityID.EntryForm.account, opening: AccessibilityID.Screen.accountPicker)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneHouseholdPicker_ShouldBeCaptured() async throws {
+        try await card(
+            "iphone-household-picker", freshSeedPerAppearance: true,
+            note: "Household is a row of More details (iphone-entry-extras), so the picker opens over that page"
+        ) { card in
+            try card.penny.draftEntry()
+            try card.penny.tapFormRow(AccessibilityID.Receipt.moreDetails, opening: AccessibilityID.Screen.entryExtras)
+            try card.penny.tap(AccessibilityID.EntryForm.household)
+            try card.penny.wait(for: "screen.householdPicker")
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneActivityFilters_ShouldBeCaptured() async throws {
+        try await card("iphone-activity-filters") { card in
+            try card.penny.openActivity()
+            try card.penny.tap(AccessibilityID.Activity.kindFilter("expense"))
+            try card.penny.waitForSelection(AccessibilityID.Activity.kindFilter("expense"))
+            try card.penny.tap(AccessibilityID.Activity.filters)
+            try card.penny.wait(for: "screen.activityFilters")
+        }
+    }
+
+    @MainActor
+    func test_whenSearchIsSlow_IphoneActivitySearching_ShouldBeCaptured() async throws {
+        try await card("iphone-activity-searching", freshSeedPerAppearance: true) { card in
+            // The server search is held back, so the search is still running.
+            try await card.applyFault()
+            try card.penny.openActivity()
+            try card.penny.search(card.state.search ?? "coffee")
+            try card.penny.wait(for: "activity.searching", timeout: 15)
         }
     }
 
@@ -440,6 +488,16 @@ final class CardCaptureTests: CardTestCase {
             try card.penny.openSettings()
             try card.penny.tap(AccessibilityID.Auth.signOut)
             _ = try card.penny.dialogButton("Sync, then sign out")
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneSignOutPlain_ShouldBeCaptured() async throws {
+        try await card("iphone-sign-out-plain") { card in
+            try card.penny.openSettings()
+            try card.penny.tap(AccessibilityID.Auth.signOut)
+            _ = try card.penny.dialogButton("Cancel")
+            try card.penny.wait(for: "screen.signOutConfirm")
         }
     }
 
@@ -679,13 +737,13 @@ extension Penny {
     func splitEqually(people: Int, apply: Bool = true) throws {
         try tapFormRow(AccessibilityID.Cards.entrySplit, opening: AccessibilityID.Screen.split)
         try selectSegment("Equally", in: AccessibilityID.Cards.splitMode)
-        // The stepper starts at 2; its buttons carry the count as their value.
-        let increment = app.buttons["split.people-Increment"]
+        // The counter starts at 2; its buttons carry the count as their value ("3 people").
+        let increment = app.buttons["split.people.increment"]
         guard increment.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "The split has no people stepper")
         }
         for _ in 2..<people { increment.tap() }
-        let reached = NSPredicate(format: "value == %@ OR value == %d", String(people), people)
+        let reached = NSPredicate(format: "value == %@", "\(people) people")
         guard
             XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: reached, object: increment)], timeout: 5)
                 == .completed
@@ -717,7 +775,7 @@ extension Penny {
     /// `withReceipt` refreshes until the entry shows the receipt another device attached.
     func openSeptemberEntry(_ id: String, withReceipt: Bool = false) throws {
         try openActivity()
-        try selectMonth("September 2026")
+        try selectActivityMonth("September 2026")
         try openEntry(id)
         guard withReceipt else { return }
         // The detail is a lazy list: its receipt row exists once scrolled to (on iPad, the

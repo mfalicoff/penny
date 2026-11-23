@@ -171,6 +171,8 @@ struct EntryAccountPicker: View {
                     creating = true
                 } label: {
                     Label("New account", systemImage: "plus")
+                        .foregroundStyle(PennyColor.tintText)
+                        .frame(minHeight: Metrics.minTouchTarget)
                 }
                 .accessibilityIdentifier("accountPicker.new")
             }
@@ -195,8 +197,15 @@ struct EntryAccountPicker: View {
             selection = id
             dismiss()
         } label: {
-            HStack {
-                Label(title, systemImage: symbol).foregroundStyle(PennyColor.label)
+            HStack(spacing: 12) {
+                // The card's icon tiles (`account-picker`).
+                Image(systemName: symbol)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(PennyColor.label)
+                    .frame(width: 32, height: 32)
+                    .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .accessibilityHidden(true)
+                Text(title).foregroundStyle(PennyColor.label)
                 Spacer()
                 if selection == id {
                     Image(systemName: "checkmark").foregroundStyle(PennyColor.tint).accessibilityHidden(true)
@@ -273,8 +282,9 @@ struct EntryDatePickerSheet: View {
     static let range: ClosedRange<Date> = DayText.date(.earliest)...DayText.date(.latest)
 }
 
-/// `split`: a personal split. Only your share counts toward spending; the total stays on the
-/// entry. A personal split stores no names: equally is a head count including you.
+/// `split`: a personal split, a half sheet stacked over the form (MAZ-255). Only your share
+/// counts toward spending; the total stays on the entry. A personal split stores no names:
+/// equally is a head count including you.
 struct EntrySplitSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var draft: EntryDraft
@@ -282,6 +292,8 @@ struct EntrySplitSheet: View {
     @State private var mode: Money.SplitMode = .full
     @State private var people = 2
     @State private var input = ""
+    /// Half height, as on the card; Amount and Percent grow it for the keyboard.
+    @State private var detent: PresentationDetent = .medium
 
     var body: some View {
         let total = try? Money.cents(draft.amount)
@@ -302,14 +314,14 @@ struct EntrySplitSheet: View {
                     switch mode {
                     case .full: EmptyView()
                     case .equal:
-                        Stepper(value: $people, in: 2...100) {
-                            HStack {
-                                Text("People, including you")
-                                Spacer()
-                                Text("\(people)").font(.title3.weight(.bold)).monospacedDigit()
-                            }
+                        HStack {
+                            Text("People, including you")
+                            Spacer(minLength: 8)
+                            PeopleCounter(count: $people)
                         }
-                        .padding(16)
+                        .padding(.leading, 16)
+                        .padding(.trailing, 12)
+                        .padding(.vertical, 10)
                         .background(
                             PennyColor.surface,
                             in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
@@ -348,14 +360,18 @@ struct EntrySplitSheet: View {
                         .accessibilityIdentifier("split.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
+                    // The copper check, as on the card and the form's own Save.
                     Button("Done", systemImage: "checkmark") { apply() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(PennyColor.tint)
                         .disabled(total == nil || (try? result.get()) == nil)
                         .accessibilityIdentifier("split.done")
                 }
             }
             .pennySolidBars()
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.medium, .large], selection: $detent)
+        .onChange(of: mode) { detent = mode == .amount || mode == .percent ? .large : .medium }
         .onAppear(perform: load)
         .accessibilityIdentifier("screen.split")
     }
@@ -422,6 +438,44 @@ struct EntrySplitSheet: View {
     }
 }
 
+/// The split's head count (`split` card): − count + on the neutral fill, from 2 to 100. VoiceOver
+/// reads it as one adjustable value.
+struct PeopleCounter: View {
+    @Binding var count: Int
+    var range: ClosedRange<Int> = 2...100
+
+    var body: some View {
+        HStack(spacing: 0) {
+            step("minus", label: "Fewer people", id: "split.people.decrement", delta: -1)
+            Text("\(count)")
+                .font(.title3.weight(.bold))
+                .monospacedDigit()
+                .frame(minWidth: 40)
+            step("plus", label: "More people", id: "split.people.increment", delta: 1)
+        }
+        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("split.people")
+    }
+
+    private func step(_ symbol: String, label: String, id: String, delta: Int) -> some View {
+        Button {
+            count = min(range.upperBound, max(range.lowerBound, count + delta))
+        } label: {
+            Image(systemName: symbol)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(PennyColor.label)
+                .frame(width: 44, height: 40)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!range.contains(count + delta))
+        .accessibilityLabel(label)
+        .accessibilityValue("\(count) people")
+        .accessibilityIdentifier(id)
+    }
+}
+
 /// `entry-extras` (More details), with the `repeat-picker` and `trip-picker`: receipt,
 /// repeat, trip and note. Repeat is offered for a new entry only (an edit changes this entry,
 /// not its schedule); trips and receipts belong to expenses only.
@@ -435,6 +489,9 @@ struct EntryExtrasView: View {
     /// shared expense form, as the Household row does; empty for an edit or without households.
     var sharedTrips: [WireHousehold] = []
     var chooseSharedTrip: (String) -> Void = { _ in }
+    /// Opens the Household picker (`iphone-household-picker`); nil when the expense can't go to a
+    /// household (an edit, income, a personal trip, or no households).
+    var chooseHousehold: (() -> Void)?
     let save: () -> Void
 
     var body: some View {
@@ -475,6 +532,27 @@ struct EntryExtrasView: View {
                     ForEach(sharedTrips) { household in sharedTripRow(household) }
                 } header: {
                     Text("Trip").cardSectionHeader()
+                }
+            }
+            if let chooseHousehold {
+                // In its own inset list after Trip, as on `iphone-entry-extras` (MAZ-277).
+                Section {
+                    Button(action: chooseHousehold) {
+                        HStack {
+                            Label("Household", systemImage: "house").foregroundStyle(PennyColor.label)
+                            Spacer(minLength: 8)
+                            Text("Personal").foregroundStyle(PennyColor.secondaryLabel)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(PennyColor.tertiaryLabel)
+                                .accessibilityHidden(true)
+                        }
+                        .frame(minHeight: Metrics.minTouchTarget)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Choose a household to split this expense with")
+                    .accessibilityIdentifier("entryForm.household")
                 }
             }
             CardSection("Note") {

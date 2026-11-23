@@ -67,9 +67,15 @@ private struct TabShell: View {
             }
         }
         .tint(PennyColor.tint)
-        // Over the content, and under the keyboard rather than above it.
+        // Over the content, and under the keyboard rather than above it. Activity's root shows its
+        // search bar in the tab bar's place instead, above the keyboard while typing (`activity`
+        // card, MAZ-255).
         .overlay(alignment: .bottom) {
-            PennyTabBar(shell: shell).ignoresSafeArea(.keyboard, edges: .bottom)
+            if shell.route.tab == .activity, shell.route.path(for: .activity).isEmpty {
+                ActivitySearchBar(shell: shell)
+            } else {
+                PennyTabBar(shell: shell).ignoresSafeArea(.keyboard, edges: .bottom)
+            }
         }
         .modifier(ToastOverlay(bottomPadding: 72))
         .sheet(isPresented: $shell.route.isSettingsPresented, onDismiss: shell.sheetDismissed) {
@@ -90,6 +96,8 @@ struct PennyTabBar: View {
     @Bindable var shell: ShellModel
 
     static let height: Double = 62
+    /// Activity's bottom search bar (`activity` card's `.searchbar`).
+    static let searchHeight: Double = 52
 
     var body: some View {
         GlassEffectContainer(spacing: 10) {

@@ -90,7 +90,7 @@ struct ServerConnectView: View {
 
     private var caption: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Enter the server’s base URL, without /api. This only affects this device.")
+            Text("Enter the server’s base URL, without /api. This only affects this \(SyncBanner.deviceName).")
                 .foregroundStyle(PennyColor.secondaryLabel)
             if input.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("http:") {
                 Text(
@@ -243,7 +243,7 @@ struct ServerInfoView: View {
                 LabeledContent("Account", value: account.email)
                 LabeledContent("Status", value: account.isVerified ? "Connected" : "Not confirmed yet (offline)")
             } footer: {
-                Text("Saved on this device. To change servers, sync your entries and sign out first.")
+                Text("Saved on this \(SyncBanner.deviceName). To change servers, sync your entries and sign out first.")
             }
         }
         .navigationTitle("Server")
