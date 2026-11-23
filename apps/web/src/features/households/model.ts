@@ -160,12 +160,17 @@ export function eligibleMembers(detail: HouseholdDetail, date: string): Househol
   });
 }
 
+/** A member as people see them (MAZ-171): their display name, else their email. */
+export const memberName = (member: HouseholdMember) => member.displayName ?? member.email;
+
 export interface People {
   meId: string | undefined;
-  /** "You", the member's email, or "Former member" for someone the caller can't see. */
+  /** "You", the member's display name (else their email), or "Former member" for someone the caller can't see. */
   name: (userId: string) => string;
-  /** What an avatar shows initials from: the member's email, never "You". */
+  /** What an avatar shows initials from: the member's name (else email), never "You". */
   avatar: (userId: string) => string;
+  /** The member's picture URL, when they have one. */
+  picture: (userId: string) => string | undefined;
   isCurrentMember: (userId: string) => boolean;
 }
 
@@ -175,8 +180,16 @@ export function people(detail: HouseholdDetail | undefined, email: string): Peop
   const meId = me?.userId;
   return {
     meId,
-    name: (userId) => (userId === meId ? "You" : (members.find((member) => member.userId === userId)?.email ?? "Former member")),
-    avatar: (userId) => members.find((member) => member.userId === userId)?.email ?? (userId === meId ? email : "?"),
+    name: (userId) => {
+      if (userId === meId) return "You";
+      const member = members.find((item) => item.userId === userId);
+      return member ? memberName(member) : "Former member";
+    },
+    avatar: (userId) => {
+      const member = members.find((item) => item.userId === userId);
+      return member ? memberName(member) : userId === meId ? email : "?";
+    },
+    picture: (userId) => members.find((member) => member.userId === userId)?.avatarUrl,
     isCurrentMember: (userId) => members.some((member) => member.userId === userId && isCurrent(member)),
   };
 }

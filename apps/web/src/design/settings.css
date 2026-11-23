@@ -217,6 +217,14 @@
   white-space: nowrap;
 }
 
+.settings__profile-email {
+  overflow: hidden;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .settings__profile .sync-line {
   gap: 5px;
   font-size: 0.875rem;

@@ -88,6 +88,15 @@ public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestB
         {
             var email = $"{alias}.{name}@penny.test";
             var (token, userId) = await AccountAsync(email);
+            // Profile names (MAZ-171); users without one show their email.
+            if (scenario["displayNames"]?[alias] is { } displayName)
+                await ExpectAsync(
+                    HttpMethod.Patch,
+                    "/api/profile",
+                    token,
+                    HttpStatusCode.OK,
+                    new { displayName = displayName.GetValue<string>() }
+                );
             (context.Emails[alias], context.Tokens[alias], context.UserIds[alias]) = (
                 email,
                 token,

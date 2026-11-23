@@ -2,16 +2,28 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, use, useEffect, type ReactNode } from "react";
 import { sessionQuery } from "../api/auth";
 import { sessionNoticeKey } from "../api/keys";
+import type { Me } from "../api/schemas";
 import { AuthScreen } from "../features/auth/AuthScreen";
 import { clearPrivateData, type SessionNotice } from "./lifecycle";
 
 const AccountContext = createContext<string | null>(null);
+const MeContext = createContext<Me | null>(null);
 
 /** The signed-in account's email. Only callable below `AuthGate`. It scopes every private query key. */
 export function useAccountEmail(): string {
   const email = use(AccountContext);
   if (email === null) throw new Error("useAccountEmail must be used inside a signed-in AuthGate");
   return email;
+}
+
+/**
+ * The signed-in account with its profile summary (MAZ-171): `displayName` and `avatarUrl` when the
+ * person has them, and `needsName`. Only callable below `AuthGate`.
+ */
+export function useAccountMe(): Me {
+  const me = use(MeContext);
+  if (me === null) throw new Error("useAccountMe must be used inside a signed-in AuthGate");
+  return me;
 }
 
 /** Why the user is looking at sign-in, when it isn't their own doing. */
@@ -60,5 +72,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   if (session.data === null) return <AuthScreen />;
-  return <AccountContext value={session.data.email}>{children}</AccountContext>;
+  return (
+    <AccountContext value={session.data.email}>
+      <MeContext value={session.data}>{children}</MeContext>
+    </AccountContext>
+  );
 }

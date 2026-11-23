@@ -20,6 +20,7 @@ test("register, sign out, sign in with the wrong and right password, and expire 
   const email = unique();
   await page.goto("/");
   await page.getByRole("button", { name: "Create an account" }).click();
+  await page.getByLabel("Name").fill("Web Tester");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();

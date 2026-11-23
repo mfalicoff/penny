@@ -85,7 +85,7 @@ export async function seed(definition, options) {
   for (const alias of definition.users) {
     const email = `${alias}.${runTag}@penny.test`;
     const password = randomBytes(12).toString("hex");
-    const { body } = await request("POST", "/api/auth/register", { body: { email, password }, expect: [201] });
+    const { body } = await request("POST", "/api/auth/register", { body: { email, password, ...(definition.displayNames?.[alias] ? { displayName: definition.displayNames[alias] } : {}) }, expect: [201] });
     context.users[alias] = { email: body.email, password, token: body.token };
   }
   // User ids are learned from household member lists (the API exposes no id for self).

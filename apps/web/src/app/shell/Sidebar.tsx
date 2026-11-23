@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { serverInfoQuery } from "../../api/info";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import type { Household } from "../../api/schemas";
-import { useAccountEmail } from "../../auth/account";
+import { useAccountEmail, useAccountMe } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Avatar, cx, Kbd } from "../../design/controls";
 import { Icon, type IconName } from "../../design/Icon";
@@ -29,6 +29,7 @@ const SIDEBAR_TRIPS = 3;
  */
 export function Sidebar() {
   const email = useAccountEmail();
+  const me = useAccountMe();
   const demo = useIsDemo();
   return (
     <aside className="sidebar sidebar--rail" aria-label="Penny">
@@ -76,10 +77,11 @@ export function Sidebar() {
         </div>
       ) : (
         <div className="sidebar__foot">
-          <Avatar name={email} size={32} />
+          <Avatar name={me.displayName ?? email} src={me.avatarUrl} size={32} />
           <div className="sidebar__account">
+            {/* The person's name, else their email (MAZ-171). */}
             <span className="sidebar__email" title={email}>
-              {email}
+              {me.displayName ?? email}
             </span>
             <SyncLine />
           </div>

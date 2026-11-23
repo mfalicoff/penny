@@ -68,7 +68,9 @@ public sealed class PostgresPasswordResetRepository(NpgsqlDataSource source)
             await context
                 .Users.Where(user => user.Id == reset.UserId)
                 .ExecuteUpdateAsync(
-                    set => set.SetProperty(user => user.Password, passwordHash),
+                    set =>
+                        set.SetProperty(user => user.Password, passwordHash)
+                            .SetProperty(user => user.PasswordChangedAt, now),
                     cancellationToken
                 );
             // Push devices registered to these sessions cascade in the database.

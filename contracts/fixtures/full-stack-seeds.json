@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Sanitized, deterministic full-stack seed scenarios (MAZ-62). Steps are language-neutral HTTP actions run by scripts/test-env/seed.mjs against the .NET/PostgreSQL API. Users are created per run with unique .test emails and generated passwords; nothing here is a credential. References: \"$user:<alias>\", \"$household:<ref>\", \"$expense:<ref>\". Exotic characters are written as \\u escapes.",
+  "description": "Sanitized, deterministic full-stack seed scenarios (MAZ-62). Steps are language-neutral HTTP actions run by scripts/test-env/seed.mjs against the .NET/PostgreSQL API. Users are created per run with unique .test emails and generated passwords; nothing here is a credential. `displayNames` (MAZ-171) gives some users a profile name; users without one show their email. References: \"$user:<alias>\", \"$household:<ref>\", \"$expense:<ref>\". Exotic characters are written as \\u escapes.",
   "scenarios": [
     {
       "name": "empty",
@@ -9,6 +9,9 @@
       "users": [
         "solo"
       ],
+      "displayNames": {
+        "solo": "Sam Lee"
+      },
       "steps": []
     },
     {
@@ -20,6 +23,10 @@
         "bea",
         "cam"
       ],
+      "displayNames": {
+        "alex": "Alex Martin",
+        "bea": "B\u00e9a Tremblay"
+      },
       "steps": [
         {
           "clock": "2026-09-01T12:00:00Z"
@@ -929,6 +936,9 @@
       "users": [
         "dana"
       ],
+      "displayNames": {
+        "dana": "Dana Park"
+      },
       "steps": [
         {
           "clock": "2026-10-16T02:30:00Z"

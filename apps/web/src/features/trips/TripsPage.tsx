@@ -14,6 +14,7 @@ import { Banner, EmptyState, ErrorState, LoadingState } from "../../design/state
 import { EntryFormDialog } from "../entries/EntryForm";
 import { categoryIcon } from "../entries/model";
 import { GroupToolbar, ToolButton } from "../households/GroupTools";
+import { memberName } from "../households/model";
 import { JoinTripDialog } from "../households/StartDialogs";
 import { useLedgerWorkspace } from "../organize/workspace";
 import { featuredTrip, paidByCell, peopleCount, phaseLabel, tileStatus, tripPhase, tripCards, tripOverview, tripRange, tripSections, type TripCard } from "./model";
@@ -250,7 +251,7 @@ function SharedAvatars({ card }: { card: SharedCard }) {
   return (
     <span className="avatars trip-hero__people" aria-hidden="true">
       {members.slice(0, 5).map((member) => (
-        <Avatar key={member.userId} name={member.email} size={34} />
+        <Avatar key={member.userId} name={memberName(member)} src={member.avatarUrl} size={34} />
       ))}
     </span>
   );
@@ -415,7 +416,11 @@ function SharedTripExpenses({ card }: { card: SharedCard }) {
   const expenses = numbers.expenses.data;
   if (!detail || !expenses) return <p className="muted trip-hero__expenses">{numbers.failed ? "Open the trip to see its expenses." : "Loading the trip's expenses…"}</p>;
   const me = numbers.me;
-  const name = (userId: string) => (userId === me ? "You" : (detail.members.find((member) => member.userId === userId)?.email ?? "Former member"));
+  const name = (userId: string) => {
+    if (userId === me) return "You";
+    const member = detail.members.find((item) => item.userId === userId);
+    return member ? memberName(member) : "Former member";
+  };
   const all: PreviewRow[] = [
     // Oldest first, as the card lists the trip's expenses; your private ones follow.
     ...[...expenses].sort((x, y) => x.date.localeCompare(y.date) || x.id.localeCompare(y.id)).map((expense) => ({

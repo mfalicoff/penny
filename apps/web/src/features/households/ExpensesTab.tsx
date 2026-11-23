@@ -115,7 +115,7 @@ function ExpenseRows({ view, expenses, search, label }: { view: HouseholdView; e
       {expenses.map((expense) => (
         <li key={expense.id}>
           <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="row">
-            <Avatar name={view.who.avatar(expense.payerUserId)} size={36} />
+            <Avatar name={view.who.avatar(expense.payerUserId)} src={view.who.picture(expense.payerUserId)} size={36} />
             <span className="row__main">
               <span className="row__title">{expense.title}</span>
               <span className="row__meta">
@@ -216,7 +216,7 @@ function ExpenseTable({ view, expenses, search, rules, selectedId }: { view: Hou
                 </th>
                 <td>
                   <span className="expense-table__payer">
-                    <Avatar name={view.who.avatar(expense.payerUserId)} size={22} />
+                    <Avatar name={view.who.avatar(expense.payerUserId)} src={view.who.picture(expense.payerUserId)} size={22} />
                     {view.who.name(expense.payerUserId)}
                   </span>
                 </td>

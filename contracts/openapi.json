@@ -407,7 +407,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Credentials"
+                "$ref": "#/components/schemas/Registration"
               }
             }
           }
@@ -4945,6 +4945,507 @@
           }
         }
       }
+    },
+    "/api/profile": {
+      "get": {
+        "summary": "Read your profile",
+        "operationId": "getApiProfile",
+        "description": "MAZ-171. The signed-in person's name, picture, which fields they may change, and whether the apps should ask for a name.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change your name or skip the name prompt",
+        "operationId": "patchApiProfile",
+        "description": "MAZ-171. Sets or clears the display name, or records that the person skipped the name prompt. Members of their households and trips see a new name at once.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A name that breaks the rules (\"Enter a name of 1 to 60 characters, without line breaks or control characters.\"), or fields of the wrong type (\"Send displayName as a string or null, and namePromptDismissed as true.\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin, or the sign-in provider manages this field (\"Your sign-in provider manages your name. Change it with your provider.\" or \"… your picture …\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body over the API-wide limit (Backend__MaxRequestBodyBytes, 20 MB).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/avatar": {
+      "put": {
+        "summary": "Upload or replace your picture",
+        "operationId": "putApiProfileAvatar",
+        "description": "MAZ-171. The request body is the picture itself, 1 byte to 10 MiB, PNG, JPEG, WebP, HEIC or HEIF, with its type in Content-Type. The server decodes it in a sandbox, applies the orientation, crops the centre square, shrinks it to at most 512 px (at least 16 px a side, at most 50 megapixels), re-encodes it as WebP and removes all metadata, location included.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a supported picture, empty, over 10 MiB or not matching its type's signature (\"Choose a PNG, JPEG, HEIC or WebP picture up to 10 MB.\"), or a picture the server can't decode or that is too small or too large (\"Penny couldn't read this picture. Choose another one.\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin, or the sign-in provider manages this field (\"Your sign-in provider manages your name. Change it with your provider.\" or \"… your picture …\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body over the API-wide limit (Backend__MaxRequestBodyBytes, 20 MB).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/*",
+                "description": "The picture's bytes."
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/*",
+                "description": "The picture's bytes."
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/*",
+                "description": "The picture's bytes."
+              }
+            },
+            "image/heic": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/*",
+                "description": "The picture's bytes."
+              }
+            },
+            "image/heif": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/*",
+                "description": "The picture's bytes."
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove your picture",
+        "operationId": "deleteApiProfileAvatar",
+        "description": "MAZ-171. Others then see initials.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin, or the sign-in provider manages this field (\"Your sign-in provider manages your name. Change it with your provider.\" or \"… your picture …\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{userId}/avatar": {
+      "get": {
+        "summary": "Read a person's picture",
+        "operationId": "getApiUsersUserIdAvatar",
+        "description": "MAZ-171. Only for the person themselves and for current members of a household or trip the person is or was a member of; anyone else, a missing account and no picture all get the same 404 (\"Picture not found.\"). With the current version in v the answer is cacheable for good (private), otherwise it is revalidated.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "v",
+            "in": "query",
+            "required": false,
+            "description": "The picture version from avatarUrl.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "image/webp": {}
+            },
+            "headers": {
+              "Cache-Control": {
+                "description": "private, max-age=31536000, immutable when v is the current version; private, no-cache otherwise.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "default-src none; sandbox.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No picture, or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "summary": "Change your password",
+        "operationId": "postApiAuthPassword",
+        "description": "MAZ-171. The current password must verify and the new one has 10-256 characters, as at sign-up. Rate-limited like sign-in. Every other session of the account ends; this session and its cookie stay.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A wrong or missing current password (\"Your current password is incorrect.\") or a new password outside 10-256 characters (\"Use a new password of 10–256 characters.\"). The session stays signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin, or an account that signs in with a provider (\"Your account signs in with your sign-in provider, so it has no password to change.\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5046,10 +5547,31 @@
       },
       "Me": {
         "type": "object",
+        "description": "Who is signed in, with the profile summary the apps' chrome shows (MAZ-171). This server always sends userId and needsName, and displayName and avatarUrl when present; servers before profiles send only email, so clients treat them as optional. Profile has the editable flags.",
         "properties": {
           "email": {
             "type": "string",
             "format": "email"
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Omitted when the person has none: show the email. Display text only, never identity: trimmed, 1-60 UTF-16 units, no control characters or line and paragraph separators."
+          },
+          "avatarUrl": {
+            "type": "string",
+            "pattern": "^/api/users/[^/?#]+/avatar\\?v=[0-9a-f]{32}$",
+            "description": "Omitted when the person has no picture: show initials. Same-origin URL of the picture (a square WebP of at most 512 px). Load it with the session; the version changes with every picture, so a URL may be cached for good."
+          },
+          "needsName": {
+            "type": "boolean",
+            "description": "True when the apps should ask for a name (no name, editable, prompt not dismissed). Skipping sends namePromptDismissed."
           }
         },
         "required": [
@@ -5721,6 +6243,17 @@
           },
           "leftAt": {
             "type": "integer"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "The member's display name (MAZ-171). Omitted when they have none: show the email."
+          },
+          "avatarUrl": {
+            "type": "string",
+            "pattern": "^/api/users/[^/?#]+/avatar\\?v=[0-9a-f]{32}$",
+            "description": "The member's picture (MAZ-171). Omitted when they have none: show initials from the display name, else from the email. Same-origin URL of the picture (a square WebP of at most 512 px). Load it with the session; the version changes with every picture, so a URL may be cached for good."
           }
         },
         "required": [
@@ -7586,6 +8119,132 @@
         "required": [
           "deleted",
           "kept"
+        ]
+      },
+      "Registration": {
+        "type": "object",
+        "description": "Credentials plus the optional name asked at sign-up (MAZ-171). Older apps send only the credentials; a blank displayName counts as none.",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 256
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "Optional. When not blank, the same rules as Profile.displayName (400 otherwise)."
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "Profile": {
+        "type": "object",
+        "description": "The signed-in person's profile (MAZ-171). Only people who share a household or trip with them see their name and picture (on HouseholdMember).",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Omitted when the person has none: show the email. Display text only, never identity: trimmed, 1-60 UTF-16 units, no control characters or line and paragraph separators."
+          },
+          "avatarUrl": {
+            "type": "string",
+            "pattern": "^/api/users/[^/?#]+/avatar\\?v=[0-9a-f]{32}$",
+            "description": "Omitted when the person has no picture: show initials. Same-origin URL of the picture (a square WebP of at most 512 px). Load it with the session; the version changes with every picture, so a URL may be cached for good."
+          },
+          "nameEditable": {
+            "type": "boolean",
+            "description": "False when the sign-in provider sends the name: it is read only and refreshed at each sign-in."
+          },
+          "avatarEditable": {
+            "type": "boolean",
+            "description": "False when the sign-in provider sends the picture: it is read only and refreshed at each sign-in."
+          },
+          "needsName": {
+            "type": "boolean",
+            "description": "True when the apps should ask for a name (no name, editable, prompt not dismissed). Skipping sends namePromptDismissed."
+          },
+          "signIn": {
+            "type": "string",
+            "enum": [
+              "password",
+              "oidc"
+            ],
+            "description": "How the account signs in. An account has exactly one sign-in method."
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "description": "For an oidc account: the configured display name of its own sign-in provider, found by the account's issuer. Omitted when not configured; say \"your sign-in provider\"."
+          },
+          "passwordChangedAt": {
+            "type": "integer",
+            "description": "Unix milliseconds when a password account last changed its password (signed in or by reset). Omitted before the first change and for oidc accounts."
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "nameEditable",
+          "avatarEditable",
+          "needsName",
+          "signIn"
+        ]
+      },
+      "ProfileUpdate": {
+        "type": "object",
+        "description": "Absent fields change nothing.",
+        "properties": {
+          "displayName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1000,
+            "description": "A name (the Profile.displayName rules, 400 otherwise) or null to clear it so the email shows. 403 when the provider manages the name."
+          },
+          "namePromptDismissed": {
+            "type": "boolean",
+            "const": true,
+            "description": "The person skipped the name prompt; needsName becomes false."
+          }
+        }
+      },
+      "PasswordChange": {
+        "type": "object",
+        "description": "A signed-in password change (MAZ-171).",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
         ]
       }
     }

@@ -85,7 +85,7 @@ export function HistoryPanel({ view, expenseId }: { view: HouseholdView; expense
               return (
                 <li key={event.id} className="history-row">
                   <span className="history-row__who" aria-hidden="true">
-                    <Avatar name={view.who.avatar(event.actorId)} size={36} />
+                    <Avatar name={view.who.avatar(event.actorId)} src={view.who.picture(event.actorId)} size={36} />
                     <span className={cx("history-row__badge", badge.tone === "income" && "history-row__badge--income")}>
                       <Icon name={badge.icon} size={11} weight={56} />
                     </span>

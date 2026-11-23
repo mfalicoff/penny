@@ -26,6 +26,7 @@ import {
   isPaid,
   localDate,
   MAX_CENTS,
+  memberName,
   monthLabel,
   parseAmount,
   parsePercent,
@@ -496,8 +497,8 @@ export function ExpenseFormDialog({
                         setDraft((previous) => ({ ...previous, payerUserId: member.userId, accountId: member.userId === meId ? previous.accountId : "" }));
                       }}
                     />
-                    <Avatar name={member.email} size={26} />
-                    <span className="payer-pill__name">{member.userId === meId ? "You" : member.email}</span>
+                    <Avatar name={memberName(member)} src={member.avatarUrl} size={26} />
+                    <span className="payer-pill__name">{member.userId === meId ? "You" : memberName(member)}</span>
                   </label>
                 );
               })}
@@ -523,13 +524,13 @@ export function ExpenseFormDialog({
             <ul className="split-rows split-rows--card" aria-label="Shares" aria-describedby={ids.splitWho}>
               {participants.map((member) => {
                 const share = preview?.shares?.find((item) => item.userId === member.userId)?.amountCents;
-                const name = member.userId === meId ? "You" : member.email;
+                const name = member.userId === meId ? "You" : memberName(member);
                 return (
                   <li key={member.userId} className="split-row split-row--checked">
                     <span className="split-row__check" aria-hidden="true">
                       <Icon name="checkmark" size={14} weight={64} />
                     </span>
-                    <Avatar name={member.email} size={30} />
+                    <Avatar name={memberName(member)} src={member.avatarUrl} size={30} />
                     <span className="split-row__name">{name}</span>
                     {draft.splitMode === "equal" ? (
                       <span className={cx("split-row__amount pk-num", member.userId === meId && "split-row__amount--me")}>{share === undefined ? "—" : view.money(share)}</span>
