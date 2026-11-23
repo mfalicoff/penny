@@ -7,7 +7,7 @@ import SwiftUI
 /// date and account. Tapping a row opens its page; swiping pauses, resumes or removes it
 /// (removal asks first); + adds a schedule. Shared schedules the account is part of (MAZ-198)
 /// sit with the expenses, marked Shared with the household's name and the account's share, and
-/// open their household, where they are edited.
+/// open their household with their form (MAZ-256: the household page no longer lists them).
 struct RecurringListView: View {
     @Environment(ShellModel.self) private var shell
     @State private var selection: ScheduleSelection?
@@ -15,6 +15,9 @@ struct RecurringListView: View {
     @State private var removing: RecurringRule?
     @State private var addingSchedule = false
     @State private var failure: SaveFailure?
+    /// A shared schedule being paused or stopped here (MAZ-256).
+    @State private var stopping: SharedSchedule?
+    @State private var sharedFailure: HouseholdFailure?
 
     var body: some View {
         WorkspaceContent { ledger in
@@ -32,6 +35,12 @@ struct RecurringListView: View {
                 if let failure {
                     Section {
                         SaveErrorBanner(failure: failure, retry: nil)
+                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    }
+                }
+                if let sharedFailure {
+                    Section {
+                        HouseholdFailureBanner(failure: sharedFailure)
                             .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     }
                 }
@@ -88,21 +97,56 @@ struct RecurringListView: View {
         } message: { rule in
             Text("Future entries for \(rule.title) stop. Entries already recorded stay in your activity.")
         }
+        .confirmationDialog(
+            "Stop repeating \(stopping?.rule.title ?? "this expense")?",
+            isPresented: Binding(get: { stopping != nil }, set: { if !$0 { stopping = nil } }),
+            titleVisibility: .visible, presenting: stopping
+        ) { schedule in
+            Button("Stop repeating", role: .destructive) { Task { await stop(schedule) } }
+                .accessibilityIdentifier("sharedSchedule.removeConfirm")
+        } message: { schedule in
+            Text("No more expenses are added to \(schedule.household.name) from it. Expenses it already added stay.")
+        }
         .task { shared = await shell.households.sharedSchedules() }
         .accessibilityIdentifier("screen.recurring")
     }
 
     private func sharedRow(_ schedule: SharedSchedule) -> some View {
-        let household = schedule.household
-        return Button {
+        Button {
+            // Its household, with the schedule's form open over it (as the web's `?rule=`).
+            let household = schedule.household
+            shell.households.model(for: household.id)?.requestedRuleID = schedule.rule.id
             shell.navigate { $0.open(household.trip == nil ? .household(id: household.id) : .trip(id: household.id)) }
         } label: {
             SharedScheduleRow(schedule: schedule, today: shell.today)
         }
         .buttonStyle(.plain)
+        // Paused or stopped from here too, as personal schedules are.
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button("Stop repeating", systemImage: "trash", role: .destructive) { stopping = schedule }
+                .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id).remove")
+            Button(
+                schedule.rule.active ? "Pause" : "Resume",
+                systemImage: schedule.rule.active ? "pause.fill" : "play.fill"
+            ) { Task { await setActive(schedule, !schedule.rule.active) } }
+            .tint(PennyColor.pending)
+            .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id).toggle")
+        }
         .cardRow()
-        .accessibilityHint(household.trip == nil ? "Opens the household" : "Opens the trip")
+        .accessibilityHint(schedule.household.trip == nil ? "Opens the household" : "Opens the trip")
         .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id)")
+    }
+
+    private func setActive(_ schedule: SharedSchedule, _ active: Bool) async {
+        guard let model = shell.households.model(for: schedule.household.id) else { return }
+        sharedFailure = await model.setActive(schedule.rule, active)
+        shared = await shell.households.sharedSchedules()
+    }
+
+    private func stop(_ schedule: SharedSchedule) async {
+        guard let model = shell.households.model(for: schedule.household.id) else { return }
+        sharedFailure = await model.deleteRule(schedule.rule)
+        shared = await shell.households.sharedSchedules()
     }
 
     private func row(_ rule: RecurringRule, ledger: Ledger) -> some View {

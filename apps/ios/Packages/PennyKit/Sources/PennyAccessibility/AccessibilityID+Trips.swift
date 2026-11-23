@@ -31,7 +31,6 @@ extension AccessibilityID {
         public static let edit = "tripPage.edit"
         public static let sharedAs = "tripPage.sharedAs"
         public static let openShared = "tripPage.openShared"
-        public static let privateNote = "tripPage.privateNote"
         public static let onlyYou = "tripPage.onlyYou"
         public static let sharedExpenses = "tripPage.sharedExpenses"
         public static func category(_ id: String) -> String { "tripPage.category.\(id)" }
@@ -59,7 +58,7 @@ extension AccessibilityID {
             Screen.all + [
                 new, join, featured, featuredShare, notice, phase, dates, yourSpending, total, outside,
                 addExpense, share,
-                edit, sharedAs, openShared, privateNote, onlyYou, sharedExpenses, formName, formStart, formEnd,
+                edit, sharedAs, openShared, onlyYou, sharedExpenses, formName, formStart, formEnd,
                 formShare, formSave, formClose, formDelete, formDeleteNote, formError, formNameProblem,
                 formDateProblem, shareConfirm, shareClose, shareError, sharePrivate,
             ]

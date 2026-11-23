@@ -21,6 +21,16 @@
   .lbl { padding: 18px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
   .act .ic { background: var(--tint-soft); color: var(--tint); }
   .act .t b { color: var(--tint-text); }
+  /* inline prompt */
+  .ask { margin: 16px 16px 0; background: var(--surface); border-radius: var(--r-card); padding: 18px; }
+  .ask .top { display: flex; gap: 14px; align-items: flex-start; }
+  .ask .ai { width: 44px; height: 44px; border-radius: 13px; background: var(--tint-soft); color: var(--tint); display: grid; place-items: center; flex: none; }
+  .ask .ai [data-i] { width: 24px; height: 24px; }
+  .ask b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin-top: 1px; }
+  .ask p { font-size: 14px; color: var(--label-2); line-height: 1.4; margin-top: 4px; }
+  .ask .btns { display: flex; gap: 10px; margin-top: 16px; }
+  .ask .b { flex: 1; height: 44px; border-radius: 22px; display: grid; place-items: center; font-size: 16px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .ask .b.tint { background: var(--tint); color: #fff; }
 </style></head>
 <body class="canvas">
 <div class="iphone">
@@ -29,6 +39,14 @@
   <div class="scroll">
     <div class="navbar"><div></div><div class="grp" style="all:unset;display:flex;gap:8px"><div class="glass gbtn"><i data-i="add"></i></div></div></div>
     <div class="head"><div class="largetitle">Shared</div><p>November · you're owed <b class="num">$104.30</b> overall</p></div>
+
+    <div class="ask">
+      <div class="top">
+        <div class="ai"><i data-i="time"></i></div>
+        <div><b>Hear about household changes</b><p>Penny tells you when someone in your household adds or changes a shared expense or records a reimbursement. Notifications never show names or amounts.</p></div>
+      </div>
+      <div class="btns"><div class="b tint">Turn on</div><div class="b">Not now</div></div>
+    </div>
 
     <div class="lbl">Households</div>
     <div class="grp">

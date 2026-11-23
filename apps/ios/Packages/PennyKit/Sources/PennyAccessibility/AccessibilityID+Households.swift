@@ -46,6 +46,8 @@ extension AccessibilityID {
         public static let addExpense = "household.addExpense"
         public static let section = "household.section"
         public static let history = "household.history"
+        /// The toolbar … menu: History or Invite when the bar has no room, then Rename, Leave and Archive.
+        public static let more = "household.more"
         public static let month = "household.month"
         public static let previousMonth = "household.previousMonth"
         public static let nextMonth = "household.nextMonth"
@@ -53,7 +55,6 @@ extension AccessibilityID {
         public static let notice = "household.notice"
         public static let invite = "household.invite"
         public static let inviteCreate = "household.inviteCreate"
-        public static let inviteInlineQR = "household.inviteQR"
         public static let leave = "household.leave"
         public static let archive = "household.archive"
         public static let rename = "household.rename"
@@ -68,7 +69,6 @@ extension AccessibilityID {
         public static func balanceRow(_ userId: String) -> String { "household.balanceRow.\(userId)" }
         public static func suggestion(from: String, to: String) -> String { "household.suggestion.\(from)-\(to)" }
         public static func overdue(_ month: String) -> String { "household.overdue.\(month)" }
-        public static func rule(_ id: String) -> String { "household.rule.\(id)" }
         public static func removeMember(_ userId: String) -> String { "household.removeMember.\(userId)" }
 
         // The invite.
@@ -78,6 +78,7 @@ extension AccessibilityID {
         public static let inviteShare = "invite.share"
         public static let inviteCopy = "invite.copy"
         public static let inviteNew = "invite.new"
+        public static let inviteDone = "invite.done"
 
         // The camera scanner.
         public static let scannerPreview = "scanner.preview"
@@ -91,6 +92,8 @@ extension AccessibilityID {
         public static let expenseEdit = "sharedExpense.edit"
         public static let expenseDelete = "sharedExpense.delete"
         public static let expenseHistory = "sharedExpense.history"
+        public static let expenseMore = "sharedExpense.more"
+        public static let expenseRule = "sharedExpense.rule"
         public static func share(_ userId: String) -> String { "sharedExpense.share.\(userId)" }
         public static func markPaid(_ userId: String) -> String { "sharedExpense.markPaid.\(userId)" }
 
@@ -145,10 +148,12 @@ extension AccessibilityID {
                 historySubtitle, startMode, startIntro, name, currency, createButton, code,
                 joinButton, scan,
                 startError, otherServer, useOtherServer, startClose, balance, recordPayment, addExpense, section,
-                history, month, previousMonth, nextMonth, readOnly, notice, invite, inviteCreate, inviteInlineQR, leave,
+                history, month, previousMonth, nextMonth, readOnly, notice, invite, inviteCreate, more, leave,
                 archive, rename,
-                monthlyNote, inviteCode, inviteQR, inviteExpires, inviteShare, inviteCopy, inviteNew, scannerPreview,
+                monthlyNote, inviteCode, inviteQR, inviteExpires, inviteShare, inviteCopy, inviteNew, inviteDone,
+                scannerPreview,
                 scannerDenied, scannerTypeCode, scannerClose, expenseTotal, expenseShare, expenseEdit, expenseDelete,
+                expenseMore, expenseRule,
                 expenseHistory, formAmount, formTitle, formDate, formMode, formYourShare, formAccount, formNote,
                 formRepeat, formSave, formClose, formCategory, formActive, formProblem, formError, formReviewLatest,
                 formRestoredDraft,
@@ -159,7 +164,7 @@ extension AccessibilityID {
         static let prefixes = [
             "shared.household.", "household.expense.", "household.member.", "household.balanceRow.",
             "household.suggestion.",
-            "household.overdue.", "household.rule.", "household.removeMember.", "sharedExpense.share.",
+            "household.overdue.", "household.removeMember.", "sharedExpense.share.",
             "sharedExpense.markPaid.", "sharedForm.payer.", "sharedForm.split.", "history.filter.", "history.event.",
         ]
     }

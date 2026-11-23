@@ -23,8 +23,9 @@ public struct InviteCode: Hashable, Sendable, CustomStringConvertible {
         ("0"..."9").contains(scalar) || ("A"..."F").contains(scalar)
     }
 
-    /// Two groups of five ("4F2A9 C01BE"), easier to read aloud. Typing it back works.
-    public var grouped: String { "\(value.prefix(5)) \(value.suffix(5))" }
+    /// Four, four and two ("4F2A 9C01 BE", as `iphone-invite` draws it), easier to read aloud. Typing it
+    /// back works.
+    public var grouped: String { "\(value.prefix(4)) \(value.dropFirst(4).prefix(4)) \(value.suffix(2))" }
 
     /// Each character spelled out for VoiceOver ("4, F, 2, A, 9, C, 0, 1, B, E").
     public var spoken: String { value.map(String.init).joined(separator: ", ") }

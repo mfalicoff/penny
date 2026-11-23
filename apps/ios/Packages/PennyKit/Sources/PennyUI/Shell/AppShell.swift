@@ -444,12 +444,7 @@ private struct SidebarFooter: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Text(shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "D")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .frame(width: 40, height: 40)
-                .background(PennyColor.fill, in: Circle())
-                .accessibilityHidden(true)
+            Monogram(initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "D", size: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(shell.account?.email ?? "Demo account").font(.subheadline.weight(.semibold)).lineLimit(1)
                 Text(SyncText.line(shell.workspace.sync)).font(.footnote)

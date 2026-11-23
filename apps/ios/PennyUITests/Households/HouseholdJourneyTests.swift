@@ -88,7 +88,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
         (back.waitForExistence(timeout: 5) ? back : penny.app.navigationBars.buttons.element(boundBy: 0)).tap()
         try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
         try penny.selectSegment("People", in: IDs.section)
-        try penny.tap(IDs.leave)
+        try penny.tap(IDs.leave, orIn: IDs.more)
         try penny.dialogButton("Leave").tap()
         // The refusal shows at the top of the page.
         for _ in 0..<3 { penny.app.collectionViews.firstMatch.swipeDown() }

@@ -16,10 +16,10 @@ struct Monogram: View {
 
     var body: some View {
         Text(initials)
-            .font(.system(size: size * 0.36, weight: .semibold))
-            .foregroundStyle(PennyColor.secondaryLabel)
+            .font(.system(size: size * 0.36, weight: .bold))
+            .foregroundStyle(PennyColor.monogramLabel)
             .frame(width: size, height: size)
-            .background(PennyColor.fill, in: Circle())
+            .background(PennyColor.monogram, in: Circle())
             .accessibilityHidden(true)
     }
 }

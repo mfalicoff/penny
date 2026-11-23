@@ -147,8 +147,8 @@ function joinedLabel(member: HouseholdMember): string {
   return day.slice(0, 4) === localDate().slice(0, 4) ? shortDate(day) : dayLabel(day, true).replace(/^\w+, /, "");
 }
 
-/** Groups the 10-character code for reading aloud and typing: "7F3A9 C01B2". */
-export const formatInviteCode = (code: string) => `${code.slice(0, 5)} ${code.slice(5)}`;
+/** Groups the 10-character code for reading aloud and typing, as `iphone-invite` draws it: "7F3A 9C01 B2". */
+export const formatInviteCode = (code: string) => `${code.slice(0, 4)} ${code.slice(4, 8)} ${code.slice(8)}`;
 
 function useNow(active: boolean) {
   const [now, setNow] = useState(() => Date.now());

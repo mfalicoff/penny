@@ -31,14 +31,16 @@ const utc = (date: string) => {
 /** Whole calendar days from `today` to `date` (negative in the past). */
 export const daysUntil = (date: string, today = localDate()) => Math.round((utc(date) - utc(today)) / DAY);
 
-/** "In 3 days", "Tomorrow", "Now", "Upcoming" or "Past": always words, never color alone. */
+/** "In 3 days", "In 12 weeks" (`iphone-trip-personal`), "Tomorrow", "Now", "Upcoming" (over 26 weeks away) or "Past": always words, never color alone. */
 export function phaseLabel(trip: { startDate: string; endDate: string }, today = localDate()): string {
   const phase = tripPhase(trip, today);
   if (phase === "now") return "Now";
   if (phase === "past") return "Past";
   const days = daysUntil(trip.startDate, today);
   if (days === 1) return "Tomorrow";
-  return days <= 30 ? `In ${String(days)} days` : "Upcoming";
+  if (days <= 30) return `In ${String(days)} days`;
+  const weeks = Math.floor(days / 7);
+  return weeks <= 26 ? `In ${String(weeks)} weeks` : "Upcoming";
 }
 
 /**

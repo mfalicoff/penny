@@ -87,7 +87,8 @@ describe("dates and phases", () => {
     expect(tripPhase(lisbon, "2026-11-20")).toBe("past");
     expect(phaseLabel(lisbon, "2026-11-11")).toBe("Tomorrow");
     expect(phaseLabel(lisbon, "2026-11-09")).toBe("In 3 days");
-    expect(phaseLabel(lisbon, "2026-09-01")).toBe("Upcoming");
+    expect(phaseLabel(lisbon, "2026-09-01")).toBe("In 10 weeks");
+    expect(phaseLabel(lisbon, "2026-01-01")).toBe("Upcoming");
     expect(phaseLabel(lisbon, "2026-11-15")).toBe("Now");
     expect(phaseLabel(lisbon, "2027-01-01")).toBe("Past");
   });
