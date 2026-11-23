@@ -34,12 +34,14 @@ public sealed class PasswordResetMailService(
         var user = await accounts.FindByEmailAsync(normalized, cancellationToken);
         if (user is null)
             return;
-        await outbox.EnqueuePasswordResetAsync(
+        await outbox.EnqueueAccountMailAsync(
+            MailKinds.PasswordReset,
             user.Id,
             MailRecipients.Hash(normalized),
             locale,
             mail,
             Now(),
+            TimeSpan.Zero,
             cancellationToken
         );
     }

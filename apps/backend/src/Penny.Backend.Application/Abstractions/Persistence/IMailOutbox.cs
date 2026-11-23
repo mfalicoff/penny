@@ -9,14 +9,18 @@ namespace Penny.Backend.Application.Abstractions.Persistence;
 public interface IMailOutbox
 {
     // One transaction holding the account's user row lock, so requests for one account
-    // serialize: queues a password reset email unless one for the account is still
-    // unsent or the recipient or the account reached the daily limit. True when queued.
-    Task<bool> EnqueuePasswordResetAsync(
+    // serialize: queues an email of `kind` (a password reset or an email verification) to
+    // the account unless one of that kind for the account is still unsent or was created
+    // less than `minimumInterval` ago, or the recipient or the account reached the daily
+    // limit. True when queued.
+    Task<bool> EnqueueAccountMailAsync(
+        string kind,
         string userId,
         string recipientHash,
         string locale,
         MailPolicy policy,
         DateTimeOffset now,
+        TimeSpan minimumInterval,
         CancellationToken cancellationToken
     );
 

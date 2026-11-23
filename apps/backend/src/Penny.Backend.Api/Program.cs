@@ -12,6 +12,7 @@ var maintenance =
     args.FirstOrDefault()
     is MaintenanceCommand.Name
         or PasswordResetCommand.Name
+        or EmailVerificationCommand.Name
         or SearchCommand.Rebuild
         or SearchCommand.Verify
         or ReceiptCommand.Verify
@@ -27,6 +28,8 @@ if (args.FirstOrDefault() == PushSmokeCommand.Name)
     return await PushSmokeCommand.RunAsync(args, builder.Configuration);
 if (args.FirstOrDefault() == PasswordResetCommand.Name)
     return await PasswordResetCommand.RunAsync(args, builder.Configuration);
+if (args.FirstOrDefault() == EmailVerificationCommand.Name)
+    return await EmailVerificationCommand.RunAsync(args, builder.Configuration);
 if (args.FirstOrDefault() is SearchCommand.Rebuild or SearchCommand.Verify)
     return await SearchCommand.RunAsync(args, builder.Configuration);
 if (maintenance)

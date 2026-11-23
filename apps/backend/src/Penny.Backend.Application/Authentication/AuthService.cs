@@ -14,6 +14,7 @@ public sealed class AuthService(
     IPasswordHasher passwords,
     RegistrationPolicy policy,
     ProfileService profiles,
+    EmailVerificationService verification,
     TimeProvider clock
 )
 {
@@ -32,6 +33,9 @@ public sealed class AuthService(
         "This account already exists. Please try signing in again.";
     public const string WrongCurrentPassword = "Your current password is incorrect.";
     public const string InvalidNewPassword = "Use a new password of 10–256 characters.";
+    public const string EmailInUse = "Another account already uses this email.";
+    public const string EmailManaged =
+        "Your sign-in provider manages your email. Change it with your provider.";
     public const string NoPassword =
         "Your account signs in with your sign-in provider, so it has no password to change.";
 
@@ -39,6 +43,7 @@ public sealed class AuthService(
         string? email,
         string? password,
         string? displayName,
+        string locale,
         CancellationToken cancellationToken
     )
     {
@@ -64,6 +69,14 @@ public sealed class AuthService(
             )
         )
             throw new BackendFailure(FailureKind.Conflict, DuplicateEmail);
+        // MAZ-172: a new password account starts unverified; the email waits in the outbox.
+        await verification.QueueAsync(
+            userId,
+            credentials.Email,
+            locale,
+            TimeSpan.Zero,
+            cancellationToken
+        );
         return new(await IssueAsync(userId, cancellationToken), credentials.Email);
     }
 
@@ -115,7 +128,8 @@ public sealed class AuthService(
             throw new BackendFailure(FailureKind.Conflict, OidcEmailInUse);
         var userId = SessionTokens.NewId();
         // OIDC-only accounts have an empty password, which never verifies.
-        var user = new StoredUser(userId, identity.Email, "");
+        // The provider said the email is verified (MAZ-172).
+        var user = new StoredUser(userId, identity.Email, "", EmailVerifiedAt: Now());
         if (
             !await accounts.TryCreateOidcAsync(
                 user,
@@ -161,6 +175,57 @@ public sealed class AuthService(
             )
         )
             throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+    }
+
+    // A signed-in email change for a password account (MAZ-172): the current password must
+    // verify and the address follows the sign-up rule. The account becomes unverified, its
+    // pending verification code stops working, and a new verification email is queued
+    // while the server sends email. Sessions stay. The same address changes nothing. An
+    // address another account uses is a 409, as at registration.
+    public async Task<ProfileView> ChangeEmailAsync(
+        AuthenticatedSession session,
+        string? email,
+        string? password,
+        string locale,
+        CancellationToken cancellationToken
+    )
+    {
+        var user = await accounts.FindByIdAsync(session.UserId, cancellationToken)
+            ?? throw new BackendFailure(FailureKind.Unauthorized, SignInRequired);
+        if (user.Password.Length == 0)
+            throw new BackendFailure(FailureKind.Forbidden, EmailManaged);
+        var normalized = Credentials.NormalizeEmail(email)
+            ?? throw new BackendFailure(FailureKind.Invalid, PasswordResetService.InvalidEmail);
+        // Always verify, so a missing password costs the same as a wrong one.
+        if (passwords.Verify(user.Password, password ?? "") == PasswordCheck.Failed)
+            throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+        if (!string.Equals(normalized, user.Email, StringComparison.Ordinal))
+        {
+            if (await accounts.FindByEmailAsync(normalized, cancellationToken) is not null)
+                throw new BackendFailure(FailureKind.Conflict, EmailInUse);
+            switch (
+                await accounts.TryChangeEmailAsync(
+                    user.Id,
+                    user.Password,
+                    normalized,
+                    cancellationToken
+                )
+            )
+            {
+                case EmailChangeResult.Duplicate:
+                    throw new BackendFailure(FailureKind.Conflict, EmailInUse);
+                case EmailChangeResult.Stale:
+                    throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+            }
+            await verification.QueueAsync(
+                user.Id,
+                normalized,
+                locale,
+                TimeSpan.Zero,
+                cancellationToken
+            );
+        }
+        return await profiles.GetAsync(user.Id, cancellationToken);
     }
 
     // Returns null for a missing, malformed, unknown, expired or revoked token.

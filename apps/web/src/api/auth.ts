@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { ApiError, apiFetch } from "./client";
 import { sessionKey } from "./keys";
 import { expireSession } from "../auth/lifecycle";
-import { meSchema, oidcChallengeSchema, oidcConfigSchema, okSchema, sessionSchema, type Me, type PasswordReset } from "./schemas";
+import { emailVerifiedSchema, meSchema, oidcChallengeSchema, oidcConfigSchema, okSchema, profileSchema, sessionSchema, type EmailChange, type Me, type PasswordReset, type Profile } from "./schemas";
 
 export interface Credentials {
   email: string;
@@ -93,3 +93,25 @@ export const sessionQuery = queryOptions({
   },
   staleTime: 60_000,
 });
+
+/**
+ * Email verification (MAZ-172). Redeems the code from the emailed link, signed in or not (the link
+ * may be opened on another device), and answers the address it verified.
+ */
+export async function verifyEmail(token: string, signal?: AbortSignal): Promise<string> {
+  const { email } = await apiFetch("/api/auth/email-verification", emailVerifiedSchema, { method: "POST", body: { token }, ...(signal ? { signal } : {}) });
+  return email;
+}
+
+/**
+ * Sends the signed-in account's verification email again. The server answers the same 202 whether
+ * or not it queued one (a minute after the last one at the earliest); a 404 means it doesn't send email.
+ */
+export async function resendVerification(signal?: AbortSignal): Promise<void> {
+  await apiFetch("/api/auth/email-verification/resend", okSchema, { method: "POST", body: {}, ...(signal ? { signal } : {}) });
+}
+
+/** Changes a password account's email after its password; the account is then unverified. */
+export function changeEmail(input: EmailChange, signal?: AbortSignal): Promise<Profile> {
+  return apiFetch("/api/auth/email", profileSchema, { method: "POST", body: input, ...(signal ? { signal } : {}) });
+}

@@ -87,7 +87,11 @@ const setClock = async (now) => {
   const response = await fetch(api + "/api/test/clock", { method: "PUT", headers: { "X-Penny-Test-Token": process.env.PENNY_TEST_TOKEN, "Content-Type": "application/json" }, body: JSON.stringify({ now }) });
   if (!response.ok) throw new Error("clock " + response.status);
 };
-const context = await seed(scenario(process.argv[1]), { apiUrl: api, runTag: process.argv[2], setClock });
+const verifyEmail = async (email) => {
+  const response = await fetch(api + "/api/test/email-verified", { method: "POST", headers: { "X-Penny-Test-Token": process.env.PENNY_TEST_TOKEN, "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+  if (!response.ok) throw new Error("email-verified " + response.status);
+};
+const context = await seed(scenario(process.argv[1]), { apiUrl: api, runTag: process.argv[2], setClock, verifyEmail });
 process.stdout.write(JSON.stringify(context));
 `;
 

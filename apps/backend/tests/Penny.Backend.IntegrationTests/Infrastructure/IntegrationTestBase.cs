@@ -47,7 +47,7 @@ public abstract class IntegrationTestBase(ApiFixture fixture) : IAsyncLifetime
     }
 
     // Registers a synthetic account and returns its bearer token.
-    protected async Task<string> RegisterAsync(string email, HttpClient? client = null)
+    protected virtual async Task<string> RegisterAsync(string email, HttpClient? client = null)
     {
         using var response = await (client ?? Client).PostAsJsonAsync(
             "/api/auth/register",

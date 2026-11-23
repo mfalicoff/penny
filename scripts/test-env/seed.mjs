@@ -70,7 +70,9 @@ export function resolve(value, context) {
  * Seeds a scenario. `setClock` pins server time (the .NET test control); without it the
  * server runs at real time, so clock-dependent fields differ from the scenario.
  * @param {object} definition one entry of full-stack-seeds.json `scenarios`
- * @param {{ apiUrl: string, runTag?: string, setClock?: (iso: string) => Promise<void> }} options
+ * `verifyEmail` marks each account verified (the .NET test control, MAZ-172), as accounts that
+ * existed before email verification are; without it the accounts stay unverified.
+ * @param {{ apiUrl: string, runTag?: string, setClock?: (iso: string) => Promise<void>, verifyEmail?: (email: string) => Promise<void> }} options
  */
 export async function seed(definition, options) {
   const request = client(options.apiUrl);
@@ -87,6 +89,7 @@ export async function seed(definition, options) {
     const password = randomBytes(12).toString("hex");
     const { body } = await request("POST", "/api/auth/register", { body: { email, password, ...(definition.displayNames?.[alias] ? { displayName: definition.displayNames[alias] } : {}) }, expect: [201] });
     context.users[alias] = { email: body.email, password, token: body.token };
+    if (options.verifyEmail) await options.verifyEmail(body.email);
   }
   // User ids are learned from household member lists (the API exposes no id for self).
   const learnMembers = (members) => {

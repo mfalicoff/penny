@@ -82,7 +82,8 @@ The API exposes `/api/test/*` only when `TestControls__Enabled=true`. Every requ
 | State | `GET /api/test/state` → `{environment, now, clockPinned, faults}` |
 | Clock | `PUT /api/test/clock {"now": "2026-10-15T12:00:00Z"}` pins the server `TimeProvider` (sessions, join days, month cutoffs, due rules, audit and created instants); `DELETE` returns to system time. Pinned time does not advance, so writes share one instant and same-day ties fall to ids |
 | Faults | `PUT /api/test/faults {"rules": [{"method": "PUT", "pathPrefix": "/api/ledger", "status": 503, "times": 1}]}`. Fields: `target` (`http`, default, or `push`), `method`, `pathPrefix`, `status` (400–599), `delayMs` (≤ 30,000), `abort` (drop the connection), `times` (default: until cleared). Rules apply in order, before routing; `/api/test/*` is never faulted. `DELETE` clears them |
-| Users | `POST /api/test/users {"label": "web"}` |
+| Users | `POST /api/test/users {"label": "web"}`. The account's email is verified unless the body has `"unverified": true` (MAZ-172) |
+| Email verified | `POST /api/test/email-verified {"email": "…"}` marks an account's email verified, as accounts that existed before email verification are (MAZ-172). Seeds call it for every account they register |
 | Reset | `POST /api/test/reset` |
 
 `push` rules apply to the MAZ-61 delivery worker, which consults the same registry before each APNs call: `method` `apns` (or any when unset), `abort` answers the call with a network retry, `status` 410 with an invalid token, 429/5xx with a retry and other 4xx with a permanent failure ([push](push.md#test-controls)).

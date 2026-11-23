@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { z } from "zod";
 import { login, oidcConfigQuery, register, type Credentials } from "../../api/auth";
@@ -127,6 +127,8 @@ export function AuthFrame({ className, footer, children }: { className?: string 
 
 function CredentialsForm({ mode }: { mode: Mode }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const emailEnabled = useEmailEnabled();
   const creating = mode === "create-account";
   const ids = { name: useId(), nameError: useId(), email: useId(), password: useId(), emailError: useId(), passwordError: useId(), formError: useId(), requirement: useId() };
   const [password, setPassword] = useState("");
@@ -139,7 +141,11 @@ function CredentialsForm({ mode }: { mode: Mode }) {
   const submit = useMutation({
     mutationKey: ["auth", mode],
     mutationFn: (credentials: Credentials & { displayName?: string }) => (creating ? register(credentials) : login(credentials)),
-    onSuccess: ({ email }) => beginSession(queryClient, email),
+    onSuccess: async ({ email }) => {
+      await beginSession(queryClient, email);
+      // MAZ-172: a new password account is unverified; while the server sends email, say a link is on its way.
+      if (creating && emailEnabled) await navigate({ to: "/verify-email", replace: true });
+    },
     onError: (error) => {
       setFormError(describeAuthError(error));
       // Recover where the user can act: a taken email is fixed in the email field, anything else by retyping the password.

@@ -45,7 +45,39 @@ public sealed class EmailDisabledTests(ApiFixture fixture) : HouseholdTestBase(f
             HttpStatusCode.NotFound,
             MailPolicy.Disabled
         );
+        // MAZ-172: verification is off. A new account stays unverified (the apps show no
+        // unverified state while email is off), nothing is queued and resending is a 404.
+        var profile = await ExpectAsync(
+            HttpMethod.Get,
+            "/api/profile",
+            alex.Token,
+            HttpStatusCode.OK
+        );
+        profile.GetProperty("emailVerified").GetBoolean().ShouldBeFalse();
+        using (
+            var resend = await SendAsync(
+                HttpMethod.Post,
+                "/api/auth/email-verification/resend",
+                alex.Token
+            )
+        )
+            await AuthTests.ShouldBeErrorAsync(
+                resend,
+                HttpStatusCode.NotFound,
+                MailPolicy.Disabled
+            );
+        // An email change works and queues nothing.
+        using (
+            var changed = await SendAsync(
+                HttpMethod.Post,
+                "/api/auth/email",
+                alex.Token,
+                new { email = "alex.new@example.test", password = TestPassword }
+            )
+        )
+            changed.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await CountAsync("SELECT count(*) FROM penny.mail_outbox")).ShouldBe(0L);
+        (await CountAsync("SELECT count(*) FROM penny.email_verifications")).ShouldBe(0L);
         // Shared codes keep working.
         (await InviteAsync(householdId, alex.Token)).ShouldMatch("^[A-F0-9]{10}$");
     }

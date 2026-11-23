@@ -615,3 +615,23 @@
   left: 58px;
   border-top: 0.5px solid var(--pk-separator);
 }
+
+/* ---------- Sign-in row: email verification (MAZ-172, card `web-profile`) ---------- */
+.profile__verified,
+.profile__unverified-label {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.profile__unverified {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}

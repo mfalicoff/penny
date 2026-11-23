@@ -15,14 +15,17 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 /**
- * Pages that work without an account: the OIDC callback finishes sign-in itself, and password
- * reset (MAZ-123, MAZ-124) is for people who can't sign in.
+ * Pages that work without an account: the OIDC callback finishes sign-in itself, password
+ * reset (MAZ-123, MAZ-124) is for people who can't sign in, and an email verification link
+ * (MAZ-172) may be opened on any device.
  */
-const PUBLIC_PATHS = new Set(["/auth/callback", "/forgot-password", "/reset-password"]);
+const PUBLIC_PATHS = new Set(["/auth/callback", "/forgot-password", "/reset-password", "/verify-email"]);
 
 /** Everything but the public pages needs a signed-in account. */
 function RootLayout() {
-  const isPublic = useRouterState({ select: (state) => PUBLIC_PATHS.has(state.location.pathname) });
+  // The page the outlet renders (the committed match), not a pending location: mid-navigation the
+  // outlet still shows the previous page, which must stay inside (or outside) its gate.
+  const isPublic = useRouterState({ select: (state) => PUBLIC_PATHS.has(state.matches.at(-1)?.pathname ?? state.location.pathname) });
   if (isPublic) return <Outlet />;
   return (
     <AuthGate>

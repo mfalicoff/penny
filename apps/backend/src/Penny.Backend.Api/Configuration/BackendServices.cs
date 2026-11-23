@@ -257,6 +257,8 @@ public static class BackendServices
         services.AddSingleton<IMailOutbox, PostgresMailOutbox>();
         services.AddSingleton<PasswordResetMailService>();
         services.AddSingleton<EmailInviteService>();
+        services.AddSingleton<IEmailVerificationRepository, PostgresEmailVerificationRepository>();
+        services.AddSingleton<EmailVerificationService>();
         if (email.Smtp is not { } smtp)
             return;
         services.AddSingleton<IMailTransport>(new SmtpMailTransport(smtp));

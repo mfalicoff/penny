@@ -26,6 +26,25 @@ public abstract partial class EmailTestBase(ApiFixture fixture, EmailHost email)
 
     protected void MailAt(DateTimeOffset instant) => Email.Factory.Clock.Set(instant);
 
+    // Registers an account as it existed before email verification (MAZ-172): verified, with
+    // no verification email waiting, so the suites count only the emails they ask for.
+    protected override async Task<string> RegisterAsync(string email, HttpClient? client = null)
+    {
+        var token = await RegisterUnverifiedAsync(email, client);
+        await Fixture.SqlAsync(
+            $"""
+            DELETE FROM penny.mail_outbox WHERE kind = 'email-verification' AND user_id = (SELECT id FROM penny.users WHERE email = '{email}');
+            UPDATE penny.users SET email_verified_at = now() WHERE email = '{email}';
+            """,
+            Ct
+        );
+        return token;
+    }
+
+    // A fresh sign-up: unverified, with its verification email queued.
+    protected Task<string> RegisterUnverifiedAsync(string email, HttpClient? client = null) =>
+        base.RegisterAsync(email, client);
+
     protected async Task<int> DeliverAsync()
     {
         var sent = 0;

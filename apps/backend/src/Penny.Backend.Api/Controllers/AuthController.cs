@@ -19,6 +19,7 @@ public sealed class AuthController(
     ProfileService profiles,
     PasswordResetService resets,
     PasswordResetMailService resetMail,
+    EmailVerificationService verification,
     AuthOptions options,
     TimeProvider clock
 ) : ControllerBase
@@ -27,6 +28,8 @@ public sealed class AuthController(
     private static readonly string[] ResetRequestFields = ["email"];
     private static readonly string[] RegisterFields = ["email", "password", "displayName"];
     private static readonly string[] ChangeFields = ["currentPassword", "newPassword"];
+    private static readonly string[] VerifyFields = ["token"];
+    private static readonly string[] EmailFields = ["email", "password"];
 
     [AllowAnonymous]
     [EnableRateLimiting(AuthRateLimit.Policy)]
@@ -47,7 +50,13 @@ public sealed class AuthController(
                 RegisterFields,
                 cancellationToken
             );
-            return await auth.RegisterAsync(fields[0], fields[1], fields[2], cancellationToken);
+            return await auth.RegisterAsync(
+                fields[0],
+                fields[1],
+                fields[2],
+                MailLocales.From(Request.Headers.AcceptLanguage),
+                cancellationToken
+            );
         });
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return StatusCode(201, new SessionResponse(session.Token, session.Email));
@@ -133,6 +142,75 @@ public sealed class AuthController(
         var fields = await JsonStringFields.ReadAsync(Request, ChangeFields, cancellationToken);
         await auth.ChangePasswordAsync(User.Session(), fields[0], fields[1], cancellationToken);
         return Ok(new OkResponse(true));
+    }
+
+    // MAZ-172: redeems an emailed verification code, anonymous so the link works on any
+    // device. Single use; a code sent to an earlier address of the account never works.
+    [AllowAnonymous]
+    [EnableRateLimiting(AuthRateLimit.Policy)]
+    [HttpPost("email-verification", Name = "postApiAuthEmailVerification")]
+    [ProducesResponseType<EmailVerifiedResponse>(200)]
+    [ProducesResponseType<ApiError>(400)]
+    [ProducesResponseType<ApiError>(403)]
+    [ProducesResponseType<ApiError>(413)]
+    [ProducesResponseType<ApiError>(429)]
+    public async Task<ActionResult<EmailVerifiedResponse>> VerifyEmail(
+        CancellationToken cancellationToken
+    )
+    {
+        var fields = await JsonStringFields.ReadAsync(Request, VerifyFields, cancellationToken);
+        return Ok(
+            new EmailVerifiedResponse(await verification.VerifyAsync(fields[0], cancellationToken))
+        );
+    }
+
+    // MAZ-172: sends the signed-in account's verification email again. The answer is the
+    // same whether or not one is queued (already verified, one still waiting or sent less
+    // than a minute ago, the daily limits). 404 while the server sends no email.
+    [EnableRateLimiting(AuthRateLimit.Policy)]
+    [HttpPost("email-verification/resend", Name = "postApiAuthEmailVerificationResend")]
+    [ProducesResponseType<OkResponse>(202)]
+    [ProducesResponseType<ApiError>(401)]
+    [ProducesResponseType<ApiError>(403)]
+    [ProducesResponseType<ApiError>(404)]
+    [ProducesResponseType<ApiError>(429)]
+    public async Task<IActionResult> ResendVerification(CancellationToken cancellationToken)
+    {
+        await verification.ResendAsync(
+            User.Session(),
+            MailLocales.From(Request.Headers.AcceptLanguage),
+            cancellationToken
+        );
+        return StatusCode(202, new OkResponse(true));
+    }
+
+    // MAZ-172: changes a password account's email after checking its password. The account
+    // becomes unverified and, while the server sends email, gets a new verification email.
+    [EnableRateLimiting(AuthRateLimit.Policy)]
+    [HttpPost("email", Name = "postApiAuthEmail")]
+    [ProducesResponseType<ProfileResponse>(200)]
+    [ProducesResponseType<ApiError>(400)]
+    [ProducesResponseType<ApiError>(401)]
+    [ProducesResponseType<ApiError>(403)]
+    [ProducesResponseType<ApiError>(409)]
+    [ProducesResponseType<ApiError>(413)]
+    [ProducesResponseType<ApiError>(429)]
+    public async Task<ActionResult<ProfileResponse>> ChangeEmail(
+        CancellationToken cancellationToken
+    )
+    {
+        var fields = await JsonStringFields.ReadAsync(Request, EmailFields, cancellationToken);
+        return Ok(
+            ProfileResponse.From(
+                await auth.ChangeEmailAsync(
+                    User.Session(),
+                    fields[0],
+                    fields[1],
+                    MailLocales.From(Request.Headers.AcceptLanguage),
+                    cancellationToken
+                )
+            )
+        );
     }
 
     [HttpGet("me", Name = "getApiAuthMe")]

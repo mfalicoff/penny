@@ -16,12 +16,14 @@ namespace Penny.Backend.Persistence.Repositories;
 // raw SQL.
 public sealed class PostgresMailOutbox(NpgsqlDataSource source) : IMailOutbox
 {
-    public async Task<bool> EnqueuePasswordResetAsync(
+    public async Task<bool> EnqueueAccountMailAsync(
+        string kind,
         string userId,
         string recipientHash,
         string locale,
         MailPolicy policy,
         DateTimeOffset now,
+        TimeSpan minimumInterval,
         CancellationToken cancellationToken
     )
     {
@@ -42,11 +44,12 @@ public sealed class PostgresMailOutbox(NpgsqlDataSource source) : IMailOutbox
         )
             return false;
         var since = now - MailPolicy.LimitWindow;
+        var recent = now - minimumInterval;
         var pending = await context.MailOutbox.AnyAsync(
             message =>
                 message.UserId == userId
-                && message.Kind == MailKinds.PasswordReset
-                && message.FinishedAt == null,
+                && message.Kind == kind
+                && (message.FinishedAt == null || message.CreatedAt > recent),
             cancellationToken
         );
         var account = await context.MailOutbox.CountAsync(
@@ -67,7 +70,7 @@ public sealed class PostgresMailOutbox(NpgsqlDataSource source) : IMailOutbox
             new MailOutboxMessage
             {
                 Id = RandomNumberGenerator.GetHexString(32, lowercase: true),
-                Kind = MailKinds.PasswordReset,
+                Kind = kind,
                 UserId = userId,
                 AccountId = userId,
                 RecipientHash = recipientHash,
