@@ -121,6 +121,40 @@ extension APIClient {
         guard ok.ok else { throw APIError.malformedResponse }
     }
 
+    // MARK: Invitations by email (MAZ-124)
+
+    private struct EmailInviteBody: Encodable { var email: String }
+    private struct EmailInviteList: Decodable { var items: [WireEmailInvite] }
+
+    /// Unrevoked invitations by email, newest first. Creator only (403); 404 `This server doesn't
+    /// send email.` while email is off.
+    public func emailInvites(householdId: String) async throws -> [WireEmailInvite] {
+        let list: EmailInviteList = try await json(.get, "\(try base(householdId))/email-invites")
+        return list.items
+    }
+
+    /// Queues an invitation email; inviting an address that already has one sends it again.
+    /// 429 when the inviter or the address reached the daily limit.
+    public func sendEmailInvite(householdId: String, email: String) async throws -> WireEmailInvite {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (3...254).contains(trimmed.utf16.count) else { throw APIError.invalidRequest(.invalidField("email")) }
+        return try await json(.post, "\(try base(householdId))/email-invites", body: EmailInviteBody(email: trimmed))
+    }
+
+    /// Queues a new email with a new code; the earlier code stops working once it is sent.
+    /// 409 once someone joined with it.
+    public func resendEmailInvite(householdId: String, inviteId: String) async throws -> WireEmailInvite {
+        let path = "\(try base(householdId))/email-invites/\(try Self.segment(inviteId, field: "inviteId"))/resend"
+        return try await json(.post, path, body: [String: String]())
+    }
+
+    /// Revokes an invitation: its code stops working and an email not yet sent is not sent.
+    public func revokeEmailInvite(householdId: String, inviteId: String) async throws {
+        let path = "\(try base(householdId))/email-invites/\(try Self.segment(inviteId, field: "inviteId"))"
+        let ok: WireOk = try await json(.delete, path)
+        guard ok.ok else { throw APIError.malformedResponse }
+    }
+
     // MARK: Shared expenses (MAZ-57)
 
     /// Live expenses the caller can see, newest first; `month` filters to one month.

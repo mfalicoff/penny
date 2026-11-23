@@ -46,6 +46,10 @@ The app talks to the endpoints MAZ-56–59 already serve (`contracts/openapi.jso
 - **Join** (`join-group`): type the code (spaces, dashes and dots are ignored, any case), or **Scan a QR code**. Errors are the server's: "Invite code is invalid or expired." for an expired or replaced code, the currency rule, "You are already a member.", and the rate limit.
 - **Camera.** Penny asks for the camera only when the scanner opens (`NSCameraUsageDescription`, set in `Configuration/Penny.xcconfig`: "Penny uses the camera only to scan a household invite QR code. Nothing is recorded or saved."). Denied, or no camera, the scanner says so and offers **Type the code instead** and, when denied, Open Settings. The scanner reads only QR codes; anything that isn't a Penny invite is rejected with the reason and scanning continues.
 
+### Invitations by email (MAZ-124)
+
+While the server sends email (`/api/info` `emailEnabled`, read again each time the sheet opens), **Invite someone** opens Invite by email (`iphone-invite-email`, `InviteEmailSheet`, `EmailInvitesModel`): an address and **Send** (`POST /api/households/{id}/email-invites`), what Penny does with it, then the invitations with their status in words (Sending, Waiting, Expired, Joined, Failed) and a … menu with **Resend** (`…/resend`) and **Cancel invite** (`DELETE`). Sending to an address that already has an invitation sends it again. **Share a code instead** opens the code sheet above. The server's text explains a `403` (creator only) or `409` (already joined); a `429` says "Too many invitation emails today. Try again tomorrow, or share a code instead." A `404` "doesn't send email" switches to the code sheet and reads `/api/info` again. The email's link (`<Email__AppUrl>/join#code=…`) opens the web app on iPhone (no Associated Domains); its code works on the join screen like any code. History names `invite.emailed` and `invite.revoked` ("You emailed an invitation", "… revoked an invitation") without the address or code.
+
 ### Invite links and servers
 
 | Link | What happens |

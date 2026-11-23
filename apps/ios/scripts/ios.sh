@@ -26,6 +26,8 @@
 # PENNY_IPHONE / PENNY_IPAD choose simulator device types (default: the newest iPhone
 # Pro and iPad Pro 11-inch the selected Xcode offers). PENNY_RUNTIME pins a runtime identifier.
 # ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_STACK_BUILD=0 (reuse the API build),
+# PENNY_STACK_SMTP=1 (the server sends email to an SMTP sink: the iphone-forgot-password and
+# iphone-invite-email cards),
 # PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from), PENNY_UI_STALL_SECONDS (silence that
 # counts as a hang, default 720).
 # archive/export/upload: PENNY_TEAM_ID, PENNY_BUILD_NUMBER, PENNY_ASC_KEY_PATH, PENNY_ASC_KEY_ID,
@@ -591,6 +593,8 @@ cmd_ui_test() {
   run_id="r$(/usr/bin/od -An -N5 -tx1 /dev/urandom | tr -d ' \n')"
   local args=(run --run-id "$run_id" --oidc)
   [[ "${PENNY_STACK_BUILD:-1}" == 0 ]] && args+=(--no-build)
+  # MAZ-124: the server sends email to an SMTP sink, for the email cards and journeys.
+  [[ "${PENNY_STACK_SMTP:-0}" == 1 ]] && args+=(--smtp)
   node "$ROOT/scripts/test-env/penny-env.mjs" "${args[@]}" -- "$IOS_DIR/scripts/ios.sh" ui-test "$plan" || status=$?
   if [[ -d "$ROOT/test-results/fullstack/$run_id" ]]; then
     mkdir -p "$out"

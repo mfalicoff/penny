@@ -5,13 +5,14 @@ import assert from "node:assert/strict";
 import { X509Certificate } from "node:crypto";
 import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:https";
-import type { AddressInfo } from "node:net";
+import { connect, type AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { databaseName, nativePostgresBin, newRunId, postgresImage, postgresMode, runnerEnvironment, validRunId, webOrigins } from "../../scripts/test-env/environment.mjs";
 import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
 import { redirectUrisFor, selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
 import { integer, trustCertificate, writeCertificate } from "../../scripts/test-env/tls.mjs";
+import { apiSmtpEnvironment, startSmtpSink } from "../../scripts/test-env/smtp-sink.mjs";
 
 test("run ids are restricted before they name containers and databases", () => {
   for (const id of ["r1a2b3c4d5", "ci42"]) assert.ok(validRunId(id));
@@ -151,4 +152,55 @@ test("certificate serials are minimal DER integers, whatever random bytes they s
   assert.equal(hex([0x80, 0x01]), "0203008001");
   assert.equal(hex([0x12]), "020112");
   assert.equal(hex([0x00]), "020100");
+});
+
+test("the SMTP sink accepts a message over plain SMTP and points the API at loopback (MAZ-124)", async () => {
+  const sink = await startSmtpSink();
+  try {
+    const socket = connect(sink.port, "127.0.0.1");
+    socket.setEncoding("utf8");
+    const replies: string[] = [];
+    let pending = "";
+    const next = () =>
+      new Promise<string>((resolve) => {
+        const take = () => {
+          const end = pending.search(/^\d{3} .*\r\n/m);
+          if (end < 0) return false;
+          const close = pending.indexOf("\r\n", end) + 2;
+          const reply = pending.slice(0, close);
+          pending = pending.slice(close);
+          replies.push(reply);
+          resolve(reply);
+          return true;
+        };
+        if (!take()) {
+          const onData = (chunk: string) => {
+            pending += chunk;
+            if (take()) socket.off("data", onData);
+          };
+          socket.on("data", onData);
+        }
+      });
+    const send = async (line: string) => {
+      socket.write(`${line}\r\n`);
+      return next();
+    };
+    assert.match(await next(), /^220 /);
+    assert.match(await send("EHLO client.test"), /^250-/);
+    assert.match(await send("MAIL FROM:<penny@example.test>"), /^250 /);
+    assert.match(await send("RCPT TO:<sam@example.test>"), /^250 /);
+    assert.match(await send("DATA"), /^354 /);
+    assert.match(await send("Subject: Hello\r\n\r\n..dot line\r\n."), /^250 /);
+    assert.match(await send("QUIT"), /^221 /);
+    socket.destroy();
+    assert.equal(sink.messages.length, 1);
+    assert.deepEqual(sink.messages[0]?.to, ["<sam@example.test>"]);
+    assert.match(sink.messages[0]?.data ?? "", /^Subject: Hello\n\n\.dot line\n$/);
+  } finally {
+    await sink.close();
+  }
+  const settings = apiSmtpEnvironment({ port: 2525 }, ["https://127.0.0.1:5173"]);
+  assert.equal(settings.Email__Smtp__Host, "127.0.0.1");
+  assert.equal(settings.Email__Smtp__Security, "none");
+  assert.equal(settings.Email__AppUrl, "https://127.0.0.1:5173");
 });

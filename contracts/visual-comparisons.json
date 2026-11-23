@@ -2341,7 +2341,7 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "note": "Draft card (MAZ-267). Forgot password is built (MAZ-124: only while the server sends email). The app has no Apple or Google sign-in (MAZ-170).",
         "followUp": "MAZ-170"
       },
       "web": {
@@ -2403,10 +2403,14 @@
       "id": "iphone-forgot-password",
       "view": "password reset by email, link sent",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no password reset by email (the server sends no email).",
-        "followUp": "MAZ-124"
+        "capture": "iPhone 18 Pro simulator, iOS 27 (ui-test cards with PENNY_STACK_SMTP=1)",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Forgot password on sign-in while the server sends email; captured after Send reset link against the real API with the SMTP sink. The host, the account and the countdown are run data."
       },
       "web": {
         "status": "not-built",
@@ -2419,10 +2423,14 @@
       "id": "iphone-invite-email",
       "view": "household invite by email with waiting and expired invites",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-124",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no invites by email (the server sends no email).",
-        "followUp": "MAZ-124"
+        "capture": "iPhone 18 Pro simulator, iOS 27 (ui-test cards with PENNY_STACK_SMTP=1)",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured against the real API with the SMTP sink: one invitation sent four days before (expired) and one today (waiting), and an address typed. The keyboard is platform chrome; the time follows the device's locale."
       },
       "web": {
         "status": "not-built",

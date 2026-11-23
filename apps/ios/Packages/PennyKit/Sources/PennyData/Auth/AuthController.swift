@@ -473,7 +473,7 @@ public final class AuthController {
         return ServerCheck(
             server: server, version: info.version, singleSignOn: config?.enabled,
             singleSignOnLabel: config?.enabled == true ? Self.label(config?.label) : nil,
-            privacyPolicy: info.privacyPolicy)
+            privacyPolicy: info.privacyPolicy, emailEnabled: info.sendsEmail)
     }
 
     /// Makes a checked server the one sign-in uses. Only while signed out: a signed-in
@@ -482,7 +482,9 @@ public final class AuthController {
         guard state.canChangeServer else {
             throw AuthFailure(.busy, "Sync your entries and sign out before changing servers.")
         }
-        let saved = SavedServer(server: check.server, version: check.version, privacyPolicy: check.privacyPolicy)
+        let saved = SavedServer(
+            server: check.server, version: check.version, privacyPolicy: check.privacyPolicy,
+            emailEnabled: check.emailEnabled)
         do { try preferences.setSavedServer(saved) } catch {
             throw AuthFailure(.storage, "Could not save the server on this device. Your previous server is unchanged.")
         }
@@ -502,16 +504,92 @@ public final class AuthController {
 
     /// Reads `/api/info` again for the privacy policy link (MAZ-169), so a server that starts or
     /// stops publishing one, or a default server that was never checked, shows the right link.
-    /// Kept with the saved server, so Settings still links it offline. A failure changes nothing.
+    /// Kept with the saved server, so Settings still links it offline. Also reads whether the
+    /// server sends email (MAZ-124), for Forgot password and Invite by email. A failure changes
+    /// nothing.
     public func refreshServerInfo() async {
         guard let current = server else { return }
         guard let info = try? await anonymousClient(current.server, timeout: Self.probeTimeout).info() else { return }
         guard var saved = server, saved.server == current.server else { return }
-        let policy = info.privacyPolicy
-        guard saved.privacyPolicy != policy else { return }
-        saved.privacyPolicy = policy
+        guard saved.privacyPolicy != info.privacyPolicy || saved.emailEnabled != info.sendsEmail else { return }
+        saved.privacyPolicy = info.privacyPolicy
+        saved.emailEnabled = info.sendsEmail
         try? preferences.setSavedServer(saved)
         server = saved
+    }
+
+    // MARK: Password reset (MAZ-124)
+
+    /// `POST /api/auth/password-reset/request`. The server answers the same whether or not the
+    /// address has an account, so `.sent` says nothing about it. `.emailOff` means the server
+    /// stopped sending email (404): the person needs a reset code from its administrator, and
+    /// the saved server forgets that it sends email.
+    public func requestPasswordReset(email: String) async throws(AuthFailure) -> PasswordResetRequestOutcome {
+        guard case .signedOut = state else { throw AuthFailure(.busy, "Sign-in is already in progress.") }
+        guard let current = server else { throw AuthFailure(.noServer, "Choose your Penny server first.") }
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard EmailAddress.looksValid(trimmed) else { throw AuthFailure(.invalidInput, "Enter a valid email address.") }
+        do {
+            try await anonymousClient(current.server).requestPasswordReset(email: trimmed)
+            return .sent
+        } catch APIError.notFound {
+            setEmailEnabled(false, for: current.server)
+            return .emailOff
+        } catch {
+            throw Self.resetFailure(error, server: current.server)
+        }
+    }
+
+    /// `POST /api/auth/password-reset` with a code from the administrator (or a reset email) and
+    /// a new password. The server signs every device out and issues no session, so the person
+    /// signs in again: sign-in says the password changed.
+    public func resetPassword(code: String, password: String) async throws(AuthFailure) {
+        guard case .signedOut = state else { throw AuthFailure(.busy, "Sign-in is already in progress.") }
+        guard let current = server else { throw AuthFailure(.noServer, "Choose your Penny server first.") }
+        let token = PasswordResetCode.normalized(code)
+        guard APIClient.isLowercaseHex64(token) else {
+            throw AuthFailure(.invalidCode, PasswordResetCode.invalidFormat)
+        }
+        guard (10...256).contains(password.utf16.count) else {
+            throw AuthFailure(.invalidInput, "Use a password of 10–256 characters.")
+        }
+        do {
+            try await anonymousClient(current.server).resetPassword(token: token, password: password)
+        } catch APIError.badRequest(let message) {
+            let text = message ?? "This reset code is invalid or has expired."
+            if text.localizedCaseInsensitiveContains("invalid or has expired") {
+                throw AuthFailure(.invalidCode, text)
+            }
+            throw AuthFailure(.invalidInput, text)
+        } catch {
+            throw Self.resetFailure(error, server: current.server)
+        }
+        guard server?.server == current.server, case .signedOut = state else { return }
+        bump()
+        state = .signedOut(.passwordReset)
+    }
+
+    private func setEmailEnabled(_ enabled: Bool, for target: ServerURL) {
+        guard var saved = server, saved.server == target, saved.emailEnabled != enabled else { return }
+        saved.emailEnabled = enabled
+        try? preferences.setSavedServer(saved)
+        server = saved
+    }
+
+    static func resetFailure(_ error: any Error, server: ServerURL) -> AuthFailure {
+        switch error as? APIError {
+        case .rateLimited:
+            return AuthFailure(.rateLimited, "Too many attempts. Wait a few minutes and try again.")
+        case .badRequest(let message):
+            return AuthFailure(.invalidInput, message ?? "Enter a valid email address.")
+        case .forbidden(let message):
+            return AuthFailure(.server, message ?? "This server refused the request. Try again from the Penny app.")
+        case .notFound:
+            return AuthFailure(
+                .notAPennyServer, "This server doesn't support password reset. Check the server address.")
+        default: break
+        }
+        return failure(error, during: .password, server: server)
     }
 
     // MARK: Plumbing

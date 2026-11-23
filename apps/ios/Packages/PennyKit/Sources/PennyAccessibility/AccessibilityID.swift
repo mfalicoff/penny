@@ -57,6 +57,9 @@ public enum AccessibilityID {
         public static let schedule = "screen.schedule"
         public static let scheduleForm = "screen.scheduleForm"
         // Overview, calendar and money flow (MAZ-77).
+        // Password reset (MAZ-124).
+        public static let forgotPassword = "screen.forgotPassword"
+        public static let resetPassword = "screen.resetPassword"
         public static let moneyFlow = "screen.moneyFlow"
         public static let insights = "screen.insights"
         public static let calendar = "screen.calendar"
@@ -69,6 +72,7 @@ public enum AccessibilityID {
             householdPicker, deleteConfirm,
             accountForm, categoryForm, schedule, scheduleForm,
             moneyFlow, insights, calendar, categorySpending,
+            forgotPassword, resetPassword,
         ]
     }
 
@@ -103,11 +107,21 @@ public enum AccessibilityID {
         public static let back = "auth.back"
         public static let passwordStrength = "auth.passwordStrength"
         public static let passwordRule = "auth.passwordRule"
+        // Password reset (MAZ-124): Forgot password, the reset email and the reset code.
+        public static let forgotPassword = "auth.forgotPassword"
+        public static let sendResetLink = "auth.sendResetLink"
+        public static let resetSent = "auth.resetSent"
+        public static let resend = "auth.resend"
+        public static let enterResetCode = "auth.enterResetCode"
+        public static let resetCode = "auth.resetCode"
+        public static let newPassword = "auth.newPassword"
+        public static let setPassword = "auth.setPassword"
 
         static let all = [
             restoring, keychainUnavailable, tryDemo, server, changeServer, email, password, signIn, createAccount,
             switchMode, singleSignOn, singleSignOnRetry, error, notice, removeLeftoverData, signOut, back,
-            passwordStrength, passwordRule,
+            passwordStrength, passwordRule, forgotPassword, sendResetLink, resetSent, resend, enterResetCode, resetCode,
+            newPassword, setPassword,
         ]
     }
 
