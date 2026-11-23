@@ -5,6 +5,13 @@ import SwiftUI
 
 /// Words for the shared expense form.
 enum SharedFormText {
+    /// The details row and page: "Receipt, repeat, note" for a new expense (`iphone-shared-expense-add`),
+    /// "Receipt, note" when editing one, "Repeat, note" for a repeating expense.
+    static func detailsTitle(_ draft: SharedExpenseDraft) -> String {
+        if draft.isEditingRule { return "Repeat, note" }
+        return draft.original == nil ? "Receipt, repeat, note" : "Receipt, note"
+    }
+
     static func frequency(_ frequency: RecurrenceFrequency) -> String {
         switch frequency {
         case .weekly: "Weekly"
@@ -118,6 +125,8 @@ private struct SharedExpenseForm: View {
     /// The Household sheet's choice, applied once the sheet has gone (`nil` inside: Personal).
     @State private var pendingHousehold: String??
     @State private var amountActive = true
+    /// The receipt upload (MAZ-256), shared with Receipt, repeat, note.
+    @State private var upload: ReceiptUploadModel?
 
     var body: some View {
         NavigationStack {
@@ -182,7 +191,7 @@ private struct SharedExpenseForm: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(PennyColor.tint)
-                    .disabled(form.isSaving || form.isStale)
+                    .disabled(form.isSaving || form.isStale || upload?.isBusy == true)
                     .accessibilityLabel(form.isSaving ? "Saving" : "Save")
                     .accessibilityIdentifier("sharedForm.save")
                 }
@@ -194,7 +203,7 @@ private struct SharedExpenseForm: View {
                         EntryAccountPicker(selection: $form.draft.accountId, ledger: ledger)
                     }
                 case .details:
-                    SharedDetailsPage(form: form)
+                    SharedDetailsPage(form: form, upload: upload, receiptContext: receiptContext)
                 }
             }
             .sheet(item: $overlay, onDismiss: applyHousehold) { overlay in
@@ -239,6 +248,10 @@ private struct SharedExpenseForm: View {
         .interactiveDismissDisabled(form.hasChanges || form.isSaving)
         .sensoryFeedback(.error, trigger: form.refusedCount)
         .onAppear {
+            if upload == nil {
+                let form = self.form
+                upload = ReceiptUploadModel(transfers: shell.receipts) { receipt in form.draft.receipt = receipt }
+            }
             // Editing opens on the whole form; a new expense opens on the amount.
             if form.draft.original != nil { amountActive = false }
             // iPad types the amount in a field; iPhone uses the keypad, so nothing needs focus.
@@ -445,7 +458,7 @@ private struct SharedExpenseForm: View {
             divider
             NavigationLink(value: SharedFormPage.details) {
                 EntryFieldRow(
-                    isNew || form.draft.isEditingRule ? "Repeat, note" : "Note", systemImage: "ellipsis",
+                    SharedFormText.detailsTitle(form.draft), systemImage: "ellipsis",
                     value: detailsValue, chevron: true)
             }
             .buttonStyle(.plain)
@@ -562,10 +575,22 @@ private struct SharedExpenseForm: View {
         }
     }
 
+    /// The receipt viewer's footer card: the expense as typed.
+    private var receiptContext: ReceiptPreviewContext? {
+        let title = form.draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let total = form.draft.totalCents.map { MoneyFormat.amount($0, currency: model.currency) }
+        return ReceiptPreviewContext(
+            title: title.isEmpty ? "Shared expense" : title,
+            detail: [total.map { "\($0) total" }, EntryText.day(form.draft.date, today: shell.today)]
+                .compactMap { $0 }.joined(separator: " · "),
+            symbol: form.draft.category.symbol, color: form.draft.category.tint)
+    }
+
     private var detailsValue: String {
         var parts: [String] = []
         if let repeats = form.draft.repeats { parts.append(SharedFormText.frequency(repeats)) }
         if form.draft.isEditingRule, !form.draft.active { parts.append("Paused") }
+        if form.draft.receipt != nil, !form.draft.isRule { parts.append("Receipt") }
         if !form.draft.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { parts.append("Note") }
         return parts.joined(separator: " · ")
     }
@@ -726,10 +751,17 @@ private struct SharedSplitSheet: View {
 /// Repeat, Active (a repeating expense) and Note, behind the form's last row as in Add entry.
 private struct SharedDetailsPage: View {
     @Bindable var form: SharedExpenseFormModel
+    /// The form's receipt upload: it outlives this page, so going back keeps it running.
+    let upload: ReceiptUploadModel?
+    let receiptContext: ReceiptPreviewContext?
     @FocusState private var noteFocused: Bool
 
     var body: some View {
         Form {
+            // The personal entry's Receipt group: a repeating expense keeps no receipt.
+            if let upload, !form.draft.isRule {
+                ReceiptAttachmentSection(receipt: $form.draft.receipt, upload: upload, context: receiptContext)
+            }
             if form.draft.original == nil || form.draft.isEditingRule {
                 Section {
                     Picker("Repeat", selection: $form.draft.repeats) {
@@ -759,7 +791,7 @@ private struct SharedDetailsPage: View {
         }
         .scrollContentBackground(.hidden)
         .background(PennyColor.background)
-        .navigationTitle(form.draft.original == nil || form.draft.isEditingRule ? "Repeat, note" : "Note")
+        .navigationTitle(SharedFormText.detailsTitle(form.draft))
         .toolbarTitleDisplayModeInline()
         .onChange(of: noteFocused) { if noteFocused { form.draft.focus = .note } }
     }

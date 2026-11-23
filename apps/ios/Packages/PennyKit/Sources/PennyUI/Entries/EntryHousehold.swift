@@ -15,6 +15,8 @@ struct EntryHandoff: Equatable {
     var categoryName: String?
     var accountId: String?
     var note: String
+    /// An uploaded receipt: both forms link one, so switching keeps it (MAZ-256).
+    var receipt: ReceiptReference?
     /// The kind the personal form opens on (Expense, unless Income or Investment was chosen).
     var kind: EntryKind = .expense
 
@@ -25,6 +27,7 @@ struct EntryHandoff: Equatable {
         categoryName = ledger.category(id: draft.categoryId)?.name
         accountId = draft.accountId
         note = draft.note
+        receipt = draft.receipt
     }
 
     init(_ draft: SharedExpenseDraft, viewerId: String?, kind: EntryKind = .expense) {
@@ -34,6 +37,7 @@ struct EntryHandoff: Equatable {
         categoryName = draft.category.name
         accountId = draft.payerId == viewerId ? draft.accountId : nil
         note = draft.note
+        receipt = draft.receipt
         self.kind = kind
     }
 
@@ -49,6 +53,7 @@ struct EntryHandoff: Equatable {
         }
         if let accountId, ledger?.account(id: accountId) != nil { draft.accountId = accountId }
         draft.note = note
+        draft.receipt = receipt
     }
 
     /// Fills a new personal entry of `kind`.
@@ -64,6 +69,7 @@ struct EntryHandoff: Equatable {
         }
         if let accountId, ledger.account(id: accountId) != nil { editor.draft.accountId = accountId }
         editor.draft.note = note
+        if kind == .expense { editor.draft.receipt = receipt }
     }
 }
 

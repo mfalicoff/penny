@@ -655,11 +655,6 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "The details row reads \"Repeat, note\": a receipt can't be attached to a shared expense yet (follow-up recorded on MAZ-256)",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
             "summary": "Opened from the household's Expense, the form adds Add entry's Household row before Date",
             "kind": "follow-up",
             "ref": "MAZ-277"

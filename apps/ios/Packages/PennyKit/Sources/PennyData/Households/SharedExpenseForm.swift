@@ -51,6 +51,9 @@ public struct SharedExpenseDraft: Equatable, Sendable {
     public var repeats: RecurrenceFrequency?
     /// Rules: whether the rule is running.
     public var active: Bool
+    /// The receipt linked to the expense (MAZ-256): uploaded or chosen in Receipt, repeat, note,
+    /// or kept from the edited expense. Expenses only; a rule keeps its own.
+    public var receipt: ReceiptReference?
     public var focus: Field?
 
     /// What is being edited, nil for a new expense or rule.
@@ -136,6 +139,9 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         active = true
         focus = nil
         original = .expense(expense)
+        receipt =
+            expense.receipt.map { ReceiptReference(id: $0.id, name: $0.name, uri: $0.uri, mime: $0.mime) }
+            ?? expense.receiptId.map { ReceiptReference(id: $0, name: "Receipt", uri: "", mime: "") }
     }
 
     /// Editing a shared rule.
@@ -351,11 +357,9 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         return input
     }
 
-    /// A receipt already linked to the edited expense stays linked (MAZ-78 adds picking one).
-    private var receiptId: String? {
-        if case .expense(let expense) = original { return expense.receiptId ?? expense.receipt?.id }
-        return nil
-    }
+    /// The linked receipt: attached in the form, or kept from the edited expense. Removing it sends
+    /// none, as the web does.
+    private var receiptId: String? { receipt?.id }
 
     /// A rule's own values as an update body (pause and resume change only `active`).
     public static func ruleInput(from rule: WireSharedRule) -> WireRuleInput {
