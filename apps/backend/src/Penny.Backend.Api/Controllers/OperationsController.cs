@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Mail;
 
 namespace Penny.Backend.Api.Controllers;
 
@@ -11,15 +12,25 @@ namespace Penny.Backend.Api.Controllers;
 [Route("api")]
 // Readiness runs every registered probe in order (PostgreSQL, then receipt storage)
 // and reports the first failure.
-public sealed class OperationsController(IEnumerable<IStorageReadiness> probes, LegalOptions legal)
-    : ControllerBase
+public sealed class OperationsController(
+    IEnumerable<IStorageReadiness> probes,
+    LegalOptions legal,
+    MailPolicy mail
+) : ControllerBase
 {
     [HttpGet("health", Name = "getApiHealth")]
     public ActionResult<HealthResponse> Health() => Ok(new HealthResponse(true));
 
     [HttpGet("info", Name = "getApiInfo")]
     public ActionResult<ServerInfo> Info() =>
-        Ok(new ServerInfo("penny", ServerInfo.CurrentVersion, legal.PrivacyPolicyUrl));
+        Ok(
+            new ServerInfo(
+                "penny",
+                ServerInfo.CurrentVersion,
+                legal.PrivacyPolicyUrl,
+                mail.Enabled
+            )
+        );
 
     [HttpGet("ready", Name = "getApiReady")]
     [ProducesResponseType<HealthResponse>(200)]

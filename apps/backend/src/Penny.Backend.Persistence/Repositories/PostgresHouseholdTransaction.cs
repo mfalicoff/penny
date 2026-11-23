@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Mail;
 using Penny.Backend.Domain.Households;
 using Penny.Backend.Persistence.Schema;
 using Penny.Backend.Persistence.Schema.Entities;
@@ -204,11 +205,24 @@ internal class PostgresHouseholdTransaction(
         ];
     }
 
-    public Task<StoredInvite?> FindInviteAsync(string codeHash) =>
-        context
+    public async Task<StoredInvite?> FindInviteAsync(string codeHash) =>
+        await context
             .HouseholdInvites.AsNoTracking()
             .Where(invite => invite.CodeHash == codeHash)
-            .Select(invite => new StoredInvite(invite.HouseholdId, invite.ExpiresAt))
+            .Select(invite => new StoredInvite(invite.HouseholdId, invite.ExpiresAt, null))
+            .SingleOrDefaultAsync(cancellationToken)
+        ?? await context
+            .HouseholdEmailInvites.AsNoTracking()
+            .Where(invite =>
+                invite.CodeHash == codeHash
+                && invite.JoinedAt == null
+                && invite.RevokedAt == null
+            )
+            .Select(invite => new StoredInvite(
+                invite.HouseholdId,
+                invite.ExpiresAt!.Value,
+                invite.Id
+            ))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task ReplaceInviteAsync(
@@ -217,7 +231,10 @@ internal class PostgresHouseholdTransaction(
         DateTimeOffset expiresAt
     )
     {
-        await DeleteInvitesAsync(householdId);
+        // Only the shared code: emailed invitations keep their own codes.
+        await context
+            .HouseholdInvites.Where(invite => invite.HouseholdId == householdId)
+            .ExecuteDeleteAsync(cancellationToken);
         context.HouseholdInvites.Add(
             new HouseholdInvite
             {
@@ -229,10 +246,234 @@ internal class PostgresHouseholdTransaction(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeleteInvitesAsync(string householdId) =>
-        context
+    public async Task DeleteInvitesAsync(string householdId, DateTimeOffset now)
+    {
+        await context
             .HouseholdInvites.Where(invite => invite.HouseholdId == householdId)
             .ExecuteDeleteAsync(cancellationToken);
+        var emailed = context.HouseholdEmailInvites.Where(invite =>
+            invite.HouseholdId == householdId && invite.RevokedAt == null
+        );
+        await FinishInviteMailAsync(emailed.Select(invite => invite.Id), now, "revoked");
+        await emailed.ExecuteUpdateAsync(
+            set =>
+                set.SetProperty(invite => invite.RevokedAt, now)
+                    .SetProperty(invite => invite.CodeHash, (string?)null)
+                    .SetProperty(invite => invite.ExpiresAt, (DateTimeOffset?)null),
+            cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyList<StoredEmailInvite>> EmailInvitesAsync(string householdId) =>
+        await ProjectEmailInvites(
+                context
+                    .HouseholdEmailInvites.AsNoTracking()
+                    .Where(invite => invite.HouseholdId == householdId && invite.RevokedAt == null)
+                    .OrderByDescending(invite => invite.RequestedAt)
+                    .ThenBy(invite => invite.Id)
+            )
+            .ToListAsync(cancellationToken);
+
+    public Task<StoredEmailInvite?> FindEmailInviteAsync(string inviteId) =>
+        ProjectEmailInvites(
+                context.HouseholdEmailInvites.AsNoTracking().Where(invite => invite.Id == inviteId)
+            )
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<StoredEmailInvite> RequestEmailInviteAsync(
+        string inviteId,
+        string householdId,
+        string invitedBy,
+        string email,
+        DateTimeOffset now
+    )
+    {
+        // The household lock is held, so no concurrent request inserts the same address.
+        var stored = await context.HouseholdEmailInvites.SingleOrDefaultAsync(
+            invite => invite.HouseholdId == householdId && invite.Email == email,
+            cancellationToken
+        );
+        if (stored is null)
+        {
+            stored = new HouseholdEmailInvite
+            {
+                Id = inviteId,
+                HouseholdId = householdId,
+                InvitedBy = invitedBy,
+                Email = email,
+                CreatedAt = now,
+                RequestedAt = now,
+            };
+            context.HouseholdEmailInvites.Add(stored);
+        }
+        else
+        {
+            if (stored.RevokedAt is not null || stored.JoinedAt is not null)
+            {
+                // A fresh invitation: the old code is gone and the history starts again.
+                stored.CreatedAt = now;
+                stored.SentAt = null;
+                stored.CodeHash = null;
+                stored.ExpiresAt = null;
+            }
+            stored.InvitedBy = invitedBy;
+            stored.RequestedAt = now;
+            stored.FailedAt = null;
+            stored.JoinedAt = null;
+            stored.RevokedAt = null;
+        }
+        await context.SaveChangesAsync(cancellationToken);
+        return ToStored(stored);
+    }
+
+    public Task IssueEmailInviteCodeAsync(
+        string inviteId,
+        string codeHash,
+        DateTimeOffset expiresAt
+    ) =>
+        context
+            .HouseholdEmailInvites.Where(invite => invite.Id == inviteId)
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(invite => invite.CodeHash, codeHash)
+                        .SetProperty(invite => invite.ExpiresAt, expiresAt),
+                cancellationToken
+            );
+
+    public Task MarkEmailInviteJoinedAsync(string inviteId, DateTimeOffset joinedAt) =>
+        context
+            .HouseholdEmailInvites.Where(invite => invite.Id == inviteId)
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(invite => invite.JoinedAt, joinedAt)
+                        .SetProperty(invite => invite.CodeHash, (string?)null)
+                        .SetProperty(invite => invite.ExpiresAt, (DateTimeOffset?)null),
+                cancellationToken
+            );
+
+    public async Task RevokeEmailInviteAsync(string inviteId, DateTimeOffset now)
+    {
+        await FinishInviteMailAsync(
+            context.HouseholdEmailInvites.Where(invite => invite.Id == inviteId).Select(invite => invite.Id),
+            now,
+            "revoked"
+        );
+        await context
+            .HouseholdEmailInvites.Where(invite => invite.Id == inviteId)
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(invite => invite.RevokedAt, now)
+                        .SetProperty(invite => invite.CodeHash, (string?)null)
+                        .SetProperty(invite => invite.ExpiresAt, (DateTimeOffset?)null),
+                cancellationToken
+            );
+    }
+
+    public async Task<(int Account, int Recipient)> CountRecentMailAsync(
+        string accountId,
+        string recipientHash,
+        DateTimeOffset since
+    )
+    {
+        await context
+            .Users.Where(user => user.Id == accountId)
+            .ExecuteUpdateAsync(
+                set => set.SetProperty(user => user.Email, user => user.Email),
+                cancellationToken
+            );
+        var account = await context.MailOutbox.CountAsync(
+            message => message.AccountId == accountId && message.CreatedAt > since,
+            cancellationToken
+        );
+        var recipient = await context.MailOutbox.CountAsync(
+            message => message.RecipientHash == recipientHash && message.CreatedAt > since,
+            cancellationToken
+        );
+        return (account, recipient);
+    }
+
+    public async Task EnqueueInviteMailAsync(
+        string messageId,
+        string inviteId,
+        string accountId,
+        string recipientHash,
+        string locale,
+        DateTimeOffset now
+    )
+    {
+        await FinishInviteMailAsync(
+            context.HouseholdEmailInvites.Where(invite => invite.Id == inviteId).Select(invite => invite.Id),
+            now,
+            "superseded"
+        );
+        context.MailOutbox.Add(
+            new MailOutboxMessage
+            {
+                Id = messageId,
+                Kind = MailKinds.HouseholdInvite,
+                EmailInviteId = inviteId,
+                AccountId = accountId,
+                RecipientHash = recipientHash,
+                Locale = locale,
+                CreatedAt = now,
+                NextAttemptAt = now,
+            }
+        );
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    // Unsent, unleased-or-leased emails of these invitations end without sending. A
+    // runner holding one records its outcome afterwards; a message that already left
+    // stays a fact.
+    private Task<int> FinishInviteMailAsync(
+        IQueryable<string> inviteIds,
+        DateTimeOffset now,
+        string reason
+    ) =>
+        context
+            .MailOutbox.Where(message =>
+                message.FinishedAt == null
+                && message.EmailInviteId != null
+                && inviteIds.Contains(message.EmailInviteId)
+            )
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(message => message.FinishedAt, now)
+                        .SetProperty(message => message.LastError, reason),
+                cancellationToken
+            );
+
+    private static IQueryable<StoredEmailInvite> ProjectEmailInvites(
+        IQueryable<HouseholdEmailInvite> invites
+    ) =>
+        invites.Select(invite => new StoredEmailInvite(
+            invite.Id,
+            invite.HouseholdId,
+            invite.InvitedBy,
+            invite.Email,
+            invite.CreatedAt,
+            invite.RequestedAt,
+            invite.SentAt,
+            invite.ExpiresAt,
+            invite.FailedAt,
+            invite.JoinedAt,
+            invite.RevokedAt
+        ));
+
+    private static StoredEmailInvite ToStored(HouseholdEmailInvite invite) =>
+        new(
+            invite.Id,
+            invite.HouseholdId,
+            invite.InvitedBy,
+            invite.Email,
+            invite.CreatedAt,
+            invite.RequestedAt,
+            invite.SentAt,
+            invite.ExpiresAt,
+            invite.FailedAt,
+            invite.JoinedAt,
+            invite.RevokedAt
+        );
 
     public async Task AddHouseholdAsync(StoredHousehold household)
     {

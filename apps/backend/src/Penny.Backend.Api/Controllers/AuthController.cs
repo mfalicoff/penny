@@ -6,6 +6,7 @@ using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Observability;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Mail;
 using Penny.Backend.Application.Profiles;
 
 namespace Penny.Backend.Api.Controllers;
@@ -17,11 +18,13 @@ public sealed class AuthController(
     AuthService auth,
     ProfileService profiles,
     PasswordResetService resets,
+    PasswordResetMailService resetMail,
     AuthOptions options,
     TimeProvider clock
 ) : ControllerBase
 {
     private static readonly string[] ResetFields = ["token", "password"];
+    private static readonly string[] ResetRequestFields = ["email"];
     private static readonly string[] RegisterFields = ["email", "password", "displayName"];
     private static readonly string[] ChangeFields = ["currentPassword", "newPassword"];
 
@@ -85,6 +88,34 @@ public sealed class AuthController(
         var fields = await JsonStringFields.ReadAsync(Request, ResetFields, cancellationToken);
         await resets.CompleteAsync(fields[0], fields[1], cancellationToken);
         return Ok(new OkResponse(true));
+    }
+
+    // MAZ-124: asks for a reset by email. The answer is the same whether or not the
+    // address has an account, and whether or not an email is queued (an earlier one still
+    // waiting, or the daily limits); the emailed code is redeemed with POST
+    // /api/auth/password-reset. 404 while the server sends no email.
+    [AllowAnonymous]
+    [EnableRateLimiting(AuthRateLimit.Policy)]
+    [HttpPost("password-reset/request", Name = "postApiAuthPasswordResetRequest")]
+    [ProducesResponseType<OkResponse>(202)]
+    [ProducesResponseType<ApiError>(400)]
+    [ProducesResponseType<ApiError>(403)]
+    [ProducesResponseType<ApiError>(404)]
+    [ProducesResponseType<ApiError>(413)]
+    [ProducesResponseType<ApiError>(429)]
+    public async Task<IActionResult> RequestPasswordReset(CancellationToken cancellationToken)
+    {
+        var fields = await JsonStringFields.ReadAsync(
+            Request,
+            ResetRequestFields,
+            cancellationToken
+        );
+        await resetMail.RequestAsync(
+            fields[0],
+            MailLocales.From(Request.Headers.AcceptLanguage),
+            cancellationToken
+        );
+        return StatusCode(202, new OkResponse(true));
     }
 
     // MAZ-171: a signed-in password change. Rate-limited like sign-in; the other sessions end
