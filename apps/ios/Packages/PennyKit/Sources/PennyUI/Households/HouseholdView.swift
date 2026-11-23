@@ -974,7 +974,7 @@ struct HouseholdPage: View {
         }
         if canInvite {
             Section {
-                InlineInvite(model: model) { inviting = true }
+                InlineInvite(model: model)
             } header: {
                 Text("Invite someone").cardSectionHeader()
             } footer: {
@@ -1255,16 +1255,13 @@ private struct MemberRow: View {
 }
 
 /// The invite under People (`iphone-shared-people`): the code with its countdown, Copy and Share,
-/// once the creator asks for one. A new code replaces the one already shared, so opening People
-/// never makes one by itself; an unexpired code from this session shows again. The QR code is in
-/// the invite sheet (Show QR code, or Invite someone in the toolbar).
+/// once the creator asks for one (approved, MAZ-256: a new code replaces the one already shared,
+/// so opening People never makes one by itself). An unexpired code from this session shows
+/// again; the QR code and New code are in the invite sheet (Invite someone).
 private struct InlineInvite: View {
     @Environment(ShellModel.self) private var shell
     @Bindable var model: HouseholdModel
-    let showQR: () -> Void
     @State private var working = false
-    @State private var width: Double = 0
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var failure: HouseholdFailure?
 
     var body: some View {
@@ -1282,11 +1279,7 @@ private struct InlineInvite: View {
                             UIPasteboard.general.string = code.value
                         #endif
                     },
-                    showsQR: false)
-                Button("Show QR code", systemImage: "qrcode", action: showQR)
-                    .font(.subheadline.weight(.semibold))
-                    .frame(minHeight: Metrics.minTouchTarget)
-                    .accessibilityIdentifier("household.inviteQR")
+                    style: .inline)
             } else {
                 Text("Make a code to share. It works for 10 minutes, for everyone you send it to.")
                     .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
@@ -1299,9 +1292,12 @@ private struct InlineInvite: View {
                 .accessibilityIdentifier("household.inviteCreate")
             }
         }
+        .padding(18)
         .frame(maxWidth: .infinity)
+        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets())
+        .task { model.expireInvite() }
     }
 
     private func create() async {
