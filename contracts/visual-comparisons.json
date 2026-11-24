@@ -2365,9 +2365,9 @@
         "note": "Captured with PENNY_STACK_SMTP=1 after a sign-up in the app (the seeded accounts are verified), so the address is the run’s own. The reminder, the empty state and New household, Join and the toolbar + match.",
         "deviations": [
           {
-            "summary": "The subtitle sits about 20 points further below the large title than on the card: iOS keeps the system large title, and the list starts below its area (the gap approved for Recurring and Accounts in MAZ-236; a design decision for the Shared tab)",
-            "kind": "follow-up",
-            "ref": "MAZ-172"
+            "summary": "The subtitle sits about 20 points further below the large title than on the card: iOS keeps the system large title, and the list starts below its area (MAZ-172)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
