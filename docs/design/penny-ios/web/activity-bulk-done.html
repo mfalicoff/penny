@@ -1,0 +1,56 @@
+<!-- @dsCard group="Web" name="Selected entries deleted" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Activity, selected entries deleted</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/web.js"></script>
+<style>
+  .bar2 { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .bar2 .sp { flex: 1; }
+  .sum { font-size: 13px; color: var(--label-2); }
+  .sum b { color: var(--label); }
+  /* After a bulk action: the selection is cleared and the saved toast offers Undo, which restores the whole batch in one save. */
+  .toast { position: absolute; z-index: 30; left: 50%; bottom: 28px; transform: translateX(-50%); width: 440px; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 16px; }
+  .toast > [data-i] { width: 20px; height: 20px; color: var(--income); }
+  .toast .undo { height: 36px; padding: 0 16px; border-radius: 18px; background: var(--fill); color: var(--tint-text); font-size: 14.5px; font-weight: 600; display: inline-flex; align-items: center; }
+  .toast .t { flex: 1; font-size: 14.5px; font-weight: 600; }
+  .toast .btn [data-i] { width: 14px; height: 14px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="activity" data-url="penny.example.com/activity">
+  <main class="wmain">
+    <div class="wtop">
+      <h1>Activity</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div>
+        <div class="bar2">
+          <div class="wchips"><span class="wchip on">All</span><span class="wchip">Expenses</span><span class="wchip">Income</span><span class="wchip">Investments</span><span class="wchip"><i data-i="options"></i>Filters</span></div>
+          <div class="sp"></div>
+          <span class="sum">21 entries · spent <b class="num">$1,766.05</b> · in <b class="num pos">$3,200.00</b></span>
+          <div class="btn icon"><i data-i="document-text"></i></div>
+        </div>
+        <div class="panel" style="padding:12px 4px;overflow:hidden">
+          <table class="tbl">
+            <thead><tr><th style="width:34px"></th><th>Entry</th><th>Account</th><th>Split</th><th class="r">Amount</th><th style="width:40px"></th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="5">Friday, Nov 6</td><td class="r num">−$200.00</td></tr>
+              <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><b>TFSA contribution</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num inv"><b>$200.00</b></td><td></td></tr>
+              <tr class="group"><td colspan="5">Wednesday, Nov 4</td><td class="r num">−$61.40</td></tr>
+              <tr><td></td><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Costco run</b><span class="tag">Apartment</span></div></td><td class="muted">—</td><td class="muted">Jo paid · 3 ways</td><td class="r num"><b>−$61.40</b></td><td></td></tr>
+              <tr class="group"><td colspan="5">Sunday, Nov 1</td><td class="r num pos">+$1,750.00</td></tr>
+              <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--income)"><i data-i="briefcase"></i></div><b>Payday</b></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num pos"><b>+$3,200.00</b></td><td></td></tr>
+              <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Rent</b><span class="tag">Apartment</span></div></td><td class="muted">Main chequing</td><td class="muted">You paid</td><td class="r num"><b>−$1,450.00</b></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="hint" style="margin-top:12px"><kbd>↑</kbd><kbd>↓</kbd> move · <kbd>↵</kbd> open · <kbd>E</kbd> edit · <kbd>⌫</kbd> delete · <kbd>X</kbd> select</div>
+      </div>
+    </div>
+  </main>
+  <div class="toast glass" role="status"><i data-i="checkmark-circle"></i><span class="t">3 entries deleted</span><span class="undo">Undo</span></div>
+</div>
+</body></html>
