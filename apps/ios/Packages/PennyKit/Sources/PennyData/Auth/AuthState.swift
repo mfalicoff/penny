@@ -159,3 +159,14 @@ public enum SignOutFailure: Error, Equatable, Sendable {
     case syncFailed
     case notSignedIn
 }
+
+/// How Change email ended (MAZ-172).
+public enum EmailChangeOutcome: Equatable, Sendable {
+    /// The account now signs in with the profile's email, unverified.
+    case changed(WireProfile)
+    /// The address is invalid or another account uses it: show it under Email.
+    case invalidEmail(String)
+    /// The password is missing or wrong: clear and refocus Password.
+    case wrongPassword(String)
+    case failed(String)
+}

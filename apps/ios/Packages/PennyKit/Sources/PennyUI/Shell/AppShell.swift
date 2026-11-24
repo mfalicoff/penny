@@ -36,6 +36,10 @@ struct AppShell: View {
                 shell.refreshToday()
                 // A name or picture changed on another device shows when the app comes back.
                 Task { await shell.profile.refreshSummary() }
+                // MAZ-172: an emailed link opened in the browser shows as verified on return.
+                if shell.auth?.server?.emailEnabled == true, shell.profile.awaitsVerification {
+                    Task { await shell.profile.refresh() }
+                }
             }
         }
         // On iPad Settings is the detail column, so Add entry opens over it instead of closing

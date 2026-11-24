@@ -108,3 +108,33 @@ public enum DisplayName {
         return .valid(trimmed)
     }
 }
+
+// MAZ-172: email verification. See contracts/openapi.json (`EmailChange`, `EmailVerificationRequest`,
+// `EmailVerified`) and docs/reference/authentication.md#email-verification-maz-172.
+
+extension APIClient {
+    /// `POST /api/auth/email-verification`: redeems the code from an emailed link. Needs no
+    /// session. One generic 400 for a bad, used, superseded or expired code.
+    public func verifyEmail(token: String) async throws -> WireEmailVerified {
+        guard Self.isLowercaseHex64(token) else { throw APIError.invalidRequest(.invalidField("token")) }
+        return try await json(
+            .post, "/api/auth/email-verification", body: WireEmailVerificationRequest(token: token),
+            authenticated: false)
+    }
+
+    /// `POST /api/auth/email-verification/resend`: 202 whether or not an email is queued (the
+    /// server sends at most one a minute); 404 while the server sends no email.
+    public func resendEmailVerification() async throws {
+        let ok: WireOk = try await json(.post, "/api/auth/email-verification/resend", body: [String: String]())
+        guard ok.ok else { throw APIError.malformedResponse }
+    }
+
+    /// `POST /api/auth/email`: a password account's new address, after its password. Returns the
+    /// updated (unverified) profile; the session stays.
+    public func changeEmail(_ change: WireEmailChange) async throws -> WireProfile {
+        let email = change.email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (3...254).contains(email.utf16.count) else { throw APIError.invalidRequest(.invalidField("email")) }
+        guard change.password.utf16.count <= 256 else { throw APIError.invalidRequest(.invalidField("password")) }
+        return try await json(.post, "/api/auth/email", body: WireEmailChange(email: email, password: change.password))
+    }
+}

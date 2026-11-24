@@ -24,6 +24,13 @@ public struct WireProfile: Codable, Equatable, Sendable {
     /// Unix milliseconds when a password account last changed its password; absent before the
     /// first change and for `oidc` accounts ("Changed Oct 3").
     public var passwordChangedAt: Int64?
+    /// MAZ-172: whether the current email is proven (an emailed link was opened, the provider says
+    /// so, an operator marked it, or the account is older than verification). Nothing waits for
+    /// it; show the unverified state only while the server sends email. True from servers before
+    /// verification, which never ask for it.
+    public var emailVerified: Bool
+    /// Unix milliseconds when the current email was verified; absent while unverified.
+    public var emailVerifiedAt: Int64?
 
     public init(
         userId: String,
@@ -35,7 +42,9 @@ public struct WireProfile: Codable, Equatable, Sendable {
         needsName: Bool = false,
         signIn: String = "password",
         provider: String? = nil,
-        passwordChangedAt: Int64? = nil
+        passwordChangedAt: Int64? = nil,
+        emailVerified: Bool = true,
+        emailVerifiedAt: Int64? = nil
     ) {
         self.userId = userId
         self.email = email
@@ -47,6 +56,29 @@ public struct WireProfile: Codable, Equatable, Sendable {
         self.signIn = signIn
         self.provider = provider
         self.passwordChangedAt = passwordChangedAt
+        self.emailVerified = emailVerified
+        self.emailVerifiedAt = emailVerifiedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case userId, email, displayName, avatarUrl, nameEditable, avatarEditable, needsName, signIn, provider
+        case passwordChangedAt, emailVerified, emailVerifiedAt
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        userId = try container.decode(String.self, forKey: .userId)
+        email = try container.decode(String.self, forKey: .email)
+        displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
+        avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        nameEditable = try container.decode(Bool.self, forKey: .nameEditable)
+        avatarEditable = try container.decode(Bool.self, forKey: .avatarEditable)
+        needsName = try container.decode(Bool.self, forKey: .needsName)
+        signIn = try container.decode(String.self, forKey: .signIn)
+        provider = try container.decodeIfPresent(String.self, forKey: .provider)
+        passwordChangedAt = try container.decodeIfPresent(Int64.self, forKey: .passwordChangedAt)
+        emailVerified = try container.decodeIfPresent(Bool.self, forKey: .emailVerified) ?? true
+        emailVerifiedAt = try container.decodeIfPresent(Int64.self, forKey: .emailVerifiedAt)
     }
 }
 
@@ -112,4 +144,32 @@ public struct WirePasswordChange: Encodable, Equatable, Sendable {
         self.currentPassword = currentPassword
         self.newPassword = newPassword
     }
+}
+
+/// `POST /api/auth/email` (MAZ-172): a password account moves to another address after its
+/// password. The account becomes unverified and, while the server sends email, a new link goes to
+/// the new address. 400 for an invalid address or a wrong password, 409 for an address another
+/// account uses, 403 for an account that signs in with a provider.
+public struct WireEmailChange: Encodable, Equatable, Sendable {
+    public var email: String
+    public var password: String
+
+    public init(email: String, password: String) {
+        self.email = email
+        self.password = password
+    }
+}
+
+/// `POST /api/auth/email-verification` body: the code from the emailed link's fragment.
+public struct WireEmailVerificationRequest: Encodable, Equatable, Sendable {
+    public var token: String
+
+    public init(token: String) { self.token = token }
+}
+
+/// `POST /api/auth/email-verification` answer: the address that is now verified.
+public struct WireEmailVerified: Decodable, Equatable, Sendable {
+    public var email: String
+
+    public init(email: String) { self.email = email }
 }

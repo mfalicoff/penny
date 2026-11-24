@@ -20,6 +20,12 @@ public final class AuthController {
     /// sign-out. The signed-out screen says so and offers `removeUnremovedLocalData()`. Kept across
     /// launches (`AuthPreferences.unremovedLocalData`).
     public private(set) var unremovedLocalData: AccountScope?
+    /// MAZ-172: the account that just signed up on a server that sends email, until Continue to
+    /// Penny. The gate shows "Check your email" (`iphone-verify-email`) instead of the shell.
+    public private(set) var checkEmailAccount: AccountScope?
+    /// When the last verification email was asked for (sign-up, Resend, Change email), so Resend
+    /// counts the server's minute down. Kept for this launch only.
+    public private(set) var verificationEmailSentAt: Date?
 
     @ObservationIgnored private let defaultServer: ServerURL?
     @ObservationIgnored private let sessions: any SessionStore
@@ -131,7 +137,7 @@ public final class AuthController {
             state = .signedIn(verified)
             return
         }
-        let migration = Task { await adoptChangedEmail(email, for: account) }
+        let migration = Task { _ = await adoptChangedEmail(email, for: account) }
         emailMigration = migration
         await migration.value
         if emailMigration == migration { emailMigration = nil }
@@ -142,22 +148,27 @@ public final class AuthController {
     /// it first so unsynced work is neither orphaned nor shown under the old scope. If the
     /// data cannot move, nothing changes: the account stays on the stored scope, unverified,
     /// and the next launch tries again.
-    private func adoptChangedEmail(_ email: String, for account: SignedInAccount) async {
+    @discardableResult
+    private func adoptChangedEmail(_ email: String, for account: SignedInAccount) async -> Bool {
         guard
             let session = try? ServerSession(
                 server: account.server, email: email, token: account.session.tokenForStorage)
-        else { return }
+        else { return false }
         do {
             try await localData.moveLocalData(from: account.scope, to: session.scope)
         } catch {
-            return
+            return false
         }
         // Sign-out and "Sync, then sign out" wait for this migration, so the account is
         // normally still current; if it expired meanwhile, its data already sits under the
         // new scope, which is where the next sign-in (with the new email) looks.
-        guard case .signedIn = state, isCurrent(account) else { return }
+        guard case .signedIn = state, isCurrent(account) else { return false }
         try? sessions.save(session)
-        _ = activate(session, verified: true)
+        let followsCheckEmail = checkEmailAccount == account.scope
+        let moved = activate(session, verified: true)
+        // "Check your email" follows the account to its new address.
+        if followsCheckEmail { checkEmailAccount = moved.scope }
+        return true
     }
 
     // MARK: Password
@@ -210,6 +221,11 @@ public final class AuthController {
             throw Self.failure(error, during: method, server: server.server)
         }
         try await install(session, previous: previous)
+        // The server sends the first verification email itself (MAZ-172).
+        if method == .registration, server.emailEnabled, let account = state.account {
+            checkEmailAccount = account.scope
+            verificationEmailSentAt = now()
+        }
     }
 
     // MARK: Single sign-on
@@ -518,6 +534,92 @@ public final class AuthController {
         server = saved
     }
 
+    // MARK: Email verification (MAZ-172)
+
+    /// Continue to Penny on "Check your email": the shell opens. Nothing waits for verification.
+    public func continueAfterCheckEmail() {
+        checkEmailAccount = nil
+    }
+
+    /// Whether "Check your email" shows for the signed-in account.
+    public var showsCheckEmail: Bool {
+        guard let scope = checkEmailAccount, case .signedIn(let account) = state else { return false }
+        return account.scope == scope
+    }
+
+    /// `POST /api/auth/email-verification/resend`. Nil when it was accepted (the server sends at
+    /// most one a minute and says the same either way), else what to say. A 404 means the server
+    /// stopped sending email: the saved server forgets it, so the unverified state goes away.
+    public func resendVerificationEmail() async -> String? {
+        guard case .signedIn(let account) = state, let client = try? signedInClient(account) else {
+            return "Sign in to send a new link."
+        }
+        do {
+            try await client.resendEmailVerification()
+            if isCurrent(account) { verificationEmailSentAt = now() }
+            return nil
+        } catch let error as APIError {
+            switch error {
+            case .notFound:
+                setEmailEnabled(false, for: account.server)
+                return "This server doesn't send email."
+            case .rateLimited: return "Too many attempts. Wait a few minutes and try again."
+            default:
+                if error.requiresSignIn { sessionDidExpire(for: account) }
+                return Self.verificationMessage(error, fallback: "The link didn't send. Try again.")
+            }
+        } catch {
+            return "The link didn't send. Try again."
+        }
+    }
+
+    /// `POST /api/auth/email` after the account's password: the account moves to the new address
+    /// and its local data moves with it, as for an email changed on another device
+    /// (`adoptChangedEmail`). While the server sends email, a new link goes to the new address.
+    public func changeEmail(to email: String, password: String) async -> EmailChangeOutcome {
+        guard case .signedIn(let account) = state, let client = try? signedInClient(account) else {
+            return .failed("Sign in to change your email.")
+        }
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard EmailAddress.looksValid(trimmed) else { return .invalidEmail("Enter a valid email address.") }
+        guard !password.isEmpty else { return .wrongPassword("Enter your password.") }
+        let profile: WireProfile
+        do {
+            profile = try await client.changeEmail(WireEmailChange(email: trimmed, password: password))
+        } catch let error as APIError {
+            switch error {
+            case .conflict(let message): return .invalidEmail(message ?? "Another account already uses this email.")
+            case .badRequest(let message):
+                let text = message ?? "Enter a valid email address."
+                return text.localizedCaseInsensitiveContains("email") ? .invalidEmail(text) : .wrongPassword(text)
+            case .forbidden(let message):
+                return .failed(message ?? "Your sign-in provider manages your email. Change it with your provider.")
+            case .rateLimited: return .failed("Too many attempts. Wait a few minutes and try again.")
+            default:
+                if error.requiresSignIn { sessionDidExpire(for: account) }
+                return .failed(Self.verificationMessage(error, fallback: "Your email wasn't changed. Try again."))
+            }
+        } catch {
+            return .failed("Your email wasn't changed. Try again.")
+        }
+        guard isCurrent(account) else { return .changed(profile) }
+        if server?.emailEnabled == true { verificationEmailSentAt = now() }
+        guard profile.email.lowercased() != account.email.lowercased() else { return .changed(profile) }
+        let migration = Task { _ = await adoptChangedEmail(profile.email, for: account) }
+        emailMigration = migration
+        await migration.value
+        if emailMigration == migration { emailMigration = nil }
+        return .changed(profile)
+    }
+
+    private static func verificationMessage(_ error: APIError, fallback: String) -> String {
+        switch error {
+        case .offline, .timeout, .unreachable: "Penny can't reach the server. Try again when you're online."
+        case .unauthorized: "Your session ended. Sign in again."
+        default: fallback
+        }
+    }
+
     // MARK: Password reset (MAZ-124)
 
     /// `POST /api/auth/password-reset/request`. The server answers the same whether or not the
@@ -644,6 +746,8 @@ public final class AuthController {
     @discardableResult
     private func activate(_ session: ServerSession, verified: Bool) -> SignedInAccount {
         let account = SignedInAccount(session: session, generation: bump(), isVerified: verified)
+        // "Check your email" belongs to the sign-up that set it, never a later session.
+        checkEmailAccount = nil
         state = .signedIn(account)
         // Entries a sign-out could not remove belong to this account again.
         if unremovedLocalData == account.scope { setUnremovedLocalData(nil) }

@@ -10,6 +10,13 @@ extension Stack {
         return info["emailEnabled"] as? Bool == true
     }
 
+    /// Marks an account's email verified (MAZ-172), as opening the emailed link does.
+    func markEmailVerified(_ email: String) async throws {
+        _ = try await send(
+            "POST", configuration.apiURL.appending(path: "api/test/email-verified"), body: ["email": email],
+            control: true)
+    }
+
     /// Invites `email` to a household by email and waits until the mail worker sent it.
     @discardableResult
     func emailInvite(token: String, household: String, email: String) async throws -> String {

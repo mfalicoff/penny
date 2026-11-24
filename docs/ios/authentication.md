@@ -113,6 +113,17 @@ Oidc__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
 - **Name prompt.** When `/api/auth/me` says `needsName`, Home shows "What should people call you?" once (`NamePromptSheet`). Not now tells the server to stop asking. Older servers send no `needsName`, so nothing is asked. The summary is read again when the app returns to the foreground.
 - **Names and pictures.** Shared screens show a member's display name, else their email, and their picture, else initials from the name or email (`HouseholdPeople.name`, `face`). Pictures (`/api/users/<id>/avatar?v=<n>`) load with the session from the same server only (`APIClient.avatar` refuses any other path) and are kept by URL for the session (`AvatarStore`); a 404 shows initials.
 
+## Email verification (MAZ-172)
+
+Verification only records that a password account's address is proven ([server side](../reference/authentication.md#email-verification-maz-172)); nothing in the app waits for it. Everything below shows only while the server sends email (`emailEnabled` on `/api/info`, kept with the saved server); without email the app shows no unverified state.
+
+- **Check your email** (`CheckEmailView`, card `iphone-verify-email`). After a password sign-up the gate shows it instead of the shell (`AuthController.showsCheckEmail`): the address, "Use Penny right away" and "Verify your address", Continue to Penny, Resend (counting the server's minute down from the sign-up) and Change email. It belongs to that sign-up only: any later session clears it.
+- **Resend** sends `POST /api/auth/email-verification/resend` (`AuthController.resendVerificationEmail`). The server answers 202 either way; a 404 means it stopped sending email, so the saved server forgets `emailEnabled`.
+- **Change email** (`ChangeEmailSheet`, from Check your email and the Shared tab's reminder) sends `POST /api/auth/email` with the new address and the password. The account's local data is scoped by email, so the account then moves to the new address the way a launch-time email change does (`adoptChangedEmail`: local data first, then the stored session); if the data can't move, the next launch tries again. A taken or invalid address shows under Email, a wrong password clears Password. The sheet has no card of its own: it follows the web's Change your email in the sign-in screens' style.
+- **The emailed link** is a web URL (`<AppUrl>/verify-email#code=…`). The app doesn't open web links, so the web page verifies it. The profile (`GET /api/profile`, `emailVerified`) is read again when the app returns to the foreground while the account is unverified, and when the Shared tab opens or refreshes. `APIClient.verifyEmail(token:)` is there for a future in-app link.
+- **Shared tab** (card `iphone-unverified`): an unverified password account sees "Verify your email" with Resend link and Change email above its households. New household, Join and the toolbar + stay available. With no households yet, the tab shows the card's empty state (New household, Join).
+- **Settings › Profile** (`iphone-profile`, `ipad-profile`): the Sign-in row shows Verified for a verified account (password or provider), or Not verified with a Resend link row for an unverified password account. Servers from before verification send no `emailVerified`; the app reads them as verified.
+
 ## Failure messages
 
 `AuthFailure` has a `kind` to branch on and a `message` to show as is (the server's message when it sent one).

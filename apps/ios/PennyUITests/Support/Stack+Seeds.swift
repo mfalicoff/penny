@@ -129,6 +129,9 @@ extension Stack {
             // A user without a name would be asked for one over Home; tests that want the prompt
             // (the iphone-name-prompt card) clear the name themselves.
             if names[alias] == nil { try await skipNamePrompt(token: token) }
+            // MAZ-172: verified, as every account from before email verification is (seed.mjs does the
+            // same), so cards on a stack that sends email show no verification reminder.
+            try await markEmailVerified((body["email"] as? String) ?? email)
             context.users[alias] = .init(email: (body["email"] as? String) ?? email, password: password, token: token)
         }
 
