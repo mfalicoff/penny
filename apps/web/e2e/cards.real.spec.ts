@@ -54,6 +54,26 @@ async function profilePane(p: Page) {
   await expect(p.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Alex Martin");
 }
 
+// MAZ-152: the delete account dialog over Profile, with the password typed (the card's dots).
+async function deleteAccountDialog(p: Page) {
+  await profilePane(p);
+  await p.getByRole("button", { name: /^Delete account/ }).last().click();
+  const dialog = p.getByRole("dialog", { name: "Delete your account?" });
+  await expect(dialog.getByText(/^Shared expenses in /)).toBeVisible();
+  await dialog.getByLabel("Enter your password to confirm").fill("0123456789");
+}
+
+// MAZ-152: Settings › Export data, after the full export downloaded (the card's "ready" line).
+async function exportPane(p: Page, download: boolean) {
+  await p.goto("/settings/export");
+  await expect(p.getByRole("heading", { name: "All your data" })).toBeVisible();
+  if (!download) return;
+  const saved = p.waitForEvent("download");
+  await p.getByRole("button", { name: "Download ZIP" }).click();
+  await saved;
+  await expect(p.getByText(/^penny-export-.*· ready$/)).toBeVisible();
+}
+
 
 async function home(page: Page, path = "/") {
   await page.goto(path);
@@ -947,7 +967,10 @@ const cards: Record<string, Card> = {
       await p.getByLabel("New password").fill("password");
     },
   },
-  "web-export": { skip: { status: "not-built", note: "The web has no Export data yet (Settings has no Export row)." } },
+  "web-export": {
+    open: ({ page: p }) => exportPane(p, false),
+    note: "The pane follows web-export-all (MAZ-152), which adds the full export above Entries only; Entries only has no shared expenses checkbox, as your share of them is always in the file.",
+  },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
   // address and inbox items; they need an `open` here once it does.
@@ -962,7 +985,7 @@ const cards: Record<string, Card> = {
   // Account and profile cards drafted for review (MAZ-267): none of these flows exist on the web yet.
   "iphone-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "Profile is a page styled as the sheet. Your data (export, delete account) is missing: those features aren't built yet.",
+    note: "Profile is a page styled as the sheet.",
   },
   "iphone-profile-provider": { skip: { status: "blocked", note: "The full-stack seeds have no account that signs in with a provider; the read-only profile is covered by the web unit tests." } },
   "iphone-profile-photo": {
@@ -995,17 +1018,23 @@ const cards: Record<string, Card> = {
   "iphone-unverified": { skip: { status: "not-built", note: "The native app's Shared tab reminder (MAZ-172 phase 2). The web shows the unverified state and Resend link in Settings › Profile." } },
   "iphone-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
   "iphone-invite-email": { skip: { status: "not-built", note: "The web has no invites by email (the server sends no email)." } },
-  "iphone-delete-account": { skip: { status: "not-built", note: "The web has no account deletion." } },
-  "iphone-export-all": { skip: { status: "not-built", note: "The web has no full data export." } },
+  "iphone-delete-account": {
+    open: ({ page: p }) => deleteAccountDialog(p),
+    note: "On a phone the web opens the web dialog as a sheet, not the native page.",
+  },
+  "iphone-export-all": {
+    fresh: true,
+    open: ({ page: p }) => exportPane(p, true),
+    note: "The web saves the file with the browser's own download; the native Save or share sheet doesn't apply.",
+  },
   "iphone-monitoring-prompt": { skip: { status: "not-built", note: "The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt." } },
   "iphone-privacy": { skip: { status: "not-built", note: "The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person." } },
   "ipad-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "Your data (export, delete account) is missing: those features aren't built yet.",
   },
   "web-profile": {
     open: ({ page: p }) => profilePane(p),
-    note: "Your data (export, delete account) is missing, and the section list has no Privacy or Export data: those features aren't built yet.",
+    note: "The section list has no Privacy: that pane isn't built yet.",
   },
   "web-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
   "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
@@ -1085,8 +1114,15 @@ const cards: Record<string, Card> = {
       await dialog.getByLabel("Email").fill("sam@example.com");
     },
   },
-  "web-delete-account": { skip: { status: "not-built", note: "The web has no account deletion." } },
-  "web-export-all": { skip: { status: "not-built", note: "The web has no Export data pane." } },
+  "web-delete-account": {
+    open: ({ page: p }) => deleteAccountDialog(p),
+    note: "The section list has no Privacy: that pane isn't built yet.",
+  },
+  "web-export-all": {
+    fresh: true,
+    open: ({ page: p }) => exportPane(p, true),
+    note: "The section list has no Privacy: that pane isn't built yet.",
+  },
   "web-privacy": { skip: { status: "not-built", note: "The web has no Privacy pane: telemetry is on or off for the whole server, with no switches for the person." } },
   "web-monitoring-prompt": { skip: { status: "not-built", note: "The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt." } },
 };

@@ -39,7 +39,8 @@ export function DeleteAccountDialog({ profile, onClose }: { profile: Profile; on
   const passwordRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const needsPassword = profile.signIn === "password";
-  const names = (households.data ?? []).map((household) => household.name);
+  // Households first, then trips, as the card lists them.
+  const names = [...(households.data ?? [])].sort((a, b) => Number(Boolean(a.trip)) - Number(Boolean(b.trip))).map((household) => household.name);
 
   const remove = useMutation({
     mutationKey: ["account", "delete"],

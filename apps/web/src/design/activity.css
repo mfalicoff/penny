@@ -1575,3 +1575,12 @@
     font-size: 0.875rem;
   }
 }
+
+/* The summary and its export button (MAZ-152) stay together at the row's end, as on `web-activity`. */
+.activity-toolbar__end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-left: auto;
+}

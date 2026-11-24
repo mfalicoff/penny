@@ -1058,3 +1058,15 @@
 .activity-export {
   flex: none;
 }
+
+.card.export__panel {
+  gap: 10px;
+}
+
+.export--desktop .export__lines {
+  gap: 6px 24px;
+}
+
+.export__ranges {
+  border-top: 0.5px solid var(--pk-separator);
+}

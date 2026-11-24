@@ -326,7 +326,7 @@ Code: `src/api/receipts.ts` (the server's type, signature and 10 MiB checks, upl
 | Currency | The ledger currency. It can change only while the ledger has no entries or recurring rules, and the reason is shown; if the server doesn't send those lists it stays fixed rather than guessing. Saving writes the snapshot back with its `revision`: a 409 reloads and asks again, other failures keep the choice and offer Retry, success shows a toast with Undo. Shared households keep their own currency. |
 | Server | The page's own origin and the server version, read-only: the web always uses the server it was opened from. |
 
-The native-only settings (app lock, server picker, notifications) are omitted; the web card's "Export data" waits for a decision on what it contains, its format and whether the API needs an endpoint (follow-up to MAZ-140).
+The native-only settings (app lock, server picker, notifications) are omitted. Export data (MAZ-152, card `web-export-all`) downloads the full export (`GET /api/export`, one ZIP) and the entries CSV (`GET /api/export/entries`, this month, this year or everything); the desktop Activity page exports the shown period's CSV. Profile › Your data opens it and deletes the account (`POST /api/account/delete`, card `web-delete-account`). The demo has no account, so it hides both.
 
 ## Temporary demo
 

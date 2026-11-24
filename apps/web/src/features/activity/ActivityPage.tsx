@@ -151,8 +151,12 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
         {tablet && !desktop ? searchField : null}
         <div className="activity-toolbar">
           {chips}
-          {desktop && ledger ? <Summary period={period} ledger={ledger} shared={shared} /> : null}
-          {desktop ? <ExportButton period={period} /> : null}
+          {desktop ? (
+            <div className="activity-toolbar__end">
+              {ledger ? <Summary period={period} ledger={ledger} shared={shared} /> : null}
+              <ExportButton period={period} />
+            </div>
+          ) : null}
         </div>
         {shared.status === "unavailable" ? (
           <p className="note" role="status">
