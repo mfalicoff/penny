@@ -211,7 +211,8 @@ async function main() {
   console.log(`# ${project} on ${origin} (api ${apiImage}, web ${webImage})`);
   up();
   check(true, "stack started: postgres healthy, api and web healthy");
-  const migrations = () => compose(["logs", "--no-log-prefix", "api"]).stdout.split("Database migrated.").length - 1;
+  // One log line per start: the JSON console logger repeats the text in Message and State.
+  const migrations = () => compose(["logs", "--no-log-prefix", "api"]).stdout.split("\n").filter((line) => line.includes("Database migrated.")).length;
   check(migrations() === 1, "the API migrated the new database on startup");
 
   // Same origin: static app, SPA fallback and the API behind one port.
