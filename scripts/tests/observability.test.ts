@@ -76,6 +76,14 @@ test("alert rules use provisioned data sources and unique ids", () => {
   }
 });
 
+test("the operator guide's alert table lists every provisioned rule", () => {
+  const guide = readFileSync(new URL("../../docs/self-hosting/observability.md", import.meta.url), "utf8");
+  const section = guide.slice(guide.indexOf("\n## Alerts\n"), guide.indexOf("\n## ", guide.indexOf("\n## Alerts\n") + 1));
+  const documented = [...section.matchAll(/^\| (Penny [^|]+?) \|/gm)].map((match) => match[1]).sort();
+  const titles = [...read("grafana/provisioning/alerting/penny.yaml").matchAll(/^\s+title: (.+)$/gm)].map((match) => match[1].trim()).sort();
+  assert.deepEqual(documented, titles);
+});
+
 test("only client ingest is exposed and every image is pinned by digest", () => {
   const compose = read("compose.yaml");
   for (const [, image] of compose.matchAll(/^\s+image: (\S+)$/gm)) assert.match(image, /:[^@]+@sha256:[0-9a-f]{64}$/, image);
