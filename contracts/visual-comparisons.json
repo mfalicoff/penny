@@ -3302,6 +3302,21 @@
       }
     },
     {
+      "id": "web-activity-bulk-done",
+      "view": "web activity after deleting three selected entries, with the saved toast and Undo",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-276",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-276",
+        "note": "Draft card (MAZ-276). The web can't select several entries yet.",
+        "followUp": "MAZ-276"
+      }
+    },
+    {
       "id": "web-server-unreachable",
       "view": "web home while the server doesn't answer its info request",
       "native": {

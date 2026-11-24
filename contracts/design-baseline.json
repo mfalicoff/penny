@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "44917c1ead6b81d253b68e66c54425d9a9ab9755d5f472cd140ffa48ad689fd4"
+      "sha256": "5cefdc0a05da15e5d3189db0b100c51a57f914a44ee6bbc6179eefc6dfad9310"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "1d300c554a5140711447026b3b498fdb06c50b20591efa680ba4db9b590a46e4"
+      "sha256": "d081fda8fc40893fb1a21a494b3f831f482fe4bc83f140b3d32455bd8eb24499"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "bc2b47c60b359182d2336661351d7b517bd41089e12f52dd272dbc18b2e4499c"
+      "sha256": "f54476dc55c958fe02151f96d9449e4e0a440211409d4896f2f41ab94f071c68"
     }
   ],
   "tokens": {
@@ -2818,7 +2818,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/activity.html",
-      "sha256": "cae71657abf0c3e88a22c538d3fbe05ad5228ec20087bafc0e14c9a6f5f8d5a0",
+      "sha256": "4cee9bd195148aae754f82f33420e7133ac067c34a936ea2c4e1e834e396c158",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
@@ -3305,6 +3305,29 @@
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/activity-bulk-delete.html",
       "sha256": "fb3d8aa8bdc9695634867ed6e40737835feb9991c71ccf8cc63461905a94d970",
+      "nativeIssue": "MAZ-276",
+      "webIssue": "MAZ-276",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-bulk-done",
+      "name": "Selected entries deleted",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-bulk-done.html",
+      "sha256": "a7ef502819a09484704947bd7d2712383c86c67cdeca2e4a3ae95576eaf479b9",
       "nativeIssue": "MAZ-276",
       "webIssue": "MAZ-276",
       "route": "/transactions",

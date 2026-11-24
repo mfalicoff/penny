@@ -160,6 +160,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-activity-bulk-category` | — | Web-only draft reference (MAZ-276): selecting several entries is desktop-only, so there is no native screen; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-activity-bulk-account` | — | Web-only draft reference (MAZ-276): selecting several entries is desktop-only, so there is no native screen; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-activity-bulk-delete` | — | Web-only draft reference (MAZ-276): selecting several entries is desktop-only, so there is no native screen; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-activity-bulk-done` | — | Web-only draft reference (MAZ-276): selecting several entries is desktop-only, so there is no native screen; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-server-unreachable` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-offline`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-demo` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-demo`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-tablet` | — | Web-only draft reference (MAZ-238): native behavior is traced through `ipad-home`; the browser journeys are MAZ-96 | Not applicable to native |
