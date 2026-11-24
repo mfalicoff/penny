@@ -64,7 +64,7 @@
     },
     "/api/auth/oidc": {
       "get": {
-        "summary": "OIDC availability",
+        "summary": "Configured sign-in providers",
         "operationId": "getApiAuthOidc",
         "responses": {
           "200": {
@@ -117,7 +117,7 @@
             }
           },
           "400": {
-            "description": "Invalid request.",
+            "description": "Invalid request, an unconfigured redirect or an unconfigured provider.",
             "content": {
               "application/json": {
                 "schema": {
@@ -301,6 +301,449 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/OidcComplete"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc/callback/{provider}": {
+      "get": {
+        "summary": "Provider callback relay",
+        "description": "MAZ-170. The redirect URI registered with a provider configured with a CallbackUri (Apple posts its response here with response_mode=form_post). Finds the pending attempt by `state` and answers 303 to the app redirect it was started for, with `code`, `state`, `iss`, `error` and Apple's `user` in the query. Not called by the apps; exempt from the origin policy.",
+        "operationId": "getApiAuthOidcCallback",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "On to the app's redirect.",
+            "headers": {
+              "Location": {
+                "description": "The app redirect with the provider's response parameters.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or repeated parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No pending sign-in has this state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The provider is not configured or has no callback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "summary": "Provider callback relay",
+        "description": "MAZ-170. The redirect URI registered with a provider configured with a CallbackUri (Apple posts its response here with response_mode=form_post). Finds the pending attempt by `state` and answers 303 to the app redirect it was started for, with `code`, `state`, `iss`, `error` and Apple's `user` in the query. Not called by the apps; exempt from the origin policy.",
+        "operationId": "postApiAuthOidcCallback",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "On to the app's redirect.",
+            "headers": {
+              "Location": {
+                "description": "The app redirect with the provider's response parameters.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or repeated parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No pending sign-in has this state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The provider is not configured or has no callback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc/native/start": {
+      "post": {
+        "summary": "Begin native sign-in",
+        "description": "MAZ-170. For a provider whose `native` is true. 400 when the provider is not configured or not native.",
+        "operationId": "postApiAuthOidcNativeStart",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OidcNativeChallenge"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OidcNativeStart"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc/native/complete": {
+      "post": {
+        "summary": "Complete native sign-in",
+        "description": "MAZ-170. Validates the platform's ID token (signature, issuer, a native client id as audience, expiry, the attempt's nonce) and signs in or registers exactly like `/api/auth/oidc/complete`.",
+        "operationId": "postApiAuthOidcNativeComplete",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "penny_session; HttpOnly; SameSite=Lax; Path=/api; Max-Age=2592000. Secure is set when configured.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Expired, unknown or unverifiable sign-in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An account already uses this email.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OidcNativeComplete"
               }
             }
           }
@@ -6620,16 +7063,58 @@
       },
       "OidcConfig": {
         "type": "object",
+        "description": "MAZ-170. The configured sign-in providers. Clients show one sign-in button per entry in `providers`, in order, and none when it is empty.",
         "properties": {
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "True when at least one provider is configured."
           },
           "label": {
-            "type": "string"
+            "type": "string",
+            "description": "Deprecated: the first provider's label, for clients from before MAZ-170. Omitted when no provider is configured."
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OidcProvider"
+            }
           }
         },
         "required": [
-          "enabled"
+          "enabled",
+          "providers"
+        ]
+      },
+      "OidcProvider": {
+        "type": "object",
+        "description": "MAZ-170. A configured sign-in provider.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+            "description": "Send it as `provider` to start a sign-in."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "The button's provider name, for example Google, Apple or the operator's single sign-on."
+          },
+          "icon": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,32}$",
+            "description": "A built-in glyph name: `google`, `apple` or `sso`. Show the generic sign-in glyph for any other name."
+          },
+          "native": {
+            "type": "boolean",
+            "description": "The app may sign in with the platform's own sign-in for this provider (Sign in with Apple on iOS) through `/api/auth/oidc/native/*`."
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "icon",
+          "native"
         ]
       },
       "OidcStart": {
@@ -6638,6 +7123,11 @@
           "redirectUri": {
             "type": "string",
             "format": "uri"
+          },
+          "provider": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+            "description": "MAZ-170. The provider's `id` from `GET /api/auth/oidc`. Omitted means the first provider, for clients from before MAZ-170."
           }
         },
         "required": [
@@ -6680,6 +7170,69 @@
         "required": [
           "transaction",
           "callbackUrl"
+        ]
+      },
+      "OidcNativeStart": {
+        "type": "object",
+        "description": "MAZ-170. Begins a sign-in with the platform's own sign-in for a provider whose `native` is true.",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
+      "OidcNativeChallenge": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "nonce": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Pass it unchanged as the platform request's nonce (ASAuthorizationAppleIDRequest.nonce); the ID token must carry it."
+          },
+          "expiresAt": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "transaction",
+          "nonce",
+          "expiresAt"
+        ]
+      },
+      "OidcNativeComplete": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "idToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192,
+            "description": "The ID token the platform returned (Apple: identityToken)."
+          },
+          "givenName": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "The name the platform gave the app. Apple gives it only the first time someone signs in to the app; send it then."
+          },
+          "familyName": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "transaction",
+          "idToken"
         ]
       },
       "Account": {
@@ -9264,6 +9817,16 @@
           "emailVerifiedAt": {
             "type": "integer",
             "description": "MAZ-172. Unix milliseconds when the current email was verified. Omitted while unverified."
+          },
+          "providerId": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+            "description": "MAZ-170. For an oidc account: the `id` of its configured provider in `GET /api/auth/oidc`. Omitted when not configured."
+          },
+          "providerIcon": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,32}$",
+            "description": "MAZ-170. For an oidc account: the `icon` of its configured provider. Omitted when not configured."
           }
         },
         "required": [

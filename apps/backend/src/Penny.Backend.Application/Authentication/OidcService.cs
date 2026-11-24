@@ -1,21 +1,26 @@
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Security;
+using Penny.Backend.Application.Profiles;
 using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Application.Authentication;
 
-// OIDC sign-in attempts. Short-lived secrets
+// OIDC sign-in attempts, for each configured provider (MAZ-170). Short-lived secrets
 // (state, nonce, PKCE verifier) stay on the server, keyed by SHA-256 of a transaction
 // that only the initiating app holds; they never appear in redirect URLs.
 public sealed class OidcService(
     OidcSettings settings,
-    IOidcProvider provider,
+    IEnumerable<IOidcProvider> providers,
     IOidcAttemptRepository attempts,
     AuthService auth,
     TimeProvider clock
 )
 {
     public const string NotConfigured = "Single sign-on is not configured.";
+    public const string ProviderNotConfigured =
+        "This sign-in provider is not configured on the server.";
+    public const string NativeNotConfigured =
+        "This sign-in provider can't be used from the app's own sign-in.";
     public const string RedirectNotConfigured =
         "This sign-in redirect is not configured on the server.";
     public const string TooManyAttempts = "Too many sign-in attempts. Try again later.";
@@ -28,48 +33,87 @@ public sealed class OidcService(
 
     public const int MaxPendingAttempts = 1000;
     public const int MaxCallbackLength = 8192;
+    public const int MaxIdTokenLength = 8192;
+    public const int MaxNameLength = 200;
     public static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(10);
 
-    public string Label => settings.Label;
+    // The parameters the callback relay hands on to the app (RFC 6749 section 4.1.2, RFC
+    // 9207 `iss`, and Apple's first-sign-in `user`). Anything else is dropped.
+    private static readonly string[] RelayedParameters = ["code", "state", "iss", "error", "user"];
 
+    private readonly Dictionary<string, IOidcProvider> clients = providers.ToDictionary(
+        provider => provider.Id,
+        StringComparer.Ordinal
+    );
+
+    public IReadOnlyList<OidcProviderSettings> Providers => settings.Providers;
+
+    // `providerId` null means the first provider: clients from before MAZ-170 send none.
     public async Task<OidcChallenge> StartAsync(
+        string? providerId,
         string? redirectUri,
         CancellationToken cancellationToken
     )
     {
+        var (provider, client) = Resolve(providerId);
         if (
             redirectUri is null
-            || !settings.RedirectUris.Contains(redirectUri, StringComparer.Ordinal)
+            || !provider.RedirectUris.Contains(redirectUri, StringComparer.Ordinal)
         )
             throw new BackendFailure(FailureKind.Invalid, RedirectNotConfigured);
-        var transaction = SessionTokens.Create();
-        var now = Now();
-        var attempt = new StoredOidcAttempt(
-            SessionTokens.Hash(transaction),
-            redirectUri,
-            SessionTokens.Create(),
-            SessionTokens.Create(),
-            SessionTokens.Create(),
-            now + Lifetime
-        );
-        if (!await attempts.TryCreateAsync(attempt, now, MaxPendingAttempts, cancellationToken))
-            throw new BackendFailure(FailureKind.Forbidden, TooManyAttempts);
+        var attempt = await CreateAttemptAsync(provider.Id, redirectUri, cancellationToken);
         string authorizationUrl;
         try
         {
-            authorizationUrl = await provider.CreateAuthorizationUrlAsync(
-                attempt,
+            authorizationUrl = await client.CreateAuthorizationUrlAsync(
+                attempt.Stored,
                 cancellationToken
             );
         }
         catch (Exception error)
         {
-            await attempts.RemoveAsync(attempt.TransactionHash, CancellationToken.None);
+            await attempts.RemoveAsync(attempt.Stored.TransactionHash, CancellationToken.None);
             if (error is OperationCanceledException && cancellationToken.IsCancellationRequested)
                 throw;
             throw new BackendFailure(FailureKind.Invalid, ProviderUnavailable);
         }
-        return new(transaction, authorizationUrl, attempt.ExpiresAt.ToUnixTimeMilliseconds());
+        return new(
+            attempt.Transaction,
+            authorizationUrl,
+            attempt.Stored.ExpiresAt.ToUnixTimeMilliseconds()
+        );
+    }
+
+    // A relayed provider's response arrives at this API (Apple posts it). The pending
+    // attempt is found by `state` and the response is handed on, unchanged, to the app
+    // redirect that attempt was started for; it is checked when the app completes.
+    public async Task<string> RelayAsync(
+        string providerId,
+        IReadOnlyDictionary<string, string> parameters,
+        CancellationToken cancellationToken
+    )
+    {
+        if (settings.Find(providerId) is not { Relayed: true })
+            throw new BackendFailure(FailureKind.NotFound, ProviderNotConfigured);
+        if (
+            !parameters.TryGetValue("state", out var state)
+            || state.Length is 0 or > 256
+            || await attempts.FindByStateAsync(state, cancellationToken)
+                is not { RedirectUri: { } redirectUri } attempt
+            || attempt.ProviderId != providerId
+            || attempt.ExpiresAt <= Now()
+        )
+            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+        var query = string.Join(
+            '&',
+            RelayedParameters
+                .Where(parameters.ContainsKey)
+                .Select(name => $"{name}={Uri.EscapeDataString(parameters[name])}")
+        );
+        var target = $"{redirectUri}?{query}";
+        if (target.Length > MaxCallbackLength)
+            throw new BackendFailure(FailureKind.Invalid, InvalidResponse);
+        return target;
     }
 
     public async Task<IssuedSession> CompleteAsync(
@@ -84,18 +128,126 @@ public sealed class OidcService(
             || callbackUrl.Length > MaxCallbackLength
         )
             throw new BackendFailure(FailureKind.Invalid, InvalidResponse);
-        // Consumed before the provider exchange, so replays and concurrent redemptions
-        // of the same transaction fail even if this exchange fails.
-        var attempt = await attempts.ConsumeAsync(
-            SessionTokens.Hash(transaction!),
+        var (attempt, provider, client) = await ConsumeAsync(transaction!, cancellationToken);
+        if (attempt.RedirectUri is null)
+            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+        var identity = await VerifyAsync(
+            () => client.ExchangeAsync(callbackUrl, attempt, cancellationToken),
+            provider,
             cancellationToken
         );
-        if (attempt is null || attempt.ExpiresAt <= Now())
+        return await auth.LoginOidcAsync(identity, provider.AllowRegistration, cancellationToken);
+    }
+
+    public async Task<OidcNativeChallenge> StartNativeAsync(
+        string? providerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var (provider, _) = Resolve(providerId ?? "");
+        if (!provider.Native)
+            throw new BackendFailure(FailureKind.Invalid, NativeNotConfigured);
+        var attempt = await CreateAttemptAsync(provider.Id, null, cancellationToken);
+        return new(
+            attempt.Transaction,
+            attempt.Stored.Nonce,
+            attempt.Stored.ExpiresAt.ToUnixTimeMilliseconds()
+        );
+    }
+
+    // `givenName` and `familyName` are what the platform's sign-in gave the app; Apple
+    // gives them only the first time someone signs in to the app.
+    public async Task<IssuedSession> CompleteNativeAsync(
+        string? transaction,
+        string? idToken,
+        string? givenName,
+        string? familyName,
+        CancellationToken cancellationToken
+    )
+    {
+        if (
+            !SessionTokens.IsWellFormed(transaction)
+            || idToken is null
+            || idToken.Length is 0 or > MaxIdTokenLength
+            || givenName?.Length > MaxNameLength
+            || familyName?.Length > MaxNameLength
+        )
+            throw new BackendFailure(FailureKind.Invalid, InvalidResponse);
+        var (attempt, provider, client) = await ConsumeAsync(transaction!, cancellationToken);
+        if (attempt.RedirectUri is not null || !provider.Native)
             throw new BackendFailure(FailureKind.Unauthorized, Expired);
+        var name = DisplayName.FromProvider(null, givenName, familyName);
+        var identity = await VerifyAsync(
+            () => client.VerifyNativeAsync(idToken, attempt, name, cancellationToken),
+            provider,
+            cancellationToken
+        );
+        return await auth.LoginOidcAsync(identity, provider.AllowRegistration, cancellationToken);
+    }
+
+    private (OidcProviderSettings Provider, IOidcProvider Client) Resolve(string? providerId)
+    {
+        var provider = providerId is null
+            ? settings.Providers[0]
+            : settings.Find(providerId)
+                ?? throw new BackendFailure(FailureKind.Invalid, ProviderNotConfigured);
+        return (provider, clients[provider.Id]);
+    }
+
+    private async Task<(string Transaction, StoredOidcAttempt Stored)> CreateAttemptAsync(
+        string providerId,
+        string? redirectUri,
+        CancellationToken cancellationToken
+    )
+    {
+        var transaction = SessionTokens.Create();
+        var now = Now();
+        var attempt = new StoredOidcAttempt(
+            SessionTokens.Hash(transaction),
+            providerId,
+            redirectUri,
+            SessionTokens.Create(),
+            SessionTokens.Create(),
+            SessionTokens.Create(),
+            now + Lifetime
+        );
+        if (!await attempts.TryCreateAsync(attempt, now, MaxPendingAttempts, cancellationToken))
+            throw new BackendFailure(FailureKind.Forbidden, TooManyAttempts);
+        return (transaction, attempt);
+    }
+
+    // Consumed before the provider exchange, so replays and concurrent redemptions of the
+    // same transaction fail even if this exchange fails. An attempt whose provider is no
+    // longer configured has expired.
+    private async Task<(
+        StoredOidcAttempt Attempt,
+        OidcProviderSettings Provider,
+        IOidcProvider Client
+    )> ConsumeAsync(string transaction, CancellationToken cancellationToken)
+    {
+        var attempt = await attempts.ConsumeAsync(
+            SessionTokens.Hash(transaction),
+            cancellationToken
+        );
+        if (
+            attempt is null
+            || attempt.ExpiresAt <= Now()
+            || settings.Find(attempt.ProviderId) is not { } provider
+        )
+            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+        return (attempt, provider, clients[provider.Id]);
+    }
+
+    private static async Task<VerifiedOidcIdentity> VerifyAsync(
+        Func<Task<VerifiedOidcIdentity>> verify,
+        OidcProviderSettings provider,
+        CancellationToken cancellationToken
+    )
+    {
         VerifiedOidcIdentity identity;
         try
         {
-            identity = await provider.ExchangeAsync(callbackUrl, attempt, cancellationToken);
+            identity = await verify();
         }
         catch (Exception error)
             when (error is not OperationCanceledException
@@ -105,11 +257,11 @@ public sealed class OidcService(
             throw new BackendFailure(FailureKind.Unauthorized, NotVerified);
         }
         if (
-            !string.Equals(identity.Issuer, settings.Issuer, StringComparison.Ordinal)
+            !string.Equals(identity.Issuer, provider.Issuer, StringComparison.Ordinal)
             || identity.Subject.Length == 0
         )
             throw new BackendFailure(FailureKind.Unauthorized, NotVerified);
-        return await auth.LoginOidcAsync(identity, settings.AllowRegistration, cancellationToken);
+        return identity;
     }
 
     // Expiries are integer milliseconds; truncating keeps the boundary exact.

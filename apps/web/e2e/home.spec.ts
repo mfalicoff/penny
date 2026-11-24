@@ -24,7 +24,7 @@ async function startDemo(page: Page) {
   await page.clock.setFixedTime(NOV_10);
   await page.route("/api/info", (route) => route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } }));
   await page.route("/api/auth/me", (route) => route.fulfill({ status: 401, json: { error: "Please sign in to continue." } }));
-  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
   await page.goto("/");
   await page.getByRole("button", { name: "Take a look around with sample data" }).click();
   await expect(page.getByText("You're exploring a demo")).toBeVisible();

@@ -1037,3 +1037,77 @@
 .auth__alt--small {
   font-size: 0.8125rem;
 }
+
+/*
+ * Sign-in providers (MAZ-170; iphone-sign-in-providers, web-sign-in-providers, web-create-account):
+ * with Apple or Google among them, every provider comes before the email form, under "or use
+ * your email". Apple's button is black (white in dark) and Google's white with its outline (dark
+ * gray in dark), as their button rules ask; the server's SSO keeps the glass capsule.
+ */
+.auth__sso--first {
+  margin-top: 22px;
+}
+
+.auth__sso--first .auth__or {
+  margin: 4px 0 0;
+  color: var(--pk-label-2);
+}
+
+.auth__sso .button.button--provider,
+.auth__sso--first .button.button--sso {
+  min-height: 50px;
+  border-radius: 25px;
+  gap: 8px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.button.button--apple {
+  border: 0;
+  background: light-dark(#000000, #ffffff);
+  color: light-dark(#ffffff, #000000);
+}
+
+.button.button--google {
+  border: 0;
+  background: light-dark(#ffffff, #131314);
+  color: light-dark(#1f1f1f, #e3e3e3);
+  box-shadow: inset 0 0 0 1px light-dark(#747775, #8e918f);
+}
+
+.auth__sso .provider-button__logo {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+
+@media (min-width: 900px) {
+  .auth__sso--first .auth__or {
+    margin: 6px 0 4px;
+    color: var(--pk-label-3);
+  }
+
+  .auth__sso .button.button--provider,
+  .auth__sso--first .button.button--sso {
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+  }
+
+  .auth__sso .provider-button__logo {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/*
+ * web-create-account (MAZ-170): on wide windows Create account has no round Back button ("Already
+ * have an account? Sign in" goes back) and no strength meter, only its "At least 10 characters"
+ * line. Phones keep both, as on iphone-create-account and iphone-create-account-providers.
+ */
+@media (min-width: 900px) {
+  .auth__back.glass-button,
+  .auth__meter {
+    display: none;
+  }
+}

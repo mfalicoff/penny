@@ -72,7 +72,7 @@ async function mockApi(context: BrowserContext) {
     const request = route.request();
     const { pathname, searchParams } = new URL(request.url());
     if (pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
-    if (pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false, providers: [] } });
     if (pathname === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
     if (pathname === "/api/ledger") {
       if (request.method() === "PUT") {

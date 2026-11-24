@@ -419,7 +419,18 @@ public static class BackendServices
             return;
         services.AddSingleton(oidc);
         services.AddSingleton(
-            new OidcSettings(oidc.Issuer, oidc.Label, oidc.RedirectUris, oidc.AllowRegistration)
+            new OidcSettings([
+                .. oidc.Providers.Select(provider => new OidcProviderSettings(
+                    provider.Id,
+                    provider.Issuer,
+                    provider.Label,
+                    provider.Icon,
+                    provider.RedirectUris,
+                    provider.AllowRegistration,
+                    Relayed: provider.CallbackUri is not null,
+                    Native: provider.NativeClientIds.Count > 0
+                )),
+            ])
         );
         // Provider calls follow no redirects, are bounded by a 10-second
         // timeout and are not logged (they carry codes, tokens and the client secret).
@@ -454,7 +465,12 @@ public static class BackendServices
             )
             .RemoveAllLoggers();
         services.AddSingleton<IProviderPictureSource, ProviderPictureClient>();
-        services.AddSingleton<IOidcProvider, OidcProviderClient>();
+        foreach (var provider in oidc.Providers)
+            services.AddSingleton<IOidcProvider>(services => new OidcProviderClient(
+                provider,
+                services.GetRequiredService<IHttpClientFactory>(),
+                services.GetRequiredService<TimeProvider>()
+            ));
         services.AddSingleton<IOidcAttemptRepository, PostgresOidcAttemptRepository>();
         services.AddSingleton<OidcService>();
     }
