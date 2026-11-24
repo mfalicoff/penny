@@ -252,6 +252,18 @@ public struct APIClient: Sendable {
             data: result.body, mime: mime, filename: Self.filename(result.headers["content-disposition"]))
     }
 
+    /// Whether receipt `id` is still on the server for this account (MAZ-199): false on 404,
+    /// which an unlinked upload answers once the server has cleaned it up. Any other failure
+    /// throws, so a caller that can't tell keeps the link.
+    public func receiptExists(id: String) async throws -> Bool {
+        do {
+            _ = try await receipt(id: id)
+            return true
+        } catch APIError.notFound {
+            return false
+        }
+    }
+
     // MARK: Search
 
     /// One page of `POST /api/v1/search/transactions`. Search failures never gate ledger

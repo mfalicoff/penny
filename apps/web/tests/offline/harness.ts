@@ -3,7 +3,7 @@ import type { Ledger, Recurring, Transaction } from "@domain/ledger.ts";
 import { ApiError } from "../../src/api/client";
 import type { LedgerChannel } from "../../src/offline/coordination";
 import { MemoryLedgerDatabase, type LedgerDatabase } from "../../src/offline/database";
-import { LedgerSyncEngine, type LedgerApi } from "../../src/offline/engine";
+import { FOREIGN_RECEIPT, LedgerSyncEngine, type LedgerApi } from "../../src/offline/engine";
 import { parseLedger, type ServerSnapshot } from "../../src/offline/wire";
 
 /** Synthetic data only: made-up names and amounts. */
@@ -65,6 +65,9 @@ export class FakeServer {
   getGate: Promise<void> | null = null;
   gets = 0;
   puts: ServerSnapshot[] = [];
+  /** Receipt uploads the server holds for the account. Null: every receipt is accepted (no check). */
+  receipts: Set<string> | null = null;
+  receiptChecks: string[] = [];
 
   constructor(initial: Ledger = ledger()) {
     this.ledger = clone(initial);
@@ -95,11 +98,19 @@ export class FakeServer {
       this.check();
       this.beforePut?.(snapshot);
       if (snapshot.revision !== this.revision) throw new ApiError(409, "The ledger changed.");
+      const held = this.receipts;
+      if (held && snapshot.ledger.transactions.some((item) => item.receipt && !held.has(item.receipt.id))) throw new ApiError(400, FOREIGN_RECEIPT);
       this.puts.push(clone(snapshot));
       this.ledger = clone(snapshot.ledger);
       this.revision += 1;
       // Parsed like the app's `ledgerApi`, so a ledger this build can't read fails the same way.
       return { revision: this.revision, ledger: parseLedger(clone(this.ledger)) };
+    },
+    receiptExists: async (id) => {
+      await Promise.resolve();
+      this.check();
+      this.receiptChecks.push(id);
+      return this.receipts?.has(id) ?? true;
     },
   };
 }

@@ -41,6 +41,10 @@ public actor LedgerSyncEngine {
     /// Passes per sync: the first plus at most two for saves made while it ran.
     static let maxPasses = 3
 
+    /// The server's refusal of a ledger that links a receipt it doesn't hold for the account
+    /// (`LedgerService.ForeignReceipt`).
+    static let foreignReceipt = "Receipt does not belong to this account."
+
     public init(
         scope: AccountScope, files: LedgerFileStore, today: @escaping @Sendable () -> PennyDomain.CalendarDate,
         now: @escaping @Sendable () -> Date = { Date() }, retry: ConflictRetryPolicy = .standard
@@ -238,6 +242,15 @@ public actor LedgerSyncEngine {
                     guard storage == .ready else { return .notReady }
                     return finish(
                         revision: server.revision, remote: try Ledger(wire: server.ledger), captured: captured)
+                } catch APIError.badRequest(let message) where message == Self.foreignReceipt {
+                    // An upload linked offline (or in a kept draft) for longer than the server keeps
+                    // unlinked receipts was cleaned up (MAZ-199): drop the dead links, keep the
+                    // entries and merge again onto the same server ledger.
+                    switch try await dropDeadReceipts(client, sent: merged, remote: remote) {
+                    case .dropped: guard storage == .ready else { return .notReady }
+                    case .noneGone: throw APIError.badRequest(message: message)
+                    case .writeFailed: return .failed(.storageWriteFailed)
+                    }
                 } catch APIError.conflict {
                     guard attempt < retry.maxAttempts else { return .failed(.conflictRetriesExhausted) }
                     await retry.delay(attempt)
@@ -257,6 +270,40 @@ public actor LedgerSyncEngine {
         } catch {
             return .failed(.serverUnavailable(retryAfter: nil))
         }
+    }
+
+    private enum ReceiptCleanup { case dropped, noneGone, writeFailed }
+
+    /// Asks which of the receipts this device linked (those in `sent` but not in `remote`) are
+    /// gone from the server, and removes those links from the local ledger, keeping the entries.
+    /// Throws what the check throws (offline, 401, 5xx), so a link is only dropped on a 404.
+    private func dropDeadReceipts(_ client: APIClient, sent: Ledger, remote: Ledger) async throws
+        -> ReceiptCleanup
+    {
+        let known = Set(remote.transactions.compactMap(\.receipt?.id))
+        var linked: [String] = []
+        for entry in sent.transactions {
+            if let id = entry.receipt?.id, !known.contains(id), !linked.contains(id) { linked.append(id) }
+        }
+        var gone = Set<String>()
+        for id in linked {
+            if try await !client.receiptExists(id: id) { gone.insert(id) }
+        }
+        guard !gone.isEmpty, storage == .ready, var next = snapshot else { return .noneGone }
+        for index in next.local.transactions.indices {
+            if let id = next.local.transactions[index].receipt?.id, gone.contains(id) {
+                next.local.transactions[index].receipt = nil
+            }
+        }
+        guard next.local != snapshot?.local else { return .noneGone }
+        do {
+            try files.save(next, for: scope)
+        } catch {
+            return .writeFailed
+        }
+        snapshot = next
+        publish()
+        return .dropped
     }
 
     /// The server now holds `remote` at `revision`, which includes everything in `captured`.

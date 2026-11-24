@@ -10,6 +10,7 @@ import {
   ReceiptFileError,
   receiptMimeOf,
   receiptDisposition,
+  receiptExists,
   receiptName,
   uploadReceipt,
   UPLOAD_TIMEOUT_MS,
@@ -229,6 +230,19 @@ describe("uploadReceipt", () => {
     expect(request?.timeout).toBe(UPLOAD_TIMEOUT_MS);
     request?.ontimeout?.();
     await expect(pending).rejects.toMatchObject({ status: 0, message: RECEIPT_MESSAGES.offline });
+  });
+});
+
+describe("receiptExists", () => {
+  it("answers from the status alone: 404 is gone, anything else unexpected is an error", async () => {
+    stubServer((url) => {
+      if (url === "/api/receipts/kept") return new Response("bytes", { status: 200, headers: { "Content-Type": "image/jpeg" } });
+      if (url === "/api/receipts/busy") return json({ error: "Busy." }, 503);
+      return undefined;
+    });
+    await expect(receiptExists("kept")).resolves.toBe(true);
+    await expect(receiptExists("expired")).resolves.toBe(false);
+    await expect(receiptExists("busy")).rejects.toMatchObject({ status: 503 });
   });
 });
 
