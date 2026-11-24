@@ -47,6 +47,10 @@ public protocol HouseholdService: Sendable {
     func sendEmailInvite(householdId: String, email: String) async throws -> WireEmailInvite
     func resendEmailInvite(householdId: String, inviteId: String) async throws -> WireEmailInvite
     func revokeEmailInvite(householdId: String, inviteId: String) async throws
+
+    /// Whether receipt `id` is still on the server (`GET /api/receipts/{id}`, false on 404).
+    /// Asked only after a shared save was refused for its receipt (MAZ-199).
+    func receiptExists(id: String) async throws -> Bool
 }
 
 extension HouseholdService {
@@ -58,6 +62,8 @@ extension HouseholdService {
         throw APIError.emailOff
     }
     public func revokeEmailInvite(householdId: String, inviteId: String) async throws { throw APIError.emailOff }
+    /// A service that can't tell says the receipt is there, so the refusal stands.
+    public func receiptExists(id: String) async throws -> Bool { true }
 }
 
 extension APIError {
@@ -82,6 +88,9 @@ public struct APIHouseholdService: HouseholdService {
     }
 
     public func households() async throws -> [WireHousehold] { try await call { try await client.households() } }
+    public func receiptExists(id: String) async throws -> Bool {
+        try await call { try await client.receiptExists(id: id) }
+    }
     public func household(id: String) async throws -> WireHouseholdDetail {
         try await call { try await client.household(id: id) }
     }

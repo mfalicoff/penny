@@ -28,6 +28,9 @@ final class FakeHouseholds: HouseholdService {
         var delays: [String: Duration] = [:]
         /// Invitations by email (MAZ-124), newest first.
         var emailInvites: [WireEmailInvite] = []
+        /// Receipt uploads still on the server. Nil: every receipt is. Otherwise a save that
+        /// links another is refused like `SharedExpenseService.ReceiptUnavailable` (MAZ-199).
+        var receipts: Set<String>?
     }
 
     let state = Mutex(State())
@@ -262,8 +265,16 @@ final class FakeHouseholds: HouseholdService {
         }
     }
 
+    func receiptExists(id: String) async throws -> Bool {
+        try await call("receiptExists")
+        return state.withLock { $0.receipts?.contains(id) ?? true }
+    }
+
     func createSharedExpense(householdId: String, _ input: WireExpenseInput) async throws -> WireSharedExpense {
         try await call("createSharedExpense")
+        if let id = input.receiptId, let held = state.withLock({ $0.receipts }), !held.contains(id) {
+            throw APIError.badRequest(message: SharedExpenseFormModel.receiptUnavailable)
+        }
         return state.withLock { state in
             state.nextId += 1
             let id = "expense-\(state.nextId)"

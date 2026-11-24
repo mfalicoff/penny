@@ -386,6 +386,9 @@ public final class SharedExpenseFormModel {
     public private(set) var isSaving = false
     /// What the server stored, once a save succeeded. A second Save returns it without sending.
     public private(set) var saved: Outcome?
+    /// Said once a save went through: the receipt was gone from the server, so it was saved
+    /// without it (MAZ-199). Nil otherwise.
+    public private(set) var notice: String?
     /// Bumped when a save is refused, for the error haptic.
     public private(set) var refusedCount = 0
     /// The draft as it was opened, to know whether closing loses anything.
@@ -425,6 +428,11 @@ public final class SharedExpenseFormModel {
         return shares.first { $0.userId == viewerId }?.amountCents ?? 0
     }
 
+    /// The server's refusal of a receipt the household can't use (`SharedExpenseService.ReceiptUnavailable`).
+    public nonisolated static let receiptUnavailable = "Receipt is not available to this household."
+    public nonisolated static let receiptGoneNotice =
+        "The receipt was no longer on the server, so it was saved without it."
+
     public enum Outcome: Equatable, Sendable {
         case expense(WireSharedExpense)
         case rule(WireSharedRule)
@@ -436,6 +444,7 @@ public final class SharedExpenseFormModel {
         guard !isSaving else { return nil }
         failure = nil
         problem = nil
+        notice = nil
         guard !household.isReadOnly else {
             failure = HouseholdFailure(.membership, household.readOnlyReason ?? "")
             refusedCount += 1
@@ -452,23 +461,20 @@ public final class SharedExpenseFormModel {
         isSaving = true
         defer { isSaving = false }
         let service = household.service
-        let householdId = draft.householdId
         do {
             let outcome: Outcome
-            switch draft.original {
-            case .expense(let expense):
-                let input = draft.expenseInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
-                outcome = .expense(
-                    try await service.updateSharedExpense(householdId: householdId, id: expense.id, input))
-            case .rule(let rule):
-                let input = draft.ruleInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
-                outcome = .rule(try await service.updateSharedRule(householdId: householdId, id: rule.id, input))
-            case nil where draft.repeats != nil:
-                let input = draft.ruleInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
-                outcome = .rule(try await service.createSharedRule(householdId: householdId, input))
-            case nil:
-                let input = draft.expenseInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
-                outcome = .expense(try await service.createSharedExpense(householdId: householdId, input))
+            do {
+                outcome = try await send(valid)
+            } catch APIError.badRequest(let message) where message == Self.receiptUnavailable {
+                // A receipt kept in a draft longer than the server keeps unlinked uploads was
+                // cleaned up (MAZ-199): save without it and say so. Any other answer, or a check
+                // that fails, keeps the refusal.
+                guard let id = draft.receipt?.id, (try? await service.receiptExists(id: id)) == false else {
+                    throw APIError.badRequest(message: message)
+                }
+                draft.receipt = nil
+                outcome = try await send(valid)
+                notice = Self.receiptGoneNotice
             }
             // Saved: never send it again, and drop any kept copy of the draft at once (a sheet that
             // closed meanwhile may have kept one). The page reads again in the background, so the
@@ -487,6 +493,26 @@ public final class SharedExpenseFormModel {
                 latest = await currentVersion()
             }
             return nil
+        }
+    }
+
+    /// Sends the draft as it is now.
+    private func send(_ valid: SharedExpenseDraft.Valid) async throws -> Outcome {
+        let service = household.service
+        let householdId = draft.householdId
+        switch draft.original {
+        case .expense(let expense):
+            let input = draft.expenseInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
+            return .expense(try await service.updateSharedExpense(householdId: householdId, id: expense.id, input))
+        case .rule(let rule):
+            let input = draft.ruleInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
+            return .rule(try await service.updateSharedRule(householdId: householdId, id: rule.id, input))
+        case nil where draft.repeats != nil:
+            let input = draft.ruleInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
+            return .rule(try await service.createSharedRule(householdId: householdId, input))
+        case nil:
+            let input = draft.expenseInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
+            return .expense(try await service.createSharedExpense(householdId: householdId, input))
         }
     }
 

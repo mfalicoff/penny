@@ -569,6 +569,61 @@ struct SharedExpenseFormTests {
         #expect(body.date == "2026-11-04")
     }
 
+    static func receiptDraft(_ form: SharedExpenseFormModel, receipt id: String) {
+        form.draft.amountText = "42"
+        form.draft.title = "Groceries"
+        form.draft.receipt = ReceiptReference(id: id, name: "\(id).jpg", uri: "/api/receipts/\(id)", mime: "image/jpeg")
+    }
+
+    @Test("whenTheReceiptWasCleanedUp_SharedExpenseForm_ShouldSaveWithoutItAndSaySo")
+    func receiptCleanedUp() async throws {
+        let fake = FakeHouseholds.standard()
+        fake.state.withLock { $0.receipts = [] }
+        let form = try await Self.open(fake)
+        Self.receiptDraft(form, receipt: "expired")
+        guard case .expense(let expense) = await form.save() else {
+            Issue.record("expected a saved expense")
+            return
+        }
+        let body = try #require(FakeHouseholdsBody.body(for: expense.id, in: form))
+        #expect(body.receiptId == nil)
+        #expect(form.draft.receipt == nil)
+        #expect(form.failure == nil)
+        #expect(form.notice == "The receipt was no longer on the server, so it was saved without it.")
+        #expect(fake.calls.filter { $0 == "createSharedExpense" }.count == 2)
+    }
+
+    @Test("whenTheReceiptIsStillThere_SharedExpenseForm_ShouldKeepTheRefusalAndTheReceipt")
+    func receiptStillThere() async throws {
+        let fake = FakeHouseholds.standard()
+        let form = try await Self.open(fake)
+        Self.receiptDraft(form, receipt: "theirs")
+        // Refused although the file exists (say, another account's upload): nothing to drop.
+        fake.state.withLock {
+            $0.failNext["createSharedExpense"] = .badRequest(message: SharedExpenseFormModel.receiptUnavailable)
+        }
+        #expect(await form.save() == nil)
+        #expect(form.failure?.message == SharedExpenseFormModel.receiptUnavailable)
+        #expect(form.draft.receipt?.id == "theirs")
+        #expect(form.notice == nil)
+        #expect(fake.calls.filter { $0 == "createSharedExpense" }.count == 1)
+    }
+
+    @Test("whenTheReceiptCheckFails_SharedExpenseForm_ShouldKeepTheRefusalAndTheReceipt")
+    func receiptCheckFails() async throws {
+        let fake = FakeHouseholds.standard()
+        fake.state.withLock {
+            $0.receipts = []
+            $0.failNext["receiptExists"] = .offline
+        }
+        let form = try await Self.open(fake)
+        Self.receiptDraft(form, receipt: "expired")
+        #expect(await form.save() == nil)
+        #expect(form.failure?.message == SharedExpenseFormModel.receiptUnavailable)
+        #expect(form.draft.receipt?.id == "expired")
+        #expect(form.notice == nil)
+    }
+
     @Test("whenTheDateIsBeforeAMemberJoined_SharedExpenseForm_ShouldLeaveThemOut")
     func membersOnTheDate() async throws {
         let form = try await Self.open(FakeHouseholds.standard())
