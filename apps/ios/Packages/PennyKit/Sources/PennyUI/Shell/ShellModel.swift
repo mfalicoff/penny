@@ -320,6 +320,12 @@ final class ShellModel {
             || (old.isSettingsPresented && !new.isSettingsPresented && !old.settingsIsColumn)
     }
 
+    /// Shows the save toast for a change that went to the server and has no Undo (a shared
+    /// expense saved without its cleaned-up receipt, MAZ-199).
+    func notify(_ title: String, detail: String) {
+        show(SavedChange(summary: ChangeSummary(title: title, detail: detail, allowsUndo: false), canUndo: false))
+    }
+
     func dismissToast() {
         toastTask?.cancel()
         toast = nil

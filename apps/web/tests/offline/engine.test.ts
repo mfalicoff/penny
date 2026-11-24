@@ -1,6 +1,7 @@
 import { deleteEntry, saveCategory, saveEntry } from "@domain/commands.ts";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "../../src/api/client";
 import { MemoryLedgerDatabase, StorageError } from "../../src/offline/database";
 import { LedgerSaveError } from "../../src/offline/engine";
 import { accountScope, recordKey } from "../../src/offline/record";
@@ -300,6 +301,71 @@ describe("conflicts with other devices", () => {
     expect(server.ledger.transactions).toHaveLength(1);
     expect(server.puts).toHaveLength(1);
     expect(tab.engine.getState()).toMatchObject({ phase: "upToDate", pending: { count: 0 } });
+  });
+});
+
+describe("receipts the server already cleaned up (MAZ-199)", () => {
+  const receipt = (id: string) => ({ id, name: `${id}.jpg`, mime: "image/jpeg", uri: `/api/receipts/${id}` });
+
+  it("drops a dead receipt link, keeps the entry and syncs it", async () => {
+    const kept = entry("a", "Market", { receipt: receipt("kept") });
+    const server = new FakeServer(ledger({ transactions: [kept] }));
+    server.receipts = new Set(["kept", "fresh"]);
+    const tab = openTab({ server });
+    await settled(tab);
+    server.reachable = false;
+    await tab.engine.save(add(entry("b", "Bakery", { receipt: receipt("expired") })));
+    await tab.engine.save(add(entry("c", "Cafe", { receipt: receipt("fresh") })));
+    server.receipts.delete("expired");
+    server.reachable = true;
+    await tab.engine.syncNow();
+
+    const state = tab.engine.getState();
+    expect(state.issue).toBeNull();
+    expect(state.phase).toBe("upToDate");
+    expect(titles(server.ledger)).toEqual(["Bakery", "Cafe", "Market"]);
+    const byId = new Map(server.ledger.transactions.map((item) => [item.id, item]));
+    expect(byId.get("b")?.receipt).toBeUndefined();
+    expect(byId.get("c")?.receipt?.id).toBe("fresh");
+    expect(byId.get("a")?.receipt?.id).toBe("kept");
+    // Only receipts this browser linked are checked, never those the server already holds.
+    expect(server.receiptChecks.sort()).toEqual(["expired", "fresh"]);
+    expect(state.ledger?.transactions.find((item) => item.id === "b")?.receipt).toBeUndefined();
+  });
+
+  it("keeps the refusal when every linked receipt is still there", async () => {
+    const server = new FakeServer(ledger());
+    server.receipts = new Set(["fresh"]);
+    const tab = openTab({ server });
+    await settled(tab);
+    server.reachable = false;
+    await tab.engine.save(add(entry("b", "Bakery", { receipt: receipt("fresh") })));
+    server.reachable = true;
+    // The server refuses for a reason this browser can't fix (say, a receipt of another account).
+    server.receipts = new Set();
+    server.api.receiptExists = () => Promise.resolve(true);
+    await tab.engine.syncNow();
+    expect(tab.engine.getState().issue).toMatchObject({ kind: "rejected", retries: false });
+    expect(tab.engine.getState().pending.count).toBe(1);
+    expect(tab.engine.getState().ledger?.transactions[0]?.receipt?.id).toBe("fresh");
+  });
+
+  it("keeps the link when the check can't reach the server", async () => {
+    const server = new FakeServer(ledger());
+    server.receipts = new Set();
+    const tab = openTab({ server });
+    await settled(tab);
+    server.reachable = false;
+    await tab.engine.save(add(entry("b", "Bakery", { receipt: receipt("unknown") })));
+    server.reachable = true;
+    server.api.receiptExists = () => Promise.reject(new ApiError(0, "Penny can't reach the server."));
+    await tab.engine.syncNow();
+    expect(tab.engine.getState().issue).toMatchObject({ kind: "serverUnreachable", retries: true });
+    expect(tab.engine.getState().ledger?.transactions[0]?.receipt?.id).toBe("unknown");
+    server.api.receiptExists = (id) => Promise.resolve(server.receipts?.has(id) ?? true);
+    await tab.engine.syncNow();
+    expect(tab.engine.getState().phase).toBe("upToDate");
+    expect(server.ledger.transactions[0]?.receipt).toBeUndefined();
   });
 });
 

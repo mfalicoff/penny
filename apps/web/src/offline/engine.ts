@@ -91,7 +91,16 @@ export interface SaveReceipt {
 export interface LedgerApi {
   get(): Promise<ServerSnapshot>;
   put(snapshot: ServerSnapshot): Promise<ServerSnapshot>;
+  /**
+   * Whether a receipt upload is still on the server (`GET /api/receipts/{id}`, false on 404). Asked
+   * only after the server refused a save for a receipt it no longer has (MAZ-199). Without it, that
+   * refusal stays a `rejected` issue.
+   */
+  receiptExists?: (id: string) => Promise<boolean>;
 }
+
+/** The API's refusal of a ledger that links a receipt it doesn't hold for the account (`LedgerService.ForeignReceipt`). */
+export const FOREIGN_RECEIPT = "Receipt does not belong to this account.";
 
 export interface EngineOptions {
   /** The page's origin. */
@@ -527,6 +536,7 @@ export class LedgerSyncEngine {
         answer = await this.options.api.put({ revision: remote.revision, ledger: merged });
         break;
       } catch (error) {
+        if (isForeignReceipt(error) && (await this.dropDeadReceipts(generation, merged, remote.ledger))) return true;
         if (!(error instanceof ApiError) || error.status !== 409) throw error;
         if (attempt >= CONFLICT_DELAYS.length + 1) throw new ConflictRetriesExhausted();
         const delay = CONFLICT_DELAYS[attempt - 1] ?? 1600;
@@ -579,6 +589,48 @@ export class LedgerSyncEngine {
     this.broadcast();
     this.options.onServerSnapshot?.({ revision: outcome.baseRevision, ledger: outcome.base }, changed);
     return !sameLedger(outcome.base, outcome.local);
+  }
+
+  /**
+   * The server refused `sent` for a receipt it doesn't hold: an upload linked offline (or kept in a
+   * draft) for longer than the server keeps unlinked receipts, so it was cleaned up (MAZ-199). Asks
+   * which of the receipts this browser linked (those not already in `remote`) are gone, removes
+   * those links from the stored copy and keeps the entries, so the next pass saves them. Returns
+   * false when none is gone (the refusal stands) or the check isn't available.
+   */
+  private async dropDeadReceipts(generation: number, sent: Ledger, remote: Ledger): Promise<boolean> {
+    const exists = this.options.api.receiptExists;
+    if (!exists) return false;
+    const known = new Set(remote.transactions.flatMap((item) => (item.receipt ? [item.receipt.id] : [])));
+    const linked = new Set(sent.transactions.flatMap((item) => (item.receipt && !known.has(item.receipt.id) ? [item.receipt.id] : [])));
+    const gone = new Set<string>();
+    for (const id of linked) if (!(await exists(id))) gone.add(id);
+    if (generation !== this.generation || gone.size === 0) return false;
+    const strip = (value: Ledger): Ledger => ({
+      ...value,
+      transactions: value.transactions.map((item) => {
+        if (!item.receipt || !gone.has(item.receipt.id)) return item;
+        const kept = { ...item };
+        delete kept.receipt;
+        return kept;
+      }),
+    });
+    const outcome = await (
+      await this.db()
+    ).update(this.key, (raw) => {
+      const current = parseRecord(raw, this.scope);
+      if (!current) return { result: null };
+      const local = normalizeLedger(strip(current.local));
+      if (sameLedger(local, current.local)) return { result: current };
+      const next: LedgerRecord = { ...current, local, savedAt: this.now().toISOString() };
+      return { next, result: next };
+    });
+    if (generation !== this.generation || !outcome) return false;
+    if (this.record && !sameLedger(this.record.local, outcome.local)) this.changedAt = this.now().getTime();
+    this.record = outcome;
+    this.emit();
+    this.broadcast();
+    return true;
   }
 
   private fail(error: unknown) {
@@ -758,6 +810,8 @@ export class LedgerSyncEngine {
     return this.options.now ? this.options.now() : new Date();
   }
 }
+
+const isForeignReceipt = (error: unknown) => error instanceof ApiError && error.status === 400 && error.message === FOREIGN_RECEIPT;
 
 function describeIssue(error: unknown, online: boolean): SyncIssue {
   if (error instanceof ConflictRetriesExhausted)

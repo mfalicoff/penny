@@ -2,6 +2,7 @@ import { hashKey, useQueryClient, type QueryClient } from "@tanstack/react-query
 import { createContext, use, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { sessionKey } from "../api/keys";
 import { ledgerKey, readLedgerSnapshot, setLedgerSnapshot, toLedgerSnapshot, writeLedgerSnapshot, type LedgerSnapshot } from "../api/ledger";
+import { receiptExists } from "../api/receipts";
 import { invalidateSearch } from "../api/search";
 import { useAccountEmail } from "../auth/account";
 import { expireSession } from "../auth/lifecycle";
@@ -36,6 +37,7 @@ export const ledgerApi: LedgerApi = {
     const answer = await writeLedgerSnapshot(snapshot);
     return { revision: answer.revision, ledger: parseLedger(answer.ledger) };
   },
+  receiptExists,
 };
 
 export interface OfflineDependencies {

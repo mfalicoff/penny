@@ -290,6 +290,29 @@ export async function fetchReceipt(receipt: Pick<Receipt, "uri" | "mime">, signa
   return blob.type === type ? blob : new Blob([blob], { type });
 }
 
+/**
+ * Whether the receipt `id` is still on the server for this account (MAZ-199): false on 404, which
+ * is what an unlinked upload answers once the server has cleaned it up. Only the status is read; the
+ * bytes are never downloaded. Throws `ApiError` for anything else (offline, 401, 5xx), so a sync
+ * that can't tell keeps the link and tries again later.
+ */
+export async function receiptExists(id: string): Promise<boolean> {
+  const path = `/api/receipts/${encodeURIComponent(id)}` as const;
+  const transport = currentTransport();
+  let response: Response;
+  try {
+    response = transport
+      ? await transport(path, { method: "GET", body: undefined, signal: null })
+      : await fetch(path, { credentials: "same-origin", headers: { Accept: "*/*" } });
+  } catch (cause) {
+    throw new ApiError(0, RECEIPT_READ_MESSAGES.offline, { cause });
+  }
+  await response.body?.cancel().catch(() => undefined);
+  if (response.ok) return true;
+  if (response.status === 404) return false;
+  throw new ApiError(response.status, response.status === 401 ? RECEIPT_READ_MESSAGES.expired : RECEIPT_READ_MESSAGES.failed);
+}
+
 /** Saves `blob` as a download named `name`, then releases its object URL. */
 export function saveBlob(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);
