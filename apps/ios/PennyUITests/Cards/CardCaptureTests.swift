@@ -69,8 +69,8 @@ final class CardCaptureTests: CardTestCase {
             try card.penny.wait(for: AccessibilityID.Overview.flowChart)
             // The card focuses the largest spending band (Home), with its focus card.
             try card.penny.tap(AccessibilityID.Overview.flowNode("expense:home"))
-            // Above the floating tab bar, as on the card.
-            try card.penny.reveal(AccessibilityID.Overview.flowFocus, above: card.app.frame.height - 130)
+            // The focus card, the hint and Show as a table above the floating tab bar, as on the card.
+            try card.penny.reveal(AccessibilityID.Overview.flowTable, above: card.app.frame.height - 120)
         }
     }
 
@@ -604,12 +604,67 @@ final class CardCaptureTests: CardTestCase {
     func test_whenSeeded_IphoneProfile_ShouldBeCaptured() async throws {
         try await card(
             "iphone-profile",
-            note: "No Verified mark and no Your data group (export, delete account): those features aren't built yet"
+            note: "No Your data group (export, delete account): those features aren't built yet"
         ) { card in
             try card.penny.openSettings()
             try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
             try card.penny.wait(for: AccessibilityID.Profile.changePassword)
+            // The Sign-in row reads as one element: its email, how it signs in and Verified.
+            guard
+                try card.penny.wait(for: AccessibilityID.Profile.signIn).waitForLabel(
+                    containing: "Verified", timeout: 20)
+            else { throw UIExpectationFailed(description: "The Sign-in row has no Verified mark") }
         }
+    }
+
+    // MARK: iPhone email verification (MAZ-172)
+
+    @MainActor
+    func test_whenTheServerSendsEmail_IphoneVerifyEmail_ShouldBeCaptured() async throws {
+        guard try await stack().sendsEmail() else {
+            return try blocked("iphone-verify-email", note: Self.needsSMTP)
+        }
+        try await card("iphone-verify-email", note: Self.newAccountNote) { card in
+            let penny = try await signUpFresh(card)
+            try penny.wait(for: AccessibilityID.EmailVerification.resend)
+        }
+    }
+
+    @MainActor
+    func test_whenTheServerSendsEmail_IphoneUnverified_ShouldBeCaptured() async throws {
+        guard try await stack().sendsEmail() else {
+            return try blocked("iphone-unverified", note: Self.needsSMTP)
+        }
+        try await card("iphone-unverified", note: Self.newAccountNote) { card in
+            let penny = try await signUpFresh(card)
+            try penny.tap(AccessibilityID.EmailVerification.continueToPenny)
+            try penny.waitForShell()
+            try penny.openShared()
+            try penny.wait(for: AccessibilityID.EmailVerification.reminder, timeout: 20)
+            try penny.wait(for: AccessibilityID.Households.create)
+        }
+    }
+
+    private static let newAccountNote =
+        "A new account signed up in the app (the seeded accounts are verified, as every account from before "
+        + "verification is), so the address is the run's own instead of the card's"
+
+    /// A fresh install that signs up a new password account and stops on Check your email.
+    @MainActor
+    private func signUpFresh(_ card: CardContext) async throws -> Penny {
+        var options = LaunchOptions()
+        options.seed = ContainerSeed(standardDefaults: ["penny.appearance": card.appearance])
+        let penny = try await launch(options)
+        try penny.wait(for: AccessibilityID.Auth.email, timeout: 30)
+        try penny.tap(AccessibilityID.Auth.switchMode)
+        try penny.type("Max Falicoff", into: AccessibilityID.Profile.signUpName)
+        let email = "max.\(UUID().uuidString.prefix(6).lowercased())@example.test"
+        try penny.type(email, into: AccessibilityID.Auth.email)
+        try penny.type("penny-card-pass-\(UUID().uuidString.prefix(6))", into: AccessibilityID.Auth.password)
+        try penny.tap(AccessibilityID.Auth.createAccount)
+        try penny.wait(for: AccessibilityID.EmailVerification.checkEmailScreen, timeout: 30)
+        penny.dismissSavePassword(timeout: 3)
+        return penny
     }
 
     @MainActor
@@ -869,6 +924,13 @@ final class CardCaptureTests: CardTestCase {
     }
 
     @MainActor
+    func test_whenSeeded_IpadHomePortrait_ShouldBeCaptured() async throws {
+        try await card("ipad-home-portrait", portrait: true) { card in
+            try card.penny.wait(for: AccessibilityID.Home.hero)
+        }
+    }
+
+    @MainActor
     func test_whenSeeded_IpadActivity_ShouldBeCaptured() async throws {
         try await card("ipad-activity") { card in
             try await card.attachReceipt(to: "p-party")
@@ -906,11 +968,16 @@ final class CardCaptureTests: CardTestCase {
     func test_whenSeeded_IpadProfile_ShouldBeCaptured() async throws {
         try await card(
             "ipad-profile",
-            note: "No Verified mark and no Your data group (export, delete account): those features aren't built yet"
+            note: "No Your data group (export, delete account): those features aren't built yet"
         ) { card in
             try card.penny.openSettings()
             try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
             try card.penny.wait(for: AccessibilityID.Profile.changePassword)
+            // The Sign-in row reads as one element: its email, how it signs in and Verified.
+            guard
+                try card.penny.wait(for: AccessibilityID.Profile.signIn).waitForLabel(
+                    containing: "Verified", timeout: 20)
+            else { throw UIExpectationFailed(description: "The Sign-in row has no Verified mark") }
         }
     }
 

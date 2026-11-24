@@ -1,7 +1,7 @@
 public import Foundation
 public import PennyData
 public import PennyDomain
-import SwiftUI
+public import SwiftUI
 
 /// The device services the app shell uses, injected so tests and previews can replace them.
 /// `live` is what the app runs with.
@@ -22,6 +22,8 @@ public struct AppServices {
     /// Opens the temporary demo at launch. Only Debug test controls set it (UI tests and
     /// screenshots without a server).
     public var startsInDemo = false
+    /// What Appearance › System shows. Nil (always, outside Debug test controls) follows the device.
+    public var systemColorScheme: ColorScheme?
 
     public init(
         preferences: any DevicePreferences, lock: AppLockController,
@@ -62,8 +64,11 @@ final class AppearanceModel {
     private(set) var weekStart: WeekStart
     @ObservationIgnored private let preferences: any DevicePreferences
 
-    init(preferences: any DevicePreferences) {
+    @ObservationIgnored private let systemScheme: ColorScheme?
+
+    init(preferences: any DevicePreferences, system: ColorScheme? = nil) {
         self.preferences = preferences
+        systemScheme = system
         preference = preferences.appearance
         showsCents = preferences.showsCents
         reducesTransparency = preferences.reducesTransparency
@@ -92,7 +97,7 @@ final class AppearanceModel {
 
     var colorScheme: ColorScheme? {
         switch preference {
-        case .system: nil
+        case .system: systemScheme
         case .light: .light
         case .dark: .dark
         }

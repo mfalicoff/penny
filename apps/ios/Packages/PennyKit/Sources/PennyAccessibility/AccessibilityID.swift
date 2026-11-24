@@ -198,12 +198,18 @@ public enum AccessibilityID {
         public static let add = "home.add"
         /// The Follow your money card's Insights pill (`home` card, MAZ-254).
         public static let insights = "home.insights"
+        /// iPad Home in portrait (`ipad-home-portrait`): spending by category, and each of its rows
+        /// (`home.category.<category id>`).
+        public static let byCategory = "home.byCategory"
+        public static func category(_ id: String) -> String { "home.category.\(Overview.segment(id))" }
 
         static let all = [
             settings, hero, month, flow, recent, empty, emptyIncome, emptyExpense, emptyInvest, emptyDemo,
             projected, expectedIncome, explore, exploreCalendar, exploreInsights, exploreMoneyFlow, totals, comingUp,
             dailySpending, sharedNotice, sharedNoticeRetry, calendar, previousMonth, nextMonth, search, add, insights,
+            byCategory,
         ]
+        static let prefixes = ["home.category."]
     }
 
     /// The money flow, Insights, a category's spending and the calendar (MAZ-77). Flow rows and
@@ -215,6 +221,9 @@ public enum AccessibilityID {
         public static let flowFocus = "moneyFlow.focus"
         public static let flowFocusClear = "moneyFlow.focusClear"
         public static let flowDetails = "moneyFlow.details"
+        /// The focus hint and "Show as a table" under the chart (MAZ-224).
+        public static let flowHint = "moneyFlow.hint"
+        public static let flowTable = "moneyFlow.table"
         public static let insightsComparison = "insights.comparison"
         public static let insightsDonut = "insights.donut"
         public static let categoryTotal = "categorySpending.total"
@@ -248,7 +257,8 @@ public enum AccessibilityID {
         }
 
         static let all = [
-            flowTotals, flowChart, flowFocus, flowFocusClear, flowDetails, insightsComparison, insightsDonut,
+            flowTotals, flowChart, flowFocus, flowFocusClear, flowDetails, flowHint, flowTable, insightsComparison,
+            insightsDonut,
             categoryTotal, calendarPrevious, calendarNext, calendarToday, calendarClose, calendarGrid,
             calendarDayTotal, calendarDayEntries, calendarLegend,
         ]
@@ -439,6 +449,7 @@ public enum AccessibilityID {
         + Receipt.all
         + ReceiptInbox.all
         + Profile.all
+        + EmailVerification.all
         + Trips.all
         + Notifications.all
         + Journeys.all
@@ -447,7 +458,7 @@ public enum AccessibilityID {
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
         Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
-        + Activity.prefixes + Organize.prefixes + Overview.prefixes
+        + Activity.prefixes + Organize.prefixes + Overview.prefixes + Home.prefixes
         + Households.prefixes
         + ReceiptInbox.prefixes
         + Trips.prefixes

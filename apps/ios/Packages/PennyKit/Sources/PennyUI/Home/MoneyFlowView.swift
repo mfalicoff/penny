@@ -5,8 +5,9 @@ import PennyDomain
 import SwiftUI
 
 /// The money flow page (`money-flow` card): came in, went out and left over, the Sankey, the
-/// focus card for the selected row, and every value as a list (the chart's accessible
-/// alternative, always on screen). At accessibility text sizes the chart gives way to the list.
+/// focus card for the selected row, the focus hint, and "Show as a table", which opens every
+/// value as a list (the chart's accessible alternative, MAZ-224). At accessibility text sizes the
+/// chart gives way to the list, shown open.
 struct MoneyFlowView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -28,21 +29,32 @@ struct MoneyFlowView: View {
                             .empty, title: "Nothing recorded in \(MonthPicker.title(shell.month, long: false))",
                             message: "Add income or an expense to see where your money goes.")
                     } else {
-                        if !typeSize.isAccessibilitySize {
-                            SankeyChart(flow: flow, currency: currency, focused: $focused)
-                                .pennyCard(padding: 14)
-                        }
-                        if let id = focused, let node = flow.node(id: id) {
-                            FlowFocusCard(node: node, flow: flow, report: report, currency: currency) {
-                                focused = nil
+                        if typeSize.isAccessibilitySize {
+                            if let id = focused, let node = flow.node(id: id) {
+                                FlowFocusCard(node: node, flow: flow, report: report, currency: currency) {
+                                    focused = nil
+                                }
+                            }
+                            FlowDetailsList(flow: flow, summary: summary, currency: currency, focused: $focused)
+                            FlowRecordedNote()
+                        } else {
+                            VStack(alignment: .leading, spacing: 10) {
+                                SankeyChart(flow: flow, currency: currency, focused: $focused)
+                                    .pennyCard(padding: 14)
+                                if let id = focused, let node = flow.node(id: id) {
+                                    FlowFocusCard(node: node, flow: flow, report: report, currency: currency) {
+                                        focused = nil
+                                    }
+                                }
+                                // The link's 44pt tap area already puts the card's gap under the hint.
+                                VStack(alignment: .leading, spacing: 0) {
+                                    FlowFocusHint()
+                                    FlowTable(flow: flow, summary: summary, currency: currency, focused: $focused)
+                                }
+                                .padding(.horizontal, 4)
                             }
                         }
-                        FlowDetailsList(flow: flow, summary: summary, currency: currency, focused: $focused)
                     }
-                    Text(
-                        "Recorded entries only, your share of shared expenses. Scheduled and expected amounts are not included until they're recorded."
-                    )
-                    .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                 }
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 24)
@@ -104,6 +116,9 @@ struct SankeyChart: View {
     let flow: MoneyFlow
     let currency: String
     @Binding var focused: String?
+    /// INCOME and WHERE IT GOES over the columns, as on the `money-flow` card; the iPad Home
+    /// panel (`ipad-home`) draws the chart without them.
+    var showsColumnHeaders = true
     @ScaledMetric(relativeTo: .footnote) private var slot = 40.0
     @ScaledMetric(relativeTo: .footnote) private var band = 200.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -115,14 +130,16 @@ struct SankeyChart: View {
     var body: some View {
         let layout = MoneyFlowLayout(flow, band: band, slot: slot, gap: gap)
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("INCOME")
-                Spacer()
-                Text("WHERE IT GOES")
+            if showsColumnHeaders {
+                HStack {
+                    Text("INCOME")
+                    Spacer()
+                    Text("WHERE IT GOES")
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .accessibilityHidden(true)
             }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(PennyColor.secondaryLabel)
-            .accessibilityHidden(true)
             GeometryReader { proxy in
                 let geometry = Geometry(width: proxy.size.width, nodeWidth: nodeWidth, barWidth: barWidth)
                 ZStack(alignment: .topLeading) {
@@ -297,6 +314,74 @@ struct FlowFocusCard: View {
         .pennyCard(padding: 14)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("moneyFlow.focus")
+    }
+}
+
+/// The focus hint under the chart (`money-flow` card, MAZ-224).
+struct FlowFocusHint: View {
+    var body: some View {
+        Text("Select a band or label to focus it, again to clear")
+            .font(.footnote)
+            .foregroundStyle(PennyColor.secondaryLabel)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("moneyFlow.hint")
+    }
+}
+
+/// What the money flow counts, under its value list.
+struct FlowRecordedNote: View {
+    var body: some View {
+        Text(
+            "Recorded entries only, your share of shared expenses. Scheduled and expected amounts are not included until they're recorded."
+        )
+        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// "Show as a table" under the chart (`money-flow`, `ipad-home` and `ipad-home-portrait` cards,
+/// MAZ-224): a copper link that opens every value of the flow as a list. The iPhone page draws a
+/// chevron that turns when the list is open; the iPad Home panel draws a plain link, with the
+/// chevron only while open, to show how to close it. VoiceOver hears it as a collapsed or
+/// expanded disclosure.
+struct FlowTable: View {
+    let flow: MoneyFlow
+    let summary: MonthSummary
+    let currency: String
+    @Binding var focused: String?
+    var chevronWhenClosed = true
+    @State private var isOpen = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { isOpen.toggle() }
+            } label: {
+                HStack(spacing: 4) {
+                    Text("Show as a table")
+                    if chevronWhenClosed || isOpen {
+                        Image(systemName: "chevron.down")
+                            .font(.footnote.weight(.semibold))
+                            .rotationEffect(.degrees(isOpen ? 180 : 0))
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(PennyColor.tintText)
+                .frame(minHeight: Metrics.minTouchTarget)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(isOpen ? "Expanded" : "Collapsed")
+            .accessibilityHint(isOpen ? "Hides the list of values" : "Lists every value of the money flow")
+            .accessibilityIdentifier("moneyFlow.table")
+            if isOpen {
+                FlowDetailsList(flow: flow, summary: summary, currency: currency, focused: $focused)
+                FlowRecordedNote()
+            }
+        }
+        // A new month starts closed, like the focus.
+        .onChange(of: summary.month) { isOpen = false }
     }
 }
 

@@ -9,13 +9,6 @@ import { Icon } from "../../design/Icon";
 import { ErrorState, LoadingState, SaveErrorBanner, useToast } from "../../design/states";
 import { SectionTitle } from "./SectionTitle";
 
-const NAMES: Record<Currency, string> = {
-  CAD: "Canadian dollar",
-  USD: "US dollar",
-  EUR: "Euro",
-  GBP: "British pound",
-};
-
 function describeSaveError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 409) return "Your ledger changed somewhere else, so Penny reloaded it. Check the currency and choose again.";
@@ -28,7 +21,8 @@ function describeSaveError(error: unknown): string {
 /**
  * Settings › Currency (specimen `currency`). One currency per account keeps totals consistent, so
  * it can change only while the ledger has no entries or recurring rules — the restriction is
- * stated, not hidden. Shared households keep their own currency.
+ * stated, not hidden. Shared households keep their own currency. Each currency is named by its
+ * ISO code alone (CAD, USD), as on the card.
  */
 export function CurrencySettings() {
   const email = useAccountEmail();
@@ -49,7 +43,6 @@ export function CurrencySettings() {
       void invalidateSearch(queryClient, email);
       toast.show({
         title: `Currency set to ${currency}`,
-        detail: NAMES[currency],
         onUndo: () => {
           save.mutate({ currency: previous, previous: currency });
         },
@@ -121,7 +114,6 @@ export function CurrencySettings() {
           options={CURRENCIES.map((code) => ({
             value: code,
             label: code,
-            description: NAMES[code],
             disabled: save.isPending || (lock !== "open" && code !== current),
           }))}
         />

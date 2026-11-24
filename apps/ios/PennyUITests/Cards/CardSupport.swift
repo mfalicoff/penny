@@ -126,10 +126,11 @@ class CardTestCase: PennyUITestCase {
     /// steps change the seeded data (a payment, an edit). `followsSystem` keeps Appearance on
     /// System (the device's appearance still picks light or dark), for cards that show the
     /// setting; `standInFaceID` answers Face ID with the Debug stand-in, so the lock can be on.
+    /// `portrait` captures an iPad card upright, for the cards drawn in portrait (`ipad-home-portrait`).
     @MainActor
     func card(
         _ id: String, freshSeedPerAppearance: Bool = false, followsSystem: Bool = false,
-        standInFaceID: Bool = false, note: String? = nil,
+        standInFaceID: Bool = false, portrait: Bool = false, note: String? = nil,
         open: (CardContext) async throws -> Void
     ) async throws {
         let state = try CardState.load(id)
@@ -147,11 +148,14 @@ class CardTestCase: PennyUITestCase {
             }
             let signsIn = !state.signedOut && (index == 0 || freshSeedPerAppearance)
             XCUIDevice.shared.appearance = appearance == "dark" ? .dark : .light
-            // The iPad cards are drawn in landscape (1290×914 in contracts/design-baseline.json).
-            if state.platform == "iPad" { XCUIDevice.shared.orientation = .landscapeLeft }
+            // The iPad cards are drawn in landscape (1290×914 in contracts/design-baseline.json),
+            // except the few drawn in portrait.
+            if state.platform == "iPad" { XCUIDevice.shared.orientation = portrait ? .portrait : .landscapeLeft }
             var options = LaunchOptions()
             options.seed = ContainerSeed(standardDefaults: ["penny.appearance": followsSystem ? "system" : appearance])
             options.standInFaceID = standInFaceID
+            // A card that shows System selected is drawn in each appearance: System shows it.
+            if followsSystem { options.systemAppearance = appearance }
             options.resetsState = state.signedOut || signsIn
             let penny = try await launch(options)
             if signsIn, let alias = state.alias, let user = seed?.users[alias] {
@@ -266,7 +270,7 @@ extension Penny {
     /// The Trips tab (iPhone) or sidebar row (iPad).
     func openTrips() throws {
         if Device.isPad {
-            let row = try wait(for: AccessibilityID.Sidebar.item("trips"))
+            let row = try sidebarRow(AccessibilityID.Sidebar.item("trips"))
             for _ in 0..<3 {
                 row.tap()
                 if element(AccessibilityID.Screen.trips).waitForExistence(timeout: 8) { return }

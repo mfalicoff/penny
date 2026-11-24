@@ -34,8 +34,16 @@ final class OverviewJourneyTests: PennyUITestCase {
             // The iPad dashboard (`ipad-home`, landscape): no Recent and no Explore list (MAZ-254).
             XCTAssertFalse(penny.element(AccessibilityID.Home.explore).exists)
             XCTAssertFalse(penny.element(AccessibilityID.Home.recent).exists)
+            // "Show as a table" under the flow (MAZ-224).
+            try penny.wait(for: AccessibilityID.Overview.flowTable)
+            if XCUIDevice.shared.orientation.isPortrait {
+                // `ipad-home-portrait`: spending by category beside daily spending, and Settings in
+                // the toolbar while the system hides the sidebar.
+                try penny.wait(for: AccessibilityID.Home.byCategory)
+                try penny.wait(for: AccessibilityID.Home.settings)
+            }
         } else {
-            // iPhone, and iPad in portrait or Split View: the iPhone layout.
+            // iPhone, and iPad in a narrow Split View: the iPhone layout.
             let flow = penny.element(AccessibilityID.Home.flow)
             XCTAssertTrue((flow.value as? String)?.hasPrefix("Came in") == true, "\(flow.value ?? "")")
             try penny.wait(for: AccessibilityID.Home.insights)
@@ -67,7 +75,17 @@ final class OverviewJourneyTests: PennyUITestCase {
         try penny.reveal(AccessibilityID.Overview.flowFocusClear, above: penny.app.frame.height - 120)
         try penny.tap(AccessibilityID.Overview.flowFocusClear)
         try penny.waitForAbsence(of: AccessibilityID.Overview.flowFocus)
+        // The focus hint, then "Show as a table", which opens every value as a list (MAZ-224).
+        try penny.wait(for: AccessibilityID.Overview.flowHint)
+        XCTAssertFalse(penny.element(AccessibilityID.Overview.flowDetails).exists, "the table starts closed")
+        try penny.reveal(AccessibilityID.Overview.flowTable, above: penny.app.frame.height - 120)
+        let table = try penny.wait(for: AccessibilityID.Overview.flowTable)
+        XCTAssertEqual(table.value as? String, "Collapsed")
+        table.tap()
         try penny.wait(for: AccessibilityID.Overview.flowDetails)
+        XCTAssertEqual(penny.element(AccessibilityID.Overview.flowTable).value as? String, "Expanded")
+        try penny.tap(AccessibilityID.Overview.flowTable)
+        try penny.waitForAbsence(of: AccessibilityID.Overview.flowDetails)
     }
 
     @MainActor

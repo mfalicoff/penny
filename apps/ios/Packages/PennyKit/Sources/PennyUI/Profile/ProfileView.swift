@@ -55,6 +55,8 @@ private struct ProfileForm: View {
     @State private var cropping: CropSource?
     @State private var changingPassword = false
     @State private var passwordChanged = false
+    @State private var resendState = ResendState.idle
+    @State private var resendError: String?
     @FocusState private var nameFocused: Bool
 
     /// iPad: the page beside the Settings list (`ipad-profile`), with the picture beside the name.
@@ -307,6 +309,49 @@ private struct ProfileForm: View {
 
     // MARK: Sign-in
 
+    enum ResendState: Equatable {
+        case idle, sending, sent
+
+        var title: String {
+            switch self {
+            case .idle: "Resend link"
+            case .sending: "Sending…"
+            case .sent: "Link sent. Check your inbox."
+            }
+        }
+    }
+
+    /// MAZ-172: Not verified (and Resend link) only while the server sends email.
+    private var showsUnverified: Bool {
+        profile.signIn == "password" && !profile.emailVerified && shell.auth?.server?.emailEnabled == true
+    }
+
+    /// The Sign-in row's trailing state (`iphone-profile`, `ipad-profile`): Verified, or Not verified.
+    @ViewBuilder
+    private var verificationMark: some View {
+        if profile.emailVerified {
+            Label("Verified", systemImage: "checkmark.circle")
+                .labelStyle(VerificationLabelStyle())
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .accessibilityIdentifier("profile.emailVerified")
+        } else if showsUnverified {
+            Label("Not verified", systemImage: "exclamationmark.circle")
+                .labelStyle(VerificationLabelStyle())
+                .foregroundStyle(PennyColor.pending)
+                .accessibilityIdentifier("profile.emailUnverified")
+        }
+    }
+
+    private func resendVerification() {
+        guard resendState == .idle, let auth = shell.auth else { return }
+        resendState = .sending
+        resendError = nil
+        Task {
+            resendError = await auth.resendVerificationEmail()
+            resendState = resendError == nil ? .sent : .idle
+        }
+    }
+
     private var signInSection: some View {
         Section {
             let oidc = profile.signIn == "oidc"
@@ -321,10 +366,26 @@ private struct ProfileForm: View {
                         .foregroundStyle(PennyColor.secondaryLabel)
                 }
                 Spacer(minLength: 0)
+                verificationMark
             }
             .cardSettingsRow()
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("profile.signIn")
+            if showsUnverified {
+                Button {
+                    resendVerification()
+                } label: {
+                    Text(resendState.title)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(resendState == .idle ? PennyColor.tintText : PennyColor.secondaryLabel)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(resendState != .idle)
+                .cardSettingsRow()
+                .accessibilityIdentifier("profile.resendVerification")
+            }
             if profile.signIn == "password" {
                 Button {
                     changingPassword = true
@@ -354,7 +415,9 @@ private struct ProfileForm: View {
         } header: {
             Text("Sign-in").cardSectionHeader()
         } footer: {
-            if profile.signIn == "oidc" {
+            if let resendError {
+                Text(resendError).foregroundStyle(PennyColor.danger)
+            } else if profile.signIn == "oidc" {
                 Text("You sign in to Penny with \(ProfileText.provider(profile)). Your account has no password.")
             }
         }
@@ -405,5 +468,16 @@ extension View {
             .frame(width: 30, height: 30)
             .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .accessibilityHidden(true)
+    }
+}
+
+/// "⊘ Verified": a 15pt symbol 6pt before the word, as on the cards.
+private struct VerificationLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            configuration.icon.font(.subheadline).accessibilityHidden(true)
+            configuration.title.font(.body).lineLimit(1)
+        }
+        .fixedSize()
     }
 }

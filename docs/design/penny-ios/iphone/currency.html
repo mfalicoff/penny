@@ -23,7 +23,7 @@
   .sr.noi + .sr::before, .sr.noi::before { left: 16px; }
   .si { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; color: var(--label); flex: none; }
   .si [data-i] { width: 18px; height: 18px; --sw: 40px; }
-  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .sr .tx { flex: 1; min-width: 0; }
   .sr .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; font-size: 16px; white-space: nowrap; }
   .sw { width: 51px; height: 31px; border-radius: 16px; background: var(--fill); position: relative; flex: none; margin-left: auto; }
   .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
@@ -40,9 +40,7 @@
   .sr .tx b { font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
   .sr .tx b [data-i] { width: 14px; height: 14px; color: var(--label-2); --sw: 48px; }
   .locked .sr .tx { color: var(--label-3); }
-  .locked .sr .tx small { color: var(--label-3); }
-  .locked .sr.sel .tx, .locked .sr.sel .tx small { color: var(--label); }
-  .locked .sr.sel .tx small { color: var(--label-2); }
+  .locked .sr.sel .tx { color: var(--label); }
   .locked .check { color: var(--label-3); }
 </style></head>
 <body class="canvas">
@@ -55,10 +53,10 @@
     <div class="grabber"></div>
     <div class="bar"><div class="side"><div class="glass gbtn"><i data-i="chevron-back"></i></div></div><h2>Currency</h2><div class="side r"></div></div>
     <div class="glist locked" style="margin-top:10px">
-      <div class="sr noi sel"><div class="tx"><b>CAD <i data-i="lock-closed"></i></b><small>Canadian dollar</small></div><i data-i="checkmark" class="check"></i></div>
-      <div class="sr noi"><div class="tx"><b>USD</b><small>US dollar</small></div></div>
-      <div class="sr noi"><div class="tx"><b>EUR</b><small>Euro</small></div></div>
-      <div class="sr noi"><div class="tx"><b>GBP</b><small>British pound</small></div></div>
+      <div class="sr noi sel"><div class="tx"><b>CAD <i data-i="lock-closed"></i></b></div><i data-i="checkmark" class="check"></i></div>
+      <div class="sr noi"><div class="tx"><b>USD</b></div></div>
+      <div class="sr noi"><div class="tx"><b>EUR</b></div></div>
+      <div class="sr noi"><div class="tx"><b>GBP</b></div></div>
     </div>
     <div class="gf">Currency is locked once your ledger has entries.</div>
   </div>

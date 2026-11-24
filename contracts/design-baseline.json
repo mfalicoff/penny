@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "557718e45b4991c0f433d2cfaa1782cfca9e53db65a7506e387afd010aed68f0"
+      "sha256": "1b1bc0d213e3c61e203fd1f4f3aef7549feb5a14f616f57ad1e51fa496280f0a"
     }
   ],
   "tokens": {
@@ -1087,7 +1087,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/settings.html",
-      "sha256": "a867d1a328329d12cdd91e15cbd234ae2c39065048e396a2dd78eead1334dcf0",
+      "sha256": "20ed7b18b253b7730dd376265265d42b55d3f06ad230b400974d84d74a2b31b0",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
@@ -1780,7 +1780,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/notifications-prompt.html",
-      "sha256": "949e18092fdb03407aa55d67f1a0914a164b2be8a725606d8cf60705de838994",
+      "sha256": "ad798dd45587b45d842cea7735794b042c9ca707b56956628ad37158a2295140",
       "nativeIssue": "MAZ-75",
       "webIssue": null,
       "route": "/households",
@@ -1872,7 +1872,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/currency.html",
-      "sha256": "733337c4fc34378082b540809b2cc1629686c58934d38f06fdf9042eee198248",
+      "sha256": "969ee7970deee83f2c637c8004dc1daf93db5c62d3185d86f5d8f976ed55bc1e",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
@@ -2565,7 +2565,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/settings.html",
-      "sha256": "b8a0e0c71da817ce7bb2749949b0455aef90c5d5052d2fb21cb54c285ee205be",
+      "sha256": "9c0b7273b6bbec038ceccfafd407ff2709cc18e3f87e7754aa44ee2fbac8d03d",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
@@ -2772,7 +2772,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/profile.html",
-      "sha256": "263660537ce1e613bcb4398a1a78b5fca50f45924f98edb99d3f3ec2dc64f261",
+      "sha256": "0a374114dba3bfc3abde8348a0cdd090c7402cffa1fff98b42678613e9301292",
       "nativeIssue": "MAZ-171",
       "webIssue": "MAZ-171",
       "route": "/",
@@ -3120,7 +3120,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/currency.html",
-      "sha256": "7d97108352703ccc24f2996009ad577c0c2fcecde371c941c73958576947a56f",
+      "sha256": "78713625f602cf908a3a798ae3e5ab32102249ed23eb5d645994f14840195ecd",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",

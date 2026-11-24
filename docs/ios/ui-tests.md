@@ -98,6 +98,7 @@ Debug-only (`#if PENNY_TEST_CONTROLS`); `ios.sh release-check` fails if any `PEN
 | `PENNY_TEST_NOTIFICATION=<json>`, `PENNY_TEST_NOTIFICATION_ON_RESUME=<json>` | Open a notification payload (the APNs custom keys) as if tapped, at launch or on the first return from the background, through `PushNotifications.didOpen` ([native notifications](notifications.md#tests-and-verification), MAZ-79) |
 | `PENNY_TEST_DEVICE_AUTH=1` | Answer the app lock's Face ID prompts with a stand-in (XCUITest cannot enroll or match biometrics): turning the lock on or off succeeds, and unlock prompts alternate cancelled and success, starting with cancelled, so each lock's own prompt leaves the lock screen up until the test taps Unlock. Only the device check is replaced (MAZ-133) |
 | `PENNY_TEST_LOCK_MINUTE=<seconds>` | Length of a Lock after minute, so a test can wait out After 1 minute (MAZ-133) |
+| `PENNY_TEST_SYSTEM_APPEARANCE=light\|dark` | What Appearance › System shows, so the cards that show System selected (`iphone-appearance`, `iphone-settings`, `ipad-settings`) are captured in each appearance (MAZ-172) |
 
 Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`. Appearance is set with `XCUIDevice.shared.appearance` and pinned through Penny's own setting (a `penny.appearance` seed), because the device setting alone did not restyle a freshly launched app on the iOS 27.0 simulator.
 

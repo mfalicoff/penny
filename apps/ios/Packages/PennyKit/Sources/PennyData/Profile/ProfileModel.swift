@@ -86,6 +86,19 @@ public final class ProfileModel {
 
     public var isAvailable: Bool { service != nil }
 
+    /// MAZ-172: a password account whose current email isn't verified yet. Show it (and Resend)
+    /// only while the server sends email; nothing waits for it.
+    public var awaitsVerification: Bool {
+        guard let profile else { return false }
+        return profile.signIn == "password" && !profile.emailVerified
+    }
+
+    /// A profile another call returned (Change email).
+    public func adopt(_ profile: WireProfile) {
+        apply(profile)
+        load = .loaded
+    }
+
     /// Whether to show the name prompt now.
     public var showsNamePrompt: Bool { needsName && !promptHandled }
 

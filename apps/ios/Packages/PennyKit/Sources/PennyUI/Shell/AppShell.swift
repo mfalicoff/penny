@@ -36,6 +36,10 @@ struct AppShell: View {
                 shell.refreshToday()
                 // A name or picture changed on another device shows when the app comes back.
                 Task { await shell.profile.refreshSummary() }
+                // MAZ-172: an emailed link opened in the browser shows as verified on return.
+                if shell.auth?.server?.emailEnabled == true, shell.profile.awaitsVerification {
+                    Task { await shell.profile.refresh() }
+                }
             }
         }
         // On iPad Settings is the detail column, so Add entry opens over it instead of closing
@@ -242,12 +246,33 @@ struct DetailPage: View {
 /// Categories; the account with its sync status and Settings) and a detail column.
 private struct SplitShell: View {
     @Bindable var shell: ShellModel
+    /// The sidebar shows beside the detail in landscape and starts hidden behind the system's
+    /// toggle in portrait, where the detail takes the full width (`ipad-home-portrait`).
+    @State private var columns = NavigationSplitViewVisibility.all
+    @State private var portrait: Bool?
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columns) {
             Sidebar(shell: shell).pennySolidBars()
         } detail: {
             detail
+        }
+        // In portrait the balanced style keeps the sidebar tiled and puts it back when it is hidden;
+        // the prominent-detail style lets it go, over the detail when shown.
+        .modifier(SplitStyle(portrait: portrait == true))
+        .onGeometryChange(for: Bool.self) {
+            $0.size.height > $0.size.width
+        } action: { isPortrait in
+            portrait = isPortrait
+        }
+        // Only when the orientation changes, so a sidebar opened with the toggle stays open.
+        .task(id: portrait) {
+            guard let portrait else { return }
+            columns = portrait ? .detailOnly : .all
+        }
+        // In portrait a pick in the sidebar shows its page with the sidebar put away again.
+        .onChange(of: shell.route.sidebarSelection) {
+            if portrait == true { columns = .detailOnly }
         }
         .modifier(ToastOverlay(bottomPadding: 16))
         // ⌘N opens Add entry wherever the iPad is (MAZ-254). An invisible button, so the shortcut
@@ -535,6 +560,20 @@ extension View {
             #endif
         } else {
             self
+        }
+    }
+}
+
+/// The iPad split view's style: the sidebar tiled beside the detail in landscape (`.balanced`),
+/// and over the detail in portrait (`.prominentDetail`), where the detail keeps the full width.
+private struct SplitStyle: ViewModifier {
+    let portrait: Bool
+
+    func body(content: Content) -> some View {
+        if portrait {
+            content.navigationSplitViewStyle(.prominentDetail)
+        } else {
+            content.navigationSplitViewStyle(.balanced)
         }
     }
 }

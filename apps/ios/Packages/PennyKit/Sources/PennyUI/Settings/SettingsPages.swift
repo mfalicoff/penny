@@ -110,7 +110,6 @@ struct AppearanceSettingsView: View {
         } label: {
             VStack(spacing: 8) {
                 ThemePreview(option: option)
-                    .frame(maxWidth: typeSize.isAccessibilitySize ? 120 : .infinity)
                 Text(option.title)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(PennyColor.label)
@@ -130,13 +129,16 @@ struct AppearanceSettingsView: View {
     }
 }
 
-/// A small phone drawn in one appearance: the glow, a title bar and three cards. System shows
-/// light and dark halves.
+/// A small phone drawn in one appearance, at the card's size (`iphone-appearance`'s `.mini`:
+/// 82×150pt, a 16pt corner and a 1.5pt edge): the glow, a title and subtitle, two cards and the tab
+/// bar. System shows light and dark halves.
 private struct ThemePreview: View {
     let option: AppearancePreference
 
+    static let size = CGSize(width: 82, height: 150)
+
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
         Group {
             switch option {
             case .light: screen.environment(\.colorScheme, .light)
@@ -146,38 +148,38 @@ private struct ThemePreview: View {
                     .overlay {
                         screen.environment(\.colorScheme, .dark)
                             .mask(alignment: .trailing) {
-                                GeometryReader { proxy in
-                                    Rectangle().frame(width: proxy.size.width / 2)
-                                        .frame(maxWidth: .infinity, alignment: .trailing)
-                                }
+                                Rectangle().frame(width: Self.size.width / 2)
                             }
                     }
             }
         }
-        .aspectRatio(0.54, contentMode: .fit)
+        .frame(width: Self.size.width, height: Self.size.height)
         .clipShape(shape)
-        .overlay(shape.strokeBorder(PennyColor.separator, lineWidth: 1))
+        .overlay(shape.strokeBorder(PennyColor.separator, lineWidth: 1.5))
         .accessibilityHidden(true)
     }
 
+    /// The card's boxes, placed from the top left as on the card.
     private var screen: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Capsule().fill(PennyColor.label).frame(width: 44, height: 10)
-            Capsule().fill(PennyColor.tertiaryLabel).frame(width: 30, height: 4)
-            Spacer().frame(height: 10)
-            ForEach(0..<2, id: \.self) { _ in
-                RoundedRectangle(cornerRadius: 7, style: .continuous).fill(PennyColor.surface).frame(height: 30)
-            }
-            Spacer(minLength: 0)
-            Capsule().fill(PennyColor.surface.opacity(0.7)).frame(height: 12)
+        ZStack(alignment: .topLeading) {
+            PennyColor.background
+            Ellipse()
+                .fill(Color(red: 1, green: 138 / 255, blue: 76 / 255).opacity(0.45))
+                .frame(width: 90, height: 70)
+                .blur(radius: 12)
+                .offset(x: -10, y: -20)
+            RoundedRectangle(cornerRadius: 4).fill(PennyColor.label)
+                .frame(width: 44, height: 11).offset(x: 9, y: 22)
+            RoundedRectangle(cornerRadius: 4).fill(PennyColor.tertiaryLabel)
+                .frame(width: 30, height: 5).offset(x: 9, y: 38)
+            RoundedRectangle(cornerRadius: 7, style: .continuous).fill(PennyColor.surface)
+                .frame(width: Self.size.width - 14, height: 28).offset(x: 7, y: 54)
+            RoundedRectangle(cornerRadius: 7, style: .continuous).fill(PennyColor.surface)
+                .frame(width: Self.size.width - 14, height: 34).offset(x: 7, y: 88)
+            Capsule().fill(PennyColor.surface.opacity(0.85))
+                .frame(width: Self.size.width - 14, height: 14).offset(x: 7, y: Self.size.height - 21)
         }
-        .padding(10)
-        .padding(.top, 14)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(alignment: .top) {
-            HeroGlow(blur: 10).frame(height: 70).padding(.horizontal, -20).offset(y: -20)
-        }
-        .background(PennyColor.background)
+        .frame(width: Self.size.width, height: Self.size.height, alignment: .topLeading)
     }
 }
 
@@ -208,19 +210,15 @@ struct CurrencySettingsView: View {
                             // `currency` card (MAZ-257): while locked, the current code carries a
                             // small lock and a grey check, and the others are dimmed.
                             HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(spacing: 4) {
-                                        Text(currency.rawValue).font(.body.weight(.semibold))
-                                        if locked, selected {
-                                            Image(systemName: "lock").font(.footnote)
-                                                .accessibilityLabel("Locked")
-                                        }
+                                // Each currency by its ISO code alone (owner's decision, 2026-11-24).
+                                HStack(spacing: 4) {
+                                    Text(currency.rawValue).font(.body.weight(.semibold))
+                                    if locked, selected {
+                                        Image(systemName: "lock").font(.footnote)
+                                            .accessibilityLabel("Locked")
                                     }
-                                    .foregroundStyle(locked && !selected ? PennyColor.tertiaryLabel : PennyColor.label)
-                                    Text(Self.name(currency)).font(.footnote)
-                                        .foregroundStyle(
-                                            locked && !selected ? PennyColor.tertiaryLabel : PennyColor.secondaryLabel)
                                 }
+                                .foregroundStyle(locked && !selected ? PennyColor.tertiaryLabel : PennyColor.label)
                                 Spacer()
                                 if selected {
                                     Image(systemName: "checkmark").font(.body.weight(.semibold))
@@ -231,7 +229,7 @@ struct CurrencySettingsView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        // The card's two-line rows, tighter than a list's default.
+                        // The card's rows, tighter than a list's default.
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .disabled(lockReason != nil && !selected)
                         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -257,10 +255,6 @@ struct CurrencySettingsView: View {
     /// Preferences footnote; any other reason (a household) as the rule gives it.
     static func footer(_ lockReason: String?) -> String? {
         lockReason == LedgerRuleError.currencyLocked.message ? CurrencyPolicy.settingsFootnote : lockReason
-    }
-
-    static func name(_ currency: Currency) -> String {
-        Locale.current.localizedString(forCurrencyCode: currency.rawValue) ?? currency.rawValue
     }
 
     private func choose(_ currency: Currency) {
