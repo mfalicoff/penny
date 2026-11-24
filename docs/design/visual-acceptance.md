@@ -285,7 +285,9 @@ Owner decision (2026-11-23): none of the three web reset cards shows the server 
 | Change category: a menu under the action with "Category for 3 expenses", a search field and the expense categories, each marking how many of the selected entries already use it ("1 of 3") | `web-activity-bulk-category` |
 | Change account: the same menu with "Account for 3 entries", the accounts and No account | `web-activity-bulk-account` |
 | Delete: "Delete 3 entries?" listing the entries with their dates and amounts, then Cancel and a red "Delete 3 entries" | `web-activity-bulk-delete` |
-| Done: the selection is cleared, the deleted rows are gone, and the saved toast says "3 entries deleted" with Undo and Close | `web-activity-bulk-done` |
+| Done: the selection is cleared, the deleted rows are gone, and the saved toast says "3 entries deleted" with Undo, as the app's saved toast draws it (a green check and a filled Undo, centered in the window) | `web-activity-bulk-done` |
+
+Built and captured on 2026-11-24 (`cards.real.spec.ts`, 1440×900, light and dark, alex's three September expenses selected with 🎉 Party supplies open): `web-activity-bulk-done` matches; `web-activity-selected`, `web-activity-bulk-category`, `web-activity-bulk-account` and `web-activity-bulk-delete` match except that, with the detail panel open at 1440px, the selection's total is cut short ("spent $184…"), as `web-activity`'s summary wraps there; the category menu also opens with its search field focused. Both are follow-ups. While entries are ticked, rows show no Edit or Delete, and a desktop keeps Add entry while a toast shows (the hiding is for phones only).
 
 Behavior (approved with the cards):
 
@@ -296,6 +298,7 @@ Behavior (approved with the cards):
 - **Repeating entries.** An entry a schedule created changes on its own: the schedule keeps its category and account, and Delete leaves the schedule running. The menu or the confirmation says so when the selection holds one (Transit pass on the cards).
 - **Many entries.** The confirmation lists up to five entries, then "and N more".
 - **Keyboard.** X selects or clears the focused row, ⌫ asks to delete the selection when there is one, and Esc clears it. The hint under the table shows these while entries are selected.
+- **Undo, not "can't be undone".** With Undo after a delete, `web-activity-bulk-delete` drops "This can't be undone." from its lead.
 - **Scope.** Desktop Activity: the table, from 768px wide with a mouse or trackpad. Touch tablets and phones keep their list. Changing the month clears the selection; a filter or search that hides a selected entry also drops it from the selection.
 
 ## Review scenarios

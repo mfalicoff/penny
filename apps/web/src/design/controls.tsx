@@ -41,7 +41,7 @@ export function Button({ variant = "secondary", icon, shortcut, iconOnly, busy, 
       {...rest}
       type={type}
       className={cx("wbtn", `wbtn--${variant}`, iconOnly && "wbtn--icon", className)}
-      aria-disabled={busy || undefined}
+      aria-disabled={busy ? true : rest["aria-disabled"]}
       onClick={(event) => {
         if (busy) {
           event.preventDefault();

@@ -9,8 +9,9 @@
   .sum { font-size: 13px; color: var(--label-2); }
   .sum b { color: var(--label); }
   /* After a bulk action: the selection is cleared and the saved toast offers Undo, which restores the whole batch in one save. */
-  .toast { position: absolute; z-index: 30; left: calc(50% + 124px); bottom: 28px; transform: translateX(-50%); width: 440px; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 16px; }
-  .toast > [data-i] { width: 20px; height: 20px; color: var(--tint); }
+  .toast { position: absolute; z-index: 30; left: 50%; bottom: 28px; transform: translateX(-50%); width: 440px; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 16px; }
+  .toast > [data-i] { width: 20px; height: 20px; color: var(--income); }
+  .toast .undo { height: 36px; padding: 0 16px; border-radius: 18px; background: var(--fill); color: var(--tint-text); font-size: 14.5px; font-weight: 600; display: inline-flex; align-items: center; }
   .toast .t { flex: 1; font-size: 14.5px; font-weight: 600; }
   .toast .btn [data-i] { width: 14px; height: 14px; }
 </style></head>
@@ -50,6 +51,6 @@
       </div>
     </div>
   </main>
-  <div class="toast glass" role="status"><i data-i="checkmark-circle"></i><span class="t">3 entries deleted</span><span class="btn">Undo</span><span class="btn icon" style="background:transparent;box-shadow:none"><i data-i="close"></i></span></div>
+  <div class="toast glass" role="status"><i data-i="checkmark-circle"></i><span class="t">3 entries deleted</span><span class="undo">Undo</span></div>
 </div>
 </body></html>

@@ -2257,7 +2257,7 @@
     {
       "id": "web-activity-bulk-delete",
       "source": "docs/design/penny-ios/web/activity-bulk-delete.html",
-      "sourceSha256": "fb3d8aa8bdc9695634867ed6e40737835feb9991c71ccf8cc63461905a94d970",
+      "sourceSha256": "d0d39da49a0318e19d057a0c54cdeeb62c0fcb4c1ea233a1c49adc2c8a819e30",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2266,19 +2266,19 @@
         {
           "appearance": "light",
           "file": "previews/web-activity-bulk-delete.light.png",
-          "sha256": "b6b3cdd6c6b5d7feacefd82e0664dafe03b5b33c741084dd5ed231a0d554dcec"
+          "sha256": "4dcce5dbc9c3bfc51e492fe5f25f79bf80007c80cc14b791f5a9eaa98f0e5fff"
         },
         {
           "appearance": "dark",
           "file": "previews/web-activity-bulk-delete.dark.png",
-          "sha256": "8fc3f92ce922cbd31dcd89054713c9637b66bf1dce7cf15a1be6c0aacafad9f1"
+          "sha256": "fdca8851066bdebff14da108fc1038cc7f364a0b139fe1784823fa49ae77958e"
         }
       ]
     },
     {
       "id": "web-activity-bulk-done",
       "source": "docs/design/penny-ios/web/activity-bulk-done.html",
-      "sourceSha256": "a7ef502819a09484704947bd7d2712383c86c67cdeca2e4a3ae95576eaf479b9",
+      "sourceSha256": "99d096fc1016b3a0058bf37b1b4690d5624b282e5896616c54c409d29848f897",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2287,12 +2287,12 @@
         {
           "appearance": "light",
           "file": "previews/web-activity-bulk-done.light.png",
-          "sha256": "153da92843cc383823c2740c4280066b9792377b821c209000e42b95e34a5e2a"
+          "sha256": "8f66100349fdbfd29bb1cc658478dde3e5a57c539779ad240b9b56746210f96b"
         },
         {
           "appearance": "dark",
           "file": "previews/web-activity-bulk-done.dark.png",
-          "sha256": "7a3394a3859c02ffa046666ca9e69cd801579cbd5420dadb789045b7f85ba127"
+          "sha256": "47086176956bf899b3a6646227f92cb40d0641927808bb64fd41f7e7f4b240f3"
         }
       ]
     },

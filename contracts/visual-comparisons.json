@@ -2871,11 +2871,6 @@
         ],
         "deviations": [
           {
-            "summary": "No row checkboxes or X to select entries",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          },
-          {
             "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
             "kind": "follow-up",
             "ref": "MAZ-225"
@@ -3250,10 +3245,20 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-276",
-        "note": "Draft card (MAZ-276) for the owner's review. The web can't select several entries yet.",
-        "followUp": "MAZ-276"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
       }
     },
     {
@@ -3265,10 +3270,25 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-276",
-        "note": "Draft card (MAZ-276) for the owner's review. The web can't select several entries yet.",
-        "followUp": "MAZ-276"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          },
+          {
+            "summary": "The search field has focus when the menu opens; the card draws it unfocused with Food & drinks hovered",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
       }
     },
     {
@@ -3280,10 +3300,20 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-276",
-        "note": "Draft card (MAZ-276) for the owner's review. The web can't select several entries yet.",
-        "followUp": "MAZ-276"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
       }
     },
     {
@@ -3295,10 +3325,20 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-276",
-        "note": "Draft card (MAZ-276) for the owner's review. The web can't select several entries yet.",
-        "followUp": "MAZ-276"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
       }
     },
     {
@@ -3310,10 +3350,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-276",
-        "note": "Draft card (MAZ-276). The web can't select several entries yet.",
-        "followUp": "MAZ-276"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
