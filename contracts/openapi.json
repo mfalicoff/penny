@@ -6235,6 +6235,257 @@
           }
         }
       }
+    },
+    "/api/account/delete": {
+      "post": {
+        "summary": "Delete your account",
+        "operationId": "postApiAccountDelete",
+        "description": "MAZ-152. Deletes the signed-in account after checking its password, and signs out every device, this one included (the session cookie is cleared). Rate-limited like sign-in. The person leaves every household they're in under the rules for leaving: settled in every month, and a creator only when no other member remains. Deleted: the personal ledger (entries, accounts, categories, schedules, trips), receipts and their text, emailed receipts and the receipt email address, search documents, sessions, push devices, pending email and push messages, the picture, the name and the email. Kept for the other members: shared expenses with their splits and payments, shared schedules and the household history, with the person shown as a former member (`deleted` on HouseholdMember); their receipts and account names are removed from those expenses. Backups keep deleted data until they age out (docs/self-hosting).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountDeletion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deleted and signed out.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A wrong or missing password (\"Your password is incorrect.\"). Nothing is deleted and the session stays.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A household rule blocks leaving, and nothing is deleted: \"Settle every monthly balance in <household> before you delete your account.\" or \"You created <household>, and other people are still in it. Remove them or archive <household> before you delete your account.\"",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/export": {
+      "get": {
+        "summary": "Export all your data",
+        "operationId": "getApiExport",
+        "description": "MAZ-152. One ZIP file (`penny-export-YYYY-MM-DD.zip`) with everything on the server that belongs to the signed-in person. JSON files use this contract's shapes: `README.txt`; `profile.json` (`profile`: Profile, `name` and `picture` with `managedBy` \"you\" or \"signInProvider\", and the picture's file); `profile/picture.webp` when there is a picture; `ledger.json` (Snapshot); `entries.csv` (as /api/export/entries for everything); `households/NN-name.json` for every household and trip joined, archived ones too (`household`, `members`, `expenses` the person can see with everyone's share, `recurring`, `history`); `receipts/<id>-<name>` for each receipt they uploaded, as the original file. The server writes the ZIP to a temporary file and deletes it when the download ends.",
+        "responses": {
+          "200": {
+            "description": "The ZIP file, as an attachment.",
+            "content": {
+              "application/zip": {}
+            },
+            "headers": {
+              "Cache-Control": {
+                "description": "no-store.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/export/entries": {
+      "get": {
+        "summary": "Export entries as CSV",
+        "operationId": "getApiExportEntries",
+        "description": "MAZ-152. Personal entries and the person's share of recorded shared expenses for a month, a year or everything, oldest first, as a CSV file (`penny-entries-<period>.csv`, or the day's date for everything) that spreadsheets open as is: UTF-8 with a byte order mark, CRLF line ends, RFC 4180 quoting. Columns: Date, Type (Expense, Income or Investment), Title, Category, Account, Amount, Your share (positive decimals), Currency, Household (shared expenses), Trip, Note. Text that a spreadsheet would read as a formula starts with an apostrophe.",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "description": "A month (YYYY-MM). Takes precedence over year."
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}$"
+            },
+            "description": "A year (YYYY). Neither: everything."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The CSV file, as an attachment.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "description": "no-store.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid month (\"Invalid household data.\") or year (\"Invalid year.\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7043,6 +7294,11 @@
             "type": "string",
             "pattern": "^/api/users/[^/?#]+/avatar\\?v=[0-9a-f]{32}$",
             "description": "The member's picture (MAZ-171). Omitted when they have none: show initials from the display name, else from the email. Same-origin URL of the picture (a square WebP of at most 512 px). Load it with the session; the version changes with every picture, so a URL may be cached for good."
+          },
+          "deleted": {
+            "type": "boolean",
+            "const": true,
+            "description": "MAZ-152. Present (true) when the person deleted their account: show \"Former member\" and never the email, which is a placeholder address. Their expenses, splits and payments stay, so balances don't change. Omitted otherwise."
           }
         },
         "required": [
@@ -9195,6 +9451,17 @@
           "email",
           "password"
         ]
+      },
+      "AccountDeletion": {
+        "type": "object",
+        "description": "MAZ-152. Confirms deleting the signed-in account.",
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "The account's password. Required for password accounts (`signIn: password` on Profile); an account that signs in with a provider has none and sends `{}`."
+          }
+        }
       }
     }
   }

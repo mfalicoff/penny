@@ -71,6 +71,10 @@ export function AuthScreen() {
             <p className="notice" role="status">
               Your password changed and every device was signed out. Sign in with the new password.
             </p>
+          ) : notice === "account-deleted" ? (
+            <p className="notice" role="status">
+              Your account was deleted, and every device was signed out.
+            </p>
           ) : null}
           <CredentialsForm key={mode} mode={mode} />
           <SsoButton />

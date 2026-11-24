@@ -160,8 +160,13 @@ export function eligibleMembers(detail: HouseholdDetail, date: string): Househol
   });
 }
 
-/** A member as people see them (MAZ-171): their display name, else their email. */
-export const memberName = (member: HouseholdMember) => member.displayName ?? member.email;
+export const FORMER_MEMBER = "Former member";
+
+/**
+ * A member as people see them (MAZ-171): their display name, else their email. Someone who deleted
+ * their account (MAZ-152) is "Former member": their name, picture and email are gone.
+ */
+export const memberName = (member: HouseholdMember) => (member.deleted ? FORMER_MEMBER : (member.displayName ?? member.email));
 
 export interface People {
   meId: string | undefined;
@@ -183,11 +188,11 @@ export function people(detail: HouseholdDetail | undefined, email: string): Peop
     name: (userId) => {
       if (userId === meId) return "You";
       const member = members.find((item) => item.userId === userId);
-      return member ? memberName(member) : "Former member";
+      return member ? memberName(member) : FORMER_MEMBER;
     },
     avatar: (userId) => {
       const member = members.find((item) => item.userId === userId);
-      return member ? memberName(member) : userId === meId ? email : "?";
+      return member && !member.deleted ? memberName(member) : userId === meId ? email : "?";
     },
     picture: (userId) => members.find((member) => member.userId === userId)?.avatarUrl,
     isCurrentMember: (userId) => members.some((member) => member.userId === userId && isCurrent(member)),

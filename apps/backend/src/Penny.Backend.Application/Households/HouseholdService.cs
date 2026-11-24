@@ -42,6 +42,16 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             cancellationToken
         );
 
+    // Every household the user has joined, archived ones too (the full export, MAZ-152).
+    public Task<IReadOnlyList<HouseholdView>> ListJoinedAsync(
+        string userId,
+        CancellationToken cancellationToken
+    ) =>
+        households.ReadAsync<IReadOnlyList<HouseholdView>>(
+            async store => [.. (await store.JoinedAsync(userId)).Select(HouseholdView.From)],
+            cancellationToken
+        );
+
     // POST /api/households (`trip` false) and POST /api/households/trips.
     public async Task<HouseholdView> CreateAsync(
         string userId,

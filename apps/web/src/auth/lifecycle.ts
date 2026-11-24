@@ -4,7 +4,7 @@ import { isPrivateKey, sessionKey, sessionNoticeKey } from "../api/keys";
 import { meSchema, type Me } from "../api/schemas";
 import { draftStore } from "../features/entries/drafts";
 
-export type SessionNotice = "expired" | "password-reset" | null;
+export type SessionNotice = "expired" | "password-reset" | "account-deleted" | null;
 
 /**
  * Removes every cached private query and forgets finished mutations. Removing a query
@@ -69,6 +69,19 @@ export async function expireSession(queryClient: QueryClient, options: { cancelS
  * A password reset succeeded (MAZ-124). The server signed every device out, this one included,
  * so the app returns to sign-in with a notice that says so. Offline edits are kept, as on expiry.
  */
+/**
+ * The person deleted their account (MAZ-152). The server ended every session; the app returns to
+ * sign-in with a notice that says the account is gone. The caller has already removed this
+ * browser's copy.
+ */
+export async function accountDeleted(queryClient: QueryClient): Promise<void> {
+  await dropInFlightSession(queryClient);
+  queryClient.setQueryData(sessionKey, null);
+  queryClient.setQueryData(sessionNoticeKey, "account-deleted" satisfies SessionNotice);
+  clearPrivateData(queryClient);
+  draftStore.clearAll();
+}
+
 export async function passwordWasReset(queryClient: QueryClient): Promise<void> {
   await dropInFlightSession(queryClient);
   queryClient.setQueryData(sessionKey, null);
