@@ -167,8 +167,8 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-name-prompt` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
 | `iphone-sign-in-providers` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-170) | Gap: draft card, not built yet |
 | `iphone-create-account-providers` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-170) | Gap: draft card, not built yet |
-| `iphone-verify-email` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-172) | Gap: draft card, not built yet |
-| `iphone-unverified` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-172) | Gap: draft card, not built yet |
+| `iphone-verify-email` | `CardCaptureTests`, `EmailVerificationJourneyTests` | Captured with `PENNY_STACK_SMTP=1` (recorded as blocked without it): a new account signs up in the app and stops on Check your email; the journey changes the email (a wrong password first) and continues (MAZ-172) | Covered |
+| `iphone-unverified` | `CardCaptureTests`, `EmailVerificationJourneyTests` | Captured with `PENNY_STACK_SMTP=1`: a new account continues from Check your email to the Shared tab's reminder; the journey then marks it verified and finds Verified in Settings › Profile (MAZ-172) | Covered |
 | `iphone-forgot-password` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1` (the server sends email to an SMTP sink; recorded as blocked without it): Forgot password on sign-in, then Send reset link (MAZ-124) | Covered |
 | `iphone-invite-email` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1`: an expired and a waiting invitation sent through the real API, then an address typed (MAZ-124) | Covered |
 | `iphone-delete-account` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |

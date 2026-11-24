@@ -51,6 +51,10 @@ struct AuthGate: View {
                     .accessibilityIdentifier("auth.keychainUnavailable")
                 case .signedOut, .signingIn:
                     SignedOutFlow(auth: auth, onTryDemo: startDemo)
+                case .signedIn where auth.showsCheckEmail:
+                    // MAZ-172: right after a password sign-up on a server that sends email.
+                    // Its own stack, as the signed-out flow has, so its screen identifier is its own.
+                    NavigationStack { CheckEmailView(auth: auth).hiddenNavigationBar() }
                 case .signedIn(let account), .signingOut(let account):
                     ShellHost(
                         inbox: $inbox,

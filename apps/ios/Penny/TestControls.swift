@@ -46,6 +46,10 @@
         /// Environment variable (seconds) for the length of a Lock after minute (MAZ-133), so UI
         /// tests can wait out "After 1 minute" in a few seconds.
         static let lockMinuteVariable = "PENNY_TEST_LOCK_MINUTE"
+        /// Environment variable (`light` or `dark`) for what Appearance › System shows, so a card
+        /// that shows System selected is captured in dark (the simulator's own appearance does not
+        /// reliably reach a freshly launched app).
+        static let systemAppearanceVariable = "PENNY_TEST_SYSTEM_APPEARANCE"
 
         var serverURL: ServerURL?
         var startsInDemo = false
@@ -59,6 +63,7 @@
         var notificationOnResume: String?
         var standInAuthenticator = false
         var lockMinute: Duration?
+        var systemAppearance: String?
 
         static func fromProcess(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> TestControls {
             TestControls(
@@ -75,7 +80,8 @@
                 standInAuthenticator: environment[deviceAuthVariable] == "1",
                 lockMinute: environment[lockMinuteVariable].flatMap { Double($0) }.flatMap {
                     $0 > 0 ? Duration.milliseconds(Int($0 * 1000)) : nil
-                })
+                },
+                systemAppearance: environment[systemAppearanceVariable])
         }
 
         /// Runs before the app reads any stored state: the reset, then the seed.
@@ -96,6 +102,11 @@
             services.startsInDemo = startsInDemo
             if let today { services.today = { today } }
             if let now { services.now = { now } }
+            switch systemAppearance {
+            case "dark": services.systemColorScheme = .dark
+            case "light": services.systemColorScheme = .light
+            default: break
+            }
             if standInAuthenticator || lockMinute != nil {
                 services.lock = AppLockController(
                     store: KeychainAppLockSettingStore(),

@@ -1963,7 +1963,7 @@
     {
       "id": "ipad-profile",
       "source": "docs/design/penny-ios/ipad/profile.html",
-      "sourceSha256": "263660537ce1e613bcb4398a1a78b5fca50f45924f98edb99d3f3ec2dc64f261",
+      "sourceSha256": "0a374114dba3bfc3abde8348a0cdd090c7402cffa1fff98b42678613e9301292",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1972,12 +1972,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-profile.light.png",
-          "sha256": "cc4944b66bf25bb4be457f362c17da15651ba78a62eb7e81d4c0f4984001d57c"
+          "sha256": "b5485481b7449e323673bb44ca441b8507c7d05a50c0de86072e483bb60a6090"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-profile.dark.png",
-          "sha256": "d40b06a4db45acd129093db75902d252b12d240f8a9cd9b4d705ebadb19c2ab4"
+          "sha256": "60053c7f14c129e16f2a1a03804c4737c78250f5cf1d19c5764669d2fe59d6f9"
         }
       ]
     },

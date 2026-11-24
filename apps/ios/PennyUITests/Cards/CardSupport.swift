@@ -152,6 +152,8 @@ class CardTestCase: PennyUITestCase {
             var options = LaunchOptions()
             options.seed = ContainerSeed(standardDefaults: ["penny.appearance": followsSystem ? "system" : appearance])
             options.standInFaceID = standInFaceID
+            // A card that shows System selected is drawn in each appearance: System shows it.
+            if followsSystem { options.systemAppearance = appearance }
             options.resetsState = state.signedOut || signsIn
             let penny = try await launch(options)
             if signsIn, let alias = state.alias, let user = seed?.users[alias] {

@@ -35,6 +35,9 @@ struct LaunchOptions {
     var standInFaceID = false
     /// Seconds in a Lock after minute (`PENNY_TEST_LOCK_MINUTE`, MAZ-133).
     var lockMinute: Int?
+    /// What Appearance › System shows (`light` or `dark`; `PENNY_TEST_SYSTEM_APPEARANCE`), for cards
+    /// that show System selected.
+    var systemAppearance: String?
 }
 
 /// Base class for Penny's UI tests: launches against the full-stack environment, creates
@@ -131,6 +134,7 @@ class PennyUITestCase: XCTestCase {
         }
         if options.standInFaceID { environment["PENNY_TEST_DEVICE_AUTH"] = "1" }
         if let minute = options.lockMinute { environment["PENNY_TEST_LOCK_MINUTE"] = String(minute) }
+        if let system = options.systemAppearance { environment["PENNY_TEST_SYSTEM_APPEARANCE"] = system }
         if let seed = options.seed { environment["PENNY_TEST_CONTAINER_SEED"] = try seed.write().path() }
         app.launchEnvironment = environment
         app.launchArguments = options.contentSize.map { ["-UIPreferredContentSizeCategoryName", $0] } ?? []

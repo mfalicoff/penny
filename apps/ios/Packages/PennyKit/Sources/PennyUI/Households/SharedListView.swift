@@ -24,6 +24,14 @@ struct SharedView: View {
                     }
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                 }
+                // The card's subtitle right under the large title while there is nothing to list
+                // (`iphone-unverified`): in the first section, so no section gap pushes it down.
+                if isEmpty, directory.isAvailable {
+                    Text("Split costs with a household or a trip.")
+                        .font(.subheadline)
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                }
             }
             .listSectionSeparator(.hidden)
 
@@ -45,25 +53,43 @@ struct SharedView: View {
                         Section { NotificationPrompt(push: push) }
                     }
                 }
+                if showsVerifyReminder, let email = shell.profile.profile?.email {
+                    // MAZ-172 (`iphone-unverified`): a reminder; sharing works either way.
+                    Section {
+                        VerifyEmailReminder(email: email)
+                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    }
+                    .compactSectionSpacing()
+                }
                 rows("Households", directory.households.filter { $0.trip == nil }, directory)
                 rows("Trips", directory.households.filter { $0.trip != nil }, directory)
-                Section {
-                    Button {
-                        shell.route.householdStart = .join(code: nil, server: nil)
-                    } label: {
-                        ActionRow(
-                            title: "Join with a code", detail: "Someone shared an invite code with you",
-                            symbol: "key")
+                if isEmpty {
+                    Section {
+                        SharedEmptyState(
+                            onCreate: { shell.route.householdStart = .create },
+                            onJoin: { shell.route.householdStart = .join(code: nil, server: nil) }
+                        )
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     }
-                    .accessibilityIdentifier("shared.join")
-                    Button {
-                        shell.route.householdStart = .create
-                    } label: {
-                        ActionRow(
-                            title: "New household", detail: "Split rent, bills and groceries every month",
-                            symbol: "person.badge.plus")
+                } else {
+                    Section {
+                        Button {
+                            shell.route.householdStart = .join(code: nil, server: nil)
+                        } label: {
+                            ActionRow(
+                                title: "Join with a code", detail: "Someone shared an invite code with you",
+                                symbol: "key")
+                        }
+                        .accessibilityIdentifier("shared.join")
+                        Button {
+                            shell.route.householdStart = .create
+                        } label: {
+                            ActionRow(
+                                title: "New household", detail: "Split rent, bills and groceries every month",
+                                symbol: "person.badge.plus")
+                        }
+                        .accessibilityIdentifier("shared.create")
                     }
-                    .accessibilityIdentifier("shared.create")
                 }
             }
         }
@@ -78,8 +104,13 @@ struct SharedView: View {
                 PennyStateView(.loading, title: "Loading households…")
             }
         }
-        .refreshable { await directory.refresh() }
+        .refreshable {
+            await directory.refresh()
+            if emailEnabled { await shell.profile.refresh() }
+        }
         .task { await directory.refresh() }
+        // MAZ-172: whether to remind about verification.
+        .task { if emailEnabled { await shell.profile.refresh() } }
         .background(PennyColor.background)
         .navigationTitle("Shared")
         .toolbar {
@@ -110,6 +141,16 @@ struct SharedView: View {
             HouseholdStartSheet(start: start).environment(shell).environment(invites)
         }
         .accessibilityIdentifier("screen.shared")
+    }
+
+    private var emailEnabled: Bool { shell.auth?.server?.emailEnabled == true }
+
+    private var showsVerifyReminder: Bool { emailEnabled && shell.profile.awaitsVerification }
+
+    /// Loaded, and no households or trips yet.
+    private var isEmpty: Bool {
+        let directory = shell.households
+        return directory.households.isEmpty && directory.load == .loaded
     }
 
     @ViewBuilder
@@ -240,5 +281,57 @@ struct BalanceLabel: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(HouseholdText.balance(cents, currency: currency))
+    }
+}
+
+/// No households or trips yet (`iphone-unverified`): the people tile, what to do, and New
+/// household and Join as tinted capsules.
+private struct SharedEmptyState: View {
+    let onCreate: () -> Void
+    let onJoin: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Image(systemName: "person.2")
+                .font(.system(size: 26))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .frame(width: 64, height: 64)
+                .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .accessibilityHidden(true)
+            Text("No households or trips yet")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(PennyColor.label)
+                .multilineTextAlignment(.center)
+                .padding(.top, 14)
+            Text("Create a household or join one with a code from a member.")
+                .font(.subheadline)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
+            HStack(spacing: 10) {
+                pill("New household", symbol: "plus", action: onCreate)
+                    .accessibilityIdentifier("shared.create")
+                pill("Join", symbol: "key", action: onJoin)
+                    .accessibilityLabel("Join with a code")
+                    .accessibilityIdentifier("shared.join")
+            }
+            .padding(.top, 20)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .padding(.top, 32)
+    }
+
+    private func pill(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(PennyColor.tintText)
+                .padding(.horizontal, 20)
+                .frame(minHeight: Metrics.minTouchTarget)
+                .background(PennyColor.fill, in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

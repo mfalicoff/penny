@@ -24,7 +24,8 @@ public struct RootView: View {
         self.configuration = configuration
         self.notifications = notifications
         _services = State(initialValue: services)
-        _appearance = State(initialValue: AppearanceModel(preferences: services.preferences))
+        _appearance = State(
+            initialValue: AppearanceModel(preferences: services.preferences, system: services.systemColorScheme))
         let development = (try? configuration.get())?.environment == .development
         _invites = State(initialValue: InviteHandoff(allowsLoopbackHTTP: development))
     }
