@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
-The 147 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 151 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (292 images: 145 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (300 images: 149 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -274,6 +274,28 @@ With email delivery configured on the server, the web password reset gets the tw
 The request step says the same thing whether or not the email has an account, as `web-forgot-password` does. Without email on the server, sign-in has no Forgot password and `web-password-reset` stays the only reset.
 
 Owner decision (2026-11-23): none of the three web reset cards shows the server chip, because the web uses the server it was opened from, as on `web-sign-in`. `web-password-reset` has no Email field, because a reset with a code takes only the code and the new password.
+
+## Drafted cards: bulk actions in Activity (MAZ-276, 2026-11-24)
+
+`web-activity` draws a checkbox on each row and the X key, but not what happens with entries selected. Following the owner's decision on MAZ-276, four cards draw it on the desktop Activity table, light and dark, for the owner's review. The web hasn't built them.
+
+| State | Card |
+| --- | --- |
+| Three expenses selected: the selection bar replaces the type chips, the summary and the export button, with a mixed checkbox, "3 selected · spent $117.30", the actions, and Clear (Esc). The header checkbox is mixed, selected rows are tinted, and the detail panel keeps the open entry | `web-activity-selected` |
+| Change category: a menu under the action with "Category for 3 expenses", a search field and the expense categories, each marking how many of the selected entries already use it ("1 of 3") | `web-activity-bulk-category` |
+| Change account: the same menu with "Account for 3 entries", the accounts and No account | `web-activity-bulk-account` |
+| Delete: "Delete 3 entries?" listing the entries with their dates and amounts, then Cancel and a red "Delete 3 entries" | `web-activity-bulk-delete` |
+
+Proposed behavior (the owner reviews it with the cards):
+
+- **Actions are one list.** The bar draws each action from one list of definitions (label, icon, whether it opens a menu or a confirmation, and how it applies to the selected entries), in that list's order, with destructive actions last and red. Adding an action, for example exporting only the selected entries, adds one definition.
+- **One save per action.** Choosing a category or an account, or confirming Delete, applies to every selected entry in one ledger save, so the offline outbox and conflict merge treat it like any other change. The selection then clears.
+- **What can be selected.** Only your own entries. A shared expense has no checkbox (`Costco run` on the cards): it belongs to its household and is changed there. The header checkbox selects every listed entry you can select.
+- **Category needs one type.** Categories belong to one type (expense, income or investment), so the menu lists only the selection's type. When the selection mixes types, Change category is unavailable and says "Select entries of one type to change their category".
+- **Repeating entries.** An entry a schedule created changes on its own: the schedule keeps its category and account, and Delete leaves the schedule running. The menu or the confirmation says so when the selection holds one (Transit pass on the cards).
+- **Many entries.** The confirmation lists up to five entries, then "and N more".
+- **Keyboard.** X selects or clears the focused row, ⌫ asks to delete the selection when there is one, and Esc clears it. The hint under the table shows these while entries are selected.
+- **Scope.** Desktop Activity: the table, from 768px wide with a mouse or trackpad. Touch tablets and phones keep their list. Changing the month clears the selection; a filter or search that hides a selected entry also drops it from the selection.
 
 ## Review scenarios
 

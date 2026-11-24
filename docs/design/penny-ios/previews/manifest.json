@@ -2213,6 +2213,69 @@
       ]
     },
     {
+      "id": "web-activity-bulk-account",
+      "source": "docs/design/penny-ios/web/activity-bulk-account.html",
+      "sourceSha256": "df136fd06140f6b8bd8b3e9ac95deff29e6b578e9aae62bcc998b400d2530f46",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-activity-bulk-account.light.png",
+          "sha256": "39856b1d39e7ca627026631042b828870939d300536f3e5cf2b0597995a93b0e"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-activity-bulk-account.dark.png",
+          "sha256": "95f71b7b7c147b83af92b1dcb0afce02528f00449aab5b913325ffd7478360f6"
+        }
+      ]
+    },
+    {
+      "id": "web-activity-bulk-category",
+      "source": "docs/design/penny-ios/web/activity-bulk-category.html",
+      "sourceSha256": "91e0b43c75dd7465ed51fe0dbba1fe889380693201c1b88b94f1460109a30599",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-activity-bulk-category.light.png",
+          "sha256": "a766aa8d443f6dd22329768ae01ea29f50eaca677acac97b81a22b3e57e700ae"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-activity-bulk-category.dark.png",
+          "sha256": "6b740d3ace8a1070de04e59863a2d0630f226e3eb96e37b1fde3ef9067a21d47"
+        }
+      ]
+    },
+    {
+      "id": "web-activity-bulk-delete",
+      "source": "docs/design/penny-ios/web/activity-bulk-delete.html",
+      "sourceSha256": "fb3d8aa8bdc9695634867ed6e40737835feb9991c71ccf8cc63461905a94d970",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-activity-bulk-delete.light.png",
+          "sha256": "b6b3cdd6c6b5d7feacefd82e0664dafe03b5b33c741084dd5ed231a0d554dcec"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-activity-bulk-delete.dark.png",
+          "sha256": "8fc3f92ce922cbd31dcd89054713c9637b66bf1dce7cf15a1be6c0aacafad9f1"
+        }
+      ]
+    },
+    {
       "id": "web-activity-searching",
       "source": "docs/design/penny-ios/web/activity-searching.html",
       "sourceSha256": "50bd7682479dfd38c5f24038dd66b399ff0a8bc2c9c2672bdc027610cea3da95",
@@ -2230,6 +2293,27 @@
           "appearance": "dark",
           "file": "previews/web-activity-searching.dark.png",
           "sha256": "61c83f26e932ee51ce84e3de6bb82be3b362dbc86535eeb456fa3c2eac473e37"
+        }
+      ]
+    },
+    {
+      "id": "web-activity-selected",
+      "source": "docs/design/penny-ios/web/activity-selected.html",
+      "sourceSha256": "c34a79184f5a5505fac72b698f9308295b35aed6ec1d6dc7fe9dd43e5ea6e114",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-activity-selected.light.png",
+          "sha256": "841951b44f2b0e60082b5a934d2ab25ad6678a2649e9f924ab850051b3c75ac7"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-activity-selected.dark.png",
+          "sha256": "ea121c53a7d205bb21a3dd2ca40b4c8a70980f96ab7876000a56bbff4f197adb"
         }
       ]
     },

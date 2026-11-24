@@ -942,6 +942,10 @@ const cards: Record<string, Card> = {
   "web-edit-entry": { open: ({ page: p }) => editEntry(p) },
   "web-join-code": { open: ({ page: p }) => joinWithCode(p) },
   "web-activity-searching": { faults: true, open: (run) => searching(run) },
+  "web-activity-selected": { skip: { status: "not-built", note: "The web can't select several Activity entries yet (MAZ-276)." } },
+  "web-activity-bulk-category": { skip: { status: "not-built", note: "The web can't select several Activity entries yet (MAZ-276)." } },
+  "web-activity-bulk-account": { skip: { status: "not-built", note: "The web can't select several Activity entries yet (MAZ-276)." } },
+  "web-activity-bulk-delete": { skip: { status: "not-built", note: "The web can't select several Activity entries yet (MAZ-276)." } },
   "web-server-unreachable": {
     faults: true,
     open: async (run) => {
