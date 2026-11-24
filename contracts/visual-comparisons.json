@@ -1046,7 +1046,7 @@
       "view": "appearance: light, dark and system",
       "native": {
         "status": "matches",
-        "owner": "MAZ-172",
+        "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
@@ -2200,7 +2200,7 @@
       "view": "Settings › Profile for a password account: picture, name, verified email, export and delete",
       "native": {
         "status": "deviates",
-        "owner": "MAZ-172",
+        "owner": "MAZ-171",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
@@ -2840,7 +2840,7 @@
       "view": "Settings with Profile in the detail column",
       "native": {
         "status": "deviates",
-        "owner": "MAZ-172",
+        "owner": "MAZ-171",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
