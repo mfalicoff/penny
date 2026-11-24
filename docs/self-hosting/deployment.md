@@ -150,7 +150,7 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Legal__PrivacyPolicyUrl` | unset | Your privacy policy, an absolute `https://` (or `http://`) URL without credentials. `GET /api/info` publishes it and the apps link it on sign-in, create account and Settings › Profile, opening it in the browser. Unset, they show no link. Set it before you open registration to anyone else |
 | `Auth__RateLimitPermits` / `Auth__InviteRateLimitPermits` | 40 / 20 | Sign-in attempts per client per 15 minutes / invite joins per client per 10 minutes, per process |
 | `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](../reference/authentication.md#password-reset-maz-123)) |
-| `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
+| `Oidc__Providers__<id>__*` (Google, Apple, your own SSO), or the single-provider `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
 | `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](../reference/push.md)) |
 | `Email__Smtp__Host`, `Email__Smtp__Security`, `Email__Smtp__Port`, `Email__Smtp__Username`, `Email__Smtp__Password`, `Email__From`, `Email__AppUrl` | off | Password reset and invitation emails through your SMTP provider ([email delivery](email.md)). The password is a secret |
 | `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker`, `Email__Worker` | `true` | [Workers](#background-workers) |
@@ -249,22 +249,79 @@ It uses a throwaway Compose project and synthetic data, and removes everything a
 
 ## OpenID Connect (OIDC) sign-in
 
-Penny supports one configurable OIDC provider alongside email/password login on web and iOS. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
+Penny can offer several sign-in providers next to email and password, on web and iOS: Google, Apple and your own OIDC provider (Keycloak, Authentik, ...). The apps show one button for each provider the server has settings for, and none for the others. Each account signs in with exactly one method, a password or one provider; Penny never links accounts by email, so a provider sign-in whose email already has an account is refused.
 
-Set these server-side values in `deploy/api.env`:
+Providers are configured in `deploy/api.env` as a dictionary keyed by a provider id you choose (`google`, `apple`, `company`, ...): `Oidc__Providers__<id>__<Setting>`. Every provider needs:
+
+| Setting | |
+| --- | --- |
+| `Issuer` | The provider's exact advertised issuer URL (HTTPS). |
+| `ClientId` | The client registered for Penny. |
+| `ClientSecret` | The client's secret, for confidential clients (Apple uses a key instead, below). Server-side only. |
+| `RedirectUris` | Comma-separated app addresses the sign-in may return to: `https://penny.example.com/auth/callback` (web) and `penny://auth/callback` (iOS). |
+| `CallbackUri` | Optional: `https://penny.example.com/api/auth/oidc/callback/<id>`, this server's own address. When set, register it with the provider instead of the app addresses; the server hands the response on to the app. Apple needs it; use it for any provider that refuses `penny://` addresses. |
+| `AllowRegistration` | `true` lets someone with no Penny account create one by signing in with this provider. Default `false`. |
+| `Label`, `Icon`, `Order` | Optional: the button's name (`Google` and `Apple` by default, else `Single sign-on`), its glyph (`google`, `apple` or `sso`) and its position. |
+
+Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin (the `web` container serves `/auth/callback`). Pending sign-in attempts are stored in PostgreSQL, so they survive restarts and work with several API containers. Details and troubleshooting: [OIDC on the .NET backend](../reference/authentication.md#openid-connect-maz-54-maz-170).
+
+### Your own OIDC provider
+
+Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response. The client secret is optional for public clients; confidential clients use `client_secret_post`.
 
 ```dotenv
-Oidc__Issuer=https://identity.example.com/realms/penny
-Oidc__ClientId=penny
-Oidc__ClientSecret=your-server-only-secret
-Oidc__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
-Oidc__Label=Single sign-on
-Oidc__AllowRegistration=true
+Oidc__Providers__company__Issuer=https://identity.example.com/realms/penny
+Oidc__Providers__company__ClientId=penny
+Oidc__Providers__company__ClientSecret=your-server-only-secret
+Oidc__Providers__company__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
+Oidc__Providers__company__Label=Company login
+Oidc__Providers__company__AllowRegistration=true
 ```
 
-Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin (the `web` container serves `/auth/callback`). The client secret is optional for public clients; confidential clients use `client_secret_post`. Never put it in client configuration. Pending sign-in attempts are stored in PostgreSQL, so they survive restarts and work with several API containers.
+**Upgrading from one provider.** The single-provider settings from before (`Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration`) keep working unchanged: they are the provider `sso`, and you can add Google or Apple next to them. To move them into the dictionary, rename each `Oidc__<Setting>` to `Oidc__Providers__sso__<Setting>` (setting both fails startup). Existing accounts keep signing in, since an account is tied to its provider's issuer, not to the id.
 
-New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](../ios/authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](../reference/authentication.md#openid-connect-maz-54).
+### Google
+
+1. In the Google Cloud console, create an OAuth client of type **Web application** (APIs & Services › Credentials), and set the consent screen's app name and support email.
+2. Under **Authorized redirect URIs**, add `https://penny.example.com/auth/callback` and `https://penny.example.com/api/auth/oidc/callback/google`. Google does not accept `penny://` addresses for web clients, so the iOS app signs in through the server's callback.
+3. Set:
+
+   ```dotenv
+   Oidc__Providers__google__Issuer=https://accounts.google.com
+   Oidc__Providers__google__ClientId=1234567890-abc.apps.googleusercontent.com
+   Oidc__Providers__google__ClientSecret=GOCSPX-your-secret
+   Oidc__Providers__google__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
+   Oidc__Providers__google__CallbackUri=https://penny.example.com/api/auth/oidc/callback/google
+   Oidc__Providers__google__AllowRegistration=true
+   ```
+
+Google says whether each address is verified; Penny accepts only verified ones. Google accounts bring their name and picture, which are read only in Penny.
+
+### Apple
+
+Apple has no fixed client secret: Penny signs a short-lived one with your private key and renews it itself. Apple posts its answer to the server, so the server's callback is required.
+
+1. In the Apple developer account (Certificates, Identifiers & Profiles), enable **Sign in with Apple** on the App ID, and create a **Services ID** (for example `com.example.penny.web`); this is the client id. Configure it with your domain and the return URL `https://penny.example.com/api/auth/oidc/callback/apple`.
+2. Create a **key** with Sign in with Apple enabled and download its `.p8` file. Note the key id and your team id.
+3. Set (keep the key file out of the repository, for example as a container secret):
+
+   ```dotenv
+   Oidc__Providers__apple__Issuer=https://appleid.apple.com
+   Oidc__Providers__apple__ClientId=com.example.penny.web
+   Oidc__Providers__apple__TeamId=ABCDE12345
+   Oidc__Providers__apple__KeyId=XYZ987WVUT
+   Oidc__Providers__apple__PrivateKeyFile=/run/secrets/apple-sign-in.p8
+   Oidc__Providers__apple__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
+   Oidc__Providers__apple__CallbackUri=https://penny.example.com/api/auth/oidc/callback/apple
+   Oidc__Providers__apple__NativeClientIds=com.mfalicoff.penny
+   Oidc__Providers__apple__AllowRegistration=true
+   ```
+
+   `PrivateKey` can hold the key's PEM text instead of a file (`\n` for line breaks). `NativeClientIds` is the iOS app's bundle id (`com.mfalicoff.penny` for the TestFlight build), so the app can use the native Sign in with Apple sheet; App Review asks for it when an app offers other third-party sign-in. Apple gives each developer team its own user ids: the web sign-in (your Services ID) and the app's sheet reach the same Penny account only when both belong to the same team. Otherwise leave `NativeClientIds` unset, and the app signs in with Apple in the browser sheet, as the web does.
+
+People may hide their address from you: Apple then gives a private relay address (`…@privaterelay.appleid.com`) that forwards to them, and Penny uses it as the account's email. Apple sends the person's name only the first time they sign in; Penny keeps it. Apple sends no picture, so Apple accounts choose their own.
+
+The native iOS app uses the `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](../ios/authentication.md#provider-and-callback-setup)).
 
 ## Phone notifications
 

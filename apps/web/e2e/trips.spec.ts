@@ -24,7 +24,7 @@ async function person(browser: Browser, email: string, baseURL: string | undefin
     const url = new URL(request.url());
     if (url.pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (url.pathname === "/api/auth/me") return route.fulfill({ json: { email } });
-    if (url.pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (url.pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false, providers: [] } });
     if (url.pathname === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });
     if (url.pathname === "/api/v1/search/transactions") return route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } });
     if (url.pathname === "/api/households/projection") return route.fulfill({ json: { transactions: [], scheduled: [] } });
@@ -223,7 +223,7 @@ test("personal trips by keyboard: assignment, deletion restrictions and a refres
 test("the demo shows its sample trip, says shared trips need a server and fits 320px", async ({ page }) => {
   await page.route("/api/info", (route) => route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } }));
   await page.route("/api/auth/me", (route) => route.fulfill({ status: 401, json: { error: "Please sign in to continue." } }));
-  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/trips");
   await page.getByRole("button", { name: "Take a look around with sample data" }).click();

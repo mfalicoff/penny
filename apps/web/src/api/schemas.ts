@@ -67,6 +67,9 @@ export const profileSchema = z.object({
   // Show the unverified state only while the server sends email.
   emailVerified: z.boolean(),
   emailVerifiedAt: z.number().int().optional(),
+  // MAZ-170: the account's configured provider, matching an entry of `GET /api/auth/oidc`.
+  providerId: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,31}$/).optional(),
+  providerIcon: z.string().regex(/^[a-z0-9-]{1,32}$/).optional(),
 });
 export type Profile = z.infer<typeof profileSchema>;
 
@@ -111,8 +114,18 @@ export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
 /** `POST /api/auth/register` body: the credentials and the optional name asked at sign-up. */
 export const registrationSchema = credentialsSchema.extend({ displayName: z.string().max(1000).optional() });
 
-export const oidcConfigSchema = z.object({ enabled: z.boolean(), label: z.string().optional() });
-export const oidcStartSchema = z.object({ redirectUri: z.url() });
+const providerId = z.string().regex(/^[a-z0-9][a-z0-9_-]{0,31}$/);
+/** MAZ-170: one configured sign-in provider. `icon` names a glyph; unknown names get the generic one. */
+export const oidcProviderSchema = z.object({
+  id: providerId,
+  label: z.string().min(1).max(60),
+  icon: z.string().regex(/^[a-z0-9-]{1,32}$/),
+  native: z.boolean(),
+});
+export type OidcProvider = z.infer<typeof oidcProviderSchema>;
+/** `GET /api/auth/oidc`: the sign-in buttons to show, in order; none when `providers` is empty. */
+export const oidcConfigSchema = z.object({ enabled: z.boolean(), label: z.string().optional(), providers: z.array(oidcProviderSchema) });
+export const oidcStartSchema = z.object({ redirectUri: z.url(), provider: providerId.optional() });
 /** The browser navigates to this address, so only https (and http on loopback, for local providers) is allowed. */
 export function isSafeAuthorizationUrl(value: string): boolean {
   try {

@@ -25,20 +25,26 @@ namespace Penny.Backend.Api.Authentication;
 public sealed class OidcProviderClient : IOidcProvider
 {
     public const string HttpClientName = "oidc-provider";
-    public const string Scope = "openid email profile";
+    public const string Scope = OidcProviderOptions.DefaultScope;
 
     // openid-client's default clock tolerance.
     private static readonly TimeSpan ClockTolerance = TimeSpan.FromSeconds(30);
 
-    private readonly OidcOptions options;
+    private readonly OidcProviderOptions options;
+    private readonly AppleClientSecret? appleSecret;
     private readonly IHttpClientFactory clients;
     private readonly ConfigurationManager<OpenIdConnectConfiguration> discovery;
     private readonly JsonWebTokenHandler tokens = new() { MapInboundClaims = false };
 
-    public OidcProviderClient(OidcOptions options, IHttpClientFactory clients)
+    public OidcProviderClient(
+        OidcProviderOptions options,
+        IHttpClientFactory clients,
+        TimeProvider clock
+    )
     {
         this.options = options;
         this.clients = clients;
+        appleSecret = options.AppleClientSecret is { } apple ? new(apple, clock) : null;
         // Discovery and JWKS are cached and refreshed by IdentityModel; a failed fetch is
         // retried on a later request, so a provider outage does not need a restart.
         discovery = new ConfigurationManager<OpenIdConnectConfiguration>(
@@ -47,6 +53,8 @@ public sealed class OidcProviderClient : IOidcProvider
             new OidcDocumentRetriever(clients)
         );
     }
+
+    public string Id => options.Id;
 
     public async Task<string> CreateAuthorizationUrlAsync(
         StoredOidcAttempt attempt,
@@ -58,9 +66,10 @@ public sealed class OidcProviderClient : IOidcProvider
         {
             IssuerAddress = RequireHttps(configuration.AuthorizationEndpoint).AbsoluteUri,
             ClientId = options.ClientId,
-            RedirectUri = attempt.RedirectUri,
+            RedirectUri = options.ProviderRedirectUri(RequireRedirect(attempt)),
             ResponseType = OpenIdConnectResponseType.Code,
-            Scope = Scope,
+            Scope = options.Scope,
+            ResponseMode = options.ResponseMode,
             State = attempt.State,
             Nonce = attempt.Nonce,
             EnableTelemetryParameters = false,
@@ -76,7 +85,7 @@ public sealed class OidcProviderClient : IOidcProvider
         CancellationToken cancellationToken
     )
     {
-        var parameters = CallbackParameters(callbackUrl, attempt.RedirectUri);
+        var parameters = CallbackParameters(callbackUrl, RequireRedirect(attempt));
         if (!string.Equals(Single(parameters, "state"), attempt.State, StringComparison.Ordinal))
             throw Rejected();
         // The user cancelled or the provider refused (RFC 6749 section 4.1.2.1).
@@ -107,18 +116,26 @@ public sealed class OidcProviderClient : IOidcProvider
             cancellationToken
         );
         var subject = Text(claims, "sub") ?? throw Rejected();
-        // Some providers only expose email through UserInfo; its subject must match.
-        var fromUserInfo = !claims.TryGetProperty("email", out _);
+        // Some providers only expose email through UserInfo; its subject must match. A
+        // provider without UserInfo (Apple) may leave the email out.
+        var fromUserInfo =
+            !claims.TryGetProperty("email", out _)
+            && !string.IsNullOrEmpty(configuration.UserInfoEndpoint);
         var profile = fromUserInfo
             ? await UserInfoAsync(configuration, accessToken, subject, cancellationToken)
             : claims;
-        var email = Credentials.NormalizeProviderEmail(Text(profile, "email")) ?? throw Rejected();
-        if (
-            !profile.TryGetProperty("email_verified", out var verified)
-            || verified.ValueKind != JsonValueKind.True
-        )
-            throw Rejected();
-        var tokenIssuer = Text(claims, "iss") ?? throw Rejected();
+        var email = VerifiedEmail(profile);
+        // Validated against the configured issuer; identities store the configured form.
+        _ = Text(claims, "iss") ?? throw Rejected();
+        var tokenIssuer = options.Issuer;
+        // Apple sends the name only in its first-sign-in `user` parameter (MAZ-170).
+        if (options.IsApple)
+            return new(
+                tokenIssuer,
+                subject,
+                email,
+                AppleName(Single(parameters, "user")) is { } name ? new(name, null) : null
+            );
         // Name and picture (MAZ-171): from the ID token, else from UserInfo. Reading UserInfo
         // only for them is best effort and never fails the sign-in.
         var person =
@@ -132,6 +149,90 @@ public sealed class OidcProviderClient : IOidcProvider
             person is { } found ? ProviderProfileOf(found) : null
         );
     }
+
+    public async Task<VerifiedOidcIdentity> VerifyNativeAsync(
+        string idToken,
+        StoredOidcAttempt attempt,
+        string? name,
+        CancellationToken cancellationToken
+    )
+    {
+        if (options.NativeClientIds.Count == 0 || attempt.RedirectUri is not null)
+            throw Rejected();
+        var result = await ValidateAsync(idToken, options.NativeClientIds, cancellationToken);
+        if (!result.IsValid || result.SecurityToken is not JsonWebToken token)
+            throw Rejected();
+        var claims = Payload(token);
+        // The token must be the one the platform made for this attempt.
+        if (
+            !string.Equals(Text(claims, "nonce"), attempt.Nonce, StringComparison.Ordinal)
+            || Text(claims, "sub") is not { Length: > 0 } subject
+            || Text(claims, "iss") is null
+        )
+            throw Rejected();
+        return new(
+            options.Issuer,
+            subject,
+            VerifiedEmail(claims),
+            name is not null ? new(name, null)
+                : options.IsApple ? null
+                : ProviderProfileOf(claims)
+        );
+    }
+
+    // The provider's email when it says the email is verified; null when it sent none. An
+    // email that is present but unverified or malformed fails the sign-in. Apple sends
+    // `email_verified` as the string "true", and its private relay addresses
+    // (`@privaterelay.appleid.com`) are real, verified addresses.
+    private string? VerifiedEmail(JsonElement profile)
+    {
+        if (
+            !profile.TryGetProperty("email", out var value)
+            || value.ValueKind == JsonValueKind.Null
+        )
+            return null;
+        var email = Credentials.NormalizeProviderEmail(
+            value.ValueKind == JsonValueKind.String ? value.GetString() : null
+        ) ?? throw Rejected();
+        if (
+            !profile.TryGetProperty("email_verified", out var verified)
+            || !(
+                verified.ValueKind == JsonValueKind.True
+                || (
+                    options.IsApple
+                    && verified.ValueKind == JsonValueKind.String
+                    && verified.GetString() == "true"
+                )
+            )
+        )
+            throw Rejected();
+        return email;
+    }
+
+    // Apple's `user` form field: `{"name":{"firstName":"…","lastName":"…"},"email":"…"}`.
+    // It is not signed, so only the display name is taken from it.
+    private static string? AppleName(string? user)
+    {
+        if (string.IsNullOrEmpty(user) || user.Length > 4096)
+            return null;
+        try
+        {
+            using var document = JsonDocument.Parse(user);
+            return
+                document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("name", out var name)
+                && name.ValueKind == JsonValueKind.Object
+                ? DisplayName.FromProvider(null, Text(name, "firstName"), Text(name, "lastName"))
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string RequireRedirect(StoredOidcAttempt attempt) =>
+        attempt.RedirectUri ?? throw Rejected();
 
     private static readonly string[] ProfileClaims =
     [
@@ -198,12 +299,12 @@ public sealed class OidcProviderClient : IOidcProvider
         {
             ["grant_type"] = "authorization_code",
             ["code"] = code,
-            ["redirect_uri"] = attempt.RedirectUri,
+            ["redirect_uri"] = options.ProviderRedirectUri(RequireRedirect(attempt)),
             ["code_verifier"] = attempt.CodeVerifier,
             ["client_id"] = options.ClientId,
         };
-        if (options.ClientSecret is not null)
-            form["client_secret"] = options.ClientSecret;
+        if ((options.ClientSecret ?? appleSecret?.Current()) is { } secret)
+            form["client_secret"] = secret;
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
             RequireHttps(configuration.TokenEndpoint)
@@ -228,19 +329,7 @@ public sealed class OidcProviderClient : IOidcProvider
         CancellationToken cancellationToken
     )
     {
-        var result = await tokens.ValidateTokenAsync(
-            idToken,
-            ValidationParameters(await DiscoverAsync(cancellationToken))
-        );
-        if (!result.IsValid && result.Exception is SecurityTokenSignatureKeyNotFoundException)
-        {
-            // The provider may have rotated its keys since the JWKS was cached.
-            discovery.RequestRefresh();
-            result = await tokens.ValidateTokenAsync(
-                idToken,
-                ValidationParameters(await DiscoverAsync(cancellationToken))
-            );
-        }
+        var result = await ValidateAsync(idToken, [options.ClientId], cancellationToken);
         if (!result.IsValid || result.SecurityToken is not JsonWebToken token)
             throw Rejected();
         // Required ID token claims, azp, at_hash (when present) and the nonce.
@@ -262,6 +351,34 @@ public sealed class OidcProviderClient : IOidcProvider
                 ValidatedIdToken = new JwtSecurityToken(idToken),
             }
         );
+        return Payload(token);
+    }
+
+    // Signature, issuer, audience and lifetime.
+    private async Task<TokenValidationResult> ValidateAsync(
+        string idToken,
+        IReadOnlyList<string> audiences,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await tokens.ValidateTokenAsync(
+            idToken,
+            ValidationParameters(await DiscoverAsync(cancellationToken), audiences)
+        );
+        if (!result.IsValid && result.Exception is SecurityTokenSignatureKeyNotFoundException)
+        {
+            // The provider may have rotated its keys since the JWKS was cached.
+            discovery.RequestRefresh();
+            result = await tokens.ValidateTokenAsync(
+                idToken,
+                ValidationParameters(await DiscoverAsync(cancellationToken), audiences)
+            );
+        }
+        return result;
+    }
+
+    private static JsonElement Payload(JsonWebToken token)
+    {
         using var payload = JsonDocument.Parse(Base64UrlEncoder.Decode(token.EncodedPayload));
         return payload.RootElement.ValueKind == JsonValueKind.Object
             ? payload.RootElement.Clone()
@@ -269,12 +386,17 @@ public sealed class OidcProviderClient : IOidcProvider
     }
 
     private TokenValidationParameters ValidationParameters(
-        OpenIdConnectConfiguration configuration
+        OpenIdConnectConfiguration configuration,
+        IReadOnlyList<string> audiences
     ) =>
         new()
         {
-            ValidIssuer = options.Issuer,
-            ValidAudience = options.ClientId,
+            // Google may write its issuer without the scheme in ID tokens.
+            ValidIssuers =
+                options.Issuer == OidcProviderOptions.GoogleIssuer
+                    ? [options.Issuer, "accounts.google.com"]
+                    : [options.Issuer],
+            ValidAudiences = audiences,
             IssuerSigningKeys = configuration.SigningKeys,
             // openid-client's default id_token_signed_response_alg.
             ValidAlgorithms = [SecurityAlgorithms.RsaSha256],

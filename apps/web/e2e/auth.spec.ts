@@ -32,7 +32,7 @@ async function mockApi(context: BrowserContext, options: { sso?: boolean } = {})
       case "/api/auth/me":
         return api.signedIn ? reply(200, { email: api.signedIn }) : reply(401, { error: "Please sign in to continue." });
       case "/api/auth/oidc":
-        return reply(200, options.sso ? { enabled: true, label: "Acme SSO" } : { enabled: false });
+        return reply(200, options.sso ? { enabled: true, label: "Acme SSO", providers: [{ id: "sso", label: "Acme SSO", icon: "sso", native: false }] } : { enabled: false, providers: [] });
       case "/api/auth/oidc/start":
         return reply(200, {
           transaction: TRANSACTION,

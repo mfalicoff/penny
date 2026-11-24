@@ -20,7 +20,7 @@ async function mockApi(page: Page, email = "alex@example.test") {
   await page.route("/api/households", (route) => route.fulfill({ json: { households: [] } }));
   await page.route("/api/households/**", (route) => route.fulfill({ status: 404, json: { error: "Household not found." } }));
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
-  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
 }
 
 // Phones title a settings section by its name (with Back to the list); wider, the page is Settings.
@@ -219,7 +219,7 @@ test("the demo stays in the tab: no private API calls, and a reload ends it", as
   const requests: string[] = [];
   await page.route("/api/info", (route) => route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } }));
   await page.route("/api/auth/me", (route) => route.fulfill({ status: 401, json: { error: "Please sign in to continue." } }));
-  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
   page.on("request", (request) => {
     if (new URL(request.url()).pathname.startsWith("/api/")) requests.push(new URL(request.url()).pathname);
   });

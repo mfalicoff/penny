@@ -31,7 +31,7 @@ async function mockAuth(context: BrowserContext, emailEnabled: boolean): Promise
       case "/api/auth/me":
         return api.signedIn ? reply(200, { email: api.signedIn }) : reply(401, { error: "Please sign in to continue." });
       case "/api/auth/oidc":
-        return reply(200, { enabled: false });
+        return reply(200, { enabled: false, providers: [] });
       case "/api/auth/password-reset/request":
         return emailEnabled ? reply(202, { ok: true }) : reply(404, { error: "This server doesn't send email." });
       case "/api/auth/password-reset": {
@@ -146,7 +146,7 @@ test("invite by email: send, see the status, revoke, and the invitee joins from 
     const url = new URL(request.url());
     if (url.pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e", emailEnabled: true } });
     if (url.pathname === "/api/auth/me") return route.fulfill({ json: { email: signedIn } });
-    if (url.pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (url.pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false, providers: [] } });
     if (url.pathname === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });
     if (url.pathname === "/api/v1/search/transactions") return route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } });
     const body = request.postData() ? (JSON.parse(request.postData() ?? "{}") as Record<string, unknown>) : {};
