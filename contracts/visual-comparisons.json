@@ -106,24 +106,12 @@
       "id": "iphone-money-flow",
       "view": "money flow, September 2026 (salary income and spending), the largest spending band focused with its focus card",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-77",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The money flow is recorded-only, with a value list under the chart",
-            "kind": "follow-up",
-            "ref": "MAZ-259"
-          },
-          {
-            "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
-          }
         ]
       },
       "web": {
@@ -820,19 +808,12 @@
       "id": "iphone-settings",
       "view": "settings sheet",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The Notifications row's icon is a bell; the card draws a clock (Ionicons time). Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          }
         ]
       },
       "web": {
@@ -1798,19 +1779,12 @@
       "id": "iphone-notifications-prompt",
       "view": "Shared tab with the household notifications prompt",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The prompt's icon is a bell; the card draws a clock (Ionicons time). Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          }
         ]
       },
       "web": {
@@ -1906,19 +1880,12 @@
       "id": "iphone-schedule-form",
       "view": "new schedule form: monthly Internet expense",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The amount shows the typed number without the currency symbol (75.00, not $75.00)",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          }
         ]
       },
       "web": {
@@ -1957,19 +1924,12 @@
       "id": "iphone-currency",
       "view": "currency settings, locked by existing entries",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Currency names come from iOS's locale, capitalized (Canadian Dollar, US Dollar); the card writes Canadian dollar",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          }
         ]
       },
       "web": {
@@ -2494,11 +2454,6 @@
             "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The card has Show as a table under the money flow, which the native dashboard doesn't show yet (follow-up recorded on MAZ-224)",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           }
         ]
       },
@@ -2658,11 +2613,6 @@
             "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
-          },
-          {
-            "summary": "The Notifications row's icon is a bell; the card draws a clock (Ionicons time). Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
           }
         ]
       },
@@ -2707,9 +2657,13 @@
       "id": "ipad-home-portrait",
       "view": "iPad home in portrait, October 2026",
       "native": {
-        "status": "blocked",
+        "status": "matches",
         "owner": "MAZ-77",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, portrait",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",

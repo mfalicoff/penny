@@ -82,8 +82,8 @@ The SwiftUI shell, settings, lock and demo are described in [native app shell](.
 The SwiftUI app builds `iphone-home`, `iphone-home-dark`, `iphone-empty-home`, `iphone-money-flow`, `iphone-insights`, `iphone-calendar` and `ipad-home` ([native overview](../ios/overview.md)). Adaptations from the cards:
 
 - **Home** follows the cards since MAZ-254: the Follow your money card opens the money flow and its Insights pill opens Insights; the calendar is a sheet over Home from the toolbar; on iPhone, Expected income and Explore your month (Calendar, Spending by category, Money flow) follow `iphone-home-explore`, and the iPad dashboard has neither Explore nor Recent, as on `ipad-home`.
-- **The money flow is recorded-only**, like Left to spend. A value list under the chart is its accessible alternative and replaces it at accessibility text sizes.
-- **iPad** uses the dashboard only in a regular width of at least 760 points; narrower, it uses the iPhone layout.
+- **The money flow is recorded-only**, like Left to spend. The value list behind Show as a table, under the focus hint, is its accessible alternative, as on the cards since MAZ-224; at accessibility text sizes it replaces the chart, shown open.
+- **iPad** uses the dashboard only in a regular width of at least 760 points; narrower, it uses the iPhone layout. In portrait the sidebar starts hidden and the dashboard stacks as on `ipad-home-portrait`.
 
 ## Web recurring notes (MAZ-90)
 

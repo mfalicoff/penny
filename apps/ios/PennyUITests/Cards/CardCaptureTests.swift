@@ -69,8 +69,8 @@ final class CardCaptureTests: CardTestCase {
             try card.penny.wait(for: AccessibilityID.Overview.flowChart)
             // The card focuses the largest spending band (Home), with its focus card.
             try card.penny.tap(AccessibilityID.Overview.flowNode("expense:home"))
-            // Above the floating tab bar, as on the card.
-            try card.penny.reveal(AccessibilityID.Overview.flowFocus, above: card.app.frame.height - 130)
+            // The focus card, the hint and Show as a table above the floating tab bar, as on the card.
+            try card.penny.reveal(AccessibilityID.Overview.flowTable, above: card.app.frame.height - 120)
         }
     }
 
@@ -866,6 +866,13 @@ final class CardCaptureTests: CardTestCase {
     @MainActor
     func test_whenSeeded_IpadHome_ShouldBeCaptured() async throws {
         try await card("ipad-home") { card in try card.penny.wait(for: AccessibilityID.Home.hero) }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadHomePortrait_ShouldBeCaptured() async throws {
+        try await card("ipad-home-portrait", portrait: true) { card in
+            try card.penny.wait(for: AccessibilityID.Home.hero)
+        }
     }
 
     @MainActor

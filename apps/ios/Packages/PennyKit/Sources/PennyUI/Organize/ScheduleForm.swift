@@ -92,6 +92,9 @@ struct ScheduleFormSheet: View {
         .accessibilityIdentifier("screen.scheduleForm")
     }
 
+    /// The ledger's currency code, for the Amount row's symbol.
+    private var currency: String { (shell.workspace.load.ledger?.currency ?? Ledger(categories: []).currency).rawValue }
+
     /// The card's first group: Name and Amount as labelled rows with the value on the right, then
     /// Your share for an expense.
     private var amountSection: some View {
@@ -103,10 +106,26 @@ struct ScheduleFormSheet: View {
                     .accessibilityIdentifier("scheduleForm.title")
             }
             LabeledContent("Amount") {
+                // "$75.00" as on the card: the field fills the rest of the row, so the whole width
+                // stays tappable, and the currency symbol is a fixed label drawn just before the
+                // typed number (the hidden copy of it keeps the symbol against the digits).
                 TextField("0.00", text: $model.draft.amount)
                     .scheduleMoneyEntry()
                     .monospacedDigit()
                     .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: .infinity)
+                    .overlay(alignment: .trailing) {
+                        HStack(spacing: 0) {
+                            Text(AmountDisplay.symbol(currency))
+                            Text(model.draft.amount.isEmpty ? "0.00" : model.draft.amount).hidden()
+                        }
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        // The label color, like the typed digits (a labelled row would grey it).
+                        .foregroundStyle(PennyColor.label)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                    }
                     .accessibilityLabel("Amount")
                     .accessibilityIdentifier("scheduleForm.amount")
             }

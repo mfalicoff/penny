@@ -19,6 +19,8 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var width: Double = 0
+    /// The scroll view is taller than wide: an iPad in portrait (`ipad-home-portrait`).
+    @State private var portrait = false
     /// The toolbar calendar is for a month with something in it; the empty Home has none.
     @State private var hasEntries = false
 
@@ -38,7 +40,8 @@ struct HomeView: View {
                     if Self.isEmpty(ledger: ledger, report: report) {
                         EmptyHomeContent(currency: currency)
                     } else if dashboard {
-                        HomeDashboard(report: report, summary: summary, currency: currency, width: width)
+                        HomeDashboard(
+                            report: report, summary: summary, currency: currency, width: width, portrait: portrait)
                     } else {
                         HomeHero(summary: summary, currency: currency)
                         ExpectedIncomeCard(summary: summary, currency: currency, today: shell.today)
@@ -57,10 +60,11 @@ struct HomeView: View {
             .onChange(of: Self.isEmpty(ledger: ledger, report: report), initial: true) { _, empty in
                 hasEntries = !empty
             }
-            .onGeometryChange(for: Double.self) {
-                $0.size.width
+            .onGeometryChange(for: CGSize.self) {
+                $0.size
             } action: {
-                width = $0
+                width = $0.width
+                portrait = $0.height > $0.width
             }
             .refreshable {
                 await shell.workspace.reload()
@@ -77,15 +81,17 @@ struct HomeView: View {
             if sizeClass == .regular {
                 // iPad (`ipad-home` card): the month between back and forward arrows and the
                 // calendar after them, then search and the copper Add entry capsule. Settings is
-                // in the sidebar's footer.
-                ToolbarItem(placement: .navigation) { MonthStepButton(offset: -1) }
-                ToolbarSpacer(.fixed, placement: .navigation)
-                ToolbarItem(placement: .navigation) { MonthPicker(showsYear: true) }
-                ToolbarSpacer(.fixed, placement: .navigation)
-                ToolbarItem(placement: .navigation) { MonthStepButton(offset: 1) }
+                // in the sidebar's footer; in portrait, where the system hides the sidebar behind
+                // its toggle, it is in the toolbar too (`ipad-home-portrait`).
+                let leading = leadingPlacement
+                ToolbarItem(placement: leading) { MonthStepButton(offset: -1) }
+                ToolbarSpacer(.fixed, placement: leading)
+                ToolbarItem(placement: leading) { MonthPicker(showsYear: true) }
+                ToolbarSpacer(.fixed, placement: leading)
+                ToolbarItem(placement: leading) { MonthStepButton(offset: 1) }
                 if hasEntries {
-                    ToolbarSpacer(.fixed, placement: .navigation)
-                    ToolbarItem(placement: .navigation) { calendarButton }
+                    ToolbarSpacer(.fixed, placement: leading)
+                    ToolbarItem(placement: leading) { calendarButton }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -96,6 +102,18 @@ struct HomeView: View {
                     // The cards draw the bar's icons in the label color; copper is for Add entry.
                     .tint(PennyColor.label)
                     .accessibilityIdentifier("home.search")
+                }
+                if portrait {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            shell.route.sidebarSelection = .settings
+                        } label: {
+                            Label("Settings", systemImage: "gearshape")
+                        }
+                        .tint(PennyColor.label)
+                        .accessibilityIdentifier("home.settings")
+                    }
                 }
                 ToolbarSpacer(.fixed, placement: .primaryAction)
                 ToolbarItem(placement: .primaryAction) { AddEntryCapsule().accessibilityIdentifier("home.add") }
@@ -120,6 +138,16 @@ struct HomeView: View {
         }
         .task(id: shell.month) { await shell.refreshShared() }
         .accessibilityIdentifier("screen.home")
+    }
+
+    /// Where the iPad bar puts the month group. In portrait the bar would center `.navigation`
+    /// items; the card keeps them leading, after the sidebar toggle.
+    private var leadingPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+            portrait ? .topBarLeading : .navigation
+        #else
+            .navigation
+        #endif
     }
 
     /// Opens the month calendar as a sheet over Home (`calendar` card, MAZ-254).
@@ -697,6 +725,8 @@ struct EmptyHomeKinds: View {
 /// with Income, Spent and Invested beside Coming up, then the full money flow beside daily
 /// spending. As on the card there is no Explore list or Recent under it (MAZ-254): the calendar
 /// is in the toolbar, Insights in the sidebar, and the money flow opens from its panel's header.
+/// In portrait (`ipad-home-portrait`) the panels stack in one column, with daily spending beside
+/// spending by category at the end.
 struct HomeDashboard: View {
     @Environment(ShellModel.self) private var shell
     let report: LedgerReport
@@ -704,55 +734,89 @@ struct HomeDashboard: View {
     let currency: String
     /// The scroll view's width, for the side column.
     let width: Double
+    /// An iPad in portrait (`ipad-home-portrait`): the panels in one column.
+    var portrait = false
     @State private var focused: String?
 
     var body: some View {
         let flow = MoneyFlow(summary, categories: report.categories)
         let side = Self.sideWidth(width)
         VStack(alignment: .leading, spacing: 20) {
-            HStack(alignment: .top, spacing: 20) {
-                VStack(alignment: .leading, spacing: 16) {
-                    HomeHero(summary: summary, currency: currency)
-                    KindTotalsRow(totals: summary.recorded, currency: currency)
+            if portrait {
+                // `ipad-home-portrait`: one column of the hero, Coming up and the money flow, then
+                // daily spending beside spending by category.
+                hero
+                comingUp
+                flowPanel(flow)
+                // The two panels share the taller one's height, as on the card.
+                HStack(alignment: .top, spacing: 16) {
+                    DailySpendingPanel(summary: summary, currency: currency, today: shell.today)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    CategoryPanel(breakdown: CategoryBreakdown(summary), currency: currency)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                ComingUpPanel(summary: summary, categories: report.categories, currency: currency, today: shell.today)
-                    .frame(width: side)
-            }
-            HStack(alignment: .top, spacing: 20) {
-                VStack(alignment: .leading, spacing: 12) {
-                    // The card's header: the title, and the focus hint with a chevron that opens
-                    // the money flow page (no separate Details link).
-                    NavigationLink(value: DetailRoute.moneyFlow) {
-                        ViewThatFits(in: .horizontal) {
-                            HStack(alignment: .firstTextBaseline, spacing: 8) { flowHeader(flow) }
-                            VStack(alignment: .leading, spacing: 4) { flowHeader(flow) }
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Follow your money")
-                    .accessibilityHint("Shows the money flow page")
-                    .accessibilityAddTraits([.isButton, .isHeader])
-                    .accessibilityIdentifier("home.flow")
-                    if flow.isEmpty {
-                        Text("Nothing recorded this month yet.")
-                            .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                    } else {
-                        SankeyChart(flow: flow, currency: currency, focused: $focused)
-                        if let id = focused, let node = flow.node(id: id) {
-                            FlowFocusCard(node: node, flow: flow, report: report, currency: currency) { focused = nil }
-                        }
-                    }
+                .fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(alignment: .top, spacing: 20) {
+                    hero.frame(maxWidth: .infinity, alignment: .leading)
+                    comingUp.frame(width: side)
                 }
-                .pennyCard()
-                .frame(maxWidth: .infinity)
-                DailySpendingPanel(summary: summary, currency: currency, today: shell.today)
-                    .frame(width: side)
+                // Daily spending as tall as the money flow beside it, as on the card.
+                HStack(alignment: .top, spacing: 20) {
+                    flowPanel(flow).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    DailySpendingPanel(summary: summary, currency: currency, today: shell.today)
+                        .frame(width: side)
+                        .frame(maxHeight: .infinity)
+                }
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
         .onChange(of: shell.month) { focused = nil }
+    }
+
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HomeHero(summary: summary, currency: currency)
+            KindTotalsRow(totals: summary.recorded, currency: currency)
+        }
+    }
+
+    private var comingUp: some View {
+        ComingUpPanel(summary: summary, categories: report.categories, currency: currency, today: shell.today)
+    }
+
+    /// Follow your money: the header opens the money flow page; under the chart, the focus card
+    /// and "Show as a table" (MAZ-224).
+    private func flowPanel(_ flow: MoneyFlow) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // The card's header: the title, and the focus hint with a chevron that opens
+            // the money flow page (no separate Details link).
+            NavigationLink(value: DetailRoute.moneyFlow) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) { flowHeader(flow) }
+                    VStack(alignment: .leading, spacing: 4) { flowHeader(flow) }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Follow your money")
+            .accessibilityHint("Shows the money flow page")
+            .accessibilityAddTraits([.isButton, .isHeader])
+            .accessibilityIdentifier("home.flow")
+            if flow.isEmpty {
+                Text("Nothing recorded this month yet.")
+                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            } else {
+                SankeyChart(flow: flow, currency: currency, focused: $focused, showsColumnHeaders: false)
+                if let id = focused, let node = flow.node(id: id) {
+                    FlowFocusCard(node: node, flow: flow, report: report, currency: currency) { focused = nil }
+                }
+                FlowTable(flow: flow, summary: summary, currency: currency, focused: $focused, chevronWhenClosed: false)
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .pennyCard()
     }
 
     @ViewBuilder
@@ -919,18 +983,135 @@ struct DailySpendingPanel: View {
                         .font(.footnote.monospacedDigit()).foregroundStyle(PennyColor.secondaryLabel)
                 }
             }
+            // The scale's top in dollars: the biggest day, or 1 when nothing was spent yet.
+            let top = max(Double(calendar.days.map(\.spent).max() ?? 0) / 100, 1)
+            let last = calendar.days.count
             Chart(calendar.days) { day in
-                BarMark(x: .value("Day", day.date.day), y: .value("Spent", Double(day.spent) / 100))
-                    .foregroundStyle(PennyColor.tint)
+                let tone = Self.tone(day.spent, date: day.date, today: today, average: average)
+                // Days still to come are a short stub, as on the card.
+                let height = tone == .future ? top * 0.015 : Double(day.spent) / 100
+                BarMark(x: .value("Day", day.date.day), y: .value("Spent", height))
+                    .foregroundStyle(tone.color)
                     .accessibilityLabel(DayText.date(day.date).formatted(.dateTime.month(.wide).day()))
                     .accessibilityValue(MoneyFormat.amount(day.spent, currency: currency))
             }
             .chartYAxis(.hidden)
-            .chartXAxis { AxisMarks(values: [1, 15, calendar.days.count]) }
-            .frame(height: 140)
+            .chartYScale(domain: 0...top)
+            // "Nov 1", "15" and the last day, without grid lines, as on the cards.
+            .chartXAxis {
+                AxisMarks(values: [1, 15, last]) { value in
+                    if let day = value.as(Int.self) {
+                        AxisValueLabel(anchor: day == 1 ? .topLeading : day == last ? .topTrailing : .top) {
+                            if day == 1, let first = calendar.days.first {
+                                Text(DayText.date(first.date).formatted(.dateTime.month(.abbreviated).day()))
+                            } else {
+                                Text("\(day)")
+                            }
+                        }
+                    }
+                }
+            }
+            .frame(minHeight: 140, idealHeight: 140, maxHeight: 480)
         }
+        // As tall as the panel beside it on the dashboard, the bars growing with it.
+        .frame(maxHeight: .infinity, alignment: .top)
         .pennyCard()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home.dailySpending")
+    }
+
+    /// A day's bar on the cards: copper for a day well over the average (more than twice it),
+    /// copper at 30% for the other days so far, and the neutral fill for days still to come.
+    enum Tone: Equatable {
+        case high, normal, future
+
+        var color: Color {
+            switch self {
+            case .high: PennyColor.tint
+            case .normal: PennyColor.tint.opacity(0.3)
+            case .future: PennyColor.fill
+            }
+        }
+    }
+
+    static func tone(_ spent: Int64, date: CalendarDate, today: CalendarDate, average: Int64?) -> Tone {
+        if date > today { return .future }
+        guard let average, average > 0 else { return .normal }
+        return spent > 2 * average ? .high : .normal
+    }
+}
+
+/// Recorded spending by category at your share, largest first, each with a bar of its share
+/// (`ipad-home-portrait`, beside daily spending). Each row opens that category's entries for
+/// the month, as in Insights; past `limit` rows, the rest are named in one line.
+struct CategoryPanel: View {
+    let breakdown: CategoryBreakdown
+    let currency: String
+
+    static let limit = 6
+
+    /// The rows past `limit` in words with their total, so nothing counted is out of sight.
+    static func more(_ breakdown: CategoryBreakdown, currency: String) -> String? {
+        let hidden = breakdown.rows.dropFirst(limit)
+        guard !hidden.isEmpty else { return nil }
+        let total = hidden.reduce(Int64(0)) { $0 + $1.amount }
+        return "\(hidden.count) more · \(MoneyFormat.amount(total, currency: currency))"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("By category").font(.headline).accessibilityAddTraits(.isHeader)
+                Spacer()
+                Text("Your share").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+            }
+            if breakdown.isEmpty {
+                Text("No spending yet.").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            }
+            ForEach(breakdown.rows.prefix(Self.limit)) { row in
+                NavigationLink(
+                    value: DetailRoute.categorySpending(categoryIds: [row.category.id], title: row.category.name)
+                ) {
+                    HStack(spacing: 12) {
+                        CategoryIcon(
+                            symbol: CategoryStyle.symbol(forIonicon: row.category.icon),
+                            color: PennyColor.category(row.category.paletteColor), size: 30)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(row.category.name).font(.subheadline.weight(.semibold))
+                                .fixedSize(horizontal: false, vertical: true)
+                            GeometryReader { proxy in
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(PennyColor.fill)
+                                    Capsule().fill(PennyColor.category(row.category.paletteColor))
+                                        .frame(width: max(4, proxy.size.width * row.fraction))
+                                }
+                            }
+                            .frame(height: 6)
+                        }
+                        Spacer(minLength: 8)
+                        Text(MoneyFormat.amount(row.amount, currency: currency))
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .fixedSize()
+                    }
+                    .foregroundStyle(PennyColor.label)
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    "\(row.category.name), \(MoneyFormat.amount(row.amount, currency: currency)), \(row.percent) of spending"
+                )
+                .accessibilityAddTraits(.isButton)
+                .accessibilityIdentifier("home.category.\(OverviewText.identifier(row.category.id))")
+            }
+            if let more = Self.more(breakdown, currency: currency) {
+                Text(more).font(.footnote).monospacedDigit().foregroundStyle(PennyColor.secondaryLabel)
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .pennyCard()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home.byCategory")
     }
 }
