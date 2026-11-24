@@ -2271,19 +2271,19 @@
         ],
         "deviations": [
           {
-            "summary": "No server chip: the web always uses the server it was opened from (as decided in MAZ-234 for iphone-sign-in and iphone-create-account; awaiting the owner for this card)",
-            "kind": "follow-up",
-            "ref": "MAZ-170"
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (as decided in MAZ-234 for iphone-sign-in and iphone-create-account; awaiting the owner for this card)",
-            "kind": "follow-up",
-            "ref": "MAZ-170"
+            "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (as decided in MAZ-239 for iphone-sign-in and iphone-create-account; awaiting the owner for this card)",
-            "kind": "follow-up",
-            "ref": "MAZ-170"
+            "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (decided in MAZ-239, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -2307,9 +2307,9 @@
         ],
         "deviations": [
           {
-            "summary": "No server chip: the web always uses the server it was opened from (as decided in MAZ-234 for iphone-sign-in and iphone-create-account; awaiting the owner for this card)",
-            "kind": "follow-up",
-            "ref": "MAZ-170"
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
