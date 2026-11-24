@@ -1224,9 +1224,9 @@
         ],
         "deviations": [
           {
-            "summary": "No Try with sample data card",
-            "kind": "follow-up",
-            "ref": "MAZ-204"
+            "summary": "No Try with sample data card: the web demo starts only from sign-in",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
