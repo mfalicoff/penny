@@ -136,6 +136,8 @@ For an external PostgreSQL, run `pg_dump` with the PostgreSQL 18 client tools fr
 
 The dump restores to its point in time. To lose nothing after it, enable WAL archiving and point-in-time recovery on the database (built into most managed services; for the bundled container use a tool such as pgBackRest or WAL-G against the `penny-postgres` volume) and back up the receipt volume at least as often.
 
+**Deleted accounts age out of backups.** When someone deletes their account (Settings › Profile › Delete account), the live database and receipt volume lose their data at once, but older dumps and file copies still hold it. The apps tell people that backups keep deleted data for up to **30 days**, so keep that promise: delete or overwrite dumps, receipt copies and WAL archives older than 30 days (for example a daily job that removes `penny-*.dump` and `penny-receipts-*.tar` older than 30 days, and a pgBackRest or WAL-G retention of 30 days or less). A backup restored after someone deleted their account brings that account back; delete it again in the app or ask the person to.
+
 ## Restore
 
 Restore into a **clean** environment, with the same release that took the backup (or a newer one) and the same receipt master key. This is exactly what the smoke test does on every CI run.

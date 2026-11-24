@@ -102,11 +102,15 @@ interface DialogProps {
   wide?: boolean;
   /** `grouped`: the body is the sheet background, for solid grouped sections as in the cards. */
   grouped?: boolean;
+  /** An icon tile before the title, e.g. the trash of a destructive confirmation. */
+  icon?: ReactNode;
+  /** Extra class on the panel. */
+  className?: string;
   children?: ReactNode;
 }
 
 /** The web dialog from the design kit: header with a close button, body, footer with actions. */
-export function Dialog({ title, description, onClose, initialFocus, actions, hint, wide, grouped, children }: DialogProps) {
+export function Dialog({ title, description, onClose, initialFocus, actions, hint, wide, grouped, icon, className, children }: DialogProps) {
   const titleId = useId();
   const descriptionId = useId();
   return (
@@ -115,9 +119,10 @@ export function Dialog({ title, description, onClose, initialFocus, actions, hin
       {...(description ? { describedBy: descriptionId } : {})}
       onClose={onClose}
       {...(initialFocus ? { initialFocus } : {})}
-      panelClassName={["pk-dialog", wide && "dialog__panel--wide", grouped && "pk-dialog--grouped"].filter(Boolean).join(" ")}
+      panelClassName={["pk-dialog", wide && "dialog__panel--wide", grouped && "pk-dialog--grouped", className].filter(Boolean).join(" ")}
     >
       <div className="pk-dialog__head">
+        {icon}
         <h2 id={titleId}>{title}</h2>
         <button type="button" className="wbtn wbtn--icon" aria-label="Close" onClick={onClose}>
           <Icon name="close" size={16} weight={44} />

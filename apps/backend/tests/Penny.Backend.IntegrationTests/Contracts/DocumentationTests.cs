@@ -130,6 +130,10 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/auth/email-verification", "post"),
                 ("/api/auth/email-verification/resend", "post"),
                 ("/api/auth/email", "post"),
+                // Account deletion and the full export (MAZ-152).
+                ("/api/account/delete", "post"),
+                ("/api/export", "get"),
+                ("/api/export/entries", "get"),
             }
         )
         {
