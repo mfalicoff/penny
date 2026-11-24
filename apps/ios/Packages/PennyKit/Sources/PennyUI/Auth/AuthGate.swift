@@ -102,6 +102,8 @@ struct AuthGate: View {
             inbox.sessionChanged(to: currentSession)
             // Receipt previews and picked files left by a crash or the previous account (MAZ-78).
             ReceiptFileCache.standard.purge()
+            // A full export left by a crash or the previous account (MAZ-152).
+            AccountExportFile.purge()
             // Push registration follows the signed-in account; the demo never registers (MAZ-79).
             let account = pushAccount
             if let push { Task { await push.accountChanged(account) } }

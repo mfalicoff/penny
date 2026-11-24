@@ -58,8 +58,12 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
     /// MAZ-171: the same-origin URL of the member's picture, loaded with the session; absent
     /// when they have none (show initials from the name, else the email).
     public var avatarUrl: String?
+    /// MAZ-152: true when the person deleted their account. Show "Former member", never the
+    /// email (a placeholder address) or initials. Their expenses and balances stay.
+    public var deleted: Bool?
 
     public var id: String { userId }
+    public var isDeleted: Bool { deleted == true }
     public var isCurrent: Bool { leftAt == nil }
 
     public init(
@@ -69,7 +73,8 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
         joinedOn: String? = nil,
         leftAt: Int64? = nil,
         displayName: String? = nil,
-        avatarUrl: String? = nil
+        avatarUrl: String? = nil,
+        deleted: Bool? = nil
     ) {
         self.userId = userId
         self.email = email
@@ -78,6 +83,7 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
         self.leftAt = leftAt
         self.displayName = displayName
         self.avatarUrl = avatarUrl
+        self.deleted = deleted
     }
 }
 
