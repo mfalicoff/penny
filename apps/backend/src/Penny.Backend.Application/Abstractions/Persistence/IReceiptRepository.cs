@@ -28,6 +28,9 @@ public interface IReceiptRepository
         CancellationToken cancellationToken
     );
 
+    // The ids of every receipt the user owns, oldest first (the full export, MAZ-152).
+    Task<IReadOnlyList<string>> ListOwnedAsync(string userId, CancellationToken cancellationToken);
+
     // Name and MIME of the user's own receipts among `receiptIds`, without reading
     // the encrypted files. Ids the user does not own are absent from the result.
     Task<IReadOnlyDictionary<string, StoredReceiptInfo>> DescribeAsync(

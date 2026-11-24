@@ -2412,6 +2412,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("avatar_version")
                         .UseCollation("C");
 
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
                     b.Property<string>("DisplayName")
                         .HasColumnType("text")
                         .HasColumnName("display_name")
