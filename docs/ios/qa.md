@@ -171,8 +171,8 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-unverified` | `CardCaptureTests`, `EmailVerificationJourneyTests` | Captured with `PENNY_STACK_SMTP=1`: a new account continues from Check your email to the Shared tab's reminder; the journey then marks it verified and finds Verified in Settings › Profile (MAZ-172) | Covered |
 | `iphone-forgot-password` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1` (the server sends email to an SMTP sink; recorded as blocked without it): Forgot password on sign-in, then Send reset link (MAZ-124) | Covered |
 | `iphone-invite-email` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1`: an expired and a waiting invitation sent through the real API, then an address typed (MAZ-124) | Covered |
-| `iphone-delete-account` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |
-| `iphone-export-all` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |
+| `iphone-delete-account` | `CardCaptureTests`, `AccountDataJourneyTests` | Settings › Profile › Delete account with the seeded household under Stays for others; the journey refuses a wrong password, then deletes a fresh account and lands on sign-in with the deleted notice, and the server no longer signs it in (MAZ-152) | Covered |
+| `iphone-export-all` | `CardCaptureTests`, `AccountDataJourneyTests` | Settings › Profile › Export all your data once the real API has prepared the ZIP (name · size · ready, Save or share) (MAZ-152) | Covered |
 | `iphone-monitoring-prompt` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |
 | `iphone-privacy` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |
 | `ipad-profile` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |

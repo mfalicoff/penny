@@ -19,6 +19,9 @@ public struct HouseholdPeople: Equatable, Sendable {
         me = members.first { $0.email.lowercased() == lower }
     }
 
+    /// How a member who deleted their account, or one the viewer can't see, is named.
+    public static let formerMember = "Former member"
+
     public var meId: String? { me?.userId }
 
     /// Whether the viewer can still act here (not a former member).
@@ -33,7 +36,7 @@ public struct HouseholdPeople: Equatable, Sendable {
     /// viewer can't see.
     public func name(_ userId: String) -> String {
         if userId == meId { return "You" }
-        return member(userId)?.shownName ?? "Former member"
+        return member(userId)?.shownName ?? Self.formerMember
     }
 
     /// "your" for the viewer, otherwise "bea@example.test's".
@@ -49,13 +52,14 @@ public struct HouseholdPeople: Equatable, Sendable {
     /// Up to two letters for a monogram, from the member's name, else their email's local part
     /// ("bea.kim@…" is "BK").
     public func initials(_ userId: String) -> String {
-        guard let member = member(userId) else { return "?" }
+        guard let member = member(userId), !member.isDeleted else { return "?" }
         return Self.initials(name: member.shownName)
     }
 
     /// The member's picture and monogram (MAZ-171).
     public func face(_ userId: String) -> PersonFace {
-        PersonFace(initials: initials(userId), avatarUrl: member(userId)?.avatarUrl)
+        PersonFace(
+            initials: initials(userId), avatarUrl: member(userId).flatMap { $0.isDeleted ? nil : $0.avatarUrl })
     }
 
     /// The monogram letters for an email address (also the iPad sidebar's account, MAZ-182).
@@ -110,8 +114,10 @@ public struct PersonFace: Hashable, Sendable {
 }
 
 extension WireHouseholdMember {
-    /// Their display name, else their email (MAZ-171).
+    /// Their display name, else their email (MAZ-171), or "Former member" once they deleted their
+    /// account (MAZ-152).
     public var shownName: String {
+        if isDeleted { return HouseholdPeople.formerMember }
         let name = displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return name.isEmpty ? email : name
     }

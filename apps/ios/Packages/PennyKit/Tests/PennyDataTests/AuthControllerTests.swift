@@ -853,4 +853,106 @@ struct AuthControllerTests {
         await missing.refreshSingleSignOn()
         #expect(missing.singleSignOn == .failed, "a 404 is an ordinary failure")
     }
+
+    // MARK: Delete account (MAZ-152)
+
+    @Test("whenTheServerDeletesTheAccount_AuthController_ShouldForgetTheSessionAndRemoveLocalData")
+    func deleteAccount() async throws {
+        let localData = FakeLocalData()
+        let sessions = EphemeralSessionStore()
+        let (controller, transport) = try await signedIn(
+            ["POST /api/account/delete": Routes.json(#"{"ok":true}"#)], localData: localData, sessions: sessions)
+        try await controller.deleteAccount(password: "correct horse")
+        #expect(controller.state == .signedOut(.accountDeleted))
+        #expect(
+            localData.log.all == [
+                "POST /api/auth/login", "POST /api/account/delete", "unregister \(email)", "remove \(email)",
+            ])
+        let sent = try #require(transport.sent.last)
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer \(APIFixtures.token)")
+        let body = try JSONSerialization.jsonObject(with: try #require(sent.httpBody)) as? [String: String]
+        #expect(body == ["password": "correct horse"])
+        #expect(try sessions.load(server: AuthFixtures.server) == nil)
+        #expect(controller.client == nil)
+        #expect(controller.unremovedLocalData == nil)
+    }
+
+    @Test("whenAProviderAccountIsDeleted_AuthController_ShouldSendAnEmptyBody")
+    func deleteProviderAccount() async throws {
+        let (controller, transport) = try await signedIn(["POST /api/account/delete": Routes.json(#"{"ok":true}"#)])
+        try await controller.deleteAccount(password: nil)
+        #expect(String(decoding: try #require(transport.sent.last?.httpBody), as: UTF8.self) == "{}")
+        #expect(controller.state == .signedOut(.accountDeleted))
+    }
+
+    @Test(
+        "whenTheServerRefusesDeletion_AuthController_ShouldStaySignedInKeepLocalDataAndSayWhy",
+        arguments: [
+            (
+                400, #"{"error":"Your password is incorrect."}"#, AccountDeletionFailure.Kind.wrongPassword,
+                "Your password is incorrect."
+            ),
+            (
+                409, #"{"error":"Settle every monthly balance in Apartment before you delete your account."}"#,
+                .blocked, "Settle every monthly balance in Apartment before you delete your account."
+            ),
+            (500, #"{"error":"Unexpected server error."}"#, .failed, "Unexpected server error."),
+        ])
+    func deleteRefused(status: Int, body: String, kind: AccountDeletionFailure.Kind, message: String) async throws {
+        let localData = FakeLocalData()
+        let sessions = EphemeralSessionStore()
+        let (controller, _) = try await signedIn(
+            ["POST /api/account/delete": Routes.json(status, body)], localData: localData, sessions: sessions)
+        await #expect(throws: AccountDeletionFailure(kind, message)) {
+            try await controller.deleteAccount(password: "wrong one")
+        }
+        #expect(controller.state.account?.scope == scope)
+        #expect(!localData.log.all.contains("remove \(email)"))
+        #expect(!localData.log.all.contains("unregister \(email)"))
+        #expect(localData.holds.withLock { $0[scope] ?? 0 } == 0, "saves resume")
+        #expect(try sessions.load(server: AuthFixtures.server) != nil)
+    }
+
+    @Test("whenThePasswordIsEmpty_AuthController_ShouldAskForItWithoutARequest")
+    func deleteWithoutPassword() async throws {
+        let localData = FakeLocalData()
+        let (controller, _) = try await signedIn([:], localData: localData)
+        await #expect(throws: AccountDeletionFailure(.wrongPassword, AccountDeletionFailure.enterPasswordMessage)) {
+            try await controller.deleteAccount(password: "")
+        }
+        #expect(localData.log.all == ["POST /api/auth/login"])
+    }
+
+    @Test("whenOffline_AuthController_ShouldKeepTheAccountAndSayTheServerCantBeReached")
+    func deleteOffline() async throws {
+        let (controller, _) = try await signedIn(
+            ["POST /api/account/delete": Routes.fail(.notConnectedToInternet)])
+        await #expect(throws: AccountDeletionFailure(.failed, AccountDeletionFailure.offlineMessage)) {
+            try await controller.deleteAccount(password: "correct horse")
+        }
+        #expect(controller.state.account?.scope == scope)
+    }
+
+    @Test("whenTheSessionHadEnded_AuthController_ShouldSignOutAsExpiredAndKeepLocalData")
+    func deleteExpired() async throws {
+        let localData = FakeLocalData()
+        let (controller, _) = try await signedIn(
+            ["POST /api/account/delete": Routes.json(401, #"{"error":"Unauthorized"}"#)], localData: localData)
+        await #expect(throws: AccountDeletionFailure.self) {
+            try await controller.deleteAccount(password: "correct horse")
+        }
+        #expect(controller.state == .signedOut(.sessionExpired(email: email)))
+        #expect(!localData.log.all.contains("remove \(email)"))
+    }
+
+    @Test("whenLocalDataCannotBeRemovedAfterDeletion_AuthController_ShouldOfferToRemoveItAgain")
+    func deleteRemovalFails() async throws {
+        let localData = FakeLocalData()
+        let (controller, _) = try await signedIn(
+            ["POST /api/account/delete": Routes.json(#"{"ok":true}"#)], localData: localData)
+        localData.removeError.withLock { $0 = CocoaError(.fileWriteUnknown) }
+        try await controller.deleteAccount(password: "correct horse")
+        #expect(controller.state == .signedOut(.accountDeleted))
+        #expect(controller.unremovedLocalData == scope)
+    }
 }

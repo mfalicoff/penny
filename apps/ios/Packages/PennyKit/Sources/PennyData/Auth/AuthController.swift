@@ -448,6 +448,56 @@ public final class AuthController {
         try await signOut()
     }
 
+    /// MAZ-152: deletes the signed-in account on the server (`POST /api/account/delete`), then
+    /// signs this device out the way sign-out does: the push registration, the Keychain session
+    /// and the account's local ledger, offline queue and drafts go. The widgets and the receipt
+    /// and export files follow from the signed-out state (`AuthGate`). Sign-in then says the
+    /// account was deleted.
+    ///
+    /// Saves are held while the server decides (`AccountLocalData.beginRemoval`). When it refuses
+    /// (a wrong password, a household balance to settle) nothing changes and saves resume.
+    ///
+    /// - Parameter password: the password of a password account; nil for one that signs in with
+    ///   a provider, whose session confirms.
+    public func deleteAccount(password: String?) async throws(AccountDeletionFailure) {
+        await finishEmailMigration()
+        guard case .signedIn(let account) = state, let client = try? signedInClient(account) else {
+            throw AccountDeletionFailure(.notSignedIn, "Sign in to delete your account.")
+        }
+        if let password, password.isEmpty {
+            throw AccountDeletionFailure(.wrongPassword, AccountDeletionFailure.enterPasswordMessage)
+        }
+        _ = await localData.beginRemoval(for: account.scope)
+        do {
+            try await client.deleteAccount(password: password)
+        } catch {
+            await localData.cancelRemoval(for: account.scope)
+            let failure = AccountDeletionFailure(error)
+            if failure.kind == .sessionEnded { sessionDidExpire(for: account) }
+            throw failure
+        }
+        // The account is gone on the server. Another request may have seen its session end
+        // meanwhile (`sessionExpired`); deletion still clears this device. Only another account
+        // signed in since keeps the state it has.
+        if let now = state.account, now.scope != account.scope {
+            try? await localData.removeLocalData(for: account.scope)
+            return
+        }
+        state = .signingOut(account)
+        bump()
+        // The session is gone, so this only forgets the stored registration.
+        await devices.unregister(using: client)
+        try? sessions.delete(server: account.server)
+        bump()
+        state = .signedOut(.accountDeleted)
+        do {
+            try await localData.removeLocalData(for: account.scope)
+        } catch {
+            await localData.cancelRemoval(for: account.scope)
+            if state.account?.scope != account.scope { setUnremovedLocalData(account.scope) }
+        }
+    }
+
     /// Waits for a launch-time email change to move the account's local data, so sign-out
     /// counts, syncs and removes the scope that data ends up under.
     private func finishEmailMigration() async {
