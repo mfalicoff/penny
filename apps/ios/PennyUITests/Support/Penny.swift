@@ -132,11 +132,30 @@ struct Penny {
 
     // MARK: Shell navigation
 
+    /// An iPad sidebar row or button, showing the sidebar first when it is hidden: in portrait
+    /// the shell starts with the detail alone (`ipad-home-portrait`), the sidebar behind the
+    /// system's toggle in the navigation bar.
+    @discardableResult
+    func sidebarRow(_ id: String) throws -> XCUIElement {
+        let row = element(id)
+        if row.waitForExistence(timeout: 3), row.isHittable { return row }
+        let toggle = app.navigationBars.buttons.matching(
+            NSPredicate(format: "identifier == 'ToggleSidebar' OR label IN {'Show Sidebar', 'Sidebar'}")
+        ).firstMatch
+        if toggle.waitForExistence(timeout: 5) { toggle.tap() }
+        let deadline = Date().addingTimeInterval(Penny.timeout)
+        while Date() < deadline {
+            if row.exists, row.isHittable { return row }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        }
+        throw UIExpectationFailed(description: "\(id) did not show in the sidebar")
+    }
+
     func openActivity() throws {
         if Device.isPad {
             // A tap that lands while the shell is still settling after sign-in is ignored, so it
             // is retried, as in `openTrips` and `openSettings`.
-            let row = try wait(for: AccessibilityID.Sidebar.item("activity"))
+            let row = try sidebarRow(AccessibilityID.Sidebar.item("activity"))
             for _ in 0..<3 {
                 row.tap()
                 if element(AccessibilityID.Screen.activity).waitForExistence(timeout: 10) { return }
@@ -160,7 +179,7 @@ struct Penny {
 
     func openHome() throws {
         if Device.isPad {
-            try tap(AccessibilityID.Sidebar.item("home"))
+            try sidebarRow(AccessibilityID.Sidebar.item("home")).tap()
             try wait(for: AccessibilityID.Screen.home)
         } else {
             try closeSettings()
@@ -172,7 +191,7 @@ struct Penny {
     /// Insights row on iPad (`home` and `ipad-home` cards, MAZ-254).
     func openInsights() throws {
         if Device.isPad {
-            try tap(AccessibilityID.Sidebar.item("insights"))
+            try sidebarRow(AccessibilityID.Sidebar.item("insights")).tap()
         } else {
             try tap(AccessibilityID.Home.insights)
         }
@@ -193,7 +212,7 @@ struct Penny {
         // (MAZ-82 saw it right after sign-in), so it is retried like the tab bar's.
         let button: XCUIElement
         if Device.isPad {
-            button = try wait(for: AccessibilityID.Sidebar.settings)
+            button = try sidebarRow(AccessibilityID.Sidebar.settings)
         } else {
             try openHome()
             button = try wait(for: AccessibilityID.Home.settings)
@@ -231,7 +250,7 @@ struct Penny {
     func openSettingsPage(_ route: String, screen: String) throws {
         // On iPad the Manage pages are sidebar rows only; the Settings list leaves them out.
         if Device.isPad, ["recurring", "accounts", "categories"].contains(route) {
-            try tap(AccessibilityID.Sidebar.item(route))
+            try sidebarRow(AccessibilityID.Sidebar.item(route)).tap()
             try wait(for: screen)
             return
         }

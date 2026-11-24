@@ -1,5 +1,6 @@
 import Foundation
 import PennyData
+import PennyDesign
 import PennyDomain
 import SwiftUI
 import Testing
@@ -220,6 +221,34 @@ struct OverviewViewTests {
         #expect(HomeDashboard.sideWidth(1000) == 301)
         #expect(HomeDashboard.sideWidth(760) == 260, "never narrower than a row needs")
         #expect(HomeDashboard.sideWidth(2000) == ((1200 - 20) / 3.15).rounded(), "the content is at most 1200pt")
+    }
+
+    @Test("whenThereAreMoreCategoriesThanRows_CategoryPanel_ShouldNameTheRestWithTheirTotal")
+    func categoryPanelMore() {
+        let six = ["groceries", "food", "home", "transport", "shopping", "fun"]
+        let few = six.enumerated().map {
+            entry("f\($0.offset)", "2026-11-0\($0.offset + 1)", 100, category: $0.element)
+        }
+        let fits = LedgerReport(ledger: Ledger(transactions: few)).month(MonthKey(today))
+        #expect(CategoryPanel.more(CategoryBreakdown(fits), currency: "CAD") == nil, "six rows fit")
+        // Eight categories: the two smallest (Health 0.50 and Other 0.25) are named in one line.
+        let many =
+            few + [entry("h", "2026-11-07", 50, category: "health"), entry("o", "2026-11-08", 25, category: "other")]
+        let summary = LedgerReport(ledger: Ledger(transactions: many)).month(MonthKey(today))
+        let more = CategoryPanel.more(CategoryBreakdown(summary), currency: "CAD")
+        #expect(more == "2 more · \(MoneyFormat.amount(75, currency: "CAD"))")
+    }
+
+    @Test("whenADayIsDrawn_DailySpendingPanel_ShouldHighlightBigDaysAndGreyOutDaysToCome")
+    func dailySpendingTone() throws {
+        let past = try #require(CalendarDate("2026-11-05"))
+        let later = try #require(CalendarDate("2026-11-20"))
+        #expect(DailySpendingPanel.tone(14_500, date: past, today: today, average: 6_278) == .high)
+        #expect(DailySpendingPanel.tone(5_500, date: past, today: today, average: 6_278) == .normal)
+        #expect(
+            DailySpendingPanel.tone(12_556, date: past, today: today, average: 6_278) == .normal, "twice is not over")
+        #expect(DailySpendingPanel.tone(0, date: later, today: today, average: 6_278) == .future)
+        #expect(DailySpendingPanel.tone(9_000, date: today, today: today, average: nil) == .normal, "no average yet")
     }
 
     @Test("whenNothingIsRecorded_Home_ShouldShowTheEmptyHome")

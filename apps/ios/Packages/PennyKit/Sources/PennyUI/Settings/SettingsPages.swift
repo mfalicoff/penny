@@ -210,19 +210,15 @@ struct CurrencySettingsView: View {
                             // `currency` card (MAZ-257): while locked, the current code carries a
                             // small lock and a grey check, and the others are dimmed.
                             HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(spacing: 4) {
-                                        Text(currency.rawValue).font(.body.weight(.semibold))
-                                        if locked, selected {
-                                            Image(systemName: "lock").font(.footnote)
-                                                .accessibilityLabel("Locked")
-                                        }
+                                // Each currency by its ISO code alone (owner's decision, 2026-11-24).
+                                HStack(spacing: 4) {
+                                    Text(currency.rawValue).font(.body.weight(.semibold))
+                                    if locked, selected {
+                                        Image(systemName: "lock").font(.footnote)
+                                            .accessibilityLabel("Locked")
                                     }
-                                    .foregroundStyle(locked && !selected ? PennyColor.tertiaryLabel : PennyColor.label)
-                                    Text(Self.name(currency)).font(.footnote)
-                                        .foregroundStyle(
-                                            locked && !selected ? PennyColor.tertiaryLabel : PennyColor.secondaryLabel)
                                 }
+                                .foregroundStyle(locked && !selected ? PennyColor.tertiaryLabel : PennyColor.label)
                                 Spacer()
                                 if selected {
                                     Image(systemName: "checkmark").font(.body.weight(.semibold))
@@ -233,7 +229,7 @@ struct CurrencySettingsView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        // The card's two-line rows, tighter than a list's default.
+                        // The card's rows, tighter than a list's default.
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .disabled(lockReason != nil && !selected)
                         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -259,10 +255,6 @@ struct CurrencySettingsView: View {
     /// Preferences footnote; any other reason (a household) as the rule gives it.
     static func footer(_ lockReason: String?) -> String? {
         lockReason == LedgerRuleError.currencyLocked.message ? CurrencyPolicy.settingsFootnote : lockReason
-    }
-
-    static func name(_ currency: Currency) -> String {
-        Locale.current.localizedString(forCurrencyCode: currency.rawValue) ?? currency.rawValue
     }
 
     private func choose(_ currency: Currency) {

@@ -185,7 +185,7 @@ extension Penny {
     /// The Shared tab (iPhone) or sidebar row (iPad).
     func openShared() throws {
         if Device.isPad {
-            let row = try wait(for: AccessibilityID.Sidebar.item("shared"))
+            let row = try sidebarRow(AccessibilityID.Sidebar.item("shared"))
             for _ in 0..<3 {
                 row.tap()
                 if element(AccessibilityID.Screen.shared).waitForExistence(timeout: 8) { return }

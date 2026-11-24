@@ -32,7 +32,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 | Households and shared expenses | `HouseholdJourneyTests` | Two users on the real API: invite, join, split, payment, stale edit, links, scanner without camera | — | Split amounts |
 | Trips | `TripJourneyTests` | Personal trip shared with earlier private expenses, splits, totals counted once, delete guard | — | Yes |
 | Receipts | `ReceiptJourneyTests` | Photo and PDF round trips (SHA-256), failures, oversized and renamed files, session end during upload | — | Bytes |
-| Reports | `OverviewJourneyTests` | Left to spend before Projected, money flow focus, the calendar sheet's day selection and Close, Insights from the flow card's pill, XXXL value lists | — | Demo data |
+| Reports | `OverviewJourneyTests` | Left to spend before Projected, money flow focus, the calendar sheet's day selection and Close, Insights from the flow card's pill, Show as a table, XXXL value lists | — | Demo data |
 | Settings and links | `SettingsJourneyTests`, `AppLockDelayTests`, `SmokeJourneyTests`, `HouseholdJourneyTests`, `NotificationJourneyTests`, `AddEntryOverSettingsTests` | Appearance kept across relaunch, app lock refused where the device cannot authenticate, Lock after delays, currency, `penny://join` links, notification navigation | App relaunch | Currency |
 | Upgrades | `LifecycleTests` | Seeded earlier-install state; `PENNY_UPGRADE_FROM_APP` installs a previous build first | Upgrade | — |
 
@@ -47,7 +47,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-home` | `OverviewJourneyTests`, `AccessibilityAuditTests`, `ScreenshotTests` | Left to spend before Projected; audit; light/dark × default/XL/RT/RM captures | Covered |
 | `iphone-home-overspent` | `CardCaptureTests` | A negative Left to spend with "… more went out than came in" under it (MAZ-254) | Covered |
 | `iphone-home-dark` | `ScreenshotTests`, `AccessibilityAuditTests` | Dark captures and dark/dark-XXXL audits | Covered (visual comparison: MAZ-122) |
-| `iphone-money-flow` | `OverviewJourneyTests`, `ScreenshotTests` | Focus/clear, value list at XXXL | Covered |
+| `iphone-money-flow` | `OverviewJourneyTests`, `ScreenshotTests`, `CardCaptureTests` | Focus/clear, the focus hint, Show as a table opening and closing the value list, value list at XXXL | Covered |
 | `iphone-insights` | `OverviewJourneyTests`, `AccessibilityAuditTests` | Category drill-down; audited in every variant | Covered |
 | `iphone-calendar` | `OverviewJourneyTests`, `ScreenshotTests` | The calendar sheet over Home: day selection, Today, Close | Covered |
 | `iphone-activity` | `EntryJourneyTests`, `SearchJourneyTests`, `AccessibilityAuditTests` | Day rows, kind filters keep totals, server totals after each write | Covered |
@@ -144,7 +144,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-sync-failed` | `CardCaptureTests` | The amber "Couldn't sync · N changes waiting" banner with Retry while the ledger answers 503; the changes stay on the device | Partly: captured on its card; no journey test taps Retry while the server fails |
 | `iphone-shared-missing` | `CardCaptureTests` | The amber "Shared expenses may be missing" banner with Retry while the household projection answers 503 | Partly: captured on its card; no journey test taps Retry |
 | `iphone-demo` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `ipad-home-portrait` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `ipad-home-portrait` | `OverviewJourneyTests`, `CardCaptureTests` | iPad Home in portrait: the sidebar hidden, Settings in the toolbar, Daily spending beside By category (MAZ-259) | Covered on iPad runs |
 | `web-households` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-shared-list`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-shared-expense` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-shared-expense-detail`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-trip` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-trip-detail`; the browser journeys are MAZ-96 | Not applicable to native |
