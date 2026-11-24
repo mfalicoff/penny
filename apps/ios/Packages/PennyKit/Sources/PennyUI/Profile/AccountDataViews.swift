@@ -35,6 +35,7 @@ struct DeleteAccountView: View {
             Section {
                 ForEach(AccountDataText.deleted, id: \.text) { item in
                     DeletionItem(systemImage: item.systemImage, text: item.text)
+                        .listRowInsets(AccountDataText.itemInsets)
                 }
             } header: {
                 Text("Deleted from \(host)").cardSectionHeader()
@@ -45,6 +46,7 @@ struct DeleteAccountView: View {
                         systemImage: "house", text: "Shared expenses in \(AccountDataText.join(staying))",
                         detail: "Members keep them, and see you as “Former member”."
                     )
+                    .listRowInsets(AccountDataText.itemInsets)
                     .accessibilityIdentifier("deleteAccount.staysForOthers")
                 } header: {
                     Text("Stays for others").cardSectionHeader()
@@ -53,6 +55,7 @@ struct DeleteAccountView: View {
             if needsPassword {
                 Section {
                     passwordField
+                        .listRowInsets(EdgeInsets(top: 9, leading: 16, bottom: 9, trailing: 16))
                 } header: {
                     Text("Confirm").cardSectionHeader()
                 }
@@ -64,7 +67,9 @@ struct DeleteAccountView: View {
                             .font(.footnote)
                             .foregroundStyle(PennyColor.danger)
                             .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 16)
                             .accessibilityIdentifier("deleteAccount.error")
                     }
                     DeleteButton(busy: deleting, action: delete)
@@ -73,13 +78,17 @@ struct DeleteAccountView: View {
                     Text(AccountDataText.backups(policy: shell.auth?.server?.privacyPolicy))
                         .font(.footnote)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 16)
                 }
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 0, trailing: 0))
         }
         .insetGroupedList()
+        .listSectionSpacing(.compact)
+        .environment(\.defaultMinListRowHeight, 0)
         .contentMargins(.top, 4, for: .scrollContent)
         .background(PennyColor.background)
         .navigationTitle("Delete account")
@@ -141,7 +150,8 @@ struct DeleteAccountView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(PennyColor.secondaryLabel)
                 .accessibilityHidden(true)
-            SecureField("Your password", text: $password)
+            SecureField("", text: $password)
+                .accessibilityLabel("Your password")
                 .passwordEntry(new: false)
                 .submitLabel(.done)
                 .focused($passwordFocused)
@@ -149,7 +159,6 @@ struct DeleteAccountView: View {
                 .disabled(deleting)
                 .accessibilityIdentifier("deleteAccount.password")
         }
-        .padding(.vertical, 1)
     }
 
     private func delete() {
@@ -200,7 +209,6 @@ private struct DeletionItem: View {
             }
             .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
     }
 }
@@ -259,6 +267,7 @@ struct ExportAllView: View {
             }
         }
         .insetGroupedList()
+        .listSectionSpacing(.compact)
         .contentMargins(.top, 4, for: .scrollContent)
         .background(PennyColor.background)
         .navigationTitle("Export your data")
@@ -373,7 +382,7 @@ private struct IncludedRow: View {
             }
             Spacer(minLength: 0)
             Image(systemName: "checkmark")
-                .font(.callout.weight(.semibold))
+                .font(.body.weight(.light))
                 .foregroundStyle(PennyColor.secondaryLabel)
                 .accessibilityLabel("Included")
         }
@@ -434,6 +443,9 @@ enum AccountDataText {
         }
         return text
     }
+
+    /// The cards' 10pt-tall list lines (`.li`), tighter than a settings row.
+    static let itemInsets = EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
 
     /// "Apartment", "Apartment and Lisbon", "Apartment, Lisbon and Cottage".
     static func join(_ names: [String]) -> String {
