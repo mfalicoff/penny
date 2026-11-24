@@ -3,8 +3,9 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// The schedule form (`edit-schedule` card), as a sheet: what the schedule records (kind, name,
-/// amount and your share), its category and account, the next date and how often it repeats.
+/// The schedule form (`schedule-form` card, MAZ-257), as a sheet: what the schedule records (kind,
+/// then name, amount and your share in one group), its category (the category picker), account,
+/// next date and how often it repeats, then a note.
 /// Editing changes future occurrences only; entries it already recorded keep their details. A
 /// new schedule records its first date and repeats from there. A new account or category can
 /// be created inline without losing this draft. A failed save keeps the draft and the reason.
@@ -13,7 +14,7 @@ struct ScheduleFormSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model: ScheduleFormModel
     @State private var addingAccount = false
-    @State private var addingCategory = false
+    @State private var pickingCategory = false
 
     init(rule: RecurringRule) {
         _model = State(initialValue: ScheduleFormModel(rule: rule))
@@ -45,11 +46,6 @@ struct ScheduleFormSheet: View {
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     .accessibilityIdentifier("scheduleForm.kind")
                 }
-                CardSection("Name") {
-                    TextField("Rent, Payday, Streaming", text: $model.draft.title)
-                        .accessibilityLabel("Name")
-                        .accessibilityIdentifier("scheduleForm.title")
-                }
                 amountSection
                 detailsSection(ledger)
                 CardSection("Note") {
@@ -60,6 +56,10 @@ struct ScheduleFormSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            // The segmented control sits right under the bar, as on the card.
+            .contentMargins(.top, 0, for: .scrollContent)
+            .scrollDismissesKeyboard(.interactively)
+            .scheduleSectionSpacing()
             .background(PennyColor.background)
             .disabled(model.isSaving)
             .navigationTitle(model.title)
@@ -79,24 +79,37 @@ struct ScheduleFormSheet: View {
             .sheet(isPresented: $addingAccount) {
                 AccountFormSheet { model.accountCreated($0) }.environment(shell)
             }
-            .sheet(isPresented: $addingCategory) {
-                CategoryFormSheet(kind: model.draft.kind, lockKind: true) { model.categoryCreated($0) }.environment(
-                    shell)
+            .sheet(isPresented: $pickingCategory) {
+                EntryCategoryPickerSheet(
+                    kind: model.draft.kind, selection: $model.draft.categoryId, ledger: ledger,
+                    editCategories: { pickingCategory = false })
             }
             .pennySolidBars()
         }
         .tint(PennyColor.tint)
+        .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(model.isSaving)
         .accessibilityIdentifier("screen.scheduleForm")
     }
 
+    /// The card's first group: Name and Amount as labelled rows with the value on the right, then
+    /// Your share for an expense.
     private var amountSection: some View {
         Section {
-            TextField("0.00", text: $model.draft.amount)
-                .scheduleMoneyEntry()
-                .monospacedDigit()
-                .accessibilityLabel("Amount")
-                .accessibilityIdentifier("scheduleForm.amount")
+            LabeledContent("Name") {
+                TextField("Rent, Payday, Streaming", text: $model.draft.title)
+                    .multilineTextAlignment(.trailing)
+                    .accessibilityLabel("Name")
+                    .accessibilityIdentifier("scheduleForm.title")
+            }
+            LabeledContent("Amount") {
+                TextField("0.00", text: $model.draft.amount)
+                    .scheduleMoneyEntry()
+                    .monospacedDigit()
+                    .multilineTextAlignment(.trailing)
+                    .accessibilityLabel("Amount")
+                    .accessibilityIdentifier("scheduleForm.amount")
+            }
             if model.draft.kind == .expense {
                 Picker("Your share", selection: $model.draft.split) {
                     Text("All of it").tag(Money.SplitMode.full)
@@ -104,6 +117,7 @@ struct ScheduleFormSheet: View {
                     Text("An amount").tag(Money.SplitMode.amount)
                     Text("A percentage").tag(Money.SplitMode.percent)
                 }
+                .tint(PennyColor.secondaryLabel)
                 .accessibilityIdentifier("scheduleForm.split")
                 if model.draft.split != .full {
                     TextField(Self.sharePrompt(model.draft.split), text: $model.draft.shareInput)
@@ -112,37 +126,56 @@ struct ScheduleFormSheet: View {
                         .accessibilityIdentifier("scheduleForm.share")
                 }
             }
-        } header: {
-            Text("Amount").cardSectionHeader()
         } footer: {
-            if model.draft.kind == .expense, model.draft.split != .full {
-                Text("Reports count only your share.")
-            }
+            if model.draft.kind == .expense { Text("Reports count only your share.") }
         }
     }
 
     private func detailsSection(_ ledger: Ledger) -> some View {
         let categories = ledger.categories.filter { $0.kind == model.draft.kind }
+        let category = categories.first { $0.id == model.draft.categoryId }
         return Section {
-            Picker("Category", selection: $model.draft.categoryId) {
-                if !categories.contains(where: { $0.id == model.draft.categoryId }) {
-                    Text("Choose").tag(model.draft.categoryId)
+            // The card's Category row: the category's tile and name, opening the category picker
+            // (Most used, every category and New, so the draft stays).
+            Button {
+                pickingCategory = true
+            } label: {
+                HStack(spacing: 8) {
+                    Text("Category").foregroundStyle(PennyColor.label)
+                    Spacer()
+                    if let category {
+                        Image(systemName: EntryText.tileSymbol(model.draft.kind, category: category))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 26, height: 26)
+                            .background(
+                                EntryText.tileColor(model.draft.kind, category: category, id: category.id),
+                                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            )
+                            .accessibilityHidden(true)
+                    }
+                    Text(category?.name ?? "Choose").foregroundStyle(PennyColor.secondaryLabel)
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                        .foregroundStyle(PennyColor.tertiaryLabel)
+                        .accessibilityHidden(true)
                 }
-                ForEach(categories, id: \.id) { Text($0.name).tag($0.id) }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Category, \(category?.name ?? "none")")
             .accessibilityIdentifier("scheduleForm.category")
-            Button("New category…", systemImage: "plus") { addingCategory = true }
-                .accessibilityIdentifier("scheduleForm.newCategory")
-            Picker("Account", selection: $model.draft.accountId) {
-                Text("None").tag(String?.none)
+            // The card's Account menu; New account… is its last item, so the draft stays.
+            Picker("Account", selection: accountChoice) {
+                Text("None").tag(AccountChoice.account(nil))
                 if let id = model.draft.accountId, ledger.account(id: id) == nil {
-                    Text("Removed account").tag(String?.some(id))
+                    Text("Removed account").tag(AccountChoice.account(id))
                 }
-                ForEach(ledger.accounts, id: \.id) { Text($0.name).tag(String?.some($0.id)) }
+                ForEach(ledger.accounts, id: \.id) { Text($0.name).tag(AccountChoice.account($0.id)) }
+                Divider()
+                Label("New account…", systemImage: "plus").tag(AccountChoice.new)
             }
+            .tint(PennyColor.secondaryLabel)
             .accessibilityIdentifier("scheduleForm.account")
-            Button("New account…", systemImage: "plus") { addingAccount = true }
-                .accessibilityIdentifier("scheduleForm.newAccount")
             DatePicker(
                 model.isNew ? "First date" : "Next date",
                 selection: Binding(
@@ -158,6 +191,7 @@ struct ScheduleFormSheet: View {
             ) {
                 ForEach(RecurrenceFrequency.allCases, id: \.self) { Text(ScheduleText.frequency($0)).tag($0) }
             }
+            .tint(PennyColor.secondaryLabel)
             .accessibilityIdentifier("scheduleForm.frequency")
         } header: {
             Text("Schedule").cardSectionHeader()
@@ -168,6 +202,22 @@ struct ScheduleFormSheet: View {
                         + "shorter months use their last day."
                     : "Changes apply to future occurrences. Recorded entries keep their original details.")
         }
+    }
+
+    private enum AccountChoice: Hashable {
+        case account(String?)
+        case new
+    }
+
+    private var accountChoice: Binding<AccountChoice> {
+        Binding(
+            get: { .account(model.draft.accountId) },
+            set: { choice in
+                switch choice {
+                case .account(let id): model.draft.accountId = id
+                case .new: addingAccount = true
+                }
+            })
     }
 
     static func sharePrompt(_ mode: Money.SplitMode) -> String {
@@ -188,6 +238,15 @@ struct ScheduleFormSheet: View {
 }
 
 extension View {
+    /// The card's compact gaps between groups (iOS only; the host tests build for macOS).
+    fileprivate func scheduleSectionSpacing() -> some View {
+        #if os(iOS)
+            listSectionSpacing(.compact)
+        #else
+            self
+        #endif
+    }
+
     /// A money field: the decimal keypad on iOS.
     func scheduleMoneyEntry() -> some View {
         #if os(iOS)

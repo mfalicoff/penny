@@ -272,7 +272,7 @@
     {
       "id": "iphone-appearance",
       "source": "docs/design/penny-ios/iphone/appearance.html",
-      "sourceSha256": "0119634845ed58492a4c76fb203a5edcfb02c66ffdf74a0e642bde5e3b5cb604",
+      "sourceSha256": "9e36aecfbe212e9284c71e6a8d058202dafcd503b05bcba93f9a60c1098bbc2d",
       "viewport": {
         "w": 482,
         "h": 954
@@ -281,12 +281,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-appearance.light.png",
-          "sha256": "ed9fbfa76e8c67772e656fb69bebd0e1dd8de5261d4cc09bc65d8cb6242e77a4"
+          "sha256": "446ebd988b04f26824de9ce76c9d4b02e49b851608b1c6055842c3279bfb7632"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-appearance.dark.png",
-          "sha256": "cdccf3dc9ed2663d350ea223c64a057ee9dc7bd5828b0154b996177e0be19f7c"
+          "sha256": "6d7704c9080796d0fbd883e0420269cd7775578bfca5249a6ad027cfccf7392a"
         }
       ]
     },
@@ -314,7 +314,7 @@
     {
       "id": "iphone-categories",
       "source": "docs/design/penny-ios/iphone/categories.html",
-      "sourceSha256": "4421bbd8f4cce37facc4fe1de6c50b84c26ba59ed75db2e926a20eaa1e5a2a2a",
+      "sourceSha256": "5d7e6681f977edb8d0616cecf878199b3f37ec3ebd278b17c35a1dce1ab1f992",
       "viewport": {
         "w": 482,
         "h": 954
@@ -323,12 +323,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-categories.light.png",
-          "sha256": "44702abea2b8f5e0b11f6c80b350d2008307eb42562fbd5109075c20fba2d3e2"
+          "sha256": "befa11a455c477b92bf681404a6d81a6b86e398290e7e76ff90eaebfd2bc3bb7"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-categories.dark.png",
-          "sha256": "fd31245db4bfe3c20479743cd7bf736904f0b0e9a667939891a7ffa7a29d23bd"
+          "sha256": "9a11dce5a4451a2c6a2dac3ae0d00a5d2dc0987a3f6ae9fb582dc8a899a7cafe"
         }
       ]
     },
@@ -1648,7 +1648,7 @@
     {
       "id": "iphone-sign-out-plain",
       "source": "docs/design/penny-ios/iphone/sign-out-plain.html",
-      "sourceSha256": "eff676d1d421dd008a196f6bb85273d5aba11106f7dde4385cb63f95f5d11054",
+      "sourceSha256": "bce81298713dbb6ff08fe52e3b081148a000bff6319c238ab0e05ee12a6ec053",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1657,19 +1657,19 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out-plain.light.png",
-          "sha256": "10a20c70937f793913544e01f6d1009262ec70bd17d15c297955eb9e5e56b934"
+          "sha256": "842b30caafe2f15a80f2e633269588bd05ae672704ddec7343845f06f0d0bc42"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-out-plain.dark.png",
-          "sha256": "8ae2fca53bb979ea52c5e92c3dcd9f0afd6316edff7568b5974b742e2a8a8598"
+          "sha256": "f8bd80de2941cb3a68c398b343c8d45857b645e199c151e43c95c925ac159713"
         }
       ]
     },
     {
       "id": "iphone-sign-out",
       "source": "docs/design/penny-ios/iphone/sign-out.html",
-      "sourceSha256": "a7b9d0662d99280d516d45cd02db1498d1608176678c49914af204f3eb6b3c2c",
+      "sourceSha256": "08f161495b1fe498476cad064c7a452a43aa67ea389f68e2a2c174bb3cbb7519",
       "viewport": {
         "w": 482,
         "h": 954
@@ -1678,12 +1678,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out.light.png",
-          "sha256": "018b3ef18ec4a9d5a9166c7d0bb8a66792ce31670d6654bcc850f4fcac1f18c4"
+          "sha256": "8758408eb0163d0b883427a515fda66bccb2e6e90352bf4992e45008ea1dd4ed"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-sign-out.dark.png",
-          "sha256": "0ea6a5fae2cd099389be3db0756d691078e152362ba6a99980fc1eea777a3368"
+          "sha256": "b7d2d10d48251584a3512f74e9bfe96b9ca7a9d7cf11680b0e5db001cb86d73e"
         }
       ]
     },
@@ -2131,7 +2131,7 @@
     {
       "id": "ipad-settings",
       "source": "docs/design/penny-ios/ipad/settings.html",
-      "sourceSha256": "dbd3d6672477326fc5722b4bb47ac33b9ef51fd158ddeab2cd83ee74cf3e5987",
+      "sourceSha256": "b8a0e0c71da817ce7bb2749949b0455aef90c5d5052d2fb21cb54c285ee205be",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -2140,12 +2140,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-settings.light.png",
-          "sha256": "8c944069c36e070aa4e2beaafadbadf4d6dfb03b0e5ac4460ffc40f88182e5af"
+          "sha256": "8300e03b3ef62fc4da431a7be42f854708a56710c16dff7c4e1cff5885c81526"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-settings.dark.png",
-          "sha256": "66a5285e78538784a7cdd9c79f0aaa1cfedcbb40df97bee71a8776ff4cfb3ac7"
+          "sha256": "6ad6d455021f8c4609cb1918cd4c02ae14b8225c3e4ec8fe859d9727bb338cc6"
         }
       ]
     },

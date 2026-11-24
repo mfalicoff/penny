@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "eebdaf6b70231cf5d0f7aeb76fb6f7799cd4ba677abfc7d03c9df45ecff4b0ac"
+      "sha256": "bc4b464bf1b43543070f37d1a9bfff322ec4d47de60b3888fc523d53c5d8dc22"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "96f0d164abb0e4495a72f3025c2e382ba23a93a1488cc34c4fe6d447660c1ccd"
+      "sha256": "557718e45b4991c0f433d2cfaa1782cfca9e53db65a7506e387afd010aed68f0"
     }
   ],
   "tokens": {
@@ -1202,7 +1202,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/categories.html",
-      "sha256": "4421bbd8f4cce37facc4fe1de6c50b84c26ba59ed75db2e926a20eaa1e5a2a2a",
+      "sha256": "5d7e6681f977edb8d0616cecf878199b3f37ec3ebd278b17c35a1dce1ab1f992",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "route": "/categories",
@@ -1248,7 +1248,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/appearance.html",
-      "sha256": "0119634845ed58492a4c76fb203a5edcfb02c66ffdf74a0e642bde5e3b5cb604",
+      "sha256": "9e36aecfbe212e9284c71e6a8d058202dafcd503b05bcba93f9a60c1098bbc2d",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
@@ -1481,7 +1481,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/sign-out.html",
-      "sha256": "a7b9d0662d99280d516d45cd02db1498d1608176678c49914af204f3eb6b3c2c",
+      "sha256": "08f161495b1fe498476cad064c7a452a43aa67ea389f68e2a2c174bb3cbb7519",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",
@@ -1504,7 +1504,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/sign-out-plain.html",
-      "sha256": "eff676d1d421dd008a196f6bb85273d5aba11106f7dde4385cb63f95f5d11054",
+      "sha256": "bce81298713dbb6ff08fe52e3b081148a000bff6319c238ab0e05ee12a6ec053",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",
@@ -2565,7 +2565,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/settings.html",
-      "sha256": "dbd3d6672477326fc5722b4bb47ac33b9ef51fd158ddeab2cd83ee74cf3e5987",
+      "sha256": "b8a0e0c71da817ce7bb2749949b0455aef90c5d5052d2fb21cb54c285ee205be",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",

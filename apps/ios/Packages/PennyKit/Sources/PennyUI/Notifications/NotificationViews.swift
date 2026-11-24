@@ -12,18 +12,19 @@ enum NotificationText {
         "Penny tells you when someone in your household adds or changes a shared expense or records a "
         + "reimbursement. Notifications never show names or amounts."
 
-    static func value(permission: PushPermission, status: PushRegistrationStatus) -> String {
+    /// The row's value, only when something needs the person: the cards draw the row with just
+    /// its chevron (`iphone-settings`, `ipad-settings`, MAZ-257).
+    static func value(permission: PushPermission, status: PushRegistrationStatus) -> String? {
         switch (permission, status) {
-        case (.notDetermined, _): "Off"
         case (.denied, _): "Off in Settings"
         case (.allowed, .unavailable): "Unavailable"
         case (.allowed, .failed): "Not connected"
-        case (.allowed, _): "On"
+        default: nil
         }
     }
 
-    /// The footer under the row: why, and what to do when something is wrong.
-    static func footer(permission: PushPermission, status: PushRegistrationStatus) -> String {
+    /// Under Preferences when something is wrong: why, and what to do. Nil when all is well.
+    static func problem(permission: PushPermission, status: PushRegistrationStatus) -> String? {
         switch (permission, status) {
         case (.denied, _):
             "Notifications are off for Penny. Turn them on in iOS Settings to hear about household changes."
@@ -31,13 +32,14 @@ enum NotificationText {
             "This device couldn't set up notifications. Penny works without them and tries again next time."
         case (.allowed, .failed):
             "Your server didn't accept this device yet. Penny tries again when you come back."
-        default: explanation
+        default: nil
         }
     }
 }
 
-/// The Notifications row in Settings: asks for permission the first time, then opens Penny's
-/// page in iOS Settings, where notifications are turned on or off.
+/// The Notifications row under Preferences in Settings, with a chevron as on the cards: asks for
+/// permission the first time, then opens Penny's page in iOS Settings, where notifications are
+/// turned on or off.
 struct NotificationSettingsRow: View {
     let push: PushNotifications
     @Environment(\.openURL) private var openURL
@@ -54,8 +56,12 @@ struct NotificationSettingsRow: View {
                 Label("Notifications", systemImage: "bell")
                     .foregroundStyle(PennyColor.label)
                 Spacer()
-                Text(NotificationText.value(permission: push.permission, status: push.registrar.status))
-                    .foregroundStyle(PennyColor.secondaryLabel)
+                if let value = NotificationText.value(permission: push.permission, status: push.registrar.status) {
+                    Text(value).foregroundStyle(PennyColor.secondaryLabel)
+                }
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                    .foregroundStyle(PennyColor.tertiaryLabel)
+                    .accessibilityHidden(true)
             }
             .frame(minHeight: Metrics.minTouchTarget)
         }

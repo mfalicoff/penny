@@ -91,7 +91,8 @@ public final class ReceiptAttacher {
             guard entry.kind == .expense else { return .failure(.message("Only expenses can have a receipt.")) }
             let attached = ReceiptInboxRules.attaching(file, to: entry)
             let summary = ChangeSummary(
-                title: "Receipt attached", detail: entry.title, kind: .expense, categoryId: entry.categoryId)
+                title: "Receipt attached", detail: entry.title, kind: .expense, categoryId: entry.categoryId,
+                entryId: entry.id)
             switch await workspace.commit(.saveEntry(attached, original: entry), summary: summary) {
             case .success(let saved):
                 return .success(

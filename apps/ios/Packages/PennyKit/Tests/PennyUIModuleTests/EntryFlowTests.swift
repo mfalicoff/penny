@@ -193,6 +193,16 @@ struct EntryFlowTests {
         #expect(DeleteEntryConfirmation.message(lunch).contains("undo"))
     }
 
+    @Test("whenAnEntryIsSaved_EntrySummary_ShouldNameTheEntryHomeTintsAndNoneWhenDeleted")
+    func summaryEntry() {
+        // Home tints the saved entry's Recent row while the toast shows (iphone-saved-toast).
+        let ledger = Ledger(currency: .cad)
+        let lunch = entry("lunch")
+        #expect(EntrySummary.saved(lunch, isNew: true, ledger: ledger).entryId == lunch.id)
+        #expect(EntrySummary.saved(lunch, isNew: false, ledger: ledger).entryId == lunch.id)
+        #expect(EntrySummary.deleted(lunch, currency: "CAD").entryId == nil, "a deleted entry has no row to tint")
+    }
+
     @Test("whenAPeriodIsDescribed_ActivityPeriodText_ShouldNameItForTheEmptyState")
     func periodText() {
         let month = MonthKey(today)

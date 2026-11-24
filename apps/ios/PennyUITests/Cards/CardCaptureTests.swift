@@ -776,6 +776,91 @@ final class CardCaptureTests: CardTestCase {
         }
     }
 
+    // MARK: iPhone drafted cards (MAZ-238, matched in MAZ-257)
+
+    @MainActor
+    func test_whenSeeded_IphoneCurrency_ShouldBeCaptured() async throws {
+        try await card("iphone-currency") { card in
+            // The seeded ledger has entries, so the currency is locked, as on the card.
+            try card.penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
+            try card.penny.wait(for: AccessibilityID.Settings.currency("CAD"))
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneNotificationsPrompt_ShouldBeCaptured() async throws {
+        try await card("iphone-notifications-prompt") { card in
+            // A fresh simulator hasn't decided on notifications, so Shared offers them once.
+            try card.penny.openShared()
+            try card.penny.waitAfterRefresh(
+                for: AccessibilityID.Notifications.prompt, on: AccessibilityID.Screen.shared)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneScheduleForm_ShouldBeCaptured() async throws {
+        try await card("iphone-schedule-form") { card in
+            try card.penny.openSettingsPage("recurring", screen: AccessibilityID.Screen.recurring)
+            try card.penny.tap(AccessibilityID.Organize.addSchedule, opening: AccessibilityID.Screen.scheduleForm)
+            // The card's draft: a monthly Internet expense of $75.00, with the keyboard away. The
+            // decimal pad has no Return, so the name goes last and its Return puts the keyboard away.
+            try card.penny.type("75.00", into: "scheduleForm.amount")
+            try card.penny.type("Internet\n", into: "scheduleForm.title")
+            guard card.penny.app.keyboards.firstMatch.waitForNonExistence(timeout: 3) else {
+                throw UIExpectationFailed(description: "Return did not put the keyboard away")
+            }
+        }
+    }
+
+    @MainActor
+    func test_whenSignedOut_IphoneDemo_ShouldBeCaptured() async throws {
+        try await card("iphone-demo") { card in
+            // Sign-in's sample-data link opens Home in the demo, under its banner.
+            try card.penny.tap(AccessibilityID.Auth.tryDemo)
+            try card.penny.wait(for: "banner.demo", timeout: 30)
+            try card.penny.wait(for: AccessibilityID.Home.hero)
+        }
+    }
+
+    // MARK: Emailed receipts (MAZ-184): recorded as blocked until the seeds have an inbox
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptInbox_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-inbox") { card in try card.openReceiptInbox() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptInboxItem_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-inbox-item") { card in try card.openInboxItem() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptAttachFile_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-attach-file") { card in try card.openAttachSheet() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptAttachEntry_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-attach-entry") { card in try card.openAttachEntries() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptAttachConfirm_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-attach-confirm") { card in try card.openAttachConfirm() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptAttachedToast_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-attached-toast", freshSeedPerAppearance: true) { card in
+            try card.attachFromInbox()
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneReceiptEmailSettings_ShouldBeCaptured() async throws {
+        try await card("iphone-receipt-email-settings") { card in try card.openReceiptEmail() }
+    }
+
     // MARK: iPad
 
     @MainActor
@@ -827,6 +912,45 @@ final class CardCaptureTests: CardTestCase {
             try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
             try card.penny.wait(for: AccessibilityID.Profile.changePassword)
         }
+    }
+
+    // MARK: iPad emailed receipts (MAZ-184): recorded as blocked until the seeds have an inbox
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptInbox_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-inbox") { card in try card.openReceiptInbox() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptInboxItem_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-inbox-item") { card in try card.openInboxItem() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptAttachFile_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-attach-file") { card in try card.openAttachSheet() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptAttachEntry_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-attach-entry") { card in try card.openAttachEntries() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptAttachConfirm_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-attach-confirm") { card in try card.openAttachConfirm() }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptAttachedToast_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-attached-toast", freshSeedPerAppearance: true) { card in
+            try card.attachFromInbox()
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IpadReceiptEmailSettings_ShouldBeCaptured() async throws {
+        try await card("ipad-receipt-email-settings") { card in try card.openReceiptEmail() }
     }
 }
 
@@ -1067,5 +1191,86 @@ extension CardContext {
             captureNow()
         }
         try penny.waitForAbsence(of: AccessibilityID.Screen.editEntry, timeout: 20)
+    }
+}
+
+/// The emailed-receipt cards' steps (MAZ-184), shared by iPhone and iPad. Their states name the
+/// seeded inbox items (Acme Store, Mill St. Coffee), whose ids the server assigns, so rows are
+/// found by their identifier prefix and label.
+extension CardContext {
+    private typealias Inbox = AccessibilityID.ReceiptInbox
+
+    @MainActor
+    func openReceiptInbox() throws {
+        try penny.openSettings()
+        try penny.tap(Inbox.settingsRow)
+        try penny.wait(for: Inbox.inboxScreen, timeout: 20)
+    }
+
+    @MainActor
+    func openReceiptEmail() throws {
+        try penny.openSettings()
+        try penny.tap(AccessibilityID.Settings.row("receiptEmail"))
+        try penny.wait(for: Inbox.emailScreen, timeout: 20)
+        try penny.wait(for: Inbox.address)
+    }
+
+    /// Opens the inbox email whose row's label contains `sender`.
+    @MainActor
+    func openInboxItem(from sender: String = "Acme Store") throws {
+        try openReceiptInbox()
+        let row = app.buttons
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", Inbox.item(""), sender))
+            .firstMatch
+        guard row.waitForExistence(timeout: 20) else {
+            throw UIExpectationFailed(description: "the inbox has no email from \(sender)")
+        }
+        row.tap()
+        try penny.wait(for: Inbox.itemScreen, timeout: 20)
+    }
+
+    @MainActor
+    func openAttachSheet(from sender: String = "Acme Store") throws {
+        try openInboxItem(from: sender)
+        try penny.tap(Inbox.attach)
+        try penny.wait(for: Inbox.attachScreen, timeout: 20)
+    }
+
+    @MainActor
+    func openAttachEntries(from sender: String = "Acme Store") throws {
+        try openAttachSheet(from: sender)
+        try penny.tap(Inbox.attachNext)
+        try penny.wait(for: Inbox.suggested, timeout: 20)
+    }
+
+    /// The card's confirm step: Acme Store's file on the shared expense Printer ink.
+    @MainActor
+    func openAttachConfirm() throws {
+        try openAttachEntries()
+        try tapTarget(prefix: "shared-", label: "Printer ink")
+        try penny.wait(for: Inbox.confirm, timeout: 20)
+    }
+
+    /// Attaches Mill St. Coffee's receipt to Coffee at Mill St.: the inbox with View entry and Undo.
+    @MainActor
+    func attachFromInbox() throws {
+        try openAttachEntries(from: "Mill St. Coffee")
+        try tapTarget(prefix: "entry-", label: "Coffee")
+        try penny.tap(Inbox.confirm)
+        try penny.wait(for: Inbox.viewEntry, timeout: 20)
+    }
+
+    @MainActor
+    private func tapTarget(prefix: String, label: String) throws {
+        let target = app.buttons
+            .matching(
+                NSPredicate(
+                    format: "identifier BEGINSWITH %@ AND label CONTAINS %@", Inbox.target(prefix), label)
+            )
+            .firstMatch
+        guard target.waitForExistence(timeout: 20) else {
+            throw UIExpectationFailed(description: "the attach sheet offers no \(label)")
+        }
+        target.tap()
     }
 }

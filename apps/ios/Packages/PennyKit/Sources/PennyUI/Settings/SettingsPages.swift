@@ -201,38 +201,62 @@ struct CurrencySettingsView: View {
                 Section {
                     ForEach(CurrencyPolicy.options, id: \.self) { currency in
                         let selected = ledger.currency == currency
+                        let locked = lockReason != nil
                         Button {
                             choose(currency)
                         } label: {
+                            // `currency` card (MAZ-257): while locked, the current code carries a
+                            // small lock and a grey check, and the others are dimmed.
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(currency.rawValue).font(.body.weight(.semibold))
+                                    HStack(spacing: 4) {
+                                        Text(currency.rawValue).font(.body.weight(.semibold))
+                                        if locked, selected {
+                                            Image(systemName: "lock").font(.footnote)
+                                                .accessibilityLabel("Locked")
+                                        }
+                                    }
+                                    .foregroundStyle(locked && !selected ? PennyColor.tertiaryLabel : PennyColor.label)
                                     Text(Self.name(currency)).font(.footnote)
-                                        .foregroundStyle(PennyColor.secondaryLabel)
+                                        .foregroundStyle(
+                                            locked && !selected ? PennyColor.tertiaryLabel : PennyColor.secondaryLabel)
                                 }
                                 Spacer()
-                                if selected { Image(systemName: "checkmark").foregroundStyle(PennyColor.tint) }
+                                if selected {
+                                    Image(systemName: "checkmark").font(.body.weight(.semibold))
+                                        .foregroundStyle(locked ? PennyColor.tertiaryLabel : PennyColor.tint)
+                                }
                             }
                             .frame(minHeight: Metrics.minTouchTarget)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        // The card's two-line rows, tighter than a list's default.
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .disabled(lockReason != nil && !selected)
                         .accessibilityAddTraits(selected ? .isSelected : [])
                         .accessibilityIdentifier("currency.\(currency.rawValue)")
                     }
                 } footer: {
                     Text(
-                        lockReason
+                        Self.footer(lockReason)
                             ?? "Choose your currency before adding entries. One currency per account keeps your totals consistent."
                     )
                 }
             }
             .insetGroupedList()
+            // The list sits right under the bar, as on the card.
+            .contentMargins(.top, 8, for: .scrollContent)
         }
         .background(PennyColor.background)
         .navigationTitle("Currency")
         .accessibilityIdentifier("screen.currency")
+    }
+
+    /// The card's footer while the ledger rule locks the currency, the same sentence as Settings'
+    /// Preferences footnote; any other reason (a household) as the rule gives it.
+    static func footer(_ lockReason: String?) -> String? {
+        lockReason == LedgerRuleError.currencyLocked.message ? CurrencyPolicy.settingsFootnote : lockReason
     }
 
     static func name(_ currency: Currency) -> String {

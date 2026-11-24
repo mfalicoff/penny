@@ -76,7 +76,7 @@ export function AppearanceSettings() {
           description={
             desktop
               ? "Use solid surfaces instead of glass for the sidebar and toolbars."
-              : "Use solid surfaces instead of glass for the navigation and toolbars. Your device's own setting also applies."
+              : "Use solid navigation bars and controls instead of glass. Your device's own setting also covers the tab bar and the bars' buttons."
           }
           checked={reduceTransparency}
           onChange={(value) => {

@@ -39,7 +39,8 @@ struct CategoriesListView: View {
                 } header: {
                     Text(OrganizeText.count(categories.count, "category", "categories")).cardSectionHeader()
                 } footer: {
-                    Text("A category with entries or schedules can be renamed and restyled, but not removed.")
+                    // The card (owner decision on MAZ-257): Penny keeps no order; the shortcuts follow use.
+                    Text("Your three most used categories appear as shortcuts when you add an entry.")
                 }
             }
             .insetGroupedList()

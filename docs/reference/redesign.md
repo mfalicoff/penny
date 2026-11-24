@@ -72,7 +72,7 @@ The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF P
 
 The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios/shell.md). Adaptations from the cards:
 
-- **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
+- **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column, beside the sidebar, as `ipad-settings` draws them (checked in MAZ-257). In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
 - **Lock after** (Immediately, 1 minute, 5 minutes on `iphone-app-lock`) is MAZ-133 and not in this build; the lock applies immediately.
 - **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.
 - Screens owned by feature issues (households and other later work) show a named "not available yet" state, and every route still lands on its destination. Home, Insights, the money flow, the calendar and the iPad dashboard panels arrived with MAZ-77 (below). On the web, Home, Insights and the money flow arrived with MAZ-92.
@@ -113,11 +113,10 @@ Expected differences that need no entry: SF Pro and SF Symbols on iOS, Inter and
 
 ### Native adaptations (MAZ-122)
 
-- **Local-first saving.** A save is kept on the device first. A failed upload shows **Couldn't sync** with Retry, not **Couldn't save** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`).
+- **Local-first saving (MAZ-257, decided by the owner 2026-11-20, as on the web in MAZ-237).** A save is kept on the device first, so a failed upload is a failed sync: the amber **Couldn't sync · N changes waiting** banner with Retry and an amber **Waiting to sync** row, not the red **Couldn't save** with **Try again** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`).
 - **Names are emails.** Members carry only an email, so households show emails and initials from the email, as on the web.
-- **Settings** has no Notifications row: notifications follow the system permission, and the shared list asks for it once (**Hear about household changes**).
 - **Invite code on request (MAZ-256, decided by the owner 2026-11-20).** Under People, the creator's invite card shows **Create invite code** until asked, instead of the code `iphone-shared-people` draws, because a new code replaces the one already shared: opening People never makes one. Once asked, it shows the code with its countdown, Copy and Share, as on the card.
-- **Recurring subtitle spacing (MAZ-236, decided by the owner 2026-11-19).** Recurring keeps the system large title instead of redrawing it, so the subtitle ("Penny records these on their date.") sits about 20 points lower than on `iphone-recurring`: the list starts below the system's large-title area.
+- **Recurring and Accounts subtitle spacing (MAZ-236, decided by the owner 2026-11-19; Accounts in MAZ-257, 2026-11-22).** Recurring and Accounts keep the system large title instead of redrawing it, so the subtitle ("Penny records these on their date." on Recurring, "Labels for how you pay and get paid." on Accounts) sits about 20 points lower than on `iphone-recurring` and `iphone-accounts`: the list starts below the system's large-title area, the same system gap on both.
 - **Home's calendar and settings buttons (MAZ-254, decided by the owner 2026-11-20).** On iPhone, Home's calendar and settings are two buttons in the toolbar's trailing group, which iOS draws as one grouped Liquid Glass capsule, not the cards' two separate circles. This is the system's own toolbar grouping; Penny draws no capsule of its own.
 
 ### Web conventions (MAZ-227)

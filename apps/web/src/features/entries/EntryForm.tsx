@@ -184,7 +184,8 @@ function EntryForm({
   };
 
   const categories = frequentCategories(ledger, draft.kind);
-  const inline = inlineCategories(categories, draft.categoryId);
+  // The three most used categories, as the cards draw them and Manage › Categories says (MAZ-257).
+  const inline = inlineCategories(categories, draft.categoryId, 3);
   const preview = buildEntry(draft, ledger, base).built?.transaction;
   const futureNote = futureIncomeNote(draft);
   // Add entry can send a new expense to a household instead (not a personal trip's expense or an edit).
