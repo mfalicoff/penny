@@ -14,6 +14,11 @@ import { CategoryPickerDialog } from "../entries/pickers";
 import { AmountHero, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, useEntryLayout } from "../entries/EntryParts";
 import { HouseholdField, type EntrySeed, type HouseholdScope } from "../entries/scope";
 import { ReceiptField } from "../receipts/ReceiptField";
+import { receiptExists } from "../../api/receipts";
+
+/** The API's refusal of a receipt the household can't use (`SharedExpenseService.ReceiptUnavailable`). */
+export const RECEIPT_UNAVAILABLE = "Receipt is not available to this household.";
+export const RECEIPT_GONE_NOTICE = "The receipt was no longer on the server, so it was saved without it.";
 import { useLedgerWorkspace } from "../organize/workspace";
 import type { HouseholdView } from "./context";
 import { useLedgerChoices, type LedgerAccountChoice } from "./choices";
@@ -224,23 +229,40 @@ export function ExpenseFormDialog({
   const save = useMutation({
     mutationKey: ["households", "expense", "save"],
     mutationFn: async ({ input, date, repeat, active, revision: base }: { input: Base; date: string; repeat: Repeat; active: boolean; revision: number }) => {
-      if (target.kind === "edit") return updateExpense(view.householdId, target.expense.id, { ...input, date, revision: base });
-      if (target.kind === "rule") {
-        return updateRule(view.householdId, target.rule.id, { ...input, nextDate: date, frequency: repeat === "none" ? target.rule.frequency : repeat, active, revision: base });
+      const send = (body: Base) => {
+        if (target.kind === "edit") return updateExpense(view.householdId, target.expense.id, { ...body, date, revision: base });
+        if (target.kind === "rule") {
+          return updateRule(view.householdId, target.rule.id, { ...body, nextDate: date, frequency: repeat === "none" ? target.rule.frequency : repeat, active, revision: base });
+        }
+        if (repeat !== "none") return createRule(view.householdId, { ...body, nextDate: date, frequency: repeat });
+        return createExpense(view.householdId, { ...body, date });
+      };
+      try {
+        await send(input);
+        return { receiptDropped: false };
+      } catch (error) {
+        // A receipt kept in a draft longer than the server keeps unlinked uploads was cleaned up
+        // (MAZ-199): save without it and say so. Any other answer, or a check that fails, keeps the refusal.
+        const receiptId = input.receiptId;
+        if (!receiptId || !(error instanceof ApiError) || error.status !== 400 || error.message !== RECEIPT_UNAVAILABLE) throw error;
+        if (await receiptExists(receiptId).catch(() => true)) throw error;
+        const rest = { ...input };
+        delete rest.receiptId;
+        await send(rest);
+        set("receipt", null);
+        return { receiptDropped: true };
       }
-      if (repeat !== "none") return createRule(view.householdId, { ...input, nextDate: date, frequency: repeat });
-      return createExpense(view.householdId, { ...input, date });
     },
-    onSuccess: async () => {
+    onSuccess: async ({ receiptDropped }) => {
       await refreshHousehold(queryClient, email, view.householdId);
       const month = draft.date.slice(0, 7);
-      toast.show(
+      const saved =
         target.kind === "new"
           ? draft.repeat === "none"
             ? { title: `${draft.title.trim()} added`, detail: month === view.month ? "Everyone in the household sees it." : `Added to ${monthLabel(month)}.` }
             : { title: `${draft.title.trim()} repeats ${draft.repeat}`, detail: "Penny adds each occurrence on its date." }
-          : { title: "Changes saved", detail: "Everyone sees the update." },
-      );
+          : { title: "Changes saved", detail: "Everyone sees the update." };
+      toast.show(receiptDropped ? { ...saved, detail: RECEIPT_GONE_NOTICE } : saved);
       onClose();
     },
     onError: async (error) => {

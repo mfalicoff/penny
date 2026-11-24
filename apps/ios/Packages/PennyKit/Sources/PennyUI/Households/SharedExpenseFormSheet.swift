@@ -290,6 +290,7 @@ private struct SharedExpenseForm: View {
     private func save() async {
         focus = nil
         if await form.save() != nil {
+            if let notice = form.notice { shell.notify("Expense saved", detail: notice) }
             saved = true
             restored = false
             close()

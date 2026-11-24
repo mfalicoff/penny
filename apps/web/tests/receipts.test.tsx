@@ -10,6 +10,7 @@ import {
   ReceiptFileError,
   receiptMimeOf,
   receiptDisposition,
+  receiptExists,
   receiptName,
   uploadReceipt,
   UPLOAD_TIMEOUT_MS,
@@ -229,6 +230,19 @@ describe("uploadReceipt", () => {
     expect(request?.timeout).toBe(UPLOAD_TIMEOUT_MS);
     request?.ontimeout?.();
     await expect(pending).rejects.toMatchObject({ status: 0, message: RECEIPT_MESSAGES.offline });
+  });
+});
+
+describe("receiptExists", () => {
+  it("answers from the status alone: 404 is gone, anything else unexpected is an error", async () => {
+    stubServer((url) => {
+      if (url === "/api/receipts/kept") return new Response("bytes", { status: 200, headers: { "Content-Type": "image/jpeg" } });
+      if (url === "/api/receipts/busy") return json({ error: "Busy." }, 503);
+      return undefined;
+    });
+    await expect(receiptExists("kept")).resolves.toBe(true);
+    await expect(receiptExists("expired")).resolves.toBe(false);
+    await expect(receiptExists("busy")).rejects.toMatchObject({ status: 503 });
   });
 });
 
@@ -529,5 +543,58 @@ describe("receipts on shared expenses", () => {
     expect(await screen.findByText("Groceries run added")).toBeInTheDocument();
     const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
     expect(bodyOf(post)).toMatchObject({ title: "Groceries run", receiptId: "rs1" });
+  });
+
+  /** A new shared expense with an uploaded receipt, saved against a server that refuses that receipt (MAZ-199). */
+  async function saveWithRefusedReceipt(receiptAnswer: () => Response) {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-20T12:00:00Z"));
+    const households = createHouseholdServer();
+    const created = households.handle(ALEX, "POST", "/api/households", { name: "Maison", currency: "CAD" }).body as { household: { id: string } };
+    const id = created.household.id;
+    const fetchMock = stubServer((url, init) => {
+      if (url === "/api/receipts" && init?.method === "POST") return json({ id: "rs1", name: "groceries.png", mime: "image/png", uri: "/api/receipts/rs1" }, 201);
+      if (url === "/api/receipts/rs1") return receiptAnswer();
+      if (!url.startsWith("/api/households") && url !== "/api/ledger") return undefined;
+      const body = (bodyOf(init) ?? {}) as Record<string, unknown>;
+      if (url === `/api/households/${id}/expenses` && init?.method === "POST" && body.receiptId) return json({ error: "Receipt is not available to this household." }, 400);
+      const result = households.handle(ALEX, init?.method ?? "GET", url, body);
+      return json(result.body, result.status);
+    });
+    const user = userEvent.setup({ applyAccept: false });
+    renderApp(`/households/${id}`);
+    await user.click(await screen.findByRole("button", { name: "Shared expense" }));
+    const form = await screen.findByRole("dialog", { name: "New expense" });
+    await user.type(within(form).getByLabelText("Title"), "Groceries run");
+    await user.type(within(form).getByLabelText("Amount (CAD)"), "30");
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, note/ }));
+    await user.upload(within(form).getByLabelText("Receipt file"), file(PNG_BYTES, "groceries.png", "image/png"));
+    expect(await within(form).findByText("groceries.png")).toBeInTheDocument();
+    await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
+    const posts = () => callsTo(fetchMock, `/api/households/${id}/expenses`).filter((init) => init?.method === "POST").map(bodyOf);
+    return { form, posts };
+  }
+
+  it("saves without a receipt the server already cleaned up and says so", async () => {
+    const { posts } = await saveWithRefusedReceipt(() => json({ error: "Receipt not found." }, 404));
+    expect(await screen.findByText("Groceries run added")).toBeInTheDocument();
+    expect(screen.getByText("The receipt was no longer on the server, so it was saved without it.")).toBeInTheDocument();
+    expect(posts()).toHaveLength(2);
+    expect(posts()[1]).not.toHaveProperty("receiptId");
+    expect(screen.queryByRole("dialog", { name: "New expense" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the refusal and the receipt when the receipt is still there", async () => {
+    const { form, posts } = await saveWithRefusedReceipt(() => new Response("bytes", { status: 200, headers: { "Content-Type": "image/png" } }));
+    expect(await within(form).findByText(/Receipt is not available to this household\./)).toBeInTheDocument();
+    expect(within(form).getByText("groceries.png")).toBeInTheDocument();
+    expect(posts()).toHaveLength(1);
+  });
+
+  it("keeps the refusal and the receipt when the check fails", async () => {
+    const { form, posts } = await saveWithRefusedReceipt(() => json({ error: "Busy." }, 503));
+    expect(await within(form).findByText(/Receipt is not available to this household\./)).toBeInTheDocument();
+    expect(within(form).getByText("groceries.png")).toBeInTheDocument();
+    expect(posts()).toHaveLength(1);
   });
 });

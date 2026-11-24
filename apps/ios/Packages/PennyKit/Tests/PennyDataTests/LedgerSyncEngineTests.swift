@@ -322,6 +322,66 @@ struct LedgerSyncEngineTests {
         #expect(await engine.state.pending.entryIDs == ["taxi"])
     }
 
+    // MARK: Receipts the server already cleaned up (MAZ-199)
+
+    func receipt(_ id: String) -> ReceiptReference {
+        ReceiptReference(id: id, name: "\(id).jpg", uri: "/api/receipts/\(id)", mime: "image/jpeg")
+    }
+
+    func entry(_ id: String, receipt receiptId: String) -> LedgerEntry {
+        var entry = Offline.entry(id, title: id)
+        entry.receipt = receipt(receiptId)
+        return entry
+    }
+
+    @Test("whenALinkedReceiptWasCleanedUp_Engine_ShouldDropTheLinkKeepTheEntryAndSync")
+    func deadReceiptDropped() async throws {
+        server.edit(Offline.alex) { $0.transactions.append(entry("kept", receipt: "held")) }
+        server.receipts.withLock { $0 = ["held", "fresh"] }
+        let engine = try await synced()
+        try await engine.commit(.saveEntry(entry("bakery", receipt: "expired")))
+        try await engine.commit(.saveEntry(entry("cafe", receipt: "fresh")))
+
+        #expect(await engine.sync(using: try Offline.client(server)) == .synced)
+
+        let saved = try #require(server.ledger(Offline.alex))
+        let byId = Dictionary(uniqueKeysWithValues: saved.transactions.map { ($0.id, $0) })
+        #expect(byId["bakery"] != nil)
+        #expect(byId["bakery"]?.receipt == nil)
+        #expect(byId["cafe"]?.receipt?.id == "fresh")
+        #expect(byId["kept"]?.receipt?.id == "held")
+        #expect(await engine.state.pending.entryIDs.isEmpty)
+        // Only receipts this device linked are checked, never one the server already holds.
+        let checks = server.log.all.filter { $0.hasPrefix("GET /api/receipts/") }.sorted()
+        #expect(checks == ["GET /api/receipts/expired", "GET /api/receipts/fresh"])
+    }
+
+    @Test("whenEveryLinkedReceiptIsStillThere_Engine_ShouldKeepTheRefusalAndTheLink")
+    func foreignReceiptKept() async throws {
+        let engine = try await synced()
+        try await engine.commit(.saveEntry(entry("bakery", receipt: "fresh")))
+        // The account can read the receipt, but its ledger still can't link it: nothing to drop.
+        server.receipts.withLock { $0 = [] }
+        server.readableReceipts.withLock { $0 = ["fresh"] }
+        let client = try Offline.client(server)
+        #expect(
+            await engine.sync(using: client)
+                == .failed(.rejected(message: "Receipt does not belong to this account.")))
+        #expect(await engine.state.snapshot?.local.transactions.first { $0.id == "bakery" }?.receipt?.id == "fresh")
+    }
+
+    @Test("whenTheReceiptCheckCannotReachTheServer_Engine_ShouldKeepTheLinkAndTryAgainLater")
+    func receiptCheckOffline() async throws {
+        server.receipts.withLock { $0 = [] }
+        let engine = try await synced()
+        try await engine.commit(.saveEntry(entry("bakery", receipt: "expired")))
+        server.fail("GET /api/receipts/expired", with: .offline)
+        #expect(await engine.sync(using: try Offline.client(server)) == .failed(.offline))
+        #expect(await engine.state.snapshot?.local.transactions.first { $0.id == "bakery" }?.receipt?.id == "expired")
+        #expect(await engine.sync(using: try Offline.client(server)) == .synced)
+        #expect(server.ledger(Offline.alex)?.transactions.first { $0.id == "bakery" }?.receipt == nil)
+    }
+
     @Test("whenTheServerSendsALedgerVersionOtherThanFour_Engine_ShouldWriteNothing", arguments: [1, 3, 5])
     func incompatibleServerData(version: Int) async throws {
         let engine = try await synced()

@@ -31,6 +31,13 @@ final class FakeLedgerServer: Sendable {
     private let gates = Mutex<[String: Gate]>([:])
     /// Runs before a PUT is checked, once per PUT, to simulate another device writing first.
     let beforePut = Mutex<[@Sendable () -> Void]>([])
+    /// Receipt uploads the server holds. Nil: every receipt is accepted. Otherwise a PUT that
+    /// links another is refused like `LedgerService.ForeignReceipt`, and `GET /api/receipts/{id}`
+    /// answers 404 for it (MAZ-199).
+    let receipts = Mutex<Set<String>?>(nil)
+    /// When set, the receipts `GET /api/receipts/{id}` serves instead of `receipts` (one the
+    /// account can read that its ledger still can't link).
+    let readableReceipts = Mutex<Set<String>?>(nil)
     let log = CallLog()
 
     init() {}
@@ -121,6 +128,11 @@ final class FakeLedgerServer: Sendable {
             guard let email = authorized(request) else { return Self.unauthorized }
             let body = try JSONDecoder().decode(LedgerSnapshot.self, from: request.httpBody ?? Data())
             if let race = beforePut.withLock({ $0.isEmpty ? nil : $0.removeFirst() }) { race() }
+            if let held = receipts.withLock({ $0 }),
+                body.ledger.transactions.contains(where: { $0.receipt.map { !held.contains($0.id) } ?? false })
+            {
+                return Self.json(400, #"{"error":"Receipt does not belong to this account."}"#)
+            }
             return accounts.withLock { accounts in
                 guard var account = accounts[email] else { return Self.unauthorized }
                 guard body.revision == account.revision else {
@@ -132,6 +144,13 @@ final class FakeLedgerServer: Sendable {
                 accounts[email] = account
                 return Self.snapshot(LedgerSnapshot(revision: account.revision, ledger: account.ledger))
             }
+        case let receipt where receipt.hasPrefix("GET /api/receipts/"):
+            guard authorized(request) != nil else { return Self.unauthorized }
+            let id = String(receipt.dropFirst("GET /api/receipts/".count))
+            guard (readableReceipts.withLock({ $0 }) ?? receipts.withLock({ $0 }))?.contains(id) ?? true else {
+                return Self.json(404, #"{"error":"Receipt not found."}"#)
+            }
+            return HTTPResult(status: 200, headers: ["content-type": "image/jpeg"], body: Data([0xFF, 0xD8, 0xFF]))
         default:
             return Self.json(404, #"{"error":"Not found."}"#)
         }
