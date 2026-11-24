@@ -1199,19 +1199,12 @@
       "id": "iphone-server-connect",
       "view": "server URL entry (environment API URL)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The Name, Version and Sign-in labels in the verified card use the label color; the card draws them grey",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          }
         ]
       },
       "web": {
