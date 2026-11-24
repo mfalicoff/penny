@@ -87,7 +87,7 @@ struct DeleteAccountView: View {
             .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 0, trailing: 0))
         }
         .insetGroupedList()
-        .listSectionSpacing(.compact)
+        .compactListSections()
         .environment(\.defaultMinListRowHeight, 0)
         .contentMargins(.top, 4, for: .scrollContent)
         .background(PennyColor.background)
@@ -267,7 +267,7 @@ struct ExportAllView: View {
             }
         }
         .insetGroupedList()
-        .listSectionSpacing(.compact)
+        .compactListSections()
         .contentMargins(.top, 4, for: .scrollContent)
         .background(PennyColor.background)
         .navigationTitle("Export your data")
@@ -451,5 +451,16 @@ enum AccountDataText {
     static func join(_ names: [String]) -> String {
         guard names.count > 1, let last = names.last else { return names.first ?? "" }
         return names.dropLast().joined(separator: ", ") + " and " + last
+    }
+}
+
+extension View {
+    /// The cards' tighter gaps between groups (iOS only; the host build has no section spacing).
+    fileprivate func compactListSections() -> some View {
+        #if os(iOS)
+            listSectionSpacing(.compact)
+        #else
+            self
+        #endif
     }
 }
