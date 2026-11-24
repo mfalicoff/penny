@@ -19,6 +19,7 @@
     ],
     "maximumTestExecutionTimeAllowance" : 600,
     "maximumTestRepetitions" : 2,
+    "preferredScreenCaptureFormat" : "screenshots",
     "systemAttachmentLifetime" : "deleteOnSuccess",
     "testRepetitionMode" : "retryOnFailure",
     "testTimeoutsEnabled" : true,
