@@ -116,6 +116,43 @@ public struct MonthTotalsFixture: Codable, Equatable, Sendable {
     }
 }
 
+/// shared-categories.json (MAZ-286): the category a shared expense counts under in the
+/// personal view.
+public struct SharedCategoriesFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    public var month: String
+    public var ledger: Ledger
+    public var projection: [Row]
+    public var expected: Expected
+
+    /// The household's copy of a category, sent by value.
+    public struct SharedCategory: Codable, Equatable, Sendable {
+        public var name: String
+        public var icon: String
+        public var color: String
+    }
+
+    /// A projected shared expense in the ledger's currency, recorded (not a preview).
+    public struct Row: Codable, Equatable, Sendable {
+        public var id: String
+        public var householdId: String
+        public var date: String
+        public var totalCents: Int64
+        public var shareCents: Int64
+        public var category: SharedCategory
+    }
+
+    public struct Expected: Codable, Equatable, Sendable {
+        /// Each projection row's id to its category id in the view.
+        public var categoryIds: [String: String]
+        /// The categories the view adds after the ledger's own, in order.
+        public var addedCategories: [Ledger.Category]
+        /// The month's recorded expense share per category id.
+        public var spending: [String: Int64]
+    }
+}
+
 /// shared-splits.json
 public struct SharedSplitsFixture: Codable, Equatable, Sendable {
     public var description: String

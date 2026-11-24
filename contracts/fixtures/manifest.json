@@ -156,6 +156,21 @@
       }
     },
     {
+      "file": "shared-categories.json",
+      "sha256": "97d225bad6dd5e18280d75a9dff0be7175024814511883cc6155ebb718590d6d",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "apps/web/tests/domain/golden-fixtures.test.ts"
+        ],
+        "csharp": "not applicable: shared expenses join the personal view on the client",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"
+        ]
+      }
+    },
+    {
       "file": "shared-splits.json",
       "sha256": "2ea29549afefd58953be727158af76790580010594afaa3535ae7182d3794ec5",
       "generatedBy": null,

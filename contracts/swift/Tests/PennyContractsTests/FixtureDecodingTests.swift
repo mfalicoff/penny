@@ -40,6 +40,9 @@ final class FixtureDecodingTests: XCTestCase {
         let totals = try Fixtures.decode(MonthTotalsFixture.self, from: "month-totals.json")
         XCTAssertTrue(totals.cases.allSatisfy { totals.ledgers[$0.ledger] != nil })
         XCTAssertTrue(totals.cases.contains { $0.clock != nil })
+        let shared = try Fixtures.decode(SharedCategoriesFixture.self, from: "shared-categories.json")
+        XCTAssertEqual(Set(shared.expected.categoryIds.keys), Set(shared.projection.map(\.id)))
+        XCTAssertTrue(shared.expected.addedCategories.allSatisfy { $0.kind == "expense" })
     }
 
     func testScenarioFixturesDecodeStrictlyAndAgree() throws {

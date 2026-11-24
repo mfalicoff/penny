@@ -166,6 +166,32 @@ describe("shared shares", () => {
     expect(report(ledger(), [other], [preview]).projected.expense).toBe(1600);
   });
 
+  it("counts a shared expense under the personal expense category of the same name (MAZ-286)", () => {
+    const base = ledger([entry("tennis", { total: 4000, share: 4000, categoryId: "sports" })]);
+    const value: Ledger = {
+      ...base,
+      categories: [
+        ...base.categories,
+        { id: "sports", name: "Sports", icon: "football-outline", color: "#3E8E5E", kind: "expense" },
+        { id: "gifts-in", name: "Gifts", icon: "gift-outline", color: "#5B7DB1", kind: "income" },
+      ],
+    };
+    const result = report(value, [
+      shared("ski", { shareCents: 6000, category: { name: "sports", icon: "trophy-outline", color: "#123456" } }),
+      shared("present", { shareCents: 2000, category: { name: "Gifts", icon: "gift-outline", color: "#5B7DB1" } }),
+    ]);
+    // One Sports row in By category and the flow; Gifts (only an income category) keeps its own row.
+    expect(result.spending.map((category) => [category.id, category.amount])).toEqual([
+      ["sports", 10000],
+      ["household-category:Gifts:gift-outline:#5B7DB1", 2000],
+    ]);
+    expect(result.flow.destinations.filter((node) => node.label === "Sports")).toHaveLength(1);
+    expect(categoryComparison(result.spending, []).map((row) => [row.name, row.current])).toEqual([
+      ["Sports", 10000],
+      ["Gifts", 2000],
+    ]);
+  });
+
   it("never changes the ledger it was given", () => {
     const original = ledger([entry("a")]);
     const copy = structuredClone(original);

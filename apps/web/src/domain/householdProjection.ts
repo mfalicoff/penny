@@ -12,6 +12,20 @@ export type ProjectedExpense = {
 
 export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string; scheduled?: boolean };
 
+const categoryKey = (name: string) => name.trim().toLowerCase();
+
+// The category a shared expense counts under in the personal view. A shared expense carries its
+// household's copy of the category by value, so it joins the person's own expense category with
+// the same name, compared trimmed and without case (icon and colour may differ): the first such
+// category in ledger order. With no match it keeps a category of its own,
+// `household-category:<name>:<icon>:<color>`. Income and investment categories never match: a
+// shared expense is an expense. `personal` is the ledger's own categories, not the view's.
+export function sharedCategoryId(personal: readonly Category[], category: ProjectedExpense["category"]): string {
+  const key = categoryKey(category.name);
+  const match = key ? personal.find((item) => item.kind === "expense" && categoryKey(item.name) === key) : undefined;
+  return match?.id ?? `household-category:${category.name}:${category.icon}:${category.color}`;
+}
+
 // A view of the private ledger. This must never be sent to the ledger snapshot API.
 export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpense[]): Ledger {
   const categories: Category[] = [...ledger.categories];
@@ -19,7 +33,7 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
   for (const item of projection) {
     // A household's currency matches its members' ledgers; a row in another currency is left out.
     if (item.householdCurrency !== ledger.currency) continue;
-    const categoryId = `household-category:${item.category.name}:${item.category.icon}:${item.category.color}`;
+    const categoryId = sharedCategoryId(ledger.categories, item.category);
     if (!categories.some((category) => category.id === categoryId)) {
       categories.push({ id: categoryId, kind: "expense", ...item.category });
     }
@@ -29,8 +43,11 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
       householdExpenseId: item.id,
       kind: "expense", title: item.title, date: item.date,
       total: item.totalCents, share: item.shareCents,
-      categoryId, note: item.note, accountId: item.accountId, receipt: item.receipt,
-      recurringId: item.recurringId, scheduled: item.scheduled,
+      categoryId, note: item.note,
+      ...(item.accountId !== undefined && { accountId: item.accountId }),
+      ...(item.receipt !== undefined && { receipt: item.receipt }),
+      ...(item.recurringId !== undefined && { recurringId: item.recurringId }),
+      ...(item.scheduled !== undefined && { scheduled: item.scheduled }),
     };
     transactions.push(shared);
   }
