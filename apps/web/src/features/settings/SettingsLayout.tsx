@@ -41,7 +41,7 @@ const THEME_NAMES: Record<Theme, string> = {
   system: "System",
 };
 
-type SectionPath = "/settings/profile" | "/settings/appearance" | "/settings/currency" | "/settings/receipt-email" | "/settings/server";
+type SectionPath = "/settings/profile" | "/settings/appearance" | "/settings/currency" | "/settings/receipt-email" | "/settings/server" | "/settings/export";
 
 /** Settings: the section list beside the open section (one URL per section, so Back works). */
 export function SettingsLayout() {
@@ -95,6 +95,7 @@ function SectionList({ layout }: { layout: SettingsLayoutKind }) {
           <Row to="/settings/currency" icon="cash" label="Currency" />
           {receiptEmail ? <Row to="/settings/receipt-email" icon="receipt" label="Receipt email" /> : null}
           <Row to="/settings/server" icon="server" label="Server & sync" />
+          {demo ? null : <Row to="/settings/export" icon="document-text" label="Export data" />}
           <li>{demo ? <LeaveDemo className="settings__link settings__link--danger" /> : <SignOutButton className="settings__link settings__link--danger" />}</li>
         </ul>
       </nav>

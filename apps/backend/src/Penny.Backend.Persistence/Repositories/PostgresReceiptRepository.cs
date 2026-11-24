@@ -86,6 +86,21 @@ public sealed class PostgresReceiptRepository(NpgsqlDataSource source, ReceiptFi
         }
     }
 
+    public async Task<IReadOnlyList<string>> ListOwnedAsync(
+        string userId,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        return await context
+            .Receipts.AsNoTracking()
+            .Where(receipt => receipt.UserId == userId)
+            .OrderBy(receipt => receipt.CreatedAt)
+            .ThenBy(receipt => receipt.Id)
+            .Select(receipt => receipt.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<string, StoredReceiptInfo>> DescribeAsync(
         string userId,
         IReadOnlyCollection<string> receiptIds,

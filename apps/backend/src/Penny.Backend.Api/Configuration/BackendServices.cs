@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
+using Penny.Backend.Api.Exports;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Api.Mail;
@@ -21,6 +22,7 @@ using Penny.Backend.Application.Abstractions.Profiles;
 using Penny.Backend.Application.Abstractions.Receipts;
 using Penny.Backend.Application.Abstractions.Search;
 using Penny.Backend.Application.Abstractions.Security;
+using Penny.Backend.Application.Accounts;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.InboundMail;
@@ -113,6 +115,13 @@ public static class BackendServices
         builder.Services.AddSingleton<ISharedExpenseRepository, PostgresSharedExpenseRepository>();
         builder.Services.AddSingleton<SharedExpenseService>();
         builder.Services.AddSingleton<SettlementService>();
+        // The full export and account deletion (MAZ-152).
+        builder.Services.AddSingleton<
+            IAccountDeletionRepository,
+            PostgresAccountDeletionRepository
+        >();
+        builder.Services.AddSingleton<AccountDeletionService>();
+        builder.Services.AddSingleton<AccountExport>();
         AddRecurrenceServices(builder.Services, RecurrenceOptions.Read(configuration));
         AddOidcServices(builder.Services, OidcOptions.Read(configuration), controls);
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));

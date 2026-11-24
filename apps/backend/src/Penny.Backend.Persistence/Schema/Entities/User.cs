@@ -30,4 +30,9 @@ public sealed class User
     // sign-in provider said so, or an operator marked it. Null while unverified; an email
     // change clears it.
     public DateTimeOffset? EmailVerifiedAt { get; set; }
+
+    // When the person deleted their account (MAZ-152). The row stays as a tombstone so
+    // shared expenses, splits and payments keep their member: its email is replaced, its
+    // password and profile cleared, and every personal row is deleted.
+    public DateTimeOffset? DeletedAt { get; set; }
 }

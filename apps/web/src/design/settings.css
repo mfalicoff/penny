@@ -891,3 +891,182 @@
 .settings--tablet .privacy-footer {
   padding: 7px 16px 0;
 }
+
+/* ---------- Export data (MAZ-152, cards `web-export-all`, `iphone-export-all`) ---------- */
+.export {
+  display: grid;
+  gap: 18px;
+  max-width: 680px;
+}
+
+.export__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.export__lead {
+  margin: -6px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.90625rem;
+  line-height: 1.45;
+}
+
+.export__lines {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.export__lines li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.export__lines .icon {
+  flex: none;
+  color: var(--pk-label-2);
+}
+
+.export__included {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.export__included li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 50px;
+  padding: 6px 0;
+}
+
+.export__included li + li {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.export__included-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pk-fill);
+}
+
+.export__included-body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.export__included-detail {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.export__included li > .icon:last-child {
+  flex: none;
+  color: var(--pk-tint);
+}
+
+.export__download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.export__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.export__ranges {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.export__range {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 0.90625rem;
+  cursor: pointer;
+}
+
+.export__range + .export__range {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.export__range input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.export__radio {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--pk-label-3);
+}
+
+.export__range--on .export__radio {
+  box-shadow: inset 0 0 0 5.5px var(--pk-tint);
+}
+
+.export__range input:focus-visible + .export__radio {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.export__range-detail {
+  margin-left: auto;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 520px) {
+  .export__lines {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The Activity export button beside the desktop summary (card `web-activity`). */
+.activity-export {
+  flex: none;
+}
+
+.card.export__panel {
+  gap: 10px;
+}
+
+.export--desktop .export__lines {
+  gap: 6px 24px;
+}
+
+.export__ranges {
+  border-top: 0.5px solid var(--pk-separator);
+}

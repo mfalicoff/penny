@@ -12,6 +12,14 @@ public interface IHouseholdTransaction
     // newest first.
     Task<IReadOnlyList<StoredHousehold>> ListAsync(string userId);
 
+    // Households the user has ever joined, archived ones too, oldest first (the full
+    // export, MAZ-152).
+    Task<IReadOnlyList<StoredHousehold>> JoinedAsync(string userId);
+
+    // Households, archived or not, in which the user is a current member, ordered by id
+    // (the order account deletion locks them in, MAZ-152).
+    Task<IReadOnlyList<StoredHousehold>> CurrentMembershipsAsync(string userId);
+
     Task<StoredHousehold?> FindAsync(string householdId, bool includeArchived);
 
     // Locks an unarchived household's row until the unit ends. False when the

@@ -38,6 +38,35 @@ internal class PostgresHouseholdTransaction(
             )
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<StoredHousehold>> JoinedAsync(string userId) =>
+        await Project(
+                context
+                    .Households.AsNoTracking()
+                    .Where(household =>
+                        context.HouseholdMemberPeriods.Any(period =>
+                            period.HouseholdId == household.Id && period.UserId == userId
+                        )
+                    )
+                    .OrderBy(household => household.CreatedAt)
+                    .ThenBy(household => household.Id)
+            )
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<StoredHousehold>> CurrentMembershipsAsync(string userId) =>
+        await Project(
+                context
+                    .Households.AsNoTracking()
+                    .Where(household =>
+                        context.HouseholdMemberPeriods.Any(period =>
+                            period.HouseholdId == household.Id
+                            && period.UserId == userId
+                            && period.LeftAt == null
+                        )
+                    )
+                    .OrderBy(household => household.Id)
+            )
+            .ToListAsync(cancellationToken);
+
     public Task<StoredHousehold?> FindAsync(string householdId, bool includeArchived) =>
         Project(
                 context
@@ -616,7 +645,8 @@ internal class PostgresHouseholdTransaction(
                         period.JoinedOn,
                         period.LeftAt,
                         user.DisplayName,
-                        user.AvatarVersion
+                        user.AvatarVersion,
+                        user.DeletedAt != null
                     )
             );
 

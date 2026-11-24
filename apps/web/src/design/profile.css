@@ -635,3 +635,115 @@
   justify-content: flex-end;
   gap: 8px 12px;
 }
+
+/* ---------- Your data (MAZ-152, cards `web-profile`, `iphone-profile`) ---------- */
+.profile__row-icon--danger {
+  background: color-mix(in srgb, var(--pk-danger) 14%, transparent);
+  color: var(--pk-danger);
+}
+
+.profile__row-title--danger {
+  color: var(--pk-danger);
+}
+
+.profile--panels .card .profile__row .wbtn {
+  flex: none;
+}
+
+a.profile__row--link {
+  text-decoration: none;
+}
+
+/* ---------- Delete account (MAZ-152, card `web-delete-account`) ---------- */
+.dialog__panel.pk-dialog.delete-account {
+  width: min(100%, 540px);
+}
+
+.delete-account__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--pk-danger) 14%, transparent);
+  color: var(--pk-danger);
+}
+
+.delete-account__form {
+  display: grid;
+  gap: 14px;
+  font-size: 0.90625rem;
+}
+
+.delete-account__lead {
+  margin: 0;
+  color: var(--pk-label-2);
+  line-height: 1.45;
+}
+
+.delete-account__lead a {
+  color: var(--pk-tint-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.delete-account__lead a:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.delete-account__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.delete-account__box {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+}
+
+.delete-account__box h3 {
+  margin: 0 0 6px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.delete-account__box ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.delete-account__box li {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+}
+
+.delete-account__box li .icon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--pk-label-2);
+}
+
+.delete-account__password {
+  margin-top: 0;
+}
+
+.delete-account__form .field__error {
+  margin: -6px 0 0;
+}
+
+.delete-account__note {
+  font-size: 0.78125rem;
+}

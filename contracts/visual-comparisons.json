@@ -2227,21 +2227,14 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-171",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "Profile is a page styled as the sheet; the seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
-        "deviations": [
-          {
-            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-152"
-          }
-        ]
+        "note": "Profile is a page styled as the sheet; the seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169)."
       }
     },
     {
@@ -2424,10 +2417,21 @@
         "followUp": "MAZ-152"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-152",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no account deletion.",
-        "followUp": "MAZ-152"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "On a phone the web opens the web dialog as a sheet.",
+        "deviations": [
+          {
+            "summary": "The web shows the web-delete-account dialog, not the native page with grouped Deleted, Stays for others and Confirm sections and a full-width red button",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       }
     },
     {
@@ -2440,10 +2444,21 @@
         "followUp": "MAZ-152"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-152",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no full data export.",
-        "followUp": "MAZ-152"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The browser saves the file itself; there is no share sheet on the web.",
+        "deviations": [
+          {
+            "summary": "The web keeps the Entries only section and the Download ZIP button with a ready line, instead of the native ready card with Save or share",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       }
     },
     {
@@ -2857,21 +2872,14 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-171",
         "capture": "1194x834",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169).",
-        "deviations": [
-          {
-            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-152"
-          }
-        ]
+        "note": "The seeded account has no picture, so initials show. The footer with the server and the Privacy Policy link is built (MAZ-169)."
       }
     },
     {
@@ -2915,14 +2923,14 @@
             "ref": "MAZ-225"
           },
           {
-            "summary": "No export button beside the summary",
+            "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
             "kind": "follow-up",
             "ref": "MAZ-225"
           },
           {
-            "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
+            "summary": "At 1440px with the detail panel open, the summary and its export button wrap below the chips; the card's wider window keeps them on one row",
             "kind": "follow-up",
-            "ref": "MAZ-225"
+            "ref": "MAZ-152"
           }
         ]
       }
@@ -2997,19 +3005,12 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-85",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The section list has no Export data: the web has no export yet (follow-up recorded on MAZ-239)",
-            "kind": "follow-up",
-            "ref": "MAZ-239"
-          }
         ]
       }
     },
@@ -3368,10 +3369,21 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "note": "The web has no Export data yet: Settings has no Export data section.",
-        "followUp": "MAZ-239"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Settings › Export data follows web-export-all (the account cards), which puts the full export above Entries only at the same URL.",
+        "deviations": [
+          {
+            "summary": "Entries only has no \"Include shared expenses (your share only)\" checkbox and no file name hint: web-export-all drops both, and your share of shared expenses is always in the CSV",
+            "kind": "follow-up",
+            "ref": "MAZ-152"
+          }
+        ]
       }
     },
     {
@@ -3491,14 +3503,9 @@
         "note": "The seeded account has no picture, so initials show and the button reads Add picture. The footer with the server and the Privacy Policy link is built (MAZ-169).",
         "deviations": [
           {
-            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
+            "summary": "The section list has no Privacy: that pane isn't built yet",
             "kind": "follow-up",
-            "ref": "MAZ-152"
-          },
-          {
-            "summary": "The section list has no Privacy or Export data rows: neither page is built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-152"
+            "ref": "MAZ-129"
           }
         ]
       }
@@ -3652,10 +3659,21 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-152",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no account deletion.",
-        "followUp": "MAZ-152"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured over Profile with the seeded account (Maison and the Lisbon trip stay for others). The dialog is centred in the window, as every web dialog is.",
+        "deviations": [
+          {
+            "summary": "The section list has no Privacy: that pane isn't built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-129"
+          }
+        ]
       }
     },
     {
@@ -3667,10 +3685,21 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-152",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Export data pane.",
-        "followUp": "MAZ-152"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured after Download ZIP, so the ready line shows the real file name and size.",
+        "deviations": [
+          {
+            "summary": "The section list has no Privacy: that pane isn't built yet",
+            "kind": "follow-up",
+            "ref": "MAZ-129"
+          }
+        ]
       }
     },
     {

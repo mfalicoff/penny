@@ -1,5 +1,8 @@
 import type { Kind, Transaction } from "@domain/ledger.ts";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { ACCOUNT_MESSAGES, download, entriesPath } from "../../api/account";
+import { ApiError } from "../../api/client";
 import { useCallback, useId, useRef, useState, type ReactNode, type RefObject, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTopbarSlot } from "../../app/shell/pageTitle";
@@ -11,7 +14,8 @@ import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { formatCents } from "../../design/Money";
-import { useOnline } from "../../design/states";
+import { useOnline, useToast } from "../../design/states";
+import { useIsDemo } from "../../demo/demo";
 import { EntryDetailDialog, EntryDetailPanel, type EntryAction } from "../entries/EntryDetail";
 import { categoryIcon, frequentCategories, inlineCategories, mostUsedCategories } from "../entries/model";
 import { CategoryPickerDialog } from "../entries/pickers";
@@ -19,7 +23,7 @@ import { useLedgerWriter } from "../entries/writer";
 import { dayLabel } from "../households/model";
 import { ActivityResults } from "./ActivityResults";
 import { periodTotals, rowFilters, useActivityLedger, useSharedRows, type SharedState } from "./data";
-import { activeDay, KIND_FILTERS, periodLabel, periodOf, periodRange, shiftPeriod, shortPeriodLabel, withPeriod, without, type ActivitySearch, type Period } from "./filters";
+import { activeDay, KIND_FILTERS, periodLabel, periodOf, periodRange, projectionPeriod, shiftPeriod, shortPeriodLabel, withPeriod, without, type ActivitySearch, type Period } from "./filters";
 
 type Navigate = (update: (previous: ActivitySearch) => ActivitySearch) => void;
 
@@ -147,7 +151,12 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
         {tablet && !desktop ? searchField : null}
         <div className="activity-toolbar">
           {chips}
-          {desktop && ledger ? <Summary period={period} ledger={ledger} shared={shared} /> : null}
+          {desktop ? (
+            <div className="activity-toolbar__end">
+              {ledger ? <Summary period={period} ledger={ledger} shared={shared} /> : null}
+              <ExportButton period={period} />
+            </div>
+          ) : null}
         </div>
         {shared.status === "unavailable" ? (
           <p className="note" role="status">
@@ -372,6 +381,37 @@ function Summary({ period, ledger, shared }: { period: Period; ledger: NonNullab
       {result.entries} {result.entries === 1 ? "entry" : "entries"} · spent <strong className="pk-num">{formatCents(result.expense, currency)}</strong> · in <strong className="pk-num">{formatCents(result.income, currency)}</strong>
       {notes.length ? <span className="visually-hidden"> {notes.join(" ")}</span> : null}
     </p>
+  );
+}
+
+/**
+ * The desktop export (MAZ-152, card `web-activity`): the period's entries as a CSV, the same file as
+ * Settings › Export data. It follows the period, not the search or filters. The demo has nothing to
+ * export, so it has no button.
+ */
+function ExportButton({ period }: { period: Period }) {
+  const demo = useIsDemo();
+  const toast = useToast();
+  const csv = useMutation({
+    mutationKey: ["export", "entries", "activity"],
+    mutationFn: () => download(entriesPath(projectionPeriod(period)), "penny-entries.csv"),
+    onError: (error) => {
+      toast.show({ title: "The file didn't download", detail: error instanceof ApiError && error.status !== 0 ? error.message : ACCOUNT_MESSAGES.offline });
+    },
+  });
+  if (demo) return null;
+  return (
+    <Button
+      iconOnly
+      icon="document-text"
+      className="activity-export"
+      busy={csv.isPending}
+      aria-label={`Export ${periodLabel(period)} as a CSV file`}
+      title="Export as CSV"
+      onClick={() => {
+        csv.mutate();
+      }}
+    />
   );
 }
 

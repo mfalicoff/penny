@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useId, useRef, useState, type SyntheticEvent, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { resendVerification } from "../../api/auth";
@@ -26,6 +27,7 @@ import { Avatar, Button, Card, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { ErrorState, LoadingState, useToast } from "../../design/states";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
+import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { AccountPrivacyFooter } from "../legal/PrivacyPolicyLink";
 import { PictureCropDialog } from "./PictureCropDialog";
 import { SectionTitle } from "./SectionTitle";
@@ -36,8 +38,8 @@ import { useSettingsLayout } from "./SettingsLayout";
  * tablets follow `iphone-profile` and `ipad-profile` (`iphone-profile-provider` when the sign-in
  * provider manages a field); desktops follow `web-profile`. A provider-managed field is read only
  * and says which provider manages it; the server refuses a change anyway. The privacy footer
- * (`AccountPrivacyFooter`) closes both layouts. Export, account deletion and email verification
- * belong to other issues and aren't shown yet.
+ * (`AccountPrivacyFooter`) closes both layouts. Your data (MAZ-152) opens the export and
+ * deletes the account (card `web-delete-account`).
  */
 export function ProfileSettings() {
   const email = useAccountEmail();
@@ -108,12 +110,13 @@ function ProfileEditor({ profile }: { profile: Profile }) {
   const layout = useSettingsLayout();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const ids = { name: useId(), nameNote: useId(), nameError: useId(), pictureError: useId(), signIn: useId() };
+  const ids = { name: useId(), nameNote: useId(), nameError: useId(), pictureError: useId(), signIn: useId(), data: useId() };
   const [name, setName] = useState(profile.displayName ?? "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [pictureError, setPictureError] = useState<string | null>(null);
   const [picked, setPicked] = useState<Picked | null>(null);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const shown = profile.displayName ?? profile.email;
@@ -211,6 +214,14 @@ function ProfileEditor({ profile }: { profile: Profile }) {
           choose(event.currentTarget.files);
         }}
       />
+      {deleting ? (
+        <DeleteAccountDialog
+          profile={profile}
+          onClose={() => {
+            setDeleting(false);
+          }}
+        />
+      ) : null}
       {changingPassword ? (
         <ChangePasswordDialog
           email={profile.email}
@@ -314,6 +325,37 @@ function ProfileEditor({ profile }: { profile: Profile }) {
           ) : null}
           {profile.signIn === "oidc" ? <p className="profile__note">You sign in to Penny with {providerName(profile)}. Your account has no password.</p> : null}
         </Card>
+        <Card title="Your data">
+          <div className="profile__row">
+            <span className="profile__row-icon" aria-hidden="true">
+              <Icon name="arrow-down" size={18} />
+            </span>
+            <span className="profile__row-body">
+              <span className="profile__row-title">Export all your data</span>
+              <span className="profile__row-detail">Entries, receipts, shared expenses and your profile, as one ZIP file</span>
+            </span>
+            <Link to="/settings/export" className="wbtn wbtn--secondary">
+              Export
+            </Link>
+          </div>
+          <div className="profile__row">
+            <span className="profile__row-icon profile__row-icon--danger" aria-hidden="true">
+              <Icon name="trash" size={18} />
+            </span>
+            <span className="profile__row-body">
+              <span className="profile__row-title">Delete account</span>
+              <span className="profile__row-detail">Removes your ledger, receipts and profile from {window.location.host}</span>
+            </span>
+            <Button
+              className="profile__remove"
+              onClick={() => {
+                setDeleting(true);
+              }}
+            >
+              Delete account…
+            </Button>
+          </div>
+        </Card>
         <AccountPrivacyFooter demo={false} />
         {extras}
       </div>
@@ -394,6 +436,38 @@ function ProfileEditor({ profile }: { profile: Profile }) {
           ) : null}
         </div>
         {profile.signIn === "oidc" ? <p className="group-note">You sign in to Penny with {providerName(profile)}. Your account has no password.</p> : null}
+      </section>
+      <section className="profile__group" aria-labelledby={ids.data}>
+        <h2 id={ids.data} className="group-label">
+          Your data
+        </h2>
+        <div className="profile__list">
+          <Link to="/settings/export" className="profile__row profile__row--link">
+            <span className="profile__row-icon" aria-hidden="true">
+              <Icon name="arrow-down" size={18} />
+            </span>
+            <span className="profile__row-body">
+              <span className="profile__row-title">Export all your data</span>
+              <span className="profile__row-detail">Entries, receipts and shared expenses</span>
+            </span>
+            <Icon name="chevron-forward" size={16} />
+          </Link>
+          <button
+            type="button"
+            className="profile__row profile__row--link"
+            onClick={() => {
+              setDeleting(true);
+            }}
+          >
+            <span className="profile__row-icon profile__row-icon--danger" aria-hidden="true">
+              <Icon name="trash" size={18} />
+            </span>
+            <span className="profile__row-body">
+              <span className="profile__row-title profile__row-title--danger">Delete account</span>
+            </span>
+            <Icon name="chevron-forward" size={16} />
+          </button>
+        </div>
       </section>
       <AccountPrivacyFooter demo={false} />
       {extras}

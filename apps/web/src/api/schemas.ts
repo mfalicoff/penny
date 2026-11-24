@@ -241,6 +241,8 @@ export const householdMemberSchema = z.object({
   // MAZ-171: absent when the member has none; show the email and initials instead.
   displayName: displayName.optional(),
   avatarUrl: avatarUrl.optional(),
+  // MAZ-152: the person deleted their account. Show "Former member", never the placeholder email.
+  deleted: z.literal(true).optional(),
 });
 export type HouseholdMember = z.infer<typeof householdMemberSchema>;
 
