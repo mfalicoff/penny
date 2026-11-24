@@ -18,6 +18,7 @@
       }
     ],
     "maximumTestExecutionTimeAllowance" : 1200,
+    "preferredScreenCaptureFormat" : "screenshots",
     "systemAttachmentLifetime" : "deleteOnSuccess",
     "testTimeoutsEnabled" : true,
     "userAttachmentLifetime" : "keepAlways"
