@@ -33,10 +33,10 @@ async function mockAuth(context: BrowserContext, emailEnabled: boolean): Promise
       case "/api/auth/oidc":
         return reply(200, { enabled: false, providers: [] });
       case "/api/auth/password-reset/request":
-        return emailEnabled ? reply(202, { ok: true }) : reply(404, { error: "This server doesn't send email." });
+        return emailEnabled ? reply(202, { ok: true }) : reply(404, { error: "This server doesn't send email.", code: "mail.disabled" });
       case "/api/auth/password-reset": {
         const body = request.postDataJSON() as { token: string };
-        return body.token === CODE ? reply(200, { ok: true }) : reply(400, { error: "This reset code is invalid or has expired." });
+        return body.token === CODE ? reply(200, { ok: true }) : reply(400, { error: "This reset code is invalid or has expired.", code: "password_reset.invalid_token" });
       }
       // Email verification (MAZ-172).
       case "/api/auth/register": {
@@ -51,7 +51,7 @@ async function mockAuth(context: BrowserContext, emailEnabled: boolean): Promise
         return reply(202, { ok: true });
       case "/api/auth/email-verification": {
         const body = request.postDataJSON() as { token: string };
-        if (body.token !== VERIFY_CODE || api.verified) return reply(400, { error: "This verification link is invalid or has expired." });
+        if (body.token !== VERIFY_CODE || api.verified) return reply(400, { error: "This verification link is invalid or has expired.", code: "email_verification.invalid_token" });
         api.verified = true;
         return reply(200, { email: api.signedIn ?? ALEX });
       }
