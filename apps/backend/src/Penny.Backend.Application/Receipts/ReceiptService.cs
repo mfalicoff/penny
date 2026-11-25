@@ -23,16 +23,43 @@ public sealed class ReceiptService(IReceiptRepository receipts, TimeProvider clo
     {
         // An app from before MAZ-131 still sends the old base64 JSON body.
         if (upload.Mime == "application/json")
-            throw new BackendFailure(FailureKind.Invalid, OutdatedClient);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptOutdatedClient,
+                OutdatedClient
+            );
+        // Both checks keep the one legacy message; the code tells them apart.
         if (
-            upload is not { Name: { } name, Mime: { } mime }
-            || name.Length is 0 or > ReceiptFormat.MaxNameLength
-            || !LedgerText.IsStorable(name)
+            upload.Mime is not { } mime
             || !ReceiptFormat.Mimes.Contains(mime, StringComparer.Ordinal)
         )
-            throw new BackendFailure(FailureKind.Invalid, InvalidUpload);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptUnsupportedType,
+                InvalidUpload
+            );
+        if (
+            upload.Name is not { } name
+            || name.Length is 0 or > ReceiptFormat.MaxNameLength
+            || !LedgerText.IsStorable(name)
+        )
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptInvalidName,
+                InvalidUpload
+            );
+        if (upload.Content is null or { Length: > ReceiptFormat.MaxBytes })
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptTooLarge,
+                UnsupportedFile
+            );
         if (upload.Content is not { } content || !ReceiptFormat.IsAcceptable(mime, content))
-            throw new BackendFailure(FailureKind.Invalid, UnsupportedFile);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptUnsupportedFile,
+                UnsupportedFile
+            );
         var id = RandomNumberGenerator.GetHexString(32, lowercase: true);
         await receipts.CreateAsync(
             userId,
@@ -53,5 +80,5 @@ public sealed class ReceiptService(IReceiptRepository receipts, TimeProvider clo
             LedgerText.IsStorable(receiptId)
                 ? await receipts.ReadVisibleAsync(userId, receiptId, cancellationToken)
                 : null
-        ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+        ) ?? throw new BackendFailure(FailureKind.NotFound, ErrorCodes.ReceiptNotFound, NotFound);
 }

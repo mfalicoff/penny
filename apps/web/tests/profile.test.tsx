@@ -223,7 +223,7 @@ describe("Change password", () => {
       if (url === "/api/profile") return json(current);
       if (url === "/api/auth/password") {
         const body = bodyOf(init) as { currentPassword: string; newPassword: string };
-        if (body.currentPassword !== "correct horse battery") return json({ error: "Your current password is incorrect." }, 400);
+        if (body.currentPassword !== "correct horse battery") return json({ error: "Your current password is incorrect.", code: "auth.wrong_current_password" }, 400);
         current = profile({ displayName: "Alex Martin", passwordChangedAt: changedAt });
         return json({ ok: true });
       }

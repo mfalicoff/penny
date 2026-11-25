@@ -139,6 +139,8 @@ public abstract class InboundMailTestBase(ApiFixture fixture) : ReceiptTextTestB
     {
         var text = await response.Content.ReadAsStringAsync(Ct);
         response.StatusCode.ShouldBe(status, text);
-        JsonDocument.Parse(text).RootElement.GetProperty("error").GetString().ShouldBe(message);
+        var root = JsonDocument.Parse(text).RootElement;
+        root.GetProperty("error").GetString().ShouldBe(message);
+        ErrorCodeCatalog.ShouldBeKnown(root.GetProperty("code").GetString());
     }
 }

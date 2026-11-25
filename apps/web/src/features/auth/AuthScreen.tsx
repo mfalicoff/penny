@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { z } from "zod";
 import { login, oidcConfigQuery, register, type Credentials } from "../../api/auth";
-import { ApiError } from "../../api/client";
+import { ApiError, hasCode } from "../../api/client";
 import { useEmailEnabled } from "../../api/info";
 import { DISPLAY_NAME_MAX, normalizeDisplayName, PROFILE_MESSAGES } from "../../api/profile";
 import { useSessionNotice } from "../../auth/account";
@@ -157,7 +157,7 @@ function CredentialsForm({ mode }: { mode: Mode }) {
     onError: (error) => {
       setFormError(describeAuthError(error));
       // Recover where the user can act: a taken email is fixed in the email field, anything else by retyping the password.
-      const target = error instanceof ApiError && error.status === 409 ? emailRef : passwordRef;
+      const target = hasCode(error, "auth.duplicate_email") ? emailRef : passwordRef;
       if (target === passwordRef && passwordRef.current) {
         passwordRef.current.value = "";
         setPassword("");

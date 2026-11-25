@@ -61,7 +61,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
     )
     {
         var input = HouseholdReader.ReadNew(body, trip)
-            ?? throw new BackendFailure(FailureKind.Invalid, InvalidData);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.HouseholdInvalidData,
+                InvalidData
+            );
         var now = Now();
         return await households.WriteAsync(
             async store =>
@@ -70,6 +74,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                 if (!string.Equals(currency, input.Currency, StringComparison.Ordinal))
                     throw new BackendFailure(
                         FailureKind.Invalid,
+                        trip ? ErrorCodes.HouseholdTripCurrency : ErrorCodes.HouseholdCurrency,
                         trip ? TripCurrency : HouseholdCurrency
                     );
                 var householdId = NewId();
@@ -111,9 +116,18 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             {
                 var membership = (
                     Storable(householdId) ? await store.MembershipAsync(householdId, userId) : null
-                ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+                )
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.HouseholdNotFound,
+                        NotFound
+                    );
                 var household = await store.FindAsync(householdId, includeArchived: true)
-                    ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.HouseholdNotFound,
+                        NotFound
+                    );
                 var members = await store.MembersAsync(householdId);
                 return new HouseholdDetail(
                     HouseholdView.From(household),
@@ -142,7 +156,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     await RequireCreatorAsync(store, householdId, userId)
                 );
                 if (name is null)
-                    throw new BackendFailure(FailureKind.Invalid, InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        InvalidData
+                    );
                 await store.RenameAsync(householdId, name);
                 var after = await ViewAsync(store, householdId);
                 await AuditAsync(
@@ -176,9 +194,17 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             {
                 var household = await RequireCreatorAsync(store, householdId, userId);
                 if (change is null)
-                    throw new BackendFailure(FailureKind.Invalid, InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        InvalidData
+                    );
                 if (household.Trip is null)
-                    throw new BackendFailure(FailureKind.NotFound, TripNotFound);
+                    throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.HouseholdTripNotFound,
+                        TripNotFound
+                    );
                 var before = HouseholdView.From(household);
                 await store.UpdateTripAsync(householdId, change.Name, change.Dates);
                 var after = await ViewAsync(store, householdId);
@@ -201,7 +227,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             {
                 await RequireCreatorAsync(store, householdId, userId);
                 if (!HouseholdSettlement.IsSettled(await store.BalancesAsync(householdId)))
-                    throw new BackendFailure(FailureKind.Conflict, UnsettledArchive);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.HouseholdUnsettledArchive,
+                        UnsettledArchive
+                    );
                 var now = Now();
                 await store.ArchiveAsync(householdId, now);
                 await store.DeleteInvitesAsync(householdId, now);
@@ -260,7 +290,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
     )
     {
         var input = HouseholdReader.ReadJoin(body)
-            ?? throw new BackendFailure(FailureKind.Invalid, InvalidData);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.HouseholdInvalidData,
+                InvalidData
+            );
         var codeHash = InviteCodes.Hash(input.Code);
         return await households.WriteAsync(
             async store =>
@@ -268,7 +302,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                 var now = Now();
                 var invite = await store.FindInviteAsync(codeHash);
                 if (invite is null || invite.ExpiresAt <= now)
-                    throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidInvite,
+                        InvalidInvite
+                    );
                 var householdId = invite.HouseholdId;
                 // Archived households accept no members (their invites are revoked).
                 // Invite replacement and archive hold this lock, so re-reading the code
@@ -278,16 +316,32 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     || await store.FindInviteAsync(codeHash) is not { } current
                     || current.ExpiresAt <= now
                 )
-                    throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidInvite,
+                        InvalidInvite
+                    );
                 var household = await store.FindAsync(householdId, includeArchived: false)
-                    ?? throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
+                    ?? throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidInvite,
+                        InvalidInvite
+                    );
                 // The ledger row stays locked, so a concurrent PUT /api/ledger cannot
                 // change currency between this check and the commit (ledger check 3).
                 var currency = await LedgerCurrencyAsync(store, userId);
                 if (!string.Equals(currency, household.Currency, StringComparison.Ordinal))
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdCurrency);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdCurrency,
+                        HouseholdCurrency
+                    );
                 if (await store.MembershipAsync(householdId, userId) is { IsCurrent: true })
-                    throw new BackendFailure(FailureKind.Conflict, AlreadyMember);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.HouseholdAlreadyMember,
+                        AlreadyMember
+                    );
                 // A former member rejoins with a new period; earlier periods are kept.
                 await store.OpenPeriodAsync(
                     NewId(),
@@ -328,7 +382,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     string.Equals(household.CreatorId, userId, StringComparison.Ordinal)
                     && household.MemberCount > 1
                 )
-                    throw new BackendFailure(FailureKind.Conflict, CreatorCannotLeave);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.HouseholdCreatorCannotLeave,
+                        CreatorCannotLeave
+                    );
                 await EndMembershipAsync(store, householdId, userId, userId, "member.left");
                 return true;
             },
@@ -346,7 +404,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             {
                 await RequireCreatorAsync(store, householdId, actorId);
                 if (string.Equals(actorId, userId, StringComparison.Ordinal))
-                    throw new BackendFailure(FailureKind.Invalid, CreatorCannotBeRemoved);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdCreatorCannotBeRemoved,
+                        CreatorCannotBeRemoved
+                    );
                 await RequireMemberAsync(store, householdId, userId);
                 await EndMembershipAsync(store, householdId, userId, actorId, "member.removed");
                 return true;
@@ -365,7 +427,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
     )
     {
         if (!HouseholdSettlement.IsSettled(await store.BalancesAsync(householdId), userId))
-            throw new BackendFailure(FailureKind.Conflict, UnsettledExit);
+            throw new BackendFailure(
+                FailureKind.Conflict,
+                ErrorCodes.HouseholdUnsettledExit,
+                UnsettledExit
+            );
         var now = Now();
         await store.ClosePeriodAsync(householdId, userId, now);
         // Search (MAZ-121): nothing to write. Search evaluates periods and splits in
@@ -388,8 +454,12 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             && await store.MembershipAsync(householdId, userId) is { IsCurrent: true }
         )
             return await store.FindAsync(householdId, includeArchived: false)
-                ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
-        throw new BackendFailure(FailureKind.NotFound, NotFound);
+                ?? throw new BackendFailure(
+                    FailureKind.NotFound,
+                    ErrorCodes.HouseholdNotFound,
+                    NotFound
+                );
+        throw new BackendFailure(FailureKind.NotFound, ErrorCodes.HouseholdNotFound, NotFound);
     }
 
     internal static async Task<StoredHousehold> RequireCreatorAsync(
@@ -401,7 +471,11 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         var household = await RequireMemberAsync(store, householdId, userId);
         return string.Equals(household.CreatorId, userId, StringComparison.Ordinal)
             ? household
-            : throw new BackendFailure(FailureKind.Forbidden, CreatorOnly);
+            : throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.HouseholdCreatorOnly,
+                CreatorOnly
+            );
     }
 
     // Every account is created with a ledger; a missing one is a server fault.

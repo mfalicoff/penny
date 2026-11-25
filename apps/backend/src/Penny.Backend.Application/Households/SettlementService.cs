@@ -45,13 +45,21 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
                     userId
                 );
                 if (!ExpenseReader.IsMonth(month))
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var former = membership.LeftAt is { } leftAt
                     ? new FormerMember(userId, leftAt)
                     : null;
                 var leftMonth = former is null ? null : MonthlySettlement.MonthOf(former.LeftAt);
                 if (leftMonth is not null && string.CompareOrdinal(month, leftMonth) > 0)
-                    throw new BackendFailure(FailureKind.NotFound, MonthNotFound);
+                    throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.SettlementMonthNotFound,
+                        MonthNotFound
+                    );
                 var visible = (await store.ListExpensesAsync(householdId, month))
                     .Where(expense => SharedExpenseService.CanSee(membership, expense, userId))
                     .Select(expense => ExpenseView.From(expense, userId))
@@ -108,16 +116,32 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
             {
                 await SharedExpenseService.RequireMemberAsync(store, householdId, actorId);
                 if (!ExpenseReader.IsMonth(month) || request is null)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 if (string.Equals(request.FromUserId, request.ToUserId, StringComparison.Ordinal))
-                    throw new BackendFailure(FailureKind.Invalid, SameMember);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.SettlementSameMember,
+                        SameMember
+                    );
                 if (
                     !string.Equals(actorId, request.FromUserId, StringComparison.Ordinal)
                     && !string.Equals(actorId, request.ToUserId, StringComparison.Ordinal)
                 )
-                    throw new BackendFailure(FailureKind.Forbidden, NotInvolved);
+                    throw new BackendFailure(
+                        FailureKind.Forbidden,
+                        ErrorCodes.SettlementNotInvolved,
+                        NotInvolved
+                    );
                 if (!MonthlySettlement.CanRecord(month, DateOnly.FromDateTime(now.UtcDateTime)))
-                    throw new BackendFailure(FailureKind.Conflict, MonthOpen);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.SettlementMonthOpen,
+                        MonthOpen
+                    );
                 var suggestions = MonthlySettlement.Suggest(
                     MonthlySettlement.Balances(month, await store.BalancesAsync(householdId))
                 );
@@ -136,7 +160,11 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
                         && suggestion.AmountCents == request.AmountCents
                     )
                 )
-                    throw new BackendFailure(FailureKind.Conflict, NotSuggested);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.SettlementNotSuggested,
+                        NotSuggested
+                    );
                 var reimbursement = new StoredReimbursement(
                     SharedExpenseService.NewId(),
                     householdId,

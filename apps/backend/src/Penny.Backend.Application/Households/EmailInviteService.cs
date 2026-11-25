@@ -57,7 +57,11 @@ public sealed class EmailInviteService(
     {
         RequireEnabled();
         var normalized = Credentials.NormalizeEmail(email)
-            ?? throw new BackendFailure(FailureKind.Invalid, InvalidEmail);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.InviteInvalidEmail,
+                InvalidEmail
+            );
         return households.WriteAsync(
             async store =>
             {
@@ -83,7 +87,7 @@ public sealed class EmailInviteService(
                 await HouseholdService.RequireCreatorAsync(store, householdId, userId);
                 var invite = await FindAsync(store, householdId, inviteId);
                 if (invite.JoinedAt is not null)
-                    throw new BackendFailure(FailureKind.Conflict, Joined);
+                    throw new BackendFailure(FailureKind.Conflict, ErrorCodes.InviteJoined, Joined);
                 return await RequestAsync(store, householdId, userId, invite.Email, locale);
             },
             cancellationToken
@@ -189,7 +193,7 @@ public sealed class EmailInviteService(
             now - MailPolicy.LimitWindow
         );
         if (account >= mail.AccountMessagesPerDay || received >= mail.RecipientMessagesPerDay)
-            throw new BackendFailure(FailureKind.RateLimited, TooMany);
+            throw new BackendFailure(FailureKind.RateLimited, ErrorCodes.InviteTooMany, TooMany);
         var invite = await store.RequestEmailInviteAsync(
             HouseholdService.NewId(),
             householdId,
@@ -217,12 +221,16 @@ public sealed class EmailInviteService(
         && await store.FindEmailInviteAsync(inviteId) is { RevokedAt: null } invite
         && string.Equals(invite.HouseholdId, householdId, StringComparison.Ordinal)
             ? invite
-            : throw new BackendFailure(FailureKind.NotFound, NotFound);
+            : throw new BackendFailure(FailureKind.NotFound, ErrorCodes.InviteNotFound, NotFound);
 
     private void RequireEnabled()
     {
         if (!mail.Enabled)
-            throw new BackendFailure(FailureKind.NotFound, MailPolicy.Disabled);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.MailDisabled,
+                MailPolicy.Disabled
+            );
     }
 
     private DateTimeOffset Now() => MembershipDates.Truncate(clock.GetUtcNow());

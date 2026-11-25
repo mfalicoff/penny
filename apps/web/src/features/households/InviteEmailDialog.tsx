@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useRef, useState, type SyntheticEvent } from "react";
 import { z } from "zod";
-import { ApiError } from "../../api/client";
+import { ApiError, hasCode } from "../../api/client";
 import { emailInvitesQuery, refreshHousehold, resendEmailInvite, revokeEmailInvite, sendEmailInvite } from "../../api/households";
 import { serverInfoQuery } from "../../api/info";
 import type { EmailInvite, EmailInviteStatus } from "../../api/schemas";
@@ -56,7 +56,7 @@ export function inviteDetail(invite: EmailInvite, now = Date.now()): string {
 
 /** A failed invitation write in words: the server's own text for its rules and limits. */
 function describeInviteError(error: unknown): string {
-  if (error instanceof ApiError && [400, 403, 404, 409, 429].includes(error.status) && !/household not found/i.test(error.message)) return error.message;
+  if (error instanceof ApiError && [400, 403, 404, 409, 429].includes(error.status) && !error.is("household.not_found")) return error.message;
   return describeSharedError(error).message;
 }
 
@@ -81,8 +81,8 @@ export function InviteEmailDialog({ view, onClose }: { view: HouseholdView; onCl
   const host = typeof window === "undefined" ? "this server" : window.location.host;
 
   const after = async (error?: unknown) => {
-    // A 404 "doesn't send email" means the server turned email off: refresh what it offers.
-    if (error instanceof ApiError && error.status === 404 && !/household not found/i.test(error.message)) {
+    // "Doesn't send email" means the server turned email off: refresh what it offers.
+    if (hasCode(error, "mail.disabled")) {
       await queryClient.invalidateQueries({ queryKey: serverInfoQuery.queryKey });
     }
     await refreshHousehold(queryClient, email, view.householdId);

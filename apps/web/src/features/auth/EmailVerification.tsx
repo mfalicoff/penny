@@ -3,7 +3,7 @@ import { Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type SyntheticEvent } from "react";
 import { z } from "zod";
 import { changeEmail, resendVerification, sessionQuery, verifyEmail } from "../../api/auth";
-import { ApiError } from "../../api/client";
+import { ApiError, hasCode } from "../../api/client";
 import { serverInfoQuery } from "../../api/info";
 import { userKey } from "../../api/keys";
 import { profileQuery } from "../../api/profile";
@@ -315,7 +315,7 @@ function ChangeEmailForm({ email, onCancel, onChanged }: { email: string; onCanc
       onChanged();
     },
     onError: (error) => {
-      if (error instanceof ApiError && (error.status === 409 || (error.status === 400 && /email/i.test(error.message)))) {
+      if (hasCode(error, "auth.email_in_use") || hasCode(error, "password_reset.invalid_email")) {
         setErrors({ email: error.message });
         requestAnimationFrame(() => emailRef.current?.focus());
         return;

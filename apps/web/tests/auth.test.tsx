@@ -144,7 +144,7 @@ describe("password sign-in", () => {
   });
 
   it("registers a new account and reports a duplicate email on the email field", async () => {
-    fakeApi(null, { register: () => json({ error: "An account with this email already exists." }, 409) });
+    fakeApi(null, { register: () => json({ error: "An account with this email already exists.", code: "auth.duplicate_email" }, 409) });
     const user = userEvent.setup();
     renderApp("/");
     await user.click(await screen.findByRole("button", { name: "Create an account" }));

@@ -21,7 +21,7 @@ export function describeSharedError(error: unknown): SharedError {
         ? { kind: "offline", message: "You're offline. Shared households need a connection, so nothing was sent." }
         : { kind: "unreachable", message: "Penny can't reach the server, so nothing was sent." };
     }
-    if (error.status === 404 && /household not found/i.test(error.message)) {
+    if (error.is("household.not_found")) {
       return { kind: "membership", message: "You're no longer a member of this household, or it was archived. Nothing was changed." };
     }
     if (error.status === 409) return { kind: "conflict", message: error.message };

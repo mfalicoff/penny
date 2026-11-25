@@ -99,7 +99,7 @@ export class FakeServer {
       this.beforePut?.(snapshot);
       if (snapshot.revision !== this.revision) throw new ApiError(409, "The ledger changed.");
       const held = this.receipts;
-      if (held && snapshot.ledger.transactions.some((item) => item.receipt && !held.has(item.receipt.id))) throw new ApiError(400, FOREIGN_RECEIPT);
+      if (held && snapshot.ledger.transactions.some((item) => item.receipt && !held.has(item.receipt.id))) throw new ApiError(400, FOREIGN_RECEIPT, { code: "ledger.foreign_receipt" });
       this.puts.push(clone(snapshot));
       this.ledger = clone(snapshot.ledger);
       this.revision += 1;

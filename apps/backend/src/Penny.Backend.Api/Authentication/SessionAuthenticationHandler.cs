@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Authentication;
 
@@ -32,5 +33,10 @@ public sealed class SessionAuthenticationHandler(
     }
 
     protected override Task HandleChallengeAsync(AuthenticationProperties properties) =>
-        ApiErrors.WriteAsync(Context, 401, AuthService.SignInRequired);
+        ApiErrors.WriteAsync(
+            Context,
+            401,
+            ErrorCodes.AuthSignInRequired,
+            AuthService.SignInRequired
+        );
 }

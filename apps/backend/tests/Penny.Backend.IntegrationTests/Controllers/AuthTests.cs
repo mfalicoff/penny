@@ -441,7 +441,9 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
     )
     {
         response.StatusCode.ShouldBe(status);
-        (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldBe(message);
+        var error = (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!;
+        error.Error.ShouldBe(message);
+        ErrorCodeCatalog.ShouldBeKnown(error.Code);
         response.Headers.CacheControl!.NoStore.ShouldBeTrue();
     }
 }

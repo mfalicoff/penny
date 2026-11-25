@@ -58,7 +58,8 @@
     },
     "status": 409,
     "response": {
-      "error": "Your data changed on another device. Please refresh and try again."
+      "error": "Your data changed on another device. Please refresh and try again.",
+      "code": "ledger.conflict"
     }
   },
   "projection": {

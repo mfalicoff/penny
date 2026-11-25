@@ -17,7 +17,6 @@ import { ReceiptField } from "../receipts/ReceiptField";
 import { receiptExists } from "../../api/receipts";
 
 /** The API's refusal of a receipt the household can't use (`SharedExpenseService.ReceiptUnavailable`). */
-export const RECEIPT_UNAVAILABLE = "Receipt is not available to this household.";
 export const RECEIPT_GONE_NOTICE = "The receipt was no longer on the server, so it was saved without it.";
 import { useLedgerWorkspace } from "../organize/workspace";
 import type { HouseholdView } from "./context";
@@ -244,7 +243,7 @@ export function ExpenseFormDialog({
         // A receipt kept in a draft longer than the server keeps unlinked uploads was cleaned up
         // (MAZ-199): save without it and say so. Any other answer, or a check that fails, keeps the refusal.
         const receiptId = input.receiptId;
-        if (!receiptId || !(error instanceof ApiError) || error.status !== 400 || error.message !== RECEIPT_UNAVAILABLE) throw error;
+        if (!receiptId || !(error instanceof ApiError) || !error.is("expense.receipt_unavailable")) throw error;
         if (await receiptExists(receiptId).catch(() => true)) throw error;
         const rest = { ...input };
         delete rest.receiptId;
@@ -268,10 +267,10 @@ export function ExpenseFormDialog({
     onError: async (error) => {
       if (!(error instanceof ApiError) || error.status !== 409) return;
       // A stale revision: fetch the latest so the person can decide. Their draft stays as typed.
-      if (target.kind === "edit" && /changed/i.test(error.message)) {
+      if (target.kind === "edit" && error.is("expense.changed")) {
         const latest = await queryClient.query({ ...expenseQuery(email, view.householdId, target.expense.id), staleTime: 0 }).catch(() => null);
         if (latest) setConflict({ title: latest.title, totalCents: latest.totalCents, payerUserId: latest.payerUserId, revision: latest.revision, source: latest });
-      } else if (target.kind === "rule" && /changed/i.test(error.message)) {
+      } else if (target.kind === "rule" && error.is("recurring.rule_changed")) {
         const rules = await queryClient.query({ ...recurringQuery(email, view.householdId), staleTime: 0 }).catch(() => null);
         const latest = rules?.find((rule) => rule.id === target.rule.id);
         if (latest) setConflict({ title: latest.title, totalCents: latest.totalCents, payerUserId: latest.payerUserId, revision: latest.revision, source: latest });

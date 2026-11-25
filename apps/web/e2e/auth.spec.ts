@@ -52,7 +52,7 @@ async function mockApi(context: BrowserContext, options: { sso?: boolean } = {})
       }
       case "/api/auth/register": {
         const body = route.request().postDataJSON() as { email: string };
-        if (body.email === "taken@example.test") return reply(409, { error: "An account with this email already exists." });
+        if (body.email === "taken@example.test") return reply(409, { error: "An account with this email already exists.", code: "auth.duplicate_email" });
         api.signedIn = body.email;
         return reply(201, { token: TOKEN, email: body.email });
       }

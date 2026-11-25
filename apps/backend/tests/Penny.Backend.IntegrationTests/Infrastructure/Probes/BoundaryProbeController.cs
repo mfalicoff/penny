@@ -12,7 +12,7 @@ public sealed class BoundaryProbeController(ProbeSignals signals) : ControllerBa
 {
     [HttpGet("failure/{kind}")]
     public IActionResult Failure(FailureKind kind) =>
-        throw new BackendFailure(kind, "Synthetic domain failure.");
+        throw new BackendFailure(kind, "test.synthetic", "Synthetic domain failure.");
 
     [HttpGet("unexpected")]
     public IActionResult Unexpected() =>

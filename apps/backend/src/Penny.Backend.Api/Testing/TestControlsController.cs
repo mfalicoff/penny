@@ -5,8 +5,10 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Contracts;
+using Penny.Backend.Api.Errors;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Mail;
+using Penny.Backend.Domain.Errors;
 using Penny.Backend.Persistence.Testing;
 
 namespace Penny.Backend.Api.Testing;
@@ -49,7 +51,9 @@ public sealed partial class TestControlsController(
         if (Guard() is { } denied)
             return denied;
         if (body.Now is not { } now)
-            return BadRequest(new ApiError("Enter the instant to pin as `now`."));
+            return BadRequest(
+                new ApiError("Enter the instant to pin as `now`.", "test.invalid_now")
+            );
         clock.Set(now);
         return State();
     }
@@ -95,7 +99,7 @@ public sealed partial class TestControlsController(
                 || (rule.Status is null && rule.Abort != true && delay == 0)
                 || (rule.PathPrefix is not null && !rule.PathPrefix.StartsWith('/'))
             )
-                return BadRequest(new ApiError("Invalid fault rule."));
+                return BadRequest(new ApiError("Invalid fault rule.", "test.invalid_fault_rule"));
             rules.Add(
                 new FaultRule(
                     target,
@@ -134,7 +138,10 @@ public sealed partial class TestControlsController(
         var label = body?.Label ?? "user";
         if (!Label().IsMatch(label))
             return BadRequest(
-                new ApiError("Use a label of 1–24 lowercase letters, digits or dashes.")
+                new ApiError(
+                    "Use a label of 1–24 lowercase letters, digits or dashes.",
+                    "test.invalid_label"
+                )
             );
         var number = Interlocked.Increment(ref users).ToString(CultureInfo.InvariantCulture);
         var email =
@@ -171,14 +178,14 @@ public sealed partial class TestControlsController(
     private ObjectResult? Guard()
     {
         if (!options.Enabled)
-            return NotFound(new ApiError("API route not found."));
+            return NotFound(new ApiError(ApiErrors.RouteNotFound, ErrorCodes.RouteNotFound));
         var supplied = Request.Headers[TokenHeader].ToString();
         return CryptographicOperations.FixedTimeEquals(
             SHA256.HashData(Encoding.UTF8.GetBytes(supplied)),
             SHA256.HashData(Encoding.UTF8.GetBytes(options.Token))
         )
             ? null
-            : StatusCode(403, new ApiError("Test control token required."));
+            : StatusCode(403, new ApiError("Test control token required.", "test.token_required"));
     }
 
     [GeneratedRegex("^[a-z0-9-]{1,24}$")]

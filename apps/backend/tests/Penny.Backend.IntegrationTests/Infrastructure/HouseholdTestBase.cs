@@ -90,9 +90,9 @@ public abstract class HouseholdTestBase(ApiFixture fixture) : IntegrationTestBas
         using var response = await SendAsync(method, path, token, body);
         var text = await response.Content.ReadAsStringAsync(Ct);
         response.StatusCode.ShouldBe(status, text);
-        JsonSerializer
-            .Deserialize<ApiError>(text, JsonSerializerOptions.Web)!
-            .Error.ShouldBe(message);
+        var error = JsonSerializer.Deserialize<ApiError>(text, JsonSerializerOptions.Web)!;
+        error.Error.ShouldBe(message);
+        ErrorCodeCatalog.ShouldBeKnown(error.Code);
     }
 
     protected async Task<JsonElement> CreateHouseholdAsync(

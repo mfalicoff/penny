@@ -6,7 +6,7 @@ The .NET API was first written to copy the Node server exactly, so the Expo apps
 
 | Client | Status |
 | --- | --- |
-| Native iOS app (`apps/ios`, TestFlight) | Supported. Speaks contract 2.0.0 from the release that ships MAZ-131 |
+| Native iOS app (`apps/ios`, TestFlight) | Supported. Speaks contract 2.0.0 from the release that ships MAZ-131; contract 2.1.0 only adds the error `code`, which it ignores until it adopts it |
 | Browser app (`apps/web`, the `penny-web` image) | Supported. Deployed with the API |
 | Expo web and mobile, Android | Removed from the repository (#64). No build is supported |
 
@@ -22,8 +22,8 @@ An iOS build older than contract 2.0.0 still works for everything except receipt
 | Receipt downloads are `no-store` | **Kept** | Access changes when someone leaves a household, and neither client relies on HTTP caching ([receipts](receipts.md#clients)) |
 | Ledger v1–v3 upgrades and pre-v3 guards | **Removed** in #64 | `PUT /api/ledger` accepts version 4 only |
 | Whole-ledger sync on every save | **Kept for now** | Smaller or per-entity sync changes the offline merge model on both clients. That is a separate design, not a compatibility cleanup. Not measured here |
-| Legacy English messages and check order, `{error: string}` | **Kept for now** | Both clients show these messages directly. Structured error codes need a contract change in every client. Do it as its own change |
-| A non-JSON body counts as no body (`LedgerBody`, `JsonStringFields`), and `400 Invalid request` for request parse failures | **Kept** | No supported client sends a non-JSON body to these endpoints. Changing the answer to `415` would be a breaking change with no user-visible gain |
+| Legacy English messages and check order, `{error: string}` | **Kept**, with a `code` added (contract 2.1.0, MAZ-187) | Both clients show these messages directly, and the iOS builds already installed read only `error`. Every error now also carries a stable `code` ([error codes](api-reference.md#error-codes)); the web app branches on it, and the iOS app moves to it in its next release |
+| A non-JSON body counts as no body (`LedgerBody`, `JsonStringFields`), and `400 Invalid request` for request parse failures | **Kept** (re-decided in MAZ-187) | No supported client sends a non-JSON body to these endpoints, and a `415` would turn today's `400` into a status that installed iOS builds don't handle. The new `code` already tells these failures apart (`request.invalid`, `request.invalid_json`, or the endpoint's own validation code), so a `415` would add a breaking change and nothing a client can use |
 | Cookie and bearer sessions | **Kept** | The browser app uses the HttpOnly cookie and the iOS app uses the bearer token. Both are current |
 | Malformed `Authorization` header falls back to the cookie | **Kept** | Neither client sends both credentials: iOS turns cookies off and the browser never sends `Authorization`. The rule costs nothing and has no effect on current clients |
 | Legacy scrypt password hashes and their reset path | **Removed** before MAZ-131 | Passwords are ASP.NET Core Identity hashes. Resets use `reset-password EMAIL` ([authentication](authentication.md#password-reset-maz-123)) |

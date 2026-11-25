@@ -1,7 +1,7 @@
 import type { LedgerChange } from "@domain/commands.ts";
 import { dateKey, materialize, type Ledger } from "@domain/ledger.ts";
 import { mergeOfflineLedger } from "./merge";
-import { ApiError } from "../api/client";
+import { ApiError, hasCode } from "../api/client";
 import { withLock, openLedgerChannel, type LedgerChannel, type LockRunner } from "./coordination";
 import { MemoryLedgerDatabase, StorageError, type LedgerDatabase } from "./database";
 import { NOTHING_PENDING, pendingChanges, type PendingSummary } from "./pending";
@@ -811,7 +811,7 @@ export class LedgerSyncEngine {
   }
 }
 
-const isForeignReceipt = (error: unknown) => error instanceof ApiError && error.status === 400 && error.message === FOREIGN_RECEIPT;
+const isForeignReceipt = (error: unknown) => hasCode(error, "ledger.foreign_receipt");
 
 function describeIssue(error: unknown, online: boolean): SyncIssue {
   if (error instanceof ConflictRetriesExhausted)

@@ -112,13 +112,19 @@ public abstract class ReceiptTestBase(ApiFixture fixture) : SharedExpenseTestBas
     protected static async Task ShouldFailAsync(
         Task<HttpResponseMessage> request,
         HttpStatusCode status,
-        string message
+        string message,
+        string? code = null
     )
     {
         using var response = await request;
         var text = await response.Content.ReadAsStringAsync(Ct);
         response.StatusCode.ShouldBe(status, text);
-        JsonDocument.Parse(text).RootElement.GetProperty("error").GetString().ShouldBe(message);
+        var root = JsonDocument.Parse(text).RootElement;
+        root.GetProperty("error").GetString().ShouldBe(message);
+        var actual = root.GetProperty("code").GetString();
+        ErrorCodeCatalog.ShouldBeKnown(actual);
+        if (code is not null)
+            actual.ShouldBe(code);
     }
 
     // Files in the receipt root, relative to it (none when the root does not exist).

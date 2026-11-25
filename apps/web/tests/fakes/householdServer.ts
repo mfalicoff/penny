@@ -8,6 +8,7 @@
  * with the server's messages. It is not the server: the real-stack journeys run against .NET.
  * All data is synthetic.
  */
+import type { ErrorCode } from "../../src/api/errorCodes";
 import { equalSplit, percentSplit } from "../../src/features/households/model";
 
 /** A private ledger as `GET`/`PUT /api/ledger` carry it (only the parts the fake checks are typed). */
@@ -90,7 +91,25 @@ interface Body {
   [key: string]: unknown;
 }
 
-const err = (status: number, error: string): FakeResponse => ({ status, body: { error } });
+// The server's code for each message the fake sends (MAZ-187), so the app can branch on codes here too.
+const CODES: Record<string, ErrorCode> = {
+  "Household not found.": "household.not_found",
+  "Expense not found.": "expense.not_found",
+  "Expense changed. Refresh and try again.": "expense.changed",
+  "Recurring rule not found.": "recurring.rule_not_found",
+  "Recurring rule changed. Refresh and try again.": "recurring.rule_changed",
+  "Invalid household data.": "household.invalid_data",
+  "Invite code is invalid or expired.": "household.invalid_invite",
+  "You are already a member.": "household.already_member",
+  "Only the household creator can manage members.": "household.creator_only",
+  "This server doesn't send email.": "mail.disabled",
+  "Enter a valid email address.": "invite.invalid_email",
+  "Invitation not found.": "invite.not_found",
+  "They already joined with this invitation.": "invite.joined",
+  "Too many invitation emails today. Try again tomorrow, or share a code instead.": "invite.too_many",
+  "API route not found.": "route.not_found",
+};
+const err = (status: number, error: string): FakeResponse => ({ status, body: { error, ...(CODES[error] ? { code: CODES[error] } : {}) } });
 const ok = (body: unknown, status = 200): FakeResponse => ({ status, body });
 const utcDay = (instant: number) => new Date(instant).toISOString().slice(0, 10);
 

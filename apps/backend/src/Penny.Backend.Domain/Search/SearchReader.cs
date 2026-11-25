@@ -58,7 +58,7 @@ public static class SearchReader
         }
         catch (FormatException)
         {
-            throw new BackendFailure(FailureKind.Invalid, Invalid);
+            throw new BackendFailure(FailureKind.Invalid, ErrorCodes.SearchInvalidRequest, Invalid);
         }
     }
 

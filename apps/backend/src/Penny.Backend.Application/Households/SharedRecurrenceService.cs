@@ -59,7 +59,11 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
                 // Access is checked before the body.
                 await SharedExpenseService.RequireMemberAsync(store, householdId, actorId);
                 if (input is null)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var template = input.Template;
                 await SharedExpenseService.ValidateAccountAsync(
                     store,
@@ -119,7 +123,11 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
             {
                 await SharedExpenseService.RequireMemberAsync(store, householdId, actorId);
                 if (update is null)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var input = update.Input;
                 var template = input.Template;
                 await SharedExpenseService.ValidateReceiptAsync(
@@ -130,9 +138,17 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
                 );
                 await ValidateSplitAsync(store, householdId, template);
                 var stored = await FindAsync(store, householdId, ruleId)
-                    ?? throw new BackendFailure(FailureKind.NotFound, RuleNotFound);
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.RecurringRuleNotFound,
+                        RuleNotFound
+                    );
                 if (stored.Revision != update.Revision)
-                    throw new BackendFailure(FailureKind.Conflict, RuleChanged);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.RecurringRuleChanged,
+                        RuleChanged
+                    );
                 // Another member's edit keeps the payer's private account; the payer
                 // replaces or clears it.
                 var accountId = template.AccountId
@@ -178,7 +194,11 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
                         Record(input, accountId, nextDate, anchor, update.Active)
                     )
                 )
-                    throw new BackendFailure(FailureKind.Conflict, RuleChanged);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.RecurringRuleChanged,
+                        RuleChanged
+                    );
                 var after = SharedRuleView.From(
                     await FindAsync(store, householdId, ruleId)
                         ?? throw new InvalidOperationException("Rule disappeared inside its lock."),
@@ -222,14 +242,26 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
             {
                 await SharedExpenseService.RequireMemberAsync(store, householdId, actorId);
                 if (revision is not { } expected)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var stored = await FindAsync(store, householdId, ruleId)
-                    ?? throw new BackendFailure(FailureKind.NotFound, RuleNotFound);
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.RecurringRuleNotFound,
+                        RuleNotFound
+                    );
                 if (
                     stored.Revision != expected
                     || !await store.DeleteRuleAsync(householdId, ruleId, expected)
                 )
-                    throw new BackendFailure(FailureKind.Conflict, RuleChanged);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.RecurringRuleChanged,
+                        RuleChanged
+                    );
                 await AuditAsync(
                     store,
                     householdId,
@@ -260,7 +292,11 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
     {
         var memberIds = await store.CurrentMemberIdsAsync(householdId);
         if (!memberIds.Contains(template.PayerUserId, StringComparer.Ordinal))
-            throw new BackendFailure(FailureKind.Invalid, PayerNotCurrent);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.RecurringPayerNotCurrent,
+                PayerNotCurrent
+            );
         ExpenseSplit.Allocate(
             template.TotalCents,
             template.SplitMode,
