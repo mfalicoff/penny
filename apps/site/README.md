@@ -22,6 +22,8 @@ Each section pairs real app screens in device frames with a live **3D Gaussian s
 
 `scripts/capture-screens.ts` re-captures the web screens; its header has the crop and WebP commands. Icons are the apps' own (Ionicons v7 outline, MIT, from `design-kit/src/icons.ts`), inlined into the HTML at build time; the typeface is the apps' Inter (OFL), subset to Latin as WOFF2.
 
+Short pre-rendered clips of the apps in use are proposed for some frames: see [docs/product-videos.md](docs/product-videos.md) for the license check, the storyboard and the pipeline outline (not built yet).
+
 ## How the splats work
 
 - **Generated, not captured.** Each scene is a deterministic generator (seeded PRNG, Vogel and R2 low-discrepancy surface sampling, so surfaces have no holes) that emits standard 3DGS splats: centre, per-axis scale, rotation, colour and opacity, plus a surface normal and how much the splat is lit. Generation runs in a Web Worker; scenes are posted one by one, so the coin shows while the rest build. 160 000 splats per scene, 70 000 on phones and devices with `deviceMemory < 4`. Nothing is downloaded but ~35 kB of JavaScript.
