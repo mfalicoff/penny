@@ -13,7 +13,8 @@ To see every moment, open [motion/demo.html](motion/demo.html) in a browser stra
 3. **Direction means something.** Earlier is to the leading edge, later to the trailing edge. Things that arrive come up from where they belong (a toast from the bottom, a drawer from its edge).
 4. **One platform language each.** iOS uses SwiftUI's springs and the system's own animations for system components. The web mirrors the same timings with CSS tokens. Both read as the same app, not the same pixels.
 5. **Readable while it moves.** Amounts keep tabular figures, rows never rewrap mid-animation (a column that resizes truncates its text instead), and charts keep their labels in place while bars and bands change.
-6. **Motion is never the only signal.** Every change it shows is also visible when it's off: the toast says "Saved", the new total is on screen, the error text names the problem.
+6. **Felt as well as seen on iOS.** Every action the person takes that animates also plays one haptic ([Haptics](#haptics-ios)).
+7. **Motion is never the only signal.** Every change it shows is also visible when it's off: the toast says "Saved", the new total is on screen, the error text names the problem.
 
 ## Tokens
 
@@ -118,6 +119,40 @@ System components keep the system's motion and are never restyled: iOS sheets an
 | **Pushed screens on iOS** | The system's navigation push. | system | System. |
 | **Web routes** | No page transition. | — | — |
 
+## Haptics (iOS)
+
+On iOS, **every action the person takes that animates also plays a haptic**, so it's felt as well as seen. The rule:
+
+- **One haptic per action**, played when the action happens, at the start of its animation; nothing waits for it. Saving plays one haptic, even though the row, the toast and the totals all move.
+- **Only for what the person did.** A change that arrives on its own doesn't vibrate: a sync that brings rows from another device, a background sync finishing, a total updated by someone else in a household. A haptic you didn't cause feels like a notification.
+- **The meaning decides the kind of haptic**, as with color: success when something is saved, error when it's refused or fails, warning before something destructive, selection when choosing or stepping, and a light impact when something opens or closes.
+- **System components keep their own haptics** (pickers tick, context menus, swipe actions reaching their full swipe, the keyboard). Penny doesn't add a second one on top.
+- **Haptics stay under Reduce Motion.** They aren't motion, and when the movement becomes a fade they're one of the signals that remain. The system's **Settings › Sounds & Haptics › System Haptics** switch turns them all off; Penny has no switch of its own. Devices without a Taptic Engine (most iPads) play nothing, which is fine, because no haptic carries information on its own.
+
+| Action | Haptic (`SensoryFeedback`) |
+| --- | --- |
+| **Saving:** save a new entry, save an edit (row, toast, totals) | `.success` (exists today: `savedCount`) |
+| Save refused by the rules (the shake) | `.error` (exists today: `refusedCount`) |
+| Save or sync failed (the couldn't-sync banner after the person's action) | `.error` (exists today: `failedCount`) |
+| Undo (from the saved toast or after a delete) | `.impact(weight: .light)` |
+| **Month and period:** step to another month or period, pick one in the calendar | `.selection` |
+| Focus a chart element (a Sankey band or label, a category in Insights) | `.selection` |
+| **Lists:** delete an entry (after its confirmation, or a full swipe) | `.impact(weight: .medium)`; the system's own on a full swipe |
+| Bulk change or delete in Activity | One `.impact(weight: .medium)`, however many rows |
+| Select or deselect a row in Activity's selection mode | `.selection` |
+| **Sheets and menus:** open or close a Penny-drawn sheet, menu or popover (add entry, the category menu, Show as a table) | `.impact(weight: .light)` |
+| A disclosure opens or closes (Entry details' extras, filters) | `.selection` |
+| A destructive confirmation appears (delete, sign out with pending changes, leave a household) | `.warning` |
+| **Feedback:** a custom button, chip or row press that runs an action | That action's haptic from this table, on release; a press that only opens or toggles plays `.impact(weight: .light)` |
+| A switch or segmented control (Expense, Income, Invest) | `.selection` (system controls already play it) |
+| Sync now / Retry finishes | `.success`, or `.error` if it failed |
+| **Navigation:** show or hide the iPad sidebar | `.impact(weight: .light)` |
+| Open an entry, a household or a trip (push, or the iPad detail column) | `.selection` |
+
+Tabs switch with no animation, so they play no haptic either.
+
+On the web there are no haptics: Safari doesn't support `navigator.vibrate`, and Penny has no Android app.
+
 ## Reduced motion
 
 When Reduce Motion (iOS) or `prefers-reduced-motion: reduce` (web) is on:
@@ -154,6 +189,7 @@ public enum Motion {
 - Rows use the list's own insert and remove animations driven by the token (`.animation(_, value: ids)`); the month slide is `.transition(Motion.transition(edge:...))` on content keyed by the month (`.id(month)`).
 - The shake is a `keyframeAnimator` on the refused count, next to the existing `.sensoryFeedback(.error, trigger:)`.
 - Charts (Swift Charts, the Sankey shapes) animate through `animatableData` with the `emphasized` token.
+- Haptics come from one table in `PennyDesign`, `Motion.Haptic`, with a case per action in [Haptics](#haptics-ios) mapping to its `SensoryFeedback`. Views attach them with `.sensoryFeedback(Motion.Haptic.save.feedback, trigger:)` on the same value that drives the animation, so the haptic and the motion can't drift apart. No view names a `SensoryFeedback` directly. The existing `.sensoryFeedback` calls in `ShellFeedback` and the entry forms move to the table.
 
 ### CSS
 
@@ -201,6 +237,7 @@ Motion must never make a test or a capture depend on timing.
   - iOS (PennyKit, `ios.sh package-test`): `MotionTests` checks that `Motion.animation` and `Motion.transition` return only a fade or nothing when `reduceMotion` is true, for every token, and that the token values match `contracts/design-baseline.json`. The `reduce-motion` screenshot variant covers the screens.
   - Web (Vitest and Playwright): a unit test for `useCountUp` under reduced motion, and a Playwright test in `shell.spec.ts` that emulates `reducedMotion: "reduce"`, triggers each moment and checks that every running animation from `document.getAnimations()` changes only `opacity` and lasts at most `quick`. The existing "reduced motion removes transitions" test changes to that check.
   - `design:check` and `PennyDesignTests` fail if the motion tokens drift between the kit, the baseline and Swift.
+- **Haptics are tested by their table, and felt on a device.** XCUITest and the simulator can't feel a haptic. `MotionTests` checks that every `Motion.Haptic` case maps to the feedback the table above gives, and that the reduce-motion path doesn't remove any. Each iOS build pull request adds a row to the real-device checks in `docs/ios/qa.md`: do every action in the table on an iPhone and feel exactly one haptic of the right kind, and none when a sync from another device arrives.
 
 ## Out of scope
 
