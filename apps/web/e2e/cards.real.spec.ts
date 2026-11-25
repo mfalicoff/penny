@@ -119,10 +119,10 @@ async function home(page: Page, path = "/") {
  */
 async function expectAlexOctober(page: Page) {
   const totals = page.getByRole("region", { name: "Left to spend" });
-  await expect(totals).toContainText("Recorded remaining: −$1,759.50");
-  await expect(totals).toContainText("Projected remaining: −$1,807.50");
+  await expect(totals).toContainText("Recorded remaining: −$1,765.90");
+  await expect(totals).toContainText("Projected remaining: −$1,813.90");
   const main = page.getByRole("main");
-  await expect(main).toContainText("$1,259.50");
+  await expect(main).toContainText("$1,265.90");
   await expect(main).toContainText("$500.00");
 }
 

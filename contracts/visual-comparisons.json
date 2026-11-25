@@ -52,19 +52,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Shared Recent rows show \"your share\" under the amount, and the seeded October has no personal expense split equally, so the capture has no row for the card's \"split 2 ways\". The ledger records the count and Recent writes \"split N ways\" since MAZ-272; re-capture once the seed has such a row (follow-up recorded on MAZ-272)",
-            "kind": "follow-up",
-            "ref": "MAZ-272"
-          }
         ]
       }
     },
@@ -87,18 +80,11 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "402x874",
         "appearances": [
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Shared Recent rows show \"your share\" under the amount, and the seeded October has no personal expense split equally, so the capture has no row for the card's \"split 2 ways\". The ledger records the count and Recent writes \"split N ways\" since MAZ-272; re-capture once the seed has such a row (follow-up recorded on MAZ-272)",
-            "kind": "follow-up",
-            "ref": "MAZ-272"
-          }
         ]
       }
     },
