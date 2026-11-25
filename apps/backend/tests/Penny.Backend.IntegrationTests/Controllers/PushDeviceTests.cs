@@ -1,7 +1,7 @@
-using Penny.Backend.Domain.Errors;
 using System.Net;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Push;
+using Penny.Backend.Domain.Errors;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
 using Xunit;
