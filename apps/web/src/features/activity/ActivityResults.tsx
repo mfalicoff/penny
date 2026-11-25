@@ -10,11 +10,11 @@ import { useAccountEmail } from "../../auth/account";
 import { Badge, Button, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
-import { formatCents, Money } from "../../design/Money";
+import { formatCents, formatWhole, Money } from "../../design/Money";
 import { EmptyState, LoadingState, useOnline } from "../../design/states";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { useLedgerCurrency } from "../../offline/useLedgerCurrency";
-import { dayLabel } from "../households/model";
+import { dayLabel, payerName } from "../households/model";
 import type { EntryAction } from "../entries/EntryDetail";
 import { categoryIcon, repeatLabel, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
@@ -382,6 +382,27 @@ function sharedWays(total: number, share: number): number | null {
   return ways >= 2 && Math.abs(Math.round(total / ways) - share) <= 1 ? ways : null;
 }
 
+type SharedEntry = Extract<ActivityRow, { source: "shared" }>["entry"];
+
+/** Whole units when the total is a whole amount ("$2,900"), as the cards write it; cents otherwise. */
+const paidAmount = (entry: SharedEntry) => (entry.totalCents % 100 === 0 ? formatWhole(entry.totalCents, entry.householdCurrency) : formatCents(entry.totalCents, entry.householdCurrency));
+
+/**
+ * A shared row's meta (`iphone-activity`, MAZ-275): the household, then who paid ("Apartment · you
+ * paid $2,900", "Apartment · Jo paid").
+ */
+function sharedMeta(entry: SharedEntry): string {
+  const household = entry.householdName || "Shared";
+  return entry.paidByYou ? `${household} · you paid ${paidAmount(entry)}` : `${household} · ${payerName(entry.payer)} paid`;
+}
+
+/** The table's Split cell (`web-activity`): "You paid", else "Jo paid · 3 ways" (or "Jo paid"). */
+function sharedSplit(entry: SharedEntry): string {
+  if (entry.paidByYou) return "You paid";
+  const ways = sharedWays(entry.totalCents, entry.shareCents);
+  return ways ? `${payerName(entry.payer)} paid · ${String(ways)} ways` : `${payerName(entry.payer)} paid`;
+}
+
 function Row({ row, context }: { row: ActivityRow; context: RowContext }) {
   const { categories, accounts, ledger, currency, today, grouped, selectedKey, onOpen } = context;
   const selected = row.key === selectedKey;
@@ -435,7 +456,7 @@ function Row({ row, context }: { row: ActivityRow; context: RowContext }) {
         </span>
         <span className="results__title">{entry.title}</span>
         <span className="results__meta">
-          {entry.householdName ? `Shared · ${entry.householdName}` : "Shared"}
+          {sharedMeta(entry)}
           <span className="visually-hidden"> · {entry.category.name}</span>
           <span className={grouped ? "visually-hidden" : undefined}>
             {" · "}
@@ -599,7 +620,8 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
   const selected = row.key === selectedKey;
   if (row.source === "shared") {
     const { entry } = row;
-    const ways = sharedWays(entry.totalCents, entry.shareCents);
+    // Only the payer gets the account they paid with (`web-activity`: Rent's Main chequing).
+    const paidWith = entry.accountId ? accounts.get(entry.accountId) : undefined;
     return (
       <tr className="activity-table__row" style={tileStyle(entry.category)}>
         {/* A shared expense belongs to its household: no checkbox (MAZ-276, owner decision). */}
@@ -614,8 +636,8 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
             {grouped ? null : <time className="activity-table__date" dateTime={entry.date}>{dayLabel(entry.date, true)}</time>}
           </Link>
         </td>
-        <td className="activity-table__none">—</td>
-        <td>{ways ? `${String(ways)} ways` : "Shared"}</td>
+        <td className={paidWith ? undefined : "activity-table__none"}>{paidWith ?? "—"}</td>
+        <td>{sharedSplit(entry)}</td>
         <td className="activity-table__num">
           <RowAmount row={row} context={context} />
         </td>

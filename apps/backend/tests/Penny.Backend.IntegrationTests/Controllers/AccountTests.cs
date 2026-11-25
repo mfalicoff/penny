@@ -202,6 +202,12 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
             .GetString()
             .ShouldBe(AccountDeletionService.TombstoneEmail(beaId));
         (await MemberAsync(home, alex, alexId)).TryGetProperty("deleted", out _).ShouldBeFalse();
+        // Alex's Activity row says a former member paid, without Bea's name.
+        var payer = (await ProjectionAsync(alex, "?month=2026-09"))
+            .GetProperty("transactions")[0]
+            .GetProperty("payer");
+        payer.GetProperty("deleted").GetBoolean().ShouldBeTrue();
+        payer.TryGetProperty("displayName", out _).ShouldBeFalse();
         (await AuditCountAsync(home, "member.left")).ShouldBe(1);
 
         // Bea's email is free again.

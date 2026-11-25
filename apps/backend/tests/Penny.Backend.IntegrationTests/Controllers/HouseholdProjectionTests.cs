@@ -43,11 +43,34 @@ public sealed class HouseholdProjectionTests(ApiFixture fixture) : SharedExpense
             .GetInt64()
             .ShouldBe(string.CompareOrdinal(beaId, alexId) < 0 ? 4501 : 4500);
         row.GetProperty("payerUserId").GetString().ShouldBe(alexId);
+        // MAZ-275: who paid, as the household sees them, and whether it was the viewer.
+        var payer = row.GetProperty("payer");
+        payer.GetProperty("email").GetString().ShouldBe("alex@example.test");
+        payer.TryGetProperty("displayName", out _).ShouldBeFalse();
+        payer.TryGetProperty("deleted", out _).ShouldBeFalse();
+        row.GetProperty("paidByYou").GetBoolean().ShouldBeFalse();
         row.GetProperty("note").GetString().ShouldBe("Market");
         row.GetProperty("category").GetProperty("name").GetString().ShouldBe("Groceries");
         row.GetProperty("receipt").GetProperty("name").GetString().ShouldBe("Slip.pdf");
         foreach (var absent in new[] { "accountId", "scheduled", "recurringId", "receiptId" })
             row.TryGetProperty(absent, out _).ShouldBeFalse(absent);
+
+        // The payer's display name once they set one; the payer sees that they paid.
+        await Fixture.SqlAsync(
+            $"UPDATE penny.users SET display_name = 'Alex Synthetic' WHERE id = '{alexId}'",
+            Ct
+        );
+        (await ProjectionAsync(bea, "?month=2026-09"))
+            .GetProperty("transactions")[0]
+            .GetProperty("payer")
+            .GetProperty("displayName")
+            .GetString()
+            .ShouldBe("Alex Synthetic");
+        (await ProjectionAsync(alex, "?month=2026-09"))
+            .GetProperty("transactions")[0]
+            .GetProperty("paidByYou")
+            .GetBoolean()
+            .ShouldBeTrue();
 
         // Year and unfiltered projections, newest first.
         (await ProjectionAsync(bea, "?year=2026"))
@@ -200,11 +223,13 @@ public sealed class HouseholdProjectionTests(ApiFixture fixture) : SharedExpense
         preview.GetProperty("householdName").GetString().ShouldBe("Home");
         preview.GetProperty("title").GetString().ShouldBe("Rent");
         preview.TryGetProperty("accountId", out _).ShouldBeFalse();
-        (await ProjectionAsync(alex, "?month=2026-10"))
-            .GetProperty("scheduled")[0]
-            .GetProperty("accountId")
-            .GetString()
-            .ShouldBe("checking");
+        preview.GetProperty("payer").GetProperty("email").GetString().ShouldBe("alex@example.test");
+        preview.GetProperty("paidByYou").GetBoolean().ShouldBeFalse();
+        var payerPreview = (await ProjectionAsync(alex, "?month=2026-10")).GetProperty("scheduled")[
+            0
+        ];
+        payerPreview.GetProperty("accountId").GetString().ShouldBe("checking");
+        payerPreview.GetProperty("paidByYou").GetBoolean().ShouldBeTrue();
         (await ProjectionAsync(bea, "?year=2026"))
             .GetProperty("scheduled")
             .GetArrayLength()
