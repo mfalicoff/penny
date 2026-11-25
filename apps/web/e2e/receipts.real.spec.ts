@@ -78,7 +78,7 @@ test("a PDF and a photo survive upload, save, reload, preview and download; anot
   expect(sha256(await mine.body())).toBe(sha256(png));
   const theirs = await sam.page.request.get(uri);
   expect(theirs.status()).toBe(404);
-  expect(await theirs.json()).toEqual({ error: "Receipt not found." });
+  expect(await theirs.json()).toEqual({ error: "Receipt not found.", code: "receipt.not_found" });
 
   await alex.context.close();
   await sam.context.close();
