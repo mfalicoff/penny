@@ -265,6 +265,21 @@ struct WireErrorBody: Decodable, Sendable {
     var error: String
 }
 
+/// Who paid a shared expense, as the household members see them (MAZ-275).
+public struct WireExpensePayer: Codable, Equatable, Sendable {
+    public var email: String
+    /// Omitted when they have none (MAZ-171): show the email.
+    public var displayName: String?
+    /// True once they deleted their account (MAZ-152): show "Former member", never the email.
+    public var deleted: Bool?
+
+    public init(email: String, displayName: String? = nil, deleted: Bool? = nil) {
+        self.email = email
+        self.displayName = displayName
+        self.deleted = deleted
+    }
+}
+
 /// A shared expense as projected for the viewer. Money is `totalCents` and `shareCents`.
 public struct WireProjectedExpense: Codable, Equatable, Sendable {
     public struct Category: Codable, Equatable, Sendable {
@@ -282,6 +297,10 @@ public struct WireProjectedExpense: Codable, Equatable, Sendable {
     public var totalCents: Int64
     public var shareCents: Int64
     public var payerUserId: String
+    /// Absent from servers before MAZ-275.
+    public var payer: WireExpensePayer?
+    /// True when the viewer paid; absent from servers before MAZ-275.
+    public var paidByYou: Bool?
     public var category: Category
     public var note: String
     public var receipt: WireReceipt?

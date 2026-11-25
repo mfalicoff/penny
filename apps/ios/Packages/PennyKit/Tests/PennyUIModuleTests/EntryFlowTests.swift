@@ -160,6 +160,29 @@ struct EntryFlowTests {
         #expect(cache.result(ledger, filters).entries.map(\.id) == ["a"], "rows gone from the answer go")
     }
 
+    @Test(
+        "whenTheServerSaysWhoPaid_EntryRowMeta_ShouldNameThePayerAfterTheHousehold",
+        arguments: [
+            (SharedPayer?.some(.you), 290_000, "Apartment · you paid $2,900"),
+            (.you, 9_630, "Apartment · you paid $96.30"),
+            (.member(name: "Jo"), 290_000, "Apartment · Jo paid"),
+            (.member(name: "Former member"), 290_000, "Apartment · Former member paid"),
+            (nil, 290_000, "Apartment"),
+        ] as [(SharedPayer?, Int64, String)])
+    @MainActor
+    func sharedPayerMeta(payer: SharedPayer?, total: Int64, expected: String) {
+        let ledger = Ledger(transactions: [entry("a")])
+        let share = SharedExpenseShare(
+            id: "rent", householdId: "home", currency: ledger.currency, title: "Rent",
+            date: CalendarDate(year: 2026, month: 11, day: 1) ?? .earliest, total: total, share: total / 2,
+            category: .init(name: "Housing", icon: "home-outline", color: "#5B7DB1"), householdName: "Apartment",
+            accountId: "visa", payer: payer)
+        let report = LedgerReport(ledger: ledger, shared: [share])
+        let row = ReportEntry.shared(share)
+        #expect(EntryRow.meta(row, category: nil, report: report, today: today, showsDate: false) == expected)
+        #expect(EntryRow.amountNote(row, currency: "CAD") == "your share")
+    }
+
     @Test("whenSharedRowsCantLoad_ActivitySharedNote_ShouldSayWhetherTheyAreMissingOrOld")
     func sharedNoteTitle() {
         #expect(ActivitySharedNoteText.title(hasAnswer: false) == "Shared expenses aren't shown")

@@ -35,6 +35,13 @@ public struct KindTotals: Hashable, Sendable {
     public var remaining: Int64 { income - expense - investment }
 }
 
+/// Who paid a shared expense, as the viewer reads it on a row (MAZ-275): "you paid $2,900" or
+/// "Jo paid". The name is already resolved: a display name, else the email, or "Former member".
+public enum SharedPayer: Hashable, Sendable {
+    case you
+    case member(name: String)
+}
+
 /// The caller's share of one shared household expense, from the server's personal
 /// projection (`GET /api/households/projection`; docs/reference/shared-expenses.md). Shared
 /// rows are server-owned: they are shown beside the personal ledger, never copied into it.
@@ -70,11 +77,13 @@ public struct SharedExpenseShare: Hashable, Sendable {
     public var recurringId: String?
     /// A preview of an occurrence a shared rule has not recorded yet.
     public var scheduled: Bool
+    /// Who paid; nil when the server sent no payer (before MAZ-275).
+    public var payer: SharedPayer?
 
     public init(
         id: String, householdId: String, currency: Currency, title: String, date: CalendarDate, total: Int64,
         share: Int64, category: Category, note: String = "", householdName: String = "", accountId: String? = nil,
-        recurringId: String? = nil, scheduled: Bool = false
+        recurringId: String? = nil, scheduled: Bool = false, payer: SharedPayer? = nil
     ) {
         self.id = id
         self.householdId = householdId
@@ -89,6 +98,7 @@ public struct SharedExpenseShare: Hashable, Sendable {
         self.accountId = accountId
         self.recurringId = recurringId
         self.scheduled = scheduled
+        self.payer = payer
     }
 }
 
@@ -114,6 +124,8 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     public var note: String
     /// A shared row's household name (empty when the server sent none); nil for a personal row.
     public var householdName: String?
+    /// Who paid a shared row; nil for a personal row, or a shared one the server sent no payer for.
+    public var payer: SharedPayer?
     public var recurringId: String?
     /// Not recorded yet: a preview, never cash.
     public var scheduled: Bool
@@ -131,6 +143,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         tripId = entry.tripId
         note = entry.note
         householdName = nil
+        payer = nil
         recurringId = entry.recurringId
         self.scheduled = scheduled
     }
@@ -150,6 +163,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         tripId = nil
         note = item.note
         householdName = item.householdName
+        payer = item.payer
         recurringId = item.recurringId
         scheduled = item.scheduled
     }

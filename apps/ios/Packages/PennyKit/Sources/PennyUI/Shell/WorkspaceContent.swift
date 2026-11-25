@@ -110,9 +110,10 @@ struct EntryRow: View {
     }
 
     /// The line under the title, as the cards read it: the day (unless the list has day
-    /// headers), the status, then the household's name for a shared expense (MAZ-185) or the
-    /// account, then "split 2 ways" for an equal split and, under a day header, the schedule's
-    /// cadence ("monthly"). The category stands in when there is nothing else to say.
+    /// headers), the status, then the household's name and who paid for a shared expense
+    /// (MAZ-185, MAZ-275: "Apartment · you paid $2,900", "Apartment · Jo paid") or the account,
+    /// then "split 2 ways" for an equal split and, under a day header, the schedule's cadence
+    /// ("monthly"). The category stands in when there is nothing else to say.
     /// "Nov 6 · Visa", "Today · Visa · split 2 ways"; on Activity "Main chequing · monthly".
     static func meta(
         _ entry: ReportEntry, category: LedgerCategory?, report: LedgerReport, today: CalendarDate,
@@ -121,8 +122,12 @@ struct EntryRow: View {
         var details: [String] = []
         if let household = entry.householdName {
             details.append(household.isEmpty ? "Shared" : household)
+            // MAZ-275: who paid, as the cards' Rent row ("Apartment · you paid $2,900"), in place
+            // of the account the payer paid with.
+            if let paid = paidText(entry, currency: report.ledger.currency.rawValue) { details.append(paid) }
+        } else if let account = entry.accountId.flatMap(report.ledger.account(id:)) {
+            details.append(account.name)
         }
-        if let account = entry.accountId.flatMap(report.ledger.account(id:)) { details.append(account.name) }
         if entry.householdName == nil, let people = equalSplit(entry) { details.append("split \(people) ways") }
         if !showsDate, let rule = entry.recurringId.flatMap(report.ledger.rule(id:)) {
             details.append(ScheduleText.frequency(rule.frequency).lowercased())
@@ -130,6 +135,21 @@ struct EntryRow: View {
         if details.isEmpty, let category { details.append(category.name) }
         let day = showsDate ? [DayText.short(entry.date, today: today)] : []
         return (day + [status(entry, today: today)].compactMap(\.self) + details).joined(separator: " · ")
+    }
+
+    /// Who paid a shared row: "you paid $2,900" (whole units when the total is whole, as the card
+    /// writes it), "Jo paid", or "Former member paid"; nil when the server sent no payer.
+    static func paidText(_ entry: ReportEntry, currency: String) -> String? {
+        switch entry.payer {
+        case .you:
+            let total =
+                entry.total % 100 == 0
+                ? MoneyFormat.whole(entry.total, currency: currency)
+                : MoneyFormat.amount(entry.total, currency: currency)
+            return "you paid \(total)"
+        case .member(let name): return "\(name) paid"
+        case nil: return nil
+        }
     }
 
     /// The line under the amount: "your share" for a shared expense, "of $12.80" for a personal
