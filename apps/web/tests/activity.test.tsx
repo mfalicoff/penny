@@ -272,6 +272,32 @@ describe("Activity", () => {
 });
 
 describe("Activity on a desktop (web-activity, MAZ-225)", () => {
+  it("ticks entries for a bulk action, never a shared expense, and Esc clears them (web-activity-selected, MAZ-276)", async () => {
+    stubDesktop();
+    server();
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    const rentRow = await within(table).findByRole("row", { name: /Rent/ });
+    // `web-activity`: a box on each personal row, none on the shared one and none in the header yet.
+    expect(within(within(table).getByRole("row", { name: /Hydro/ })).queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(within(table).queryByRole("checkbox", { name: "Select all listed entries" })).not.toBeInTheDocument();
+    expect(screen.getByText(/move ·/).closest("p")).toHaveTextContent("X select");
+
+    await user.click(within(rentRow).getByRole("checkbox", { name: "Select Rent" }));
+    const bar = await screen.findByRole("toolbar", { name: "1 entry selected" });
+    expect(bar).toHaveTextContent("1 selected · spent $1,450.00");
+    expect(within(bar).getAllByRole("button").map((button) => button.textContent)).toEqual(["", "Change category", "Change account", "Delete", "ClearEsc"]);
+    // The bar takes the chips', the summary's and the export's place.
+    expect(screen.queryByRole("button", { name: /Filters/ })).not.toBeInTheDocument();
+    expect(within(table).getByRole("checkbox", { name: "Select all listed entries" })).toHaveAttribute("aria-checked", "mixed");
+    expect(screen.getByText(/move ·/).closest("p")).toHaveTextContent("delete selected · Esc clear selection");
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("toolbar")).not.toBeInTheDocument();
+    expect(within(rentRow).getByRole("checkbox", { name: "Select Rent" })).toHaveAttribute("aria-checked", "false");
+  });
+
   it("lists the period as a table and opens an entry in the panel beside it, with its split", async () => {
     stubDesktop();
     const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food", note: "Catch-up" });
@@ -279,7 +305,7 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
     const user = userEvent.setup();
     renderApp("/transactions?month=2026-11");
     const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
-    expect([...table.querySelectorAll("thead th")].map((cell) => cell.textContent)).toEqual(["Entry", "Account", "Split", "Amount", "Actions"]);
+    expect([...table.querySelectorAll("thead th")].map((cell) => cell.textContent)).toEqual(["Select", "Entry", "Account", "Split", "Amount", "Actions"]);
     // Day rows head their entries, with the day's total.
     expect(within(table).getByRole("columnheader", { name: /Monday, Nov\.? 9/ })).toBeInTheDocument();
     const row = within(table).getByRole("row", { name: /Dinner out/ });

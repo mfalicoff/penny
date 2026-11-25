@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
-The 147 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 152 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (292 images: 145 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (302 images: 150 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -274,6 +274,32 @@ With email delivery configured on the server, the web password reset gets the tw
 The request step says the same thing whether or not the email has an account, as `web-forgot-password` does. Without email on the server, sign-in has no Forgot password and `web-password-reset` stays the only reset.
 
 Owner decision (2026-11-23): none of the three web reset cards shows the server chip, because the web uses the server it was opened from, as on `web-sign-in`. `web-password-reset` has no Email field, because a reset with a code takes only the code and the new password.
+
+## Cards: bulk actions in Activity (MAZ-276, 2026-11-24)
+
+`web-activity` draws a checkbox on each row and the X key, but not what happens with entries selected. Following the owner's decision on MAZ-276, five cards draw it on the desktop Activity table, light and dark. The owner approved them on 2026-11-24, with two decisions: a shared household expense has no checkbox, so `web-activity` drops the one on its shared row (Costco run), and a bulk change or delete shows the saved toast with Undo, drawn on `web-activity-bulk-done`.
+
+| State | Card |
+| --- | --- |
+| Three expenses selected: the selection bar replaces the type chips, the summary and the export button, with a mixed checkbox, "3 selected · spent $117.30", the actions, and Clear (Esc). The header checkbox is mixed, selected rows are tinted, and the detail panel keeps the open entry | `web-activity-selected` |
+| Change category: a menu under the action with "Category for 3 expenses", a search field and the expense categories, each marking how many of the selected entries already use it ("1 of 3") | `web-activity-bulk-category` |
+| Change account: the same menu with "Account for 3 entries", the accounts and No account | `web-activity-bulk-account` |
+| Delete: "Delete 3 entries?" listing the entries with their dates and amounts, then Cancel and a red "Delete 3 entries" | `web-activity-bulk-delete` |
+| Done: the selection is cleared, the deleted rows are gone, and the saved toast says "3 entries deleted" with Undo, as the app's saved toast draws it (a green check and a filled Undo, centered in the window) | `web-activity-bulk-done` |
+
+Built and captured on 2026-11-24 (`cards.real.spec.ts`, 1440×900, light and dark, alex's three September expenses selected with 🎉 Party supplies open): `web-activity-bulk-done` matches; `web-activity-selected`, `web-activity-bulk-category`, `web-activity-bulk-account` and `web-activity-bulk-delete` match except that, with the detail panel open at 1440px, the selection's total is cut short ("spent $184…"), as `web-activity`'s summary wraps there; the category menu also opens with its search field focused. Both are follow-ups. While entries are ticked, rows show no Edit or Delete, and a desktop keeps Add entry while a toast shows (the hiding is for phones only).
+
+Behavior (approved with the cards):
+
+- **Actions are one list.** The bar draws each action from one list of definitions (label, icon, whether it opens a menu or a confirmation, and how it applies to the selected entries), in that list's order, with destructive actions last and red. Adding an action, for example exporting only the selected entries, adds one definition.
+- **One save per action.** Choosing a category or an account, or confirming Delete, applies to every selected entry in one ledger save, so the offline outbox and conflict merge treat it like any other change. The selection then clears and the saved toast names the change ("3 entries deleted", "3 entries moved to Food & drinks", "3 entries moved to Visa", "Account removed from 3 entries"). Undo puts every entry back as it was, in one ledger save. If an entry changed on another device meanwhile, nothing is changed and the bar says so.
+- **What can be selected.** Only your own entries. A shared expense has no checkbox (`Costco run` on the cards): it belongs to its household and is changed there. The header checkbox selects every listed entry you can select.
+- **Category needs one type.** Categories belong to one type (expense, income or investment), so the menu lists only the selection's type. When the selection mixes types, Change category is unavailable and says "Select entries of one type to change their category".
+- **Repeating entries.** An entry a schedule created changes on its own: the schedule keeps its category and account, and Delete leaves the schedule running. The menu or the confirmation says so when the selection holds one (Transit pass on the cards).
+- **Many entries.** The confirmation lists up to five entries, then "and N more".
+- **Keyboard.** X selects or clears the focused row, ⌫ asks to delete the selection when there is one, and Esc clears it. The hint under the table shows these while entries are selected.
+- **Undo, not "can't be undone".** With Undo after a delete, `web-activity-bulk-delete` drops "This can't be undone." from its lead.
+- **Scope.** Desktop Activity: the table, from 768px wide with a mouse or trackpad. Touch tablets and phones keep their list. Changing the month clears the selection; a filter or search that hides a selected entry also drops it from the selection.
 
 ## Review scenarios
 

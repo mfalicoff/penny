@@ -56,6 +56,24 @@ interface ResultsProps {
   autoSelect?: ((pick: { entry: Transaction; row: HTMLElement } | null) => void) | undefined;
   /** Drops these search parameters (the empty state's "Search all time" and "Clear filters"). */
   onClear: (...keys: (keyof ActivitySearch)[]) => void;
+  /** The desktop table's checkboxes (`web-activity-selected`, MAZ-276); the list has none. */
+  selection?: TableSelection | undefined;
+}
+
+/**
+ * The entries ticked in the desktop table for a bulk action (MAZ-276). Only personal entries can
+ * be ticked: a shared expense belongs to its household and has no checkbox.
+ */
+export interface TableSelection {
+  ids: ReadonlySet<string>;
+  toggle: (entry: Transaction) => void;
+  /** Ticks (or clears) all of these: the header checkbox. */
+  setMany: (entries: Transaction[], on: boolean) => void;
+  clear: () => void;
+  /** ⌫ with entries ticked: asks to delete them all (`web-activity-bulk-delete`). */
+  deleteSelected: () => void;
+  /** The personal entries the table lists now, so a filter that hides a ticked entry drops it. */
+  listed: (ids: string[]) => void;
 }
 
 /**
@@ -67,7 +85,7 @@ interface ResultsProps {
  * accepted entry isn't listed twice. Personal rows open their detail; shared rows open the expense
  * in its household.
  */
-export function ActivityResults({ search, filters, ledger, shared, onOpen, onClear, layout, selectedKey, autoSelect }: ResultsProps) {
+export function ActivityResults({ search, filters, ledger, shared, onOpen, onClear, layout, selectedKey, autoSelect, selection }: ResultsProps) {
   const email = useAccountEmail();
   const range = searchRange(search);
   const serverSearch = useInfiniteQuery(
@@ -97,7 +115,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
             {shared.status === "ready" ? "Shared expenses are as Penny last loaded them; smarter matching needs a connection." : "Shared expenses and smarter matching need a connection."}
           </p>
           {rows.length === 0 ? <NoResults search={search} onClear={onClear} /> : null}
-          <RowList rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
+          <RowList rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} selection={layout === "table" ? selection : undefined} />
           {rows.length > limit ? (
             <Button variant="secondary" onClick={() => { setLimit((value) => value + PAGE); }}>
               Show more
@@ -114,7 +132,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
       <section aria-label="Search results" className="activity-results activity-pending">
         {/* Only the headers' look: the status below says what's happening. */}
         <table className="activity-table" aria-hidden="true">
-          <TableHead />
+          <TableHead pick={Boolean(selection)} />
         </table>
         <LoadingState label="Searching…" />
       </section>
@@ -163,7 +181,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
       </p>
       {total === 0 && !serverSearch.hasNextPage ? <NoResults search={search} onClear={onClear} /> : null}
       {/* A search with words is ranked by relevance, not date, so only browsing is grouped by day. */}
-      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
+      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} selection={layout === "table" ? selection : undefined} />
       {pageFailed || refreshFailed ? (
         <div role="alert">
           <p>{describeSearchError(serverSearch.error)}</p>
@@ -261,6 +279,7 @@ interface RowListProps {
   selectedKey: string | undefined;
   onOpen: ResultsProps["onOpen"];
   autoSelect: ResultsProps["autoSelect"];
+  selection: TableSelection | undefined;
 }
 
 /** What a row needs to describe a personal entry. */
@@ -273,6 +292,7 @@ interface RowContext {
   grouped: boolean;
   selectedKey: string | undefined;
   onOpen: ResultsProps["onOpen"];
+  selection: TableSelection | undefined;
 }
 
 /**
@@ -280,8 +300,14 @@ interface RowContext {
  * with the day's total, then that day's rows. On a desktop the rows are a table (Entry, Account,
  * Split, Amount) with each row's Edit and Delete, and the keyboard moves through it.
  */
-function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKey, onOpen, autoSelect }: RowListProps) {
+function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKey, onOpen, autoSelect, selection }: RowListProps) {
   const today = useToday();
+  // MAZ-276: tell Activity which personal entries are listed, so a hidden one leaves the selection.
+  const listedIds = rows.flatMap((row) => (row.source === "personal" ? [row.entry.id] : [])).join(" ");
+  const report = selection?.listed;
+  useEffect(() => {
+    report?.(listedIds ? listedIds.split(" ") : []);
+  }, [report, listedIds]);
   // `ipad-activity`: when the selected entry isn't listed (nothing selected yet, it was deleted or
   // the filters hide it), select the first personal row, or nothing when there is none.
   const listed = selectedKey !== undefined && rows.some((row) => row.key === selectedKey);
@@ -306,6 +332,7 @@ function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKe
     grouped,
     selectedKey,
     onOpen,
+    selection,
   };
   const groups = grouped ? groupByDay(rows) : [{ date: "", rows }];
   const totalOf = (index: number) => {
@@ -432,11 +459,33 @@ const EDITABLE = "[data-row-key]";
  * same Edit and Delete show on the hovered, focused or selected row.
  */
 /** The desktop table's column headers (`web-activity`). */
-function TableHead() {
+function TableHead({ pick = false, rows = [], selection }: { pick?: boolean; rows?: Transaction[]; selection?: TableSelection | undefined }) {
+  const ticked = selection ? rows.filter((entry) => selection.ids.has(entry.id)).length : 0;
   return (
       <thead>
         <tr>
-          <th scope="col">Entry</th>
+          {pick ? (
+            <th scope="col" className="activity-table__pick">
+              {/* `web-activity` draws no header checkbox; it shows once entries are ticked (`web-activity-selected`). */}
+              {selection && selection.ids.size > 0 && rows.length > 0 ? (
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={ticked === rows.length ? true : ticked === 0 ? false : "mixed"}
+                  aria-label="Select all listed entries"
+                  className={cx("pick-box", ticked === rows.length ? "pick-box--on" : ticked > 0 && "pick-box--mixed")}
+                  onClick={() => {
+                    selection.setMany(rows, ticked !== rows.length);
+                  }}
+                >
+                  <span className="pick-box__mark" aria-hidden="true" />
+                </button>
+              ) : (
+                <span className="visually-hidden">Select</span>
+              )}
+            </th>
+          ) : null}
+          <th scope="col" className="activity-table__entry-head">Entry</th>
           <th scope="col">Account</th>
           <th scope="col">Split</th>
           <th scope="col" className="activity-table__num">
@@ -463,9 +512,16 @@ function RowTable({
 }) {
   const hintId = useId();
   const personal = new Map(groups.flatMap((group) => group.rows).flatMap((row) => (row.source === "personal" ? [[row.key, row.entry] as const] : [])));
+  const { selection } = context;
+  const picking = Boolean(selection && selection.ids.size > 0);
 
   function onKeyDown(event: KeyboardEvent<HTMLTableElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === "Escape" && selection && picking) {
+      event.preventDefault();
+      selection.clear();
+      return;
+    }
     const target = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>(EDITABLE) : null;
     if (!target) return;
     const all = [...event.currentTarget.querySelectorAll<HTMLElement>(EDITABLE)];
@@ -475,9 +531,17 @@ function RowTable({
       all[Math.min(all.length - 1, Math.max(0, index + (event.key === "ArrowDown" ? 1 : -1)))]?.focus();
       return;
     }
+    if ((event.key === "Backspace" || event.key === "Delete") && selection && picking) {
+      event.preventDefault();
+      selection.deleteSelected();
+      return;
+    }
     const entry = personal.get(target.dataset.rowKey ?? "");
     if (!entry) return;
-    if (event.key === "e" || event.key === "E") {
+    if ((event.key === "x" || event.key === "X") && selection) {
+      event.preventDefault();
+      selection.toggle(entry);
+    } else if (event.key === "e" || event.key === "E") {
       event.preventDefault();
       context.onOpen(entry, target, "edit");
     } else if (event.key === "Backspace" || event.key === "Delete") {
@@ -488,13 +552,13 @@ function RowTable({
 
   return (
     <>
-      <table className="activity-table" aria-describedby={hintId} onKeyDown={onKeyDown}>
-        <TableHead />
+      <table className={cx("activity-table", picking && "activity-table--picking")} aria-describedby={hintId} onKeyDown={onKeyDown}>
+        <TableHead pick={Boolean(selection)} rows={[...personal.values()]} selection={selection} />
         {groups.map((group, index) => (
           <tbody key={group.date || "results"}>
             {group.date ? (
               <tr className="activity-table__day">
-                <th scope="colgroup" colSpan={3}>
+                <th scope="colgroup" colSpan={selection ? 4 : 3}>
                   <time dateTime={group.date}>{dayHeading(group.date, context.today, true)}</time>
                 </th>
                 <td className="activity-table__num" colSpan={2}>
@@ -510,7 +574,21 @@ function RowTable({
       </table>
       <p id={hintId} className="key-hints">
         <span className="visually-hidden">Keyboard: </span>
-        <Kbd>↑</Kbd> <Kbd>↓</Kbd> move · <Kbd>↵</Kbd> open · <Kbd>E</Kbd> edit · <Kbd>⌫</Kbd> delete
+        {picking ? (
+          <>
+            <Kbd>↑</Kbd> <Kbd>↓</Kbd> move · <Kbd>X</Kbd> select · <Kbd>⌫</Kbd> delete selected · <Kbd>Esc</Kbd> clear selection
+          </>
+        ) : (
+          <>
+            <Kbd>↑</Kbd> <Kbd>↓</Kbd> move · <Kbd>↵</Kbd> open · <Kbd>E</Kbd> edit · <Kbd>⌫</Kbd> delete
+            {selection ? (
+              <>
+                {" · "}
+                <Kbd>X</Kbd> select
+              </>
+            ) : null}
+          </>
+        )}
       </p>
     </>
   );
@@ -524,6 +602,8 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
     const ways = sharedWays(entry.totalCents, entry.shareCents);
     return (
       <tr className="activity-table__row" style={tileStyle(entry.category)}>
+        {/* A shared expense belongs to its household: no checkbox (MAZ-276, owner decision). */}
+        {context.selection ? <td className="activity-table__pick" /> : null}
         <td>
           <Link to="/households/$id/expenses/$expenseId" params={{ id: entry.householdId, expenseId: entry.id }} className="activity-table__entry" data-row-key={row.key}>
             <span className="category-dot">
@@ -549,15 +629,35 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
   const expected = isExpectedIncome(entry, today);
   const split = splitSummary(entry);
   const repeat = entry.recurringId ? repeatLabel(entry, ledger) : null;
+  const { selection } = context;
+  const picked = selection?.ids.has(entry.id) ?? false;
   return (
-    <tr className={cx("activity-table__row", selected && "activity-table__row--selected")} style={tileStyle({ ...category, entryKind: entry.kind })}>
+    <tr className={cx("activity-table__row", selected && "activity-table__row--selected", picked && "activity-table__row--picked")} style={tileStyle({ ...category, entryKind: entry.kind })}>
+      {selection ? (
+        <td className="activity-table__pick">
+          {/* X ticks the focused row, as E and ⌫ reach the row's actions, so the box stays out of the tab order. */}
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={picked}
+            aria-label={`Select ${entry.title}`}
+            tabIndex={-1}
+            className={cx("pick-box", picked && "pick-box--on")}
+            onClick={() => {
+              selection.toggle(entry);
+            }}
+          >
+            <span className="pick-box__mark" aria-hidden="true" />
+          </button>
+        </td>
+      ) : null}
       <td>
         <button
           type="button"
           className="activity-table__entry"
           data-row-key={row.key}
           aria-current={selected ? "true" : undefined}
-          aria-keyshortcuts="E Backspace"
+          aria-keyshortcuts={selection ? "E Backspace X" : "E Backspace"}
           onClick={(event) => {
             onOpen(entry, event.currentTarget, "detail");
           }}
@@ -567,6 +667,7 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
           </span>
           <span className="activity-table__title">{entry.title}</span>
           <span className="visually-hidden"> · {category?.name ?? "Unknown category"}</span>
+          {picked ? <span className="visually-hidden"> · selected</span> : null}
           {repeat ? <Badge icon="repeat">{repeat}</Badge> : null}
           {expected ? (
             <Badge tone="pending" icon="time">

@@ -319,6 +319,86 @@ test("edits with a stale-version check and deletes after confirming", async ({ c
   await expect(results(page).getByRole("button", { name: /^Rent/ })).toHaveCount(0);
 });
 
+test("selects several entries on a desktop, changes their category and account, deletes them, and undoes each in one save (MAZ-276)", async ({ context, page, isMobile }) => {
+  test.skip(isMobile, "Selecting several entries is the desktop table's (web-activity-selected).");
+  const server = await mockApi(context);
+  server.ledger.accounts.push({ id: "visa", name: "Visa", type: "credit" });
+  server.ledger.transactions.push(entry("coffee", "Coffee with Mira", { total: 1280, share: 640, categoryId: "food", date: "2026-11-09", accountId: "visa" }), entry("bus", "Transit pass", { total: 6200, share: 6200, date: "2026-11-06", accountId: "chq" }));
+  // The offline store normalizes each entry, so compare entries by value, not by key order.
+  const canonical = () => JSON.stringify(server.ledger.transactions.map((item) => Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))).sort((a, b) => String(a.id).localeCompare(String(b.id))));
+  const original = canonical();
+  await open(page, "/transactions?month=2026-11");
+  await ledgerReady(page, false);
+  const table = results(page);
+  const bar = page.getByRole("toolbar", { name: /selected$/ });
+
+  // `web-activity`: a box on each personal row, none on the shared one and none in the header yet.
+  await expect(table.getByRole("checkbox", { name: "Select Rent" })).not.toBeChecked();
+  await expect(rowOf(page, "Hydro").getByRole("checkbox")).toHaveCount(0);
+  await expect(table.getByRole("checkbox", { name: "Select all listed entries" })).toHaveCount(0);
+
+  // X ticks the focused row; the bar replaces the chips, the summary and Export.
+  await table.getByRole("button", { name: /^Coffee with Mira/ }).focus();
+  await page.keyboard.press("x");
+  await expect(bar).toContainText("1 selected");
+  await expect(page.getByRole("radio", { name: "Expenses" }).or(page.getByRole("button", { name: "Expenses" }))).toHaveCount(0);
+  await table.getByRole("checkbox", { name: "Select Transit pass" }).click();
+  await table.getByRole("checkbox", { name: "Select Monthly salary" }).click();
+  await expect(bar).toContainText("3 selected");
+  await expect(table.getByRole("checkbox", { name: "Select all listed entries" })).toHaveAttribute("aria-checked", "mixed");
+  // Categories belong to one type: income and expenses together can't share one.
+  await expect(bar.getByRole("button", { name: "Change category" })).toHaveAttribute("aria-disabled", "true");
+  await table.getByRole("checkbox", { name: "Select Monthly salary" }).click();
+
+  // Change category: one save for both, then Undo restores both in one more.
+  let puts = server.puts;
+  await bar.getByRole("button", { name: "Change category" }).click();
+  const menu = page.getByRole("dialog", { name: "Category for 2 expenses" });
+  await expect(menu.getByRole("button", { name: "Food & drinks, 1 of 2 already" })).toBeVisible();
+  await expect(menu.getByText("Transit pass")).toHaveCount(0);
+  await menu.getByRole("searchbox").fill("groc");
+  await menu.getByRole("button", { name: /^Groceries/ }).click();
+  await expect(page.getByText("2 entries moved to Groceries")).toBeVisible();
+  await expect(bar).toHaveCount(0);
+  await expect.poll(() => server.ledger.transactions.filter((item) => item.categoryId === "groceries").map((item) => item.id).sort()).toEqual(["bus", "coffee"]);
+  expect(server.puts).toBe(puts + 1);
+  puts = server.puts;
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect.poll(canonical).toBe(original);
+  expect(server.puts).toBe(puts + 1);
+
+  // Change account to none, then Esc clears a new selection.
+  await table.getByRole("checkbox", { name: "Select Coffee with Mira" }).click();
+  await table.getByRole("checkbox", { name: "Select all listed entries" }).click();
+  await expect(bar).toContainText("4 selected");
+  await bar.getByRole("button", { name: "Change account" }).click();
+  await page.getByRole("dialog", { name: "Account for 4 entries" }).getByRole("button", { name: "No account" }).click();
+  await expect(page.getByText("Account removed from 4 entries")).toBeVisible();
+  await expect.poll(() => server.ledger.transactions.filter((item) => item.accountId).length).toBe(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect.poll(canonical).toBe(original);
+  await table.getByRole("checkbox", { name: "Select Rent" }).click();
+  await expect(bar).toContainText("1 selected");
+  await page.keyboard.press("Escape");
+  await expect(bar).toHaveCount(0);
+
+  // ⌫ with entries ticked asks to delete them all (`web-activity-bulk-delete`).
+  await table.getByRole("checkbox", { name: "Select Coffee with Mira" }).click();
+  await table.getByRole("checkbox", { name: "Select Rent" }).click();
+  await table.getByRole("button", { name: /^Rent/ }).focus();
+  await page.keyboard.press("Backspace");
+  const confirm = page.getByRole("dialog", { name: "Delete 2 entries?" });
+  await expect(confirm.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await expect(confirm.getByRole("listitem")).toHaveText([/Coffee with Mira/, /Rent/]);
+  await confirm.getByRole("button", { name: "Delete 2 entries" }).click();
+  await expect(page.getByText("2 entries deleted")).toBeVisible();
+  await expect.poll(() => server.ledger.transactions.map((item) => item.id).sort()).toEqual(["bus", "pay"]);
+  await expect(table.getByRole("button", { name: /^Rent/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect.poll(() => server.ledger.transactions.map((item) => item.id).sort()).toEqual(["bus", "coffee", "pay", "rent"]);
+  await expect(table.getByRole("button", { name: /^Rent/ })).toBeVisible();
+});
+
 test("fits a 320px screen without horizontal scrolling", async ({ context, page }) => {
   await mockApi(context);
   await page.setViewportSize({ width: 320, height: 720 });

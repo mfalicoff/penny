@@ -1,0 +1,140 @@
+<!-- @dsCard group="Web" name="Change account of selected" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Activity, change account</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/web.js"></script>
+<style>
+  .split { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 18px; }
+  .det h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 10px; }
+  .det .amt { font-size: 40px; font-weight: 700; letter-spacing: -0.04em; margin-top: 12px; }
+  .det .amt small { font-size: 14px; color: var(--label-2); font-weight: 500; letter-spacing: 0; margin-left: 6px; }
+  .kv { display: flex; justify-content: space-between; padding: 9px 0; font-size: 14px; border-top: .5px solid var(--separator); }
+  .kv span { color: var(--label-2); }
+  .receipt { height: 96px; border-radius: 12px; margin-top: 12px; background: repeating-linear-gradient(180deg, var(--surface-2) 0 12px, var(--surface) 12px 14px); box-shadow: inset 0 0 0 .5px var(--separator); display: grid; place-items: center; color: var(--label-2); font-size: 13px; }
+  .acts { display: flex; gap: 8px; margin-top: 16px; }
+  /* Selection bar: takes the place of the chips, summary and export while entries are selected. Its actions come from one list. */
+  .selbar { position: relative; z-index: 5; display: flex; align-items: center; gap: 8px; height: 44px; margin: -7px 0 7px; padding: 0 6px 0 12px; border-radius: 14px; background: var(--tint-soft); box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--tint) 30%, transparent); }
+  .selbar .n { font-size: 14.5px; font-weight: 700; }
+  .selbar .sum { font-size: 13px; color: var(--label-2); }
+  .selbar .sum b { color: var(--label); }
+  .selbar .sp { flex: 1; }
+  .selbar .btn { background: var(--surface); box-shadow: 0 0 0 .5px var(--separator); }
+  .selbar .btn.open { box-shadow: inset 0 0 0 1.5px var(--tint), 0 0 0 4px var(--tint-soft); }
+  .selbar .btn.quiet { background: transparent; box-shadow: none; color: var(--label-2); font-weight: 600; }
+  .selbar .btn.quiet kbd { background: var(--surface); color: var(--label-2); }
+  .selbar .div { width: .5px; height: 22px; background: var(--separator); margin: 0 2px; }
+  .anchor { position: relative; display: inline-flex; }
+  .chk.mixed { background: var(--tint); box-shadow: none; position: relative; }
+  .chk.mixed::after { content: ""; position: absolute; left: 4px; right: 4px; top: 7px; height: 2px; border-radius: 1px; background: #fff; }
+  .tbl tr.picked td { background: color-mix(in srgb, var(--tint) 7%, transparent); }
+  .tbl tr.picked.sel td { background: var(--tint-soft); }
+  /* Pickers: a menu under the action, no scrim. Choosing a row applies it to every selected entry. */
+  .pop { position: absolute; top: 44px; left: 0; z-index: 22; width: 300px; background: var(--surface); border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.22), 0 0 0 .5px var(--separator); overflow: hidden; }
+  .poph { padding: 12px 14px 8px; font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; }
+  .pops { margin: 0 10px 6px; height: 34px; border-radius: 9px; background: var(--fill); display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 14px; color: var(--label-2); }
+  .pops [data-i] { width: 14px; height: 14px; }
+  .popl { padding: 2px 6px 6px; }
+  .opt { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 8px; border-radius: 9px; font-size: 14.5px; font-weight: 500; }
+  .opt.hover { background: var(--fill); }
+  .opt .ic { width: 26px; height: 26px; border-radius: 8px; }
+  .opt .ic [data-i] { width: 14px; height: 14px; }
+  .opt .ai { width: 26px; height: 26px; border-radius: 8px; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+  .opt .ai [data-i] { width: 15px; height: 15px; }
+  .opt .c { margin-left: auto; font-size: 12.5px; color: var(--label-2); font-weight: 500; }
+  .popf { display: flex; gap: 7px; padding: 10px 14px 12px; border-top: .5px solid var(--separator); background: var(--surface-2); font-size: 12.5px; line-height: 1.4; color: var(--label-2); }
+  .popf [data-i] { width: 14px; height: 14px; flex: none; margin-top: 1px; }
+  /* Delete confirmation */
+  .modal { left: 50%; top: 170px; transform: translateX(-50%); width: 500px; }
+  .mh .di { width: 32px; height: 32px; border-radius: 10px; background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); display: grid; place-items: center; }
+  .mh .di [data-i] { width: 18px; height: 18px; }
+  .mbody { padding: 16px 20px 18px; font-size: 14.5px; }
+  .mbody > p { color: var(--label-2); line-height: 1.45; }
+  .list { margin-top: 14px; border-radius: 12px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); padding: 2px 12px; }
+  .li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: .5px solid var(--separator); font-size: 14px; }
+  .li:first-child { border-top: 0; }
+  .li .ic { width: 26px; height: 26px; border-radius: 8px; }
+  .li .ic [data-i] { width: 14px; height: 14px; }
+  .li b { font-weight: 600; }
+  .li .d { color: var(--label-2); font-size: 13px; }
+  .li .num { margin-left: auto; font-weight: 600; }
+  .li.total { font-weight: 600; } .li.total span:first-child { color: var(--label-2); }
+  .note { display: flex; gap: 8px; margin-top: 12px; font-size: 13px; line-height: 1.45; color: var(--label-2); }
+  .note [data-i] { width: 15px; height: 15px; flex: none; margin-top: 2px; }
+  .btn.dangerfill { background: var(--danger); color: #fff; box-shadow: none; }
+  .mf .sp { flex: 1; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="activity" data-url="penny.example.com/activity">
+  <main class="wmain">
+    <div class="wtop">
+      <h1>Activity</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div class="split">
+        <div>
+          <div class="selbar">
+            <span class="chk mixed"></span><span class="n">3 selected</span><span class="sum">· spent <b class="num">$117.30</b></span>
+            <div class="sp"></div>
+            <span class="anchor"><span class="btn"><i data-i="pricetag"></i>Change category</span></span>
+            <span class="anchor"><span class="btn open"><i data-i="wallet"></i>Change account</span><div class="pop" role="menu">
+              <div class="poph">Account for 3 entries</div>
+              <div class="popl">
+                <div class="opt hover"><span class="ai"><i data-i="wallet"></i></span>Main chequing<span class="c">1 of 3</span></div>
+                <div class="opt"><span class="ai"><i data-i="card"></i></span>Visa<span class="c">2 of 3</span></div>
+                <div class="opt"><span class="ai"><i data-i="cash"></i></span>Cash</div>
+                <div class="opt"><span class="ai"><i data-i="close"></i></span>No account</div>
+              </div>
+              <div class="popf"><i data-i="repeat"></i>Transit pass repeats monthly. Its schedule keeps its own account.</div>
+            </div></span>
+            <span class="btn danger"><i data-i="trash"></i>Delete</span>
+            <span class="div"></span>
+            <span class="btn quiet">Clear <kbd>Esc</kbd></span>
+          </div>
+          <div class="panel" style="padding:12px 4px;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th style="width:34px"><span class="chk mixed"></span></th><th>Entry</th><th>Account</th><th>Split</th><th class="r">Amount</th><th style="width:40px"></th></tr></thead>
+              <tbody>
+                <tr class="group"><td colspan="5">Today · Monday, Nov 9</td><td class="r num">−$55.30</td></tr>
+                <tr class="picked"><td><span class="chk on"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Groceries</b></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num"><b>−$48.90</b></td><td></td></tr>
+                <tr class="picked sel"><td><span class="chk on"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><b>Coffee with Mira</b></div></td><td class="muted">Visa</td><td class="muted">2 people</td><td class="r num"><b>−$6.40</b></td><td></td></tr>
+                <tr class="group"><td colspan="5">Friday, Nov 6</td><td class="r num">−$262.00</td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><b>TFSA contribution</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num inv"><b>$200.00</b></td><td></td></tr>
+                <tr class="picked"><td><span class="chk on"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><b>Transit pass</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td class="muted">Visa</td><td class="muted">—</td><td class="r num"><b>−$62.00</b></td><td></td></tr>
+                <tr class="group"><td colspan="5">Wednesday, Nov 4</td><td class="r num">−$61.40</td></tr>
+                <tr><td></td><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Costco run</b><span class="tag">Apartment</span></div></td><td class="muted">—</td><td class="muted">Jo paid · 3 ways</td><td class="r num"><b>−$61.40</b></td><td></td></tr>
+                <tr class="group"><td colspan="5">Sunday, Nov 1</td><td class="r num pos">+$1,750.00</td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--income)"><i data-i="briefcase"></i></div><b>Payday</b></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num pos"><b>+$3,200.00</b></td><td></td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Rent</b><span class="tag">Apartment</span></div></td><td class="muted">Main chequing</td><td class="muted">You paid</td><td class="r num"><b>−$1,450.00</b></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="hint" style="margin-top:12px"><kbd>↑</kbd><kbd>↓</kbd> move · <kbd>X</kbd> select · <kbd>⌫</kbd> delete selected · <kbd>Esc</kbd> clear selection</div>
+        </div>
+
+        <aside class="panel det">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="ic" style="width:44px;height:44px;border-radius:13px;background:var(--c-food)"><i data-i="cafe" style="width:22px;height:22px"></i></div>
+            <div class="btn icon"><i data-i="close"></i></div>
+          </div>
+          <h2>Coffee with Mira</h2>
+          <div style="font-size:14px;color:var(--label-2)">Food &amp; drinks · Today</div>
+          <div class="amt num">−$6.40<small>your share of $12.80</small></div>
+          <div style="margin-top:16px">
+            <div class="kv"><span>Account</span><b>Visa</b></div>
+            <div class="kv"><span>Split</span><b>Equally · 2 people</b></div>
+            <div class="kv"><span>Repeats</span><b>Never</b></div>
+            <div class="kv"><span>Trip</span><b>—</b></div>
+            <div class="kv"><span>Note</span><b>Saturday catch-up</b></div>
+          </div>
+          <div class="receipt"><span style="display:flex;gap:6px;align-items:center"><i data-i="receipt" style="width:16px;height:16px"></i>receipt.jpg · 1.2 MB</span></div>
+          <div class="acts"><div class="btn" style="flex:1;justify-content:center"><i data-i="create"></i>Edit <kbd>E</kbd></div><div class="btn icon danger"><i data-i="trash"></i></div></div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

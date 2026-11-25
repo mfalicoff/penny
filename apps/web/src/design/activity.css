@@ -897,7 +897,7 @@
   text-transform: uppercase;
 }
 
-.activity-table thead th:first-child {
+.activity-table thead th.activity-table__entry-head {
   padding-inline-start: 64px;
 }
 
@@ -1583,4 +1583,401 @@
   gap: 10px;
   min-width: 0;
   margin-left: auto;
+}
+
+/* ---------- bulk actions (MAZ-276: web-activity-selected, -bulk-category, -bulk-account, -bulk-delete, -bulk-done) ---------- */
+/* The checkbox column: no header box until entries are ticked; a shared expense's cell stays empty. */
+.activity-table th.activity-table__pick,
+.activity-table td.activity-table__pick {
+  width: 44px;
+  padding-inline: 4px 0;
+}
+
+.pick-box {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-inline-start: -2px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+}
+
+.pick-box__mark {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1.5px var(--pk-label-3);
+}
+
+.pick-box--on .pick-box__mark,
+.pick-box--mixed .pick-box__mark {
+  background: var(--pk-tint);
+  box-shadow: none;
+}
+
+.pick-box--on .pick-box__mark::after {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  content: "";
+}
+
+.pick-box--mixed .pick-box__mark::after {
+  position: absolute;
+  top: 7px;
+  right: 4px;
+  left: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: #fff;
+  content: "";
+}
+
+.pick-box:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -4px;
+}
+
+@media (forced-colors: active) {
+  .pick-box__mark {
+    border: 1px solid CanvasText;
+  }
+
+  .pick-box--on .pick-box__mark,
+  .pick-box--mixed .pick-box__mark {
+    background: Highlight;
+  }
+}
+
+/* While entries are ticked, the bar acts on them: rows show no Edit or Delete (`web-activity-selected`). */
+.activity-table--picking .activity-table__actions .wbtn {
+  visibility: hidden;
+}
+
+.activity-table__row--picked td,
+.activity-table__row--picked:hover td {
+  background: color-mix(in srgb, var(--pk-tint) 7%, var(--pk-surface));
+}
+
+.activity-table__row--picked.activity-table__row--selected td {
+  background: var(--pk-tint-soft);
+}
+
+/* The bar takes the chips', the summary's and the export button's place. */
+.selection-bar-wrap {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.selection-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 6px 4px 4px;
+  border-radius: 14px;
+  background: var(--pk-tint-soft);
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--pk-tint) 30%, transparent);
+}
+
+.selection-bar__clear-box {
+  width: 28px;
+  height: 36px;
+  margin: 0;
+}
+
+.selection-bar__count {
+  font-size: 0.90625rem;
+  font-weight: 700;
+}
+
+/* The bar stays one row (`web-activity-selected`): the totals give way first when the panel is open. */
+.selection-bar__count,
+.selection-bar .wbtn {
+  flex: none;
+}
+
+.selection-bar__sum {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection-bar__sum .money {
+  color: var(--pk-label);
+  font-weight: 600;
+}
+
+.selection-bar__space {
+  flex: 1 0 0;
+}
+
+.selection-bar__action--danger,
+.selection-bar__action--danger:hover {
+  color: var(--pk-danger);
+}
+
+.selection-bar__action--open {
+  box-shadow: inset 0 0 0 1.5px var(--pk-tint), 0 0 0 4px var(--pk-tint-soft);
+}
+
+.selection-bar__divider {
+  width: 0.5px;
+  height: 22px;
+  margin-inline: 2px;
+  background: var(--pk-separator);
+}
+
+.selection-bar__clear {
+  padding-inline: 6px;
+  color: var(--pk-label-2);
+}
+
+.selection-bar__clear .pk-kbd {
+  background: var(--pk-surface);
+  color: var(--pk-label-2);
+}
+
+.selection-bar__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--pk-danger);
+  font-size: 0.875rem;
+}
+
+/* A pick action's menu, under its button, with no scrim. */
+.bulk-menu-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.bulk-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: 300px;
+  max-height: min(70vh, 520px);
+  overflow: auto;
+  border-radius: 16px;
+  background: var(--pk-surface);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.22), 0 0 0 0.5px var(--pk-separator);
+}
+
+.bulk-menu__title {
+  margin: 0;
+  padding: 12px 14px 8px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bulk-menu__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 0 10px 6px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.bulk-menu__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.bulk-menu__search:focus-within {
+  box-shadow: inset 0 0 0 1.5px var(--pk-tint);
+}
+
+.bulk-menu__list {
+  margin: 0;
+  padding: 2px 6px 6px;
+  list-style: none;
+}
+
+.bulk-menu__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--pk-label);
+  font: 500 0.90625rem var(--pk-font);
+  text-align: start;
+  cursor: pointer;
+}
+
+.bulk-menu__option:hover,
+.bulk-menu__option:focus-visible {
+  background: var(--pk-fill);
+  outline: none;
+}
+
+.bulk-menu__option:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--pk-tint);
+}
+
+.bulk-menu__tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.bulk-menu__tile--plain {
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.bulk-menu__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.bulk-menu__count {
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  font-weight: 500;
+}
+
+.bulk-menu__empty {
+  padding: 8px;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.bulk-menu__note {
+  display: flex;
+  gap: 7px;
+  margin: 0;
+  padding: 10px 14px 12px;
+  border-top: 0.5px solid var(--pk-separator);
+  background: var(--pk-surface-2);
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  line-height: 1.4;
+}
+
+.bulk-menu__note .icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* The confirmation (web-activity-bulk-delete). */
+.dialog__panel.pk-dialog.bulk-confirm {
+  width: min(100%, 500px);
+}
+
+.bulk-confirm__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--pk-danger) 14%, transparent);
+  color: var(--pk-danger);
+}
+
+.bulk-confirm__lead {
+  margin: 0;
+  color: var(--pk-label-2);
+  line-height: 1.45;
+}
+
+.bulk-confirm__list {
+  margin: 14px 0 0;
+  padding: 2px 12px;
+  border-radius: 12px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  list-style: none;
+}
+
+.bulk-confirm__list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 0.5px solid var(--pk-separator);
+  font-size: 0.875rem;
+}
+
+.bulk-confirm__list li:first-child {
+  border-top: 0;
+}
+
+.bulk-confirm__tile {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.bulk-confirm__title {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bulk-confirm__date {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.bulk-confirm__amount {
+  margin-inline-start: auto;
+  font-weight: 600;
+}
+
+.bulk-confirm__more {
+  color: var(--pk-label-2);
+}
+
+.bulk-confirm__note {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.bulk-confirm__note .icon {
+  flex: none;
+  margin-top: 2px;
 }
