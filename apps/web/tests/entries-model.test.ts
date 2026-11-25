@@ -36,6 +36,21 @@ describe("entry drafts", () => {
     expect(share("percent", "33.33")).toBe(2806);
   });
 
+  it("records the people of an equal split as participants, and none for the other modes (MAZ-272)", () => {
+    const built = (extra: Partial<EntryDraft>) => buildEntry(draft(extra), ledger()).built;
+    expect(built({ split: "equal", shareInput: "3" })?.transaction.participants).toBe(3);
+    expect(built({ split: "equal", shareInput: "3", repeat: "monthly" })?.rule?.participants).toBe(3);
+    for (const split of ["full", "amount", "percent"] as const) expect(built({ split, shareInput: "20" })?.transaction).not.toHaveProperty("participants");
+    expect(built({ kind: "income", categoryId: "salary", split: "equal", shareInput: "3" })?.transaction).not.toHaveProperty("participants");
+  });
+
+  it("reopens an equal split with its people while they still give its share, else by amount (MAZ-272)", () => {
+    expect(draftFromEntry(entry("a", { total: 8420, share: 2807, participants: 3 }))).toMatchObject({ split: "equal", shareInput: "3" });
+    expect(draftFromEntry(entry("b", { total: 8420, share: 2000, participants: 3 }))).toMatchObject({ split: "amount", shareInput: "20.00" });
+    expect(draftFromEntry(entry("c", { total: 8420, share: 2000 }))).toMatchObject({ split: "amount" });
+    expect(draftFromEntry(entry("d"))).toMatchObject({ split: "full", shareInput: "" });
+  });
+
   it("reports problems against their fields", () => {
     expect(buildEntry(draft({ amount: "0", title: " " }), ledger()).errors).toEqual({ amount: "Enter an amount greater than zero.", title: "Add a name for this entry." });
     expect(buildEntry(draft({ amount: "1.234" }), ledger()).errors.amount).toBe("Enter an amount with up to two decimal places.");
@@ -253,6 +268,9 @@ describe("entry detail helpers (MAZ-225)", () => {
     // personalShare rounds the total over the people: $10.00 over 3 is $3.33.
     expect(splitSummary({ kind: "expense", total: 1000, share: 333 })).toEqual({ method: "Equally · 3 people", people: 3 });
     expect(splitSummary({ kind: "expense", total: 1000, share: 700 })).toEqual({ method: "Custom share", people: null });
+    // MAZ-272: the recorded count wins where the amounts alone mislead (10 cents over 7 or 10 people is 1 each).
+    expect(splitSummary({ kind: "expense", total: 10, share: 1 })).toEqual({ method: "Equally · 10 people", people: 10 });
+    expect(splitSummary({ kind: "expense", total: 10, share: 1, participants: 7 })).toEqual({ method: "Equally · 7 people", people: 7 });
     expect(splitSummary({ kind: "expense", total: 1000, share: 1000 })).toBeNull();
     expect(splitSummary({ kind: "income", total: 1000, share: 500 })).toBeNull();
     expect(repeatLabel({}, null)).toBe("Never");

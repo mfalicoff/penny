@@ -159,6 +159,19 @@ describe("the schedule draft", () => {
     expect(draftFromRule(rule({ kind: "income", categoryId: "salary", accountId: undefined }))).toMatchObject({ split: "full", accountId: "" });
   });
 
+  it("records an equal split's people on the rule and its occurrences, and drops them when the split changes (MAZ-272)", () => {
+    const equal = draft({ split: "equal", shareInput: "2" });
+    const created = newRule(equal, build(equal), "net");
+    expect(created).toMatchObject({ share: 3250, participants: 2 });
+    expect(draftFromRule(created)).toMatchObject({ split: "equal", shareInput: "2" });
+    const recorded = materialize(ledger({ recurring: [{ ...created, nextDate: "2026-11-10" }] }), TODAY).transactions;
+    expect(recorded).toEqual([expect.objectContaining({ id: "net:2026-11-10", participants: 2 })]);
+    const byAmount = { ...draftFromRule(created), split: "amount" as const, shareInput: "30" };
+    expect(editedRule(created, byAmount, build(byAmount, ledger({ recurring: [created] }), created))).not.toHaveProperty("participants");
+    const income = { ...draft({ kind: "income", categoryId: "salary", split: "equal", shareInput: "2" }) };
+    expect(newRule(income, build(income), "p")).not.toHaveProperty("participants");
+  });
+
   it("adds a schedule only if its category and account still exist, and removing keeps recorded entries", () => {
     const item = rule({ id: "new" });
     expect(() => addSchedule(item)(ledger({ accounts: [] }))).toThrow("payment account was removed");

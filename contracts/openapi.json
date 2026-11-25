@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny API",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "description": "The HTTP API that the .NET backend serves and the iOS and web apps call. See docs/reference/.",
     "license": {
       "name": "MIT",
@@ -7999,6 +7999,12 @@
             "maximum": 99999999999,
             "description": "Integer minor currency units (cents)."
           },
+          "participants": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 100,
+            "description": "Contract 2.2.0. How many people split this expense, the person included: an equal split records it so the apps can say \"split N ways\". Expenses only; absent when the entry is not split or was split by amount or percent. Optional, so ledgers from older clients stay valid; servers before 2.2.0 reject it."
+          },
           "categoryId": {
             "type": "string",
             "minLength": 1,
@@ -8075,6 +8081,12 @@
             "minimum": 0,
             "maximum": 99999999999,
             "description": "Integer minor currency units (cents)."
+          },
+          "participants": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 100,
+            "description": "Contract 2.2.0. How many people split this expense, the person included: an equal split records it so the apps can say \"split N ways\". Expenses only; absent when the entry is not split or was split by amount or percent. Optional, so ledgers from older clients stay valid; servers before 2.2.0 reject it."
           },
           "categoryId": {
             "type": "string",

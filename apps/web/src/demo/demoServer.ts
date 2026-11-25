@@ -18,6 +18,7 @@ interface DemoEntry {
   kind: Kind;
   total: number;
   share: number;
+  participants?: number;
   categoryId: string;
   date: string;
   note: string;
@@ -47,6 +48,8 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
     kind,
     total,
     share,
+    // Half of the total: split equally between two people, so Recent says "split 2 ways" (MAZ-272).
+    ...(kind === "expense" && share * 2 === total ? { participants: 2 } : {}),
     categoryId,
     date: on(offset),
     note: "",

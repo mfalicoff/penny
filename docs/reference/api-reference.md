@@ -39,6 +39,15 @@ Shared expense/rule edits and deletes carry the entity revision; creation begins
 - **Push devices (MAZ-61).** `postApiPushDevices` and `deleteApiPushDevices` register APNs device tokens (`provider: "apns"`, `environment` `sandbox` or `production`); a PostgreSQL-leased worker delivers. See [push](push.md).
 - **Search v1 (MAZ-121).** Authenticated `POST /api/v1/search/transactions` over personal entries and visible shared expenses: accent- and case-insensitive substring, typo-tolerant and meaning-based (on-server embedding) matching, relevance or date/amount sorting, authorization before count/page, keyset cursors and explicit local pending/offline scope. See [search](search.md).
 
+## Participant count
+
+Since contract 2.2.0 a personal expense entry or rule may carry `participants`: how many people split it, the person included, an integer from 2 to 100. The apps set it when you split an expense equally, and Home's Recent says "split N ways" for it (an entry saved before it still reads its count from the total and share when they fit an equal split). It is absent when the entry isn't split or was split by amount or percent, and only expenses may carry it. Materialized occurrences copy it from their rule.
+
+- It is optional, so ledgers written before contract 2.2.0 stay valid and read back unchanged.
+- A server before contract 2.2.0 rejects a ledger that carries it (`400 Invalid ledger data.`), so deploy the API before the clients that send it.
+- A client before contract 2.2.0 ignores the field when it reads the ledger and drops it when it saves; the entry's `share` is unchanged, only the "split N ways" text is lost.
+- Storage: the nullable `participants` column of `ledger_entries` and `ledger_recurring`. The rules and their golden cases (`ledgerParticipants` in `contracts/fixtures/money.json`) are shared by TypeScript, C# and Swift.
+
 ## Error codes
 
 Since contract 2.1.0 (MAZ-187) every error body carries a stable, machine-readable `code` next to the English `error` message, for example `{"error":"Your data changed on another device. Please refresh and try again.","code":"ledger.conflict"}`. The message is unchanged, so clients that read only `error` keep working.

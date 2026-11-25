@@ -25,6 +25,13 @@ internal static class Checks
 
     public static string AnchorDay(string column) => $"{column} BETWEEN 1 AND 31";
 
+    // How many people split a personal expense (contract 2.2.0); only expenses carry it.
+    public static string Participants(string column) =>
+        $"{column} IS NULL OR {column} BETWEEN 2 AND 100";
+
+    public static string ParticipantsExpenseOnly(string column) =>
+        $"{column} IS NULL OR kind = 'expense'";
+
     public const string Lease =
         "(lease_owner IS NULL) = (lease_token IS NULL) AND (lease_token IS NULL) = (lease_expires_at IS NULL)";
 }

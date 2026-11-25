@@ -181,11 +181,29 @@ describe("Home", () => {
     const recent = await screen.findByRole("region", { name: "Recent" });
     const metaOf = async (title: string) => (await within(recent).findByText(title)).closest("li")?.querySelector(".results__meta")?.textContent;
     // iphone-home: "Today · Main chequing"; the category is the row's icon, not its subtitle.
-    expect(await metaOf("Morning coffee")).toBe("Nov 6");
+    expect(await metaOf("Morning coffee")).toBe("Nov 6 · split 2 ways");
     expect(await metaOf("Hydro")).toMatch(/^Nov 3 · /);
     expect(await metaOf("Hydro")).not.toContain("Utilities");
     // The flow card's Insights is a pill link, not a copper text link.
     expect(within(screen.getByRole("region", { name: "Follow your money" })).getByRole("link", { name: "Insights" })).toHaveClass("home-flow__insights");
+  });
+
+  it("says how many ways a personal expense was split equally, as iphone-home does (MAZ-272)", async () => {
+    const split = entry("split", "Coffee with Mira", { total: 1280, share: 640, participants: 2, date: "2026-11-09", categoryId: "food" });
+    const custom = entry("custom", "Lunch", { total: 3000, share: 700, date: "2026-11-08", categoryId: "food" });
+    const older = entry("older", "Brunch", { total: 3000, share: 1000, date: "2026-11-07", categoryId: "food" });
+    server([pay, rent, split, custom, older]);
+    renderApp("/?month=2026-11");
+    const recent = await screen.findByRole("region", { name: "Recent" });
+    const rowOf = async (title: string) => (await within(recent).findByText(title)).closest("li");
+    expect((await rowOf("Coffee with Mira"))?.querySelector(".results__meta")?.textContent).toBe("Nov 9 · split 2 ways");
+    // The subtitle already says it's split, so the amount needs no "your share", as the card.
+    expect((await rowOf("Coffee with Mira"))?.querySelector(".results__sub")).toBeNull();
+    // An entry saved before the count reads it from the amounts, as the native app does.
+    expect((await rowOf("Brunch"))?.querySelector(".results__meta")?.textContent).toBe("Nov 7 · split 3 ways");
+    // A custom share has no count: none is shown, and "your share" stays.
+    expect((await rowOf("Lunch"))?.querySelector(".results__meta")?.textContent).toBe("Nov 8");
+    expect((await rowOf("Lunch"))?.querySelector(".results__sub")).toHaveTextContent("your share");
   });
 
   it("signs Coming up amounts as web-home does (MAZ-223)", async () => {

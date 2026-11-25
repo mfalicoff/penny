@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cents, emptyLedger, materialize, nextOccurrence, personalShare, type Ledger, type Recurring, type Transaction } from "../../src/domain/ledger.ts";
-import { mergeLedger } from "../../src/domain/merge.ts";
+import { cents, emptyLedger, materialize, nextOccurrence, personalShare, recordedSplit, type Ledger, type Recurring, type Transaction } from "../../src/domain/ledger.ts";
+import { mergeLedger, occurrenceOf } from "../../src/domain/merge.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { searchEntries } from "../../src/domain/search.ts";
 import { scheduledEntries, summarizeMonth } from "../../src/domain/summary.ts";
@@ -18,6 +18,7 @@ import { buildMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
 import { tripOverview } from "../../src/domain/selectors/trips.ts";
 import { ledgerWithHouseholds } from "../../src/domain/householdProjection.ts";
 import type { ProjectedExpense } from "../../src/domain/householdProjection.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const root = new URL("../../../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));
@@ -347,4 +348,28 @@ test("redesign fixture: future-dated income counts toward projected, not recorde
   const later = summarizeMonth(ledger, month, { today: "2026-10-28" });
   assert.equal(later.recorded.income, expected.projected.incomeCents - 200000);
   assert.deepEqual(ledger, before);
+});
+
+test("participants (contract 2.2.0): optional, 2–100 on expenses only, copied to occurrences and merged as a field (MAZ-272)", () => {
+  const base = emptyLedger();
+  const rule: Recurring = { id: "r", title: "Rent", kind: "expense", total: 200000, share: 100000, participants: 2, categoryId: "home", date: "2026-01-01", note: "", frequency: "monthly", nextDate: "2026-01-01", anchorDay: 1, active: true };
+  const valid = (ledger: Ledger) => ledgerWriteSchema.safeParse({ revision: 0, ledger }).success;
+  const withRule = materialize({ ...base, recurring: [rule] }, "2026-01-15");
+  assert.equal(withRule.transactions[0]?.participants, 2);
+  assert.deepEqual(occurrenceOf(rule, "2026-01-01"), withRule.transactions[0]);
+  assert.equal(valid(withRule), true);
+  const entry = withRule.transactions[0]!;
+  assert.equal(valid({ ...withRule, transactions: [{ ...entry, participants: 1 }] }), false);
+  assert.equal(valid({ ...withRule, transactions: [{ ...entry, participants: 101 }] }), false);
+  assert.equal(valid({ ...withRule, transactions: [{ ...entry, participants: null as unknown as number }] }), false);
+  const { participants: _, ...plain } = entry;
+  assert.equal(valid({ ...withRule, transactions: [plain] }), true);
+  // Field-wise merge: the server's new count survives this device's unrelated note edit.
+  const merged = mergeLedger(withRule, { ...withRule, transactions: [{ ...entry, note: "Local" }] }, { ...withRule, transactions: [{ ...entry, participants: 4, share: 50000 }] });
+  assert.deepEqual([merged.transactions[0]?.participants, merged.transactions[0]?.note], [4, "Local"]);
+  // Reopening: equal while the count still gives the share, else by amount, else in full.
+  assert.equal(recordedSplit(entry), "equal");
+  assert.equal(recordedSplit({ ...entry, share: 1 }), "amount");
+  assert.equal(recordedSplit(plain), "amount");
+  assert.equal(recordedSplit({ ...plain, share: plain.total }), "full");
 });

@@ -59,7 +59,28 @@ function money() {
   const ledgerAmounts = bounds.map(([total, share]) => ({
     total, share, valid: ledgerWriteSchema.safeParse({ revision: 0, ledger: entry(total, share) }).success,
   }));
-  return { generator, description: "Integer-cent money: client amount parsing (cents), personal share entry, and the stored entry total/share bounds every server enforces.", parse, personalShares, ledgerAmounts };
+  // Contract 2.2.0: the optional participant count of a split expense, on entries and rules.
+  // `participants: null` stands for an absent field (null itself is never valid JSON input).
+  const participantCases: [string, "transaction" | "recurring", number | null][] = [
+    ["expense", "transaction", null], ["expense", "transaction", 2], ["expense", "transaction", 100],
+    ["expense", "transaction", 1], ["expense", "transaction", 0], ["expense", "transaction", 101],
+    ["expense", "transaction", 2.5], ["income", "transaction", 2],
+    ["investment", "transaction", 3], ["expense", "recurring", 3], ["expense", "recurring", 1], ["income", "recurring", 2],
+  ];
+  const ledgerParticipants = participantCases.map(([kind, list, participants]) => {
+    const categories = [{ id: "c", name: "Category", icon: "cafe-outline", color: "#E47850", kind }];
+    const item = {
+      id: "t", title: "Sample", kind, total: 1000, share: kind === "expense" ? 500 : 1000,
+      ...(participants === null ? {} : { participants }), categoryId: "c", date: "2026-10-01", note: "",
+    };
+    const ledger = {
+      version: 4, currency: "CAD", accounts: [], trips: [], categories,
+      transactions: list === "transaction" ? [item] : [],
+      recurring: list === "recurring" ? [{ ...item, frequency: "monthly", nextDate: "2026-11-01", anchorDay: 1, active: true }] : [],
+    };
+    return { kind, list, participants, valid: ledgerWriteSchema.safeParse({ revision: 0, ledger }).success };
+  });
+  return { generator, description: "Integer-cent money: client amount parsing (cents), personal share entry, the stored entry total/share bounds every server enforces, and the optional participant count of a split expense (contract 2.2.0: an integer from 2 to 100, on expenses only; `participants: null` means the field is absent).", parse, personalShares, ledgerAmounts, ledgerParticipants };
 }
 
 function recurrence() {

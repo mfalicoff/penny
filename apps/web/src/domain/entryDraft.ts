@@ -1,4 +1,4 @@
-import { cents, nextOccurrence, parseDate, personalShare, uid, validDate, type Category, type Frequency, type Kind, type Receipt, type Recurring, type Transaction } from "./ledger.ts";
+import { cents, nextOccurrence, parseDate, personalShare, splitParticipants, uid, validDate, type Category, type Frequency, type Kind, type Receipt, type Recurring, type Transaction } from "./ledger.ts";
 
 export type EntryDraft = {
   kind: Kind;
@@ -26,6 +26,7 @@ export function buildEntry(draft: EntryDraft, categories: Category[], entry?: Tr
   const transaction: Transaction = {
     id: entry?.id ?? uid(), kind, title: title.trim(), total,
     share: personalShare(total, kind === "expense" ? split : "full", shareInput),
+    participants: kind === "expense" ? splitParticipants(split, shareInput) : undefined,
     date, categoryId, accountId: draft.accountId, tripId: kind === "expense" ? draft.tripId : undefined,
     note: note.trim(), receipt: kind === "expense" ? receipt : undefined,
     recurringId: entry?.recurringId,

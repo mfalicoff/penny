@@ -308,6 +308,7 @@ extension LedgerEntry {
         guard let date = PennyDomain.CalendarDate(wire.date) else { return nil }
         self.init(
             id: wire.id, title: wire.title, kind: EntryKind(wire: wire.kind), total: wire.total, share: wire.share,
+            participants: wire.participants,
             categoryId: wire.categoryId, accountId: wire.accountId, tripId: wire.tripId, date: date, note: wire.note,
             receipt: wire.receipt.map { ReceiptReference(id: $0.id, name: $0.name, uri: $0.uri, mime: $0.mime) },
             recurringId: wire.recurringId)

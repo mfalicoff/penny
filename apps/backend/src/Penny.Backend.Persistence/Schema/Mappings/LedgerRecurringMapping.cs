@@ -20,6 +20,14 @@ internal sealed class LedgerRecurringMapping : IEntityTypeConfiguration<LedgerRe
             );
             table.HasCheckConstraint("ck_ledger_recurring_note", Checks.Length("note", 0, 1000));
             table.HasCheckConstraint(
+                "ck_ledger_recurring_participants",
+                Checks.Participants("participants")
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_recurring_participants_kind",
+                Checks.ParticipantsExpenseOnly("participants")
+            );
+            table.HasCheckConstraint(
                 "ck_ledger_recurring_frequency",
                 Checks.In("frequency", Checks.Frequencies)
             );

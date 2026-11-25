@@ -6,6 +6,7 @@ public sealed record StoredEntry(
     string Kind,
     long TotalCents,
     long ShareCents,
+    int? Participants,
     string CategoryId,
     string? AccountId,
     string? TripId,

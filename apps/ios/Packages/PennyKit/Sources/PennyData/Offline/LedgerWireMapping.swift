@@ -52,6 +52,7 @@ extension Ledger {
             transactions.append(
                 LedgerEntry(
                     id: entry.id, title: entry.title, kind: kind(entry.kind), total: entry.total, share: entry.share,
+                    participants: entry.participants,
                     categoryId: entry.categoryId, accountId: entry.accountId, tripId: entry.tripId,
                     date: try date(entry.date, "transactions.date"), note: entry.note,
                     receipt: entry.receipt.map {
@@ -70,6 +71,7 @@ extension Ledger {
             recurring.append(
                 RecurringRule(
                     id: rule.id, title: rule.title, kind: kind(rule.kind), total: rule.total, share: rule.share,
+                    participants: rule.participants,
                     categoryId: rule.categoryId, accountId: rule.accountId, date: try date(rule.date, "recurring.date"),
                     note: rule.note,
                     frequency: frequency, nextDate: try date(rule.nextDate, "recurring.nextDate"),
@@ -106,6 +108,7 @@ extension WireLedger {
             transactions: ledger.transactions.map {
                 WireEntry(
                     id: $0.id, title: $0.title, kind: kind($0.kind), total: $0.total, share: $0.share,
+                    participants: $0.participants,
                     categoryId: $0.categoryId, accountId: $0.accountId, tripId: $0.tripId, recurringId: $0.recurringId,
                     date: $0.date.description, note: $0.note,
                     receipt: $0.receipt.map { WireReceipt(id: $0.id, name: $0.name, mime: $0.mime, uri: $0.uri) })
@@ -113,6 +116,7 @@ extension WireLedger {
             recurring: ledger.recurring.map {
                 WireRecurring(
                     id: $0.id, title: $0.title, kind: kind($0.kind), total: $0.total, share: $0.share,
+                    participants: $0.participants,
                     categoryId: $0.categoryId, accountId: $0.accountId, date: $0.date.description, note: $0.note,
                     frequency: $0.frequency.rawValue, nextDate: $0.nextDate.description, anchorDay: $0.anchorDay,
                     active: $0.active)

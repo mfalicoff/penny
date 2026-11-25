@@ -24,8 +24,12 @@ public sealed class RedactAuditSnapshotsTests(ApiFixture fixture) : SettlementTe
         await using (var context = PennyDbContext.Create(Fixture.Admin))
         {
             var migrations = context.Database.GetMigrations().ToList();
-            migrations[^1].ShouldEndWith("_RedactAuditSnapshots");
-            await context.GetService<IMigrator>().MigrateAsync(migrations[^2], Ct);
+            // Later migrations are rolled back too and reapplied by the upgrade below.
+            var redact = migrations.FindIndex(migration =>
+                migration.EndsWith("_RedactAuditSnapshots", StringComparison.Ordinal)
+            );
+            redact.ShouldBeGreaterThan(0);
+            await context.GetService<IMigrator>().MigrateAsync(migrations[redact - 1], Ct);
         }
         await Fixture.SqlAsync(
             $$$"""

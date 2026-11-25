@@ -5,6 +5,7 @@ public struct MoneyFixture: Codable, Equatable, Sendable {
     public var parse: [ParseCase]
     public var personalShares: [ShareCase]
     public var ledgerAmounts: [AmountCase]
+    public var ledgerParticipants: [ParticipantsCase]
 
     /// Exactly one of `cents` and `error` is present.
     public struct ParseCase: Codable, Equatable, Sendable {
@@ -25,6 +26,16 @@ public struct MoneyFixture: Codable, Equatable, Sendable {
     public struct AmountCase: Codable, Equatable, Sendable {
         public var total: Double
         public var share: Double
+        public var valid: Bool
+    }
+
+    /// Contract 2.2.0: the optional participant count of a split expense on one entry
+    /// (`list` "transaction") or rule ("recurring") of `kind`. A nil `participants` means the
+    /// field is absent; it deliberately includes a fraction.
+    public struct ParticipantsCase: Codable, Equatable, Sendable {
+        public var kind: String
+        public var list: String
+        public var participants: Double?
         public var valid: Bool
     }
 }

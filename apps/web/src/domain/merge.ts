@@ -93,6 +93,7 @@ export function occurrenceOf(rule: Recurring, date: string): Transaction {
     kind: rule.kind,
     total: rule.total,
     share: rule.share,
+    ...(rule.participants !== undefined ? { participants: rule.participants } : {}),
     categoryId: rule.categoryId,
     accountId: rule.accountId,
     date,

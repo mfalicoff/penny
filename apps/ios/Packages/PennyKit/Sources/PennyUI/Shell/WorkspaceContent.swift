@@ -160,10 +160,13 @@ struct EntryRow: View {
         return "of \(MoneyFormat.amount(entry.total, currency: currency))"
     }
 
-    /// The head count of an equal split, when the share is exactly what splitting the total
-    /// that many ways gives (`Money.personalShare` rounds half up). Entries keep only the total
-    /// and the share, so an amount or percentage share that isn't an equal split says nothing.
+    /// The head count of an equal split: the expense's recorded `participants` (contract 2.2.0,
+    /// as the web's Recent rows). An entry recorded before 2.2.0 has none, so it counts when the
+    /// share is exactly what splitting the total that many ways gives (`Money.personalShare`
+    /// rounds half up); an amount or percentage share that isn't an equal split says nothing.
     static func equalSplit(_ entry: ReportEntry) -> Int64? {
+        guard entry.kind == .expense else { return nil }
+        if let participants = entry.participants { return Int64(participants) }
         guard entry.share > 0, entry.share < entry.total else { return nil }
         let people = Money.divideRoundingHalfUp(entry.total, by: entry.share)
         guard (2...100).contains(people), Money.divideRoundingHalfUp(entry.total, by: people) == entry.share else {

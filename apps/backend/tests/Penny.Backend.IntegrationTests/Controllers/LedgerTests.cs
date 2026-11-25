@@ -93,6 +93,79 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
+    public async Task whenExpensesHaveParticipants_LedgerFlow_ShouldStoreAndReturnThemAfterShare()
+    {
+        var token = await RegisterAsync("owner@example.test");
+        var snapshot = await GetAsync(token);
+        var split = Entry("dinner", "food", 9000, 3000);
+        split["participants"] = 3;
+        var transactions = snapshot["ledger"]!["transactions"]!.AsArray();
+        transactions.Add(split);
+        transactions.Add(Entry("lunch", "food", 1250, 1250));
+        snapshot["ledger"]!["recurring"]!
+            .AsArray()
+            .Add(
+                new JsonObject
+                {
+                    ["id"] = "rent",
+                    ["title"] = "Synthetic rent",
+                    ["kind"] = "expense",
+                    ["total"] = 200000,
+                    ["share"] = 100000,
+                    ["participants"] = 2,
+                    ["categoryId"] = "food",
+                    ["date"] = "2026-10-01",
+                    ["note"] = "",
+                    ["frequency"] = "monthly",
+                    ["nextDate"] = "2026-11-01",
+                    ["anchorDay"] = 1,
+                    ["active"] = true,
+                }
+            );
+        (await PutAsync(token, snapshot)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var request = Authorized(HttpMethod.Get, "/api/ledger", bearer: token);
+        using var response = await Client.SendAsync(request, Ct);
+        var text = await response.Content.ReadAsStringAsync(Ct);
+        text.ShouldContain(
+            "{\"id\":\"dinner\",\"title\":\"Synthetic lunch\",\"kind\":\"expense\",\"total\":9000,\"share\":3000,\"participants\":3,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\"}"
+        );
+        text.ShouldContain(
+            "{\"id\":\"lunch\",\"title\":\"Synthetic lunch\",\"kind\":\"expense\",\"total\":1250,\"share\":1250,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\"}"
+        );
+        text.ShouldContain(
+            "{\"id\":\"rent\",\"title\":\"Synthetic rent\",\"kind\":\"expense\",\"total\":200000,\"share\":100000,\"participants\":2,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\",\"frequency\":\"monthly\",\"nextDate\":\"2026-11-01\",\"anchorDay\":1,\"active\":true}"
+        );
+        var userId = await UserIdAsync("owner@example.test");
+        await using var context = PennyDbContext.Create(Fixture.Admin);
+        (
+            await context
+                .LedgerEntries.Where(entry => entry.UserId == userId)
+                .OrderBy(entry => entry.Id)
+                .Select(entry => entry.Participants)
+                .ToListAsync(Ct)
+        ).ShouldBe([3, null]);
+    }
+
+    [Fact]
+    public async Task whenParticipantsInvalid_PutLedger_ShouldRejectThem()
+    {
+        var token = await RegisterAsync("owner@example.test");
+        var snapshot = await GetAsync(token);
+        var single = Entry("solo", "food", 1000, 1000);
+        single["participants"] = 1;
+        var withSingle = snapshot.DeepClone();
+        withSingle["ledger"]!["transactions"]!.AsArray().Add(single);
+        await ShouldFailAsync(token, withSingle, Invalid);
+        var explicitNull = Entry("none", "food", 1000, 1000);
+        explicitNull["participants"] = null;
+        var withNull = snapshot.DeepClone();
+        withNull["ledger"]!["transactions"]!.AsArray().Add(explicitNull);
+        await ShouldFailAsync(token, withNull, Invalid);
+        (await GetAsync(token))["revision"]!.GetValue<long>().ShouldBe(0);
+    }
+
+    [Fact]
     public async Task whenSessionMissing_LedgerFlow_ShouldRequireSignIn()
     {
         using var read = await Client.GetAsync("/api/ledger", Ct);

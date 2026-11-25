@@ -123,4 +123,65 @@ struct LedgerValidationTests {
         let json = Data(#"["a\ud83d"]"#.utf8)
         #expect(throws: (any Error).self) { try JSONDecoder().decode([String].self, from: json) }
     }
+
+    /// Contract 2.2.0: builds each `ledgerParticipants` case the way `money()` in
+    /// apps/web/scripts/fixtures/generate-golden.ts does and checks Swift agrees with the
+    /// TypeScript write schema.
+    @Test("whenGoldenParticipantsCase_Violations_ShouldMatchMoneyFixture")
+    func goldenParticipants() throws {
+        let fixture = try Fixtures.decode(MoneyFixture.self, from: "money.json")
+        #expect(fixture.ledgerParticipants.count >= 10)
+        for item in fixture.ledgerParticipants {
+            let kind = try #require(EntryKind(rawValue: item.kind))
+            // A fraction is never a head count, so it is invalid before any range check.
+            var participants: Int?
+            if let value = item.participants {
+                guard let whole = Int(exactly: value) else {
+                    #expect(!item.valid, "\(item.kind) \(item.list) \(value)")
+                    continue
+                }
+                participants = whole
+            }
+            let share: Int64 = kind == .expense ? 500 : 1000
+            let category = LedgerCategory(id: "c", name: "Category", icon: "cafe-outline", color: "#E47850", kind: kind)
+            var ledger = PennyDomain.Ledger(currency: .cad, categories: [category])
+            switch item.list {
+            case "transaction":
+                ledger.transactions = [
+                    LedgerEntry(
+                        id: "t", title: "Sample", kind: kind, total: 1000, share: share, participants: participants,
+                        categoryId: "c", date: .day("2026-10-01"))
+                ]
+            case "recurring":
+                ledger.recurring = [
+                    RecurringRule(
+                        id: "t", title: "Sample", kind: kind, total: 1000, share: share, participants: participants,
+                        categoryId: "c", date: .day("2026-10-01"), frequency: .monthly, nextDate: .day("2026-11-01"),
+                        anchorDay: 1)
+                ]
+            default:
+                Issue.record("unknown list \(item.list)")
+            }
+            #expect(
+                ledger.violations.isEmpty == item.valid,
+                "\(item.kind) \(item.list) \(String(describing: item.participants))")
+        }
+    }
+
+    @Test("whenParticipantsAreOutOfRangeOrNotOnAnExpense_Violations_ShouldNameThem")
+    func participants() {
+        var ledger = Sample.ledger(
+            transactions: [Sample.entry("e", "2026-01-01", share: 500, total: 1000)],
+            recurring: [Sample.rule("r", start: "2026-01-01")])
+        ledger.transactions[0].participants = 2
+        ledger.recurring[0].participants = 100
+        #expect(ledger.violations.isEmpty)
+        ledger.transactions[0].participants = 1
+        ledger.recurring[0].participants = 101
+        #expect(ledger.violations == [.invalidParticipants("e"), .invalidParticipants("r")])
+        ledger.transactions[0] = Sample.entry("e", "2026-01-01", kind: .income)
+        ledger.transactions[0].participants = 2
+        ledger.recurring[0].participants = nil
+        #expect(ledger.violations == [.invalidParticipants("e")])
+    }
 }

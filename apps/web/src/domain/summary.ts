@@ -41,7 +41,7 @@ export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[]
       const id = `${rule.id}:${date}`;
       if (date >= start && !existing.has(id)) {
         result.push({ id, title: rule.title, kind: rule.kind, total: rule.total,
-          share: rule.share, categoryId: rule.categoryId, accountId: rule.accountId, date, note: rule.note,
+          share: rule.share, participants: rule.participants, categoryId: rule.categoryId, accountId: rule.accountId, date, note: rule.note,
           recurringId: rule.id, scheduled: true });
       }
       date = nextOccurrence(date, rule.frequency, rule.anchorDay);
