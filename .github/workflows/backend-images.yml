@@ -85,6 +85,8 @@ jobs:
             test -n "$user" && test "$user" != "root" && test "$user" != "0"
           done
       - name: Production container smoke test
+        # bash -e alone ignores a failure before the pipe; pipefail fails the step through tee.
+        shell: bash
         env:
           PENNY_SMOKE_API_IMAGE: penny-api:ci
           PENNY_SMOKE_WEB_IMAGE: penny-web:ci
@@ -98,6 +100,8 @@ jobs:
           if-no-files-found: warn
       # MAZ-128: the reference Grafana stack beside these images, with telemetry on.
       - name: Observability stack smoke test
+        # bash -e alone ignores a failure before the pipe; pipefail fails the step through tee.
+        shell: bash
         env:
           PENNY_SMOKE_API_IMAGE: penny-api:ci
           PENNY_SMOKE_WEB_IMAGE: penny-web:ci

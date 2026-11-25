@@ -241,6 +241,8 @@ Grafana evaluates the rules in `grafana/provisioning/alerting/penny.yaml`:
 | Penny background job lagging | A job's p95 lag (due → claimed) above 15 minutes for 15 minutes; recurrence excluded | warning |
 | Penny recurrences a day late | Recurrence p95 lag of a day or more, for an hour | warning |
 | Penny background job failures | More than 5 failures of one job in 15 minutes | warning |
+| Penny emailed receipt ingress refusing signatures | More than 10 unsigned or badly signed requests to `/api/inbound-mail` in 15 minutes: the Email Worker's secret differs from the API's, or something else reaches the endpoint ([emailed receipts](operations.md#emailed-receipts)) | warning |
+| Penny emailed receipts not converting | More than 3 emailed receipts waiting for `penny-render` in 30 minutes, for 15 minutes ([penny-render is down](operations.md#penny-render-is-down)) | warning |
 | Penny app crashes | A web or iOS crash reported in the last hour | warning |
 
 **No contact point is provisioned.** Until you add one, alerts show only under Alerting → Alert rules. Add a contact point (email needs Grafana's `GF_SMTP_*` settings; ntfy, Telegram, Slack and webhooks need none) and set it on the default notification policy. These alerts complement the [suggested checks](operations.md) that telemetry cannot see: disk space, backups and the `*-verify` commands.

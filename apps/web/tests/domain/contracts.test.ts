@@ -50,7 +50,7 @@ test("OpenAPI operations are unique, documented and resolve every schema", () =>
   assert.equal(new Set(operationIds).size, operationIds.length, "operation IDs are unique");
   for (const [path, operations] of Object.entries(spec.paths)) {
     for (const [method, operation] of Object.entries(operations as Record<string, any>)) {
-      assert.ok(operation.responses["200"] || operation.responses["201"] || operation.responses["202"], `${method} ${path} has a success response`);
+      assert.ok(operation.responses["200"] || operation.responses["201"] || operation.responses["202"] || operation.responses["303"], `${method} ${path} has a success response`);
       assert.ok(operation.responses.default, `${method} ${path} has an error response`);
       const names = [...path.matchAll(/\{(\w+)\}/g)].map((match) => match[1]);
       assert.deepEqual(names.sort(), (operation.parameters ?? []).filter((item: any) => item.in === "path").map((item: any) => item.name).sort());

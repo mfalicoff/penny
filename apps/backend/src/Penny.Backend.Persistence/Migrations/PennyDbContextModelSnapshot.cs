@@ -1406,8 +1406,13 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("nonce")
                         .UseCollation("C");
 
-                    b.Property<string>("RedirectUri")
+                    b.Property<string>("ProviderId")
                         .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("RedirectUri")
                         .HasColumnType("text")
                         .HasColumnName("redirect_uri")
                         .UseCollation("C");
@@ -1422,11 +1427,15 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.HasIndex("ExpiresAt");
 
+                    b.HasIndex("State");
+
                     b.ToTable("oidc_attempts", "penny", t =>
                         {
                             t.HasCheckConstraint("CK_oidc_attempts_code_verifier", "length(code_verifier) BETWEEN 43 AND 128");
 
                             t.HasCheckConstraint("CK_oidc_attempts_nonce", "length(nonce) BETWEEN 1 AND 256");
+
+                            t.HasCheckConstraint("CK_oidc_attempts_provider_id", "provider_id ~ '^[a-z0-9][a-z0-9_-]{0,31}$'");
 
                             t.HasCheckConstraint("CK_oidc_attempts_redirect_uri", "length(redirect_uri) BETWEEN 1 AND 2048");
 

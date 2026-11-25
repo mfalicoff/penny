@@ -26,6 +26,7 @@ public sealed class PostgresOidcAttemptRepository(NpgsqlDataSource source) : IOi
             new OidcAttempt
             {
                 TransactionHash = attempt.TransactionHash,
+                ProviderId = attempt.ProviderId,
                 RedirectUri = attempt.RedirectUri,
                 State = attempt.State,
                 Nonce = attempt.Nonce,
@@ -48,6 +49,7 @@ public sealed class PostgresOidcAttemptRepository(NpgsqlDataSource source) : IOi
             .Where(pending => pending.TransactionHash == transactionHash)
             .Select(pending => new StoredOidcAttempt(
                 pending.TransactionHash,
+                pending.ProviderId,
                 pending.RedirectUri,
                 pending.State,
                 pending.Nonce,
@@ -64,6 +66,27 @@ public sealed class PostgresOidcAttemptRepository(NpgsqlDataSource source) : IOi
             .OidcAttempts.Where(pending => pending.TransactionHash == transactionHash)
             .ExecuteDeleteAsync(cancellationToken);
         return claimed == 1 ? attempt : null;
+    }
+
+    public async Task<StoredOidcAttempt?> FindByStateAsync(
+        string state,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        return await context
+            .OidcAttempts.AsNoTracking()
+            .Where(pending => pending.State == state)
+            .Select(pending => new StoredOidcAttempt(
+                pending.TransactionHash,
+                pending.ProviderId,
+                pending.RedirectUri,
+                pending.State,
+                pending.Nonce,
+                pending.CodeVerifier,
+                pending.ExpiresAt
+            ))
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task RemoveAsync(string transactionHash, CancellationToken cancellationToken)

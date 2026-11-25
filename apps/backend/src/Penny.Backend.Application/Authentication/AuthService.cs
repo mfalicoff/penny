@@ -124,12 +124,15 @@ public sealed class AuthService(
         }
         if (!allowRegistration)
             throw new BackendFailure(FailureKind.Forbidden, OidcRegistrationDisabled);
-        if (await accounts.FindByEmailAsync(identity.Email, cancellationToken) is not null)
+        // A new account needs the verified email; an existing one is found without it.
+        if (identity.Email is not { } email)
+            throw new BackendFailure(FailureKind.Unauthorized, OidcService.NotVerified);
+        if (await accounts.FindByEmailAsync(email, cancellationToken) is not null)
             throw new BackendFailure(FailureKind.Conflict, OidcEmailInUse);
         var userId = SessionTokens.NewId();
         // OIDC-only accounts have an empty password, which never verifies.
         // The provider said the email is verified (MAZ-172).
-        var user = new StoredUser(userId, identity.Email, "", EmailVerifiedAt: Now());
+        var user = new StoredUser(userId, email, "", EmailVerifiedAt: Now());
         if (
             !await accounts.TryCreateOidcAsync(
                 user,
@@ -141,7 +144,7 @@ public sealed class AuthService(
         )
             throw new BackendFailure(FailureKind.Conflict, OidcAccountExists);
         await profiles.ApplyProviderAsync(userId, identity.Profile, cancellationToken);
-        return new(await IssueAsync(userId, cancellationToken), identity.Email);
+        return new(await IssueAsync(userId, cancellationToken), email);
     }
 
     // A signed-in password change (MAZ-171): the current password must verify, the new one

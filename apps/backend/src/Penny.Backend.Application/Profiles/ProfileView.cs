@@ -4,6 +4,8 @@ namespace Penny.Backend.Application.Profiles;
 // clients can cache the picture's URL for good. `NeedsName`: the apps ask for a name.
 // `PasswordChangedAt`: when a password account last changed its password, if ever.
 // `EmailVerifiedAt`: when the current email was proven (MAZ-172), null while unverified.
+// `Provider`, `ProviderId` and `ProviderIcon` describe the configured provider an oidc account
+// signs in with (MAZ-170), null when none is configured for its issuer any more.
 public sealed record ProfileView(
     string UserId,
     string Email,
@@ -15,5 +17,7 @@ public sealed record ProfileView(
     SignInMethod SignIn,
     string? Provider,
     DateTimeOffset? PasswordChangedAt = null,
-    DateTimeOffset? EmailVerifiedAt = null
+    DateTimeOffset? EmailVerifiedAt = null,
+    string? ProviderId = null,
+    string? ProviderIcon = null
 );

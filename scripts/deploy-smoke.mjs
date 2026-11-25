@@ -206,12 +206,13 @@ async function main() {
     }),
     { mode: 0o600 },
   );
-  const up = () => compose(["up", "-d", "--wait", "--no-build", "--pull", "never"]);
+  const up = () => compose(["up", "-d", "--wait", "--no-build", "--pull", "missing"]);
 
   console.log(`# ${project} on ${origin} (api ${apiImage}, web ${webImage})`);
   up();
   check(true, "stack started: postgres healthy, api and web healthy");
-  const migrations = () => compose(["logs", "--no-log-prefix", "api"]).stdout.split("Database migrated.").length - 1;
+  // One log line per start: the JSON console logger repeats the text in Message and State.
+  const migrations = () => compose(["logs", "--no-log-prefix", "api"]).stdout.split("\n").filter((line) => line.includes("Database migrated.")).length;
   check(migrations() === 1, "the API migrated the new database on startup");
 
   // Same origin: static app, SPA fallback and the API behind one port.
@@ -354,7 +355,7 @@ async function main() {
   // Restore into a clean environment: new volumes (the image creates the penny login and
   // database), the search extensions the dump's columns and indexes need, then the dump.
   compose(["down", "-v"]);
-  compose(["up", "-d", "--wait", "--no-build", "--pull", "never", "postgres"]);
+  compose(["up", "-d", "--wait", "--no-build", "--pull", "missing", "postgres"]);
   psql("CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public");
   compose(["exec", "-T", "postgres", "pg_restore", "-U", "penny", "-d", "penny", "--clean", "--if-exists", "--exit-on-error"], { input: dump });
   compose(["run", "--rm", "--no-deps", "-T", "--entrypoint", "tar", "api", "-C", "/var/lib/penny/receipts", "-xf", "-"], { input: receipts });
