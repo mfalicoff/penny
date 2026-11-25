@@ -602,10 +602,7 @@ final class CardCaptureTests: CardTestCase {
 
     @MainActor
     func test_whenSeeded_IphoneProfile_ShouldBeCaptured() async throws {
-        try await card(
-            "iphone-profile",
-            note: "No Your data group (export, delete account): those features aren't built yet"
-        ) { card in
+        try await card("iphone-profile") { card in
             try card.penny.openSettings()
             try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
             try card.penny.wait(for: AccessibilityID.Profile.changePassword)
@@ -614,6 +611,32 @@ final class CardCaptureTests: CardTestCase {
                 try card.penny.wait(for: AccessibilityID.Profile.signIn).waitForLabel(
                     containing: "Verified", timeout: 20)
             else { throw UIExpectationFailed(description: "The Sign-in row has no Verified mark") }
+            try card.penny.wait(for: AccessibilityID.AccountData.deleteRow)
+        }
+    }
+
+    // MARK: iPhone Your data (MAZ-152)
+
+    @MainActor
+    func test_whenSeeded_IphoneDeleteAccount_ShouldBeCaptured() async throws {
+        try await card("iphone-delete-account") { card in
+            try card.penny.openSettings()
+            try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
+            try card.penny.tap(AccessibilityID.AccountData.deleteRow, opening: AccessibilityID.AccountData.deleteScreen)
+            // Stays for others lists the seeded household once the list has loaded.
+            try card.penny.wait(for: AccessibilityID.AccountData.deleteStays, timeout: 20)
+            try card.penny.wait(for: AccessibilityID.AccountData.deleteConfirm)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneExportAll_ShouldBeCaptured() async throws {
+        try await card("iphone-export-all") { card in
+            try card.penny.openSettings()
+            try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
+            try card.penny.tap(AccessibilityID.AccountData.exportRow, opening: AccessibilityID.AccountData.exportScreen)
+            try card.penny.wait(for: AccessibilityID.AccountData.exportFile, timeout: 60)
+            try card.penny.wait(for: AccessibilityID.AccountData.exportShare)
         }
     }
 
@@ -966,10 +989,7 @@ final class CardCaptureTests: CardTestCase {
 
     @MainActor
     func test_whenSeeded_IpadProfile_ShouldBeCaptured() async throws {
-        try await card(
-            "ipad-profile",
-            note: "No Your data group (export, delete account): those features aren't built yet"
-        ) { card in
+        try await card("ipad-profile") { card in
             try card.penny.openSettings()
             try card.penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
             try card.penny.wait(for: AccessibilityID.Profile.changePassword)
@@ -978,6 +998,7 @@ final class CardCaptureTests: CardTestCase {
                 try card.penny.wait(for: AccessibilityID.Profile.signIn).waitForLabel(
                     containing: "Verified", timeout: 20)
             else { throw UIExpectationFailed(description: "The Sign-in row has no Verified mark") }
+            try card.penny.wait(for: AccessibilityID.AccountData.deleteRow)
         }
     }
 

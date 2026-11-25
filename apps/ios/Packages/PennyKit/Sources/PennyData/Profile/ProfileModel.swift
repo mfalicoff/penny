@@ -11,6 +11,8 @@ public protocol ProfileService: Sendable {
     func removeAvatar() async throws -> WireProfile
     func changePassword(_ change: WirePasswordChange) async throws
     func avatar(_ path: String) async throws -> Data
+    /// `GET /api/export` (MAZ-152).
+    func exportAll() async throws -> AccountExport
 }
 
 /// The signed-in account's profile, straight from the API. A 401 ends the session it was made
@@ -41,6 +43,7 @@ public struct APIProfileService: ProfileService {
         try await call { try await client.changePassword(change) }
     }
     public func avatar(_ path: String) async throws -> Data { try await call { try await client.avatar(path) } }
+    public func exportAll() async throws -> AccountExport { try await call { try await client.exportAll() } }
 }
 
 /// How a password change ended (`POST /api/auth/password`).

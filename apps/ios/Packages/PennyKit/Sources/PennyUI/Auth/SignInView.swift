@@ -145,6 +145,11 @@ struct SignInView: View {
             )
             .padding(.top, 20)
         }
+        if auth.state == .signedOut(.accountDeleted), mode == .signIn {
+            AuthMessage(text: "Your account was deleted, and every device was signed out.", tone: .notice)
+                .padding(.top, 20)
+                .accessibilityIdentifier("auth.accountDeleted")
+        }
         if auth.state == .signedOut(.passwordReset), mode == .signIn {
             AuthMessage(
                 text: "Your password changed and every device was signed out. Sign in with the new password.",

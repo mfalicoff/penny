@@ -57,6 +57,7 @@ private struct ProfileForm: View {
     @State private var passwordChanged = false
     @State private var resendState = ResendState.idle
     @State private var resendError: String?
+    @State private var dataPage: AccountDataPage?
     @FocusState private var nameFocused: Bool
 
     /// iPad: the page beside the Settings list (`ipad-profile`), with the picture beside the name.
@@ -88,17 +89,7 @@ private struct ProfileForm: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             nameSection
             signInSection
-            if let server = shell.account?.server {
-                Section {
-                } footer: {
-                    Text(
-                        PrivacyPolicyText.footer(
-                            host: ServerText.host(server), policy: shell.auth?.server?.privacyPolicy)
-                    )
-                    .font(.footnote)
-                    .accessibilityIdentifier("profile.footer")
-                }
-            }
+            yourDataSection
         }
         .insetGroupedList()
         .contentMargins(.top, 4, for: .scrollContent)
@@ -124,6 +115,12 @@ private struct ProfileForm: View {
         .sheet(isPresented: $changingPassword) {
             ChangePasswordView { passwordChanged = true }
                 .environment(shell)
+        }
+        .navigationDestination(item: $dataPage) { page in
+            switch page {
+            case .export: ExportAllView()
+            case .delete: DeleteAccountView(profile: profile)
+            }
         }
     }
 
@@ -307,6 +304,34 @@ private struct ProfileForm: View {
         }
     }
 
+    // MARK: Your data (MAZ-152)
+
+    /// Export all your data and Delete account, with the server and its privacy policy under them.
+    private var yourDataSection: some View {
+        Section {
+            DataRow(
+                systemImage: "arrow.down", title: "Export all your data",
+                detail: "Entries, receipts and shared expenses", destructive: false
+            ) { dataPage = .export }
+            .accessibilityIdentifier("profile.exportAll")
+            DataRow(systemImage: "trash", title: "Delete account", detail: nil, destructive: true) {
+                dataPage = .delete
+            }
+            .accessibilityIdentifier("profile.deleteAccount")
+        } header: {
+            Text("Your data").cardSectionHeader()
+        } footer: {
+            if let server = shell.account?.server {
+                Text(
+                    PrivacyPolicyText.footer(
+                        host: ServerText.host(server), policy: shell.auth?.server?.privacyPolicy)
+                )
+                .font(.footnote)
+                .accessibilityIdentifier("profile.footer")
+            }
+        }
+    }
+
     // MARK: Sign-in
 
     enum ResendState: Equatable {
@@ -462,12 +487,55 @@ enum ProfileText {
 
 extension View {
     /// A Sign-in row's icon on the cards' neutral 30pt tile.
-    fileprivate func settingsIconTile() -> some View {
+    func settingsIconTile() -> some View {
         font(.callout)
             .foregroundStyle(PennyColor.label)
             .frame(width: 30, height: 30)
             .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .accessibilityHidden(true)
+    }
+}
+
+/// A Your data row: the icon tile (red for Delete account), the title and its detail, and a
+/// chevron, as on the profile cards.
+private struct DataRow: View {
+    let systemImage: String
+    let title: String
+    let detail: String?
+    let destructive: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                if destructive {
+                    Image(systemName: systemImage)
+                        .font(.callout)
+                        .foregroundStyle(PennyColor.danger)
+                        .frame(width: 30, height: 30)
+                        .background(
+                            PennyColor.danger.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        )
+                        .accessibilityHidden(true)
+                } else {
+                    Image(systemName: systemImage).settingsIconTile()
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).foregroundStyle(destructive ? PennyColor.danger : PennyColor.label)
+                    if let detail {
+                        Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(PennyColor.tertiaryLabel)
+                    .accessibilityHidden(true)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .cardSettingsRow()
     }
 }
 
