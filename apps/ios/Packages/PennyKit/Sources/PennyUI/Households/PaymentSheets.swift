@@ -155,7 +155,7 @@ struct PaymentSheet: View {
     }
 
     private var isOpen: Bool {
-        SettlementCalendar.monthlyPaymentsOpen(month, todayUTC: CalendarDate(now(), in: HouseholdPageCalendar.utc))
+        SettlementCalendar.monthlyPaymentsOpen(month, at: now())
     }
 
     private var subtitle: String {
@@ -199,14 +199,6 @@ struct PaymentSheet: View {
             case .failed(let refused): failure = refused
             }
         }
-    }
-}
-
-enum HouseholdPageCalendar {
-    static var utc: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
-        return calendar
     }
 }
 
