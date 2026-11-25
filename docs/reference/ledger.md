@@ -14,6 +14,7 @@ Both operations return `{revision, ledger}`. `PUT` takes the same envelope: the 
 - **Dates** are calendar dates without time zones: strict `YYYY-MM-DD` with ASCII digits, a real day, 2000-01-01 through 2100-12-31. They are stored as PostgreSQL `date` and written back unchanged.
 - **Revision** is a JSON integer, 0..2^53−1 (`Number.MAX_SAFE_INTEGER`). For example 9007199254740990 is read and incremented exactly.
 - **Strings** keep their exact text; lengths count UTF-16 code units like JavaScript. Account and trip names are trimmed with JavaScript `trim()` whitespace rules, other strings are not trimmed. Unknown keys are ignored and, for duplicate JSON keys, the last value wins.
+- **Compression (MAZ-186).** Both responses are sent with Brotli or gzip when the request's `Accept-Encoding` allows it (`Vary: Accept-Encoding`), and uncompressed otherwise. Requests are never compressed. No other API route compresses its responses, because of BREACH ([deployment](../self-hosting/deployment.md#reverse-proxy-and-tls)). Code: `Api/Middleware/LedgerResponseCompression`. Tests: `IntegrationTests/Http/CompressionTests`.
 - **Receipts.** An entry's `receipt` is `{id, name, mime, uri}`. Only `id` is stored on the entry. Responses (GET and PUT) serve `name` and `mime` from the uploaded receipt row (the encrypted filename is opened, never the file) and `uri` as `/api/receipts/{id}`, the value the upload returned. Client-sent name/MIME/URI text is validated for length and then ignored.
 
 ## Version
@@ -77,4 +78,4 @@ MAZ-121 implements the seam: `TrySaveAsync` stages the personal `search_document
 
 ## Sync cost baseline (MAZ-186)
 
-What whole-document sync costs today (payload sizes, server time and the web client's sync pass for 2,000 and 50,000 entries), with the script to measure it again: [ledger sync baseline](ledger-sync-baseline.md).
+What whole-document sync costs today (payload sizes, server time and the web client's sync pass for 2,000 and 50,000 entries), with the script to measure it again: [ledger sync baseline](ledger-sync-baseline.md). The change-based sync it was measured for is recorded and deferred in [ADR 005](architecture.md#adr-005-change-based-personal-ledger-sync-deferred).

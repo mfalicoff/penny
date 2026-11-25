@@ -10,7 +10,8 @@
  */
 import { readFileSync, statSync, openSync, readSync, closeSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { brotliCompressSync, constants, gzipSync } from "node:zlib";
+import { Agent, request as httpsRequest } from "node:https";
+import { brotliCompressSync, brotliDecompressSync, constants, gunzipSync, gzipSync } from "node:zlib";
 import type { Ledger } from "../src/domain/ledger.ts";
 import { registerViteLikeResolution } from "./ledger-bench/hooks.ts";
 import { editEntry, summarize, syntheticLedger, type Summary } from "./ledger-bench/synthetic.ts";
@@ -101,20 +102,43 @@ interface Exchange {
   request: string;
   response: string;
   contentEncoding: string | null;
-  /** fetch until the whole body is read, on loopback. */
+  /** The response body's size on the wire, as served (compressed or not). */
+  wireBytes: number;
+  /** Request until the whole body is read and decoded, on loopback. */
   roundTripMs: number;
 }
 
+// `fetch` decodes compressed bodies without saying how big they were, so requests go through
+// node:https, which hands over the bytes as served. One kept-alive connection, as a browser has.
+const agent = new Agent({ keepAlive: true, maxSockets: 1 });
+
 async function exchange(token: string, method: "GET" | "PUT", body?: unknown): Promise<Exchange> {
   const request = body === undefined ? "" : JSON.stringify(body);
+  const payload = Buffer.from(request);
   const started = performance.now();
-  const response = await fetch(`${state.apiUrl}/api/ledger`, {
-    method,
-    headers: { authorization: `Bearer ${token}`, "accept-encoding": "gzip, br", ...(body === undefined ? {} : { "content-type": "application/json" }) },
-    body: body === undefined ? undefined : request,
+  const { status, encoding, wire } = await new Promise<{ status: number; encoding: string | null; wire: Buffer }>((resolve, reject) => {
+    const call = httpsRequest(
+      new URL("/api/ledger", state.apiUrl),
+      {
+        method,
+        agent,
+        headers: { authorization: `Bearer ${token}`, "accept-encoding": "gzip, br", ...(body === undefined ? {} : { "content-type": "application/json", "content-length": payload.length }) },
+      },
+      (response) => {
+        const chunks: Buffer[] = [];
+        response.on("data", (chunk: Buffer) => chunks.push(chunk));
+        response.on("error", reject);
+        response.on("end", () => {
+          const header = response.headers["content-encoding"];
+          resolve({ status: response.statusCode ?? 0, encoding: typeof header === "string" ? header : null, wire: Buffer.concat(chunks) });
+        });
+      },
+    );
+    call.on("error", reject);
+    call.end(body === undefined ? undefined : payload);
   });
-  const text = await response.text();
-  return { method, status: response.status, request, response: text, contentEncoding: response.headers.get("content-encoding"), roundTripMs: performance.now() - started };
+  const decoded = encoding === "br" ? brotliDecompressSync(wire) : encoding === "gzip" ? gunzipSync(wire) : wire;
+  return { method, status, request, response: decoded.toString("utf8"), contentEncoding: encoding, wireBytes: wire.length, roundTripMs: performance.now() - started };
 }
 
 /** One device's view of the wire, for the engine: every exchange, and the time spent parsing answers. */
@@ -161,6 +185,7 @@ interface Row {
   requestBytes: { raw: number; gzip: number; br: number };
   responseBytes: { raw: number; gzip: number; br: number };
   contentEncoding: string;
+  servedResponseBytes: number;
   serverMs: Summary;
   roundTripMs: Summary;
   clientParseMs?: Summary;
@@ -203,7 +228,7 @@ async function measure(entries: number): Promise<Row[]> {
     }
     rows.push({
       scenario, entries, requests, requestBytes: total(last, "request"), responseBytes: total(last, "response"),
-      contentEncoding: last.map((item) => item.contentEncoding ?? "identity").join(", "), serverMs: summarize(server), roundTripMs: summarize(roundTrip),
+      contentEncoding: last.map((item) => item.contentEncoding ?? "identity").join(", "), servedResponseBytes: last.reduce((sum, item) => sum + item.wireBytes, 0), serverMs: summarize(server), roundTripMs: summarize(roundTrip),
     });
   };
 
@@ -277,7 +302,7 @@ async function measure(entries: number): Promise<Row[]> {
     }
     rows.push({
       scenario, entries, requests: last.map((item) => item.method).join(" + "), requestBytes: total(last, "request"), responseBytes: total(last, "response"),
-      contentEncoding: last.map((item) => item.contentEncoding ?? "identity").join(", "),
+      contentEncoding: last.map((item) => item.contentEncoding ?? "identity").join(", "), servedResponseBytes: last.reduce((sum, item) => sum + item.wireBytes, 0),
       serverMs: summarize(server), roundTripMs: summarize(roundTrip), clientParseMs: summarize(parse), clientEngineMs: summarize(engineWork), passMs: summarize(wall),
     });
   };
@@ -334,11 +359,12 @@ const kib = (bytes: number) => (bytes < 10_240 ? `${(bytes / 1024).toFixed(1)} K
 const ms = (value?: Summary) => (value ? `${value.median.toFixed(1)} (p90 ${value.p90.toFixed(1)})` : "–");
 const sizeCell = (value: { raw: number; gzip: number; br: number }) => (value.raw === 0 ? "0" : `${kib(value.raw)} / ${kib(value.gzip)} / ${kib(value.br)}`);
 const lines = [
-  `Runs per scenario: ${runs} (after 2 warm-ups). Times in ms, median (p90). Sizes raw / gzip / br; served encoding: ${[...new Set(results.map((row) => row.contentEncoding))].join(", ")}.`,
+  `Runs per scenario: ${runs} (after 2 warm-ups). Times in ms, median (p90). Sizes raw / gzip (level 6) / br (quality 4); "Served response" is what came over the wire.`,
   "",
-  "| Entries | Scenario | Requests | Request bytes | Response bytes | Server ms | Round trip ms | Web parse ms | Web engine ms | Web pass ms |",
-  "| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-  ...results.map((row) => `| ${row.entries.toLocaleString("en")} | ${row.scenario} | ${row.requests} | ${sizeCell(row.requestBytes)} | ${sizeCell(row.responseBytes)} | ${ms(row.serverMs)} | ${ms(row.roundTripMs)} | ${ms(row.clientParseMs)} | ${ms(row.clientEngineMs)} | ${ms(row.passMs)} |`),
+  "| Entries | Scenario | Requests | Request bytes | Response bytes | Served response | Server ms | Round trip ms | Web parse ms | Web engine ms | Web pass ms |",
+  "| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+  ...results.map((row) => `| ${row.entries.toLocaleString("en")} | ${row.scenario} | ${row.requests} | ${sizeCell(row.requestBytes)} | ${sizeCell(row.responseBytes)} | ${kib(row.servedResponseBytes)} (${row.contentEncoding}) | ${ms(row.serverMs)} | ${ms(row.roundTripMs)} | ${ms(row.clientParseMs)} | ${ms(row.clientEngineMs)} | ${ms(row.passMs)} |`),
 ];
 process.stdout.write(`${lines.join("\n")}\n`);
 if (args.json) writeFileSync(args.json, `${JSON.stringify({ today: TODAY, runs, node: process.version, results }, null, 2)}\n`);
+agent.destroy();

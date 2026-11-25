@@ -109,6 +109,7 @@ public static class BackendServices
             }
         );
         builder.Services.AddOpenApi();
+        builder.Services.AddLedgerResponseCompression();
         AddAuthServices(builder.Services, AuthOptions.Read(configuration), configuration);
         AddLedgerServices(builder.Services, configuration);
         builder.Services.AddSingleton<IHouseholdRepository, PostgresHouseholdRepository>();

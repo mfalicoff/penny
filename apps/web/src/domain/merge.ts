@@ -30,7 +30,8 @@ function mergeItems<T extends Item>(base: T[], local: T[], remote: T[]): T[] {
   const before = new Map(base.map((item) => [item.id, item]));
   const changed = new Map(local.filter((item) => JSON.stringify(item) !== JSON.stringify(before.get(item.id)))
     .map((item) => [item.id, item]));
-  const removed = new Set(base.filter((item) => !local.some((next) => next.id === item.id)).map((item) => item.id));
+  const localIds = new Set(local.map((item) => item.id));
+  const removed = new Set(base.filter((item) => !localIds.has(item.id)).map((item) => item.id));
   const remoteIds = new Set(remote.map((item) => item.id));
   const result = remote.filter((item) => !removed.has(item.id)).map((item) => {
     const next = changed.get(item.id);

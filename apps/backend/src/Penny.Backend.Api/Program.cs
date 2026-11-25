@@ -43,6 +43,9 @@ app.UseForwardedHeaders();
 app.UseMiddleware<RequestCorrelationMiddleware>();
 app.UseMiddleware<ApiBoundaryMiddleware>();
 
+// MAZ-186: only the ledger document is compressed (BREACH: never sign-in or session answers).
+app.UseLedgerResponseCompression();
+
 // MAZ-62: injected failures for full-stack test runs; never registered in Production.
 if (app.Services.GetRequiredService<TestControlOptions>().Enabled)
     app.UseMiddleware<FaultInjectionMiddleware>();
