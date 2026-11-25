@@ -416,7 +416,8 @@ section {
     0 0 120px rgba(255, 111, 63, 0.12);
 }
 
-.iphone img {
+.iphone img,
+.iphone video {
   width: 100%;
   border-radius: 40px;
   /* The renders' corners outside the screen are trimmed by the radius. */
@@ -500,9 +501,118 @@ section {
   padding: 6px;
 }
 
-.device-pair .iphone img {
+.device-pair .iphone img,
+.device-pair .iphone video {
   border-radius: 28px;
   clip-path: inset(0 round 28px);
+}
+
+/* ---------- clips of the apps in use (src/clips.ts) ---------- */
+
+.clip-frame {
+  position: relative;
+}
+
+.clip-frame video {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.clip-frame.is-playing video {
+  opacity: 1;
+}
+
+.clip-frame.is-stopped video,
+.clip-frame.is-stopped .clip-toggle {
+  display: none;
+}
+
+.clip-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--glass-edge);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--label);
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.iphone .clip-toggle {
+  right: 16px;
+  bottom: 22px;
+}
+
+.clip-toggle:hover,
+.clip-toggle:focus-visible {
+  opacity: 1;
+}
+
+.clip-toggle:focus-visible {
+  outline: 2px solid var(--tint-text);
+  outline-offset: 3px;
+}
+
+.clip-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.clip-captions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 20px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  color: var(--label-2);
+}
+
+.clip-captions[hidden] {
+  display: none;
+}
+
+.clip-captions li::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+}
+
+.clip-captions.is-synced li {
+  color: var(--label-3);
+  transition: color 0.3s ease;
+}
+
+.clip-captions.is-synced li.is-current {
+  color: var(--label);
+}
+
+.clip-captions.is-synced li.is-current::before {
+  background: var(--tint);
 }
 
 /* ---------- self-host ---------- */
@@ -600,7 +710,8 @@ section {
     padding: 6px;
   }
 
-  .iphone img {
+  .iphone img,
+  .iphone video {
     border-radius: 30px;
     clip-path: inset(0 round 30px);
   }

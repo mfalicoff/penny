@@ -54,3 +54,30 @@ jobs:
         run: npx wrangler deploy --dry-run
         env:
           WRANGLER_SEND_METRICS: 'false'
+
+  video:
+    # The clip pipeline (apps/site/video): lint and types only. Capturing and rendering need a
+    # browser, the web app and ffmpeg, and run on a developer's machine (apps/site/README.md);
+    # the page's tests check the committed clips against their budgets.
+    name: Product page clip pipeline lint and types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/site/video
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/site/video/package-lock.json
+      - name: Install dependencies
+        # Remotion's renderer binaries are optional dependencies, not needed to lint.
+        run: npm ci --no-audit --no-fund --omit=optional
+      - name: Lint
+        run: npm run lint
+      - name: Check types
+        run: npm run typecheck
