@@ -1,7 +1,8 @@
 namespace Penny.Backend.Application.Households;
 
-// One household audit event. `BeforeJson`/`AfterJson` are
-// redacted JSON snapshots (null when absent); `CreatedAt` is Unix milliseconds.
+// One household audit event. `BeforeJson`/`AfterJson` are the stored
+// JSON snapshots, which never hold private data (null when absent); `CreatedAt` is
+// Unix milliseconds.
 public sealed record AuditEventView(
     string Id,
     string HouseholdId,
