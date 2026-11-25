@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   ui:
-    name: ${{ matrix.os.name }} · ${{ matrix.plan }}
+    name: ${{ matrix.os.name }} · ${{ matrix.job.plan }}${{ matrix.job.shard && format(' shard {0}', matrix.job.shard) || '' }} · ${{ matrix.device }}
     runs-on: xcode-27
     timeout-minutes: 120
     strategy:
@@ -33,22 +33,37 @@ jobs:
       matrix:
         os:
           # `runtime` is a CoreSimulator runtime identifier prefix; empty means the newest
-          # installed runtime that supports the device types (ios.sh picks it).
+          # installed runtime that supports the device types (ios.sh picks it, and on a pinned
+          # older runtime the newest device type that runtime supports).
           - { name: iOS 26 (minimum), download: '26.0', runtime: com.apple.CoreSimulator.SimRuntime.iOS-26-0 }
           - { name: newest iOS, download: '', runtime: '' }
-        plan: [full, screenshots, performance]
+        # One device per job, and Full in two shards (MAZ-195): one device's whole Full plan took
+        # 84 minutes of tests alone on this runner, so iPhone and iPad together never finished
+        # within the limit. Shard 1 runs the classes in FULL_SHARD, shard 2 the rest, so a new
+        # class lands in shard 2. Keep each shard's timings (job summary) well under the limit.
+        device: [iphone, ipad]
+        job:
+          - { plan: full, shard: '1' }
+          - { plan: full, shard: '2' }
+          - { plan: screenshots, shard: '' }
+          - { plan: performance, shard: '' }
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
       # The runner cannot run Linux containers: PostgreSQL 18 + pgvector comes from the flake.
       PENNY_POSTGRES: native
       PENNY_POSTGRES_BIN: ${{ github.workspace }}/.cache/test-postgres/bin
+      # The heavier half of Full by the hosted runner's timings (receipts, auth, organize, the
+      # app lock, households and search); everything else runs in shard 2.
+      FULL_SHARD: >-
+        PennyUITests/ReceiptJourneyTests PennyUITests/AuthJourneyTests PennyUITests/OrganizeJourneyTests
+        PennyUITests/AppLockDelayTests PennyUITests/HouseholdJourneyTests PennyUITests/SearchJourneyTests
     steps:
       - name: Selected plans
         id: selected
         shell: bash
         env:
           PLANS: ${{ github.event.inputs.plans || 'full screenshots performance' }}
-          PLAN: ${{ matrix.plan }}
+          PLAN: ${{ matrix.job.plan }}
         run: |
           if [[ " $PLANS " == *" $PLAN "* ]]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/checkout@v7
@@ -87,11 +102,20 @@ jobs:
       - name: Restore locked packages
         if: steps.selected.outputs.run == 'true'
         run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
-      - name: ${{ matrix.plan }} plan on clean iPhone and iPad simulators
+      - name: ${{ matrix.job.plan }} plan on a clean ${{ matrix.device }} simulator
         if: steps.selected.outputs.run == 'true'
+        shell: bash
         env:
           PENNY_RUNTIME: ${{ matrix.os.runtime }}
-        run: apps/ios/scripts/ios.sh ui-test "${{ matrix.plan }}"
+          PENNY_UI_DEVICES: ${{ matrix.device }}
+          PLAN: ${{ matrix.job.plan }}
+          SHARD: ${{ matrix.job.shard }}
+        run: |
+          case "$SHARD" in
+            1) export PENNY_UI_ONLY="$FULL_SHARD" ;;
+            2) export PENNY_UI_SKIP="$FULL_SHARD" ;;
+          esac
+          apps/ios/scripts/ios.sh ui-test "$PLAN"
       - name: Remove leftover environments
         if: always() && steps.selected.outputs.run == 'true'
         run: node scripts/test-env/penny-env.mjs down --all
@@ -99,6 +123,6 @@ jobs:
         if: always() && steps.selected.outputs.run == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: ios-ui-${{ matrix.plan }}-${{ matrix.os.download || 'newest' }}
+          name: ios-ui-${{ matrix.job.plan }}${{ matrix.job.shard }}-${{ matrix.device }}-${{ matrix.os.download || 'newest' }}
           path: test-results/ios/ui/
           if-no-files-found: warn
