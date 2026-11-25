@@ -182,6 +182,7 @@ interface Leaving<T> {
 
 export interface ListItem<T> {
   item: T;
+  /** The item's own key. Render a leaving row under a different React key, so an item that comes back gets a fresh element. */
   key: string;
   /** The row has been removed and is playing its exit; render it inert. */
   leaving: boolean;

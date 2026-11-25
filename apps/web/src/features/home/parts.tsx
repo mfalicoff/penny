@@ -231,14 +231,14 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
         );
         if (entry.scheduled) {
           return (
-            <li key={entry.id} className="results__row activity-row" {...motion}>
+            <li key={leaving ? `leaving:${entry.id}` : entry.id} className="results__row activity-row" {...motion}>
               <div className="activity-row__main activity-row__main--static">{body}</div>
             </li>
           );
         }
         if (shared) {
           return (
-            <li key={entry.id} className="results__row activity-row" {...motion}>
+            <li key={leaving ? `leaving:${entry.id}` : entry.id} className="results__row activity-row" {...motion}>
               <Link to="/households/$id/expenses/$expenseId" params={{ id: shared.householdId, expenseId: shared.householdExpenseId }} className="activity-row__main">
                 {body}
               </Link>
@@ -247,7 +247,7 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
         }
         const highlighted = saved === entry.id;
         return (
-          <li key={entry.id} className={cx("results__row activity-row", highlighted && "activity-row--saved", unsaving === entry.id && "activity-row--unsaving")} style={highlighted || unsaving === entry.id ? tileStyle({ ...category, entryKind: entry.kind }) : undefined} {...motion}>
+          <li key={leaving ? `leaving:${entry.id}` : entry.id} className={cx("results__row activity-row", highlighted && "activity-row--saved", unsaving === entry.id && "activity-row--unsaving")} style={highlighted || unsaving === entry.id ? tileStyle({ ...category, entryKind: entry.kind }) : undefined} {...motion}>
             <button
               type="button"
               className="activity-row__main"

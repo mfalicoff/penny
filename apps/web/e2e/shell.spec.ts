@@ -132,14 +132,19 @@ test.describe("appearance", () => {
     expect(await filter()).toBe("none");
   });
 
-  test("reduced motion removes transitions", async ({ page }) => {
+  // docs/design/motion.md, Reduced motion: nothing moves, and fades stay at `quick` (MAZ-287).
+  test("reduced motion stops movement and keeps quick fades", async ({ page }) => {
     await mockApi(page);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/settings/appearance");
-    const duration = await page
-      .getByRole("switch", { name: "Reduce transparency" })
-      .evaluate((element) => Number.parseFloat(getComputedStyle(element).transitionDuration));
-    expect(duration).toBeLessThan(0.001);
+    const timing = await page.getByRole("switch", { name: "Reduce transparency" }).evaluate((element) => ({
+      track: getComputedStyle(element).transitionDuration.split(",").map((value) => Number.parseFloat(value)),
+      thumb: getComputedStyle(element, "::after").transitionDuration.split(",").map((value) => Number.parseFloat(value)),
+      motion: getComputedStyle(document.documentElement).getPropertyValue("--pk-motion").trim(),
+    }));
+    expect(timing.motion).toBe("0");
+    expect(Math.max(...timing.thumb)).toBe(0);
+    expect(Math.max(...timing.track)).toBeLessThanOrEqual(0.15);
   });
 });
 

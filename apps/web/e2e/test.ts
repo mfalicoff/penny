@@ -91,6 +91,25 @@ export const test = base.extend<{ mockedApi: MockedApi }>({
  */
 export async function motionOff(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    document.documentElement.dataset.motion = "off";
+    // Init scripts run before `<html>` exists: set it as soon as the parser inserts it, before the app's scripts run.
+    const off = () => {
+      // `documentElement` is null until then, whatever the DOM types say.
+      const root = document.documentElement as HTMLElement | null;
+      if (root) root.dataset.motion = "off";
+    };
+    off();
+    new MutationObserver(off).observe(document, { childList: true });
+    document.addEventListener("readystatechange", off);
   });
+}
+
+/**
+ * Waits until no finite animation or transition is running (docs/design/motion.md). Checks that
+ * read the page as it rests, such as axe's color contrast, run after this: text mid-fade isn't
+ * what a person reads. Progress spinners (infinite) don't count.
+ */
+export async function motionSettled(page: Page): Promise<void> {
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity),
+  );
 }

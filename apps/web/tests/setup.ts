@@ -16,7 +16,7 @@ if (typeof window !== "undefined") window.scrollTo = () => undefined;
 beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
   // Unit tests check what a screen settles on: totals don't count and rows don't linger (docs/design/motion.md).
-  document.documentElement.dataset.motion = "off";
+  if (typeof document !== "undefined") document.documentElement.dataset.motion = "off";
   messages = [];
   for (const level of ["error", "warn"] as const) {
     vi.spyOn(console, level).mockImplementation((...args: unknown[]) => {

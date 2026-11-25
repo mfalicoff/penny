@@ -1,7 +1,7 @@
 import { appendFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, test } from "./test";
+import { expect, test, motionSettled } from "./test";
 import { enterDemo, navigate, startDemo } from "./demo";
 import known from "./a11y-known.json" with { type: "json" };
 
@@ -23,6 +23,8 @@ test.describe.configure({ timeout: 120_000 });
 const allowed = known.violations as { scan: string; rule: string; projects: string[]; except?: string[]; reason: string }[];
 
 async function scan(page: Page, label: string) {
+  // Contrast is read once fades and slides have finished (MAZ-287).
+  await motionSettled(page);
   const result = await new AxeBuilder({ page }).withTags(TAGS).analyze();
   const found = result.violations.map((violation) => violation.id).sort();
   const report = process.env.PENNY_A11Y_REPORT;

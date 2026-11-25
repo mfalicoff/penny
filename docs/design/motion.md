@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Visual acceptance](visual-acceptance.md) · [Redesign baseline](../reference/redesign.md) · [Demo page](motion/demo.html)
 
-**Status: draft for the owner's review.** Nothing here is built yet. Once it's approved, this page is the reference for motion on iOS and the web. The cards are static (their renderer turns animation off), so they show where things end up; this page says how they get there.
+**Status: approved by the owner (2026-11-25).** This page is the reference for motion on iOS and the web. The web part is built ([Web implementation](#web-implementation)); the iOS part follows on the Mac. The cards are static (their renderer turns animation off), so they show where things end up; this page says how they get there.
 
 To see every moment, open [motion/demo.html](motion/demo.html) in a browser straight from the checkout. It uses the kit's tokens and the timings below, and has a switch that simulates reduced motion.
 
@@ -238,6 +238,23 @@ Motion must never make a test or a capture depend on timing.
   - Web (Vitest and Playwright): a unit test for `useCountUp` under reduced motion, and a Playwright test in `shell.spec.ts` that emulates `reducedMotion: "reduce"`, triggers each moment and checks that every running animation from `document.getAnimations()` changes only `opacity` and lasts at most `quick`. The existing "reduced motion removes transitions" test changes to that check.
   - `design:check` and `PennyDesignTests` fail if the motion tokens drift between the kit, the baseline and Swift.
 - **Haptics are tested by their table, and felt on a device.** XCUITest and the simulator can't feel a haptic. `MotionTests` checks that every `Motion.Haptic` case maps to the feedback the table above gives, and that the reduce-motion path doesn't remove any. Each iOS build pull request adds a row to the real-device checks in `docs/ios/qa.md`: do every action in the table on an iPhone and feel exactly one haptic of the right kind, and none when a sync from another device arrives.
+
+## Web implementation
+
+Where each part lives in `apps/web`:
+
+- **Tokens:** `design-kit/src/styles.css` (`--pk-dur-*`, `--pk-ease-*`, `--pk-nudge`, `--pk-shift`, `--pk-shake`, `--pk-press`, `--pk-motion`), generated into `src/design/tokens.css`, and `contracts/design-baseline.json` `tokens.motion`. `src/design/global.css` sets the reduced-motion overrides and `data-motion="off"`.
+- **CSS moments:** `src/design/motion.css` (toast, row inserts, the saved-row highlight fade, bars and the money flow, dialogs, menus, "Show as a table", press, switches, the sync line, banners, the selection bar, the detail panel).
+- **JavaScript moments:** `src/design/motion.ts`: `useCountUp` (totals, through `HeroMoney` and `<Money count>`), `usePeriodSlide` (Home, Insights, Money flow, Activity, a household), `useListMotion` with `exitRow` (Recent and Activity), `useFadingHighlight`, `shake` (Add entry and the shared expense form). Dialogs leave through an inert copy in `ModalDialog`, so focus returns at once; the toast through `ToastProvider`.
+- **Tests:** `src/design/motion.test.ts` (the tokens match the baseline and the CSS, reduced and off modes, counting, rows leaving), `e2e/motion.spec.ts` (a month slides from the right side; under reduced motion nothing running moves or lasts past `quick`; motion off settles at once), and `e2e/shell.spec.ts` (the switch under reduced motion). `motionOff` (`e2e/test.ts`) turns motion off for the card and visual captures, and `motionSettled` makes axe read the page once it rests. Unit tests run with motion off.
+
+Where the web does less than the moments above, and why:
+
+- **Month changes:** the new month fades in over the old one rather than the old one fading out first, because React has already replaced it.
+- **Desktop Activity table:** a deleted row fades, then its space closes at once, because a table row's height can't animate.
+- **Detail panel:** it opens with the slide and switches with the crossfade, but closes at once, and the list's width changes at once.
+- **Disclosures** grow where the browser supports `::details-content` and `interpolate-size` (Chromium); elsewhere they open at once. The money flow's bands move in Chromium and Firefox, which read `d` from CSS; Safari shows the new diagram at once.
+- **Checkboxes** are the browser's own and fill at once. The web has no drawer today, so that row applies when one is added.
 
 ## Out of scope
 
