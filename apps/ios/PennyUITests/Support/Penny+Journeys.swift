@@ -73,7 +73,9 @@ extension Penny {
     /// Types a query into Activity's search field.
     func search(_ query: String) throws {
         let field = try searchField()
-        field.tap()
+        // A tap that lands while the list settles after a save is dropped on iPad (MAZ-195), so tap
+        // until the field has keyboard focus.
+        try focus(field, id: AccessibilityID.Activity.search)
         if let current = field.value as? String, !current.isEmpty, current != field.placeholderValue {
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
         }
@@ -109,7 +111,23 @@ extension Penny {
     /// Opens a personal entry's detail from an Activity or Home row: pushed on iPhone, beside the
     /// list on iPad.
     func openEntry(_ id: String) throws {
-        try waitForEntry(id).tap()
+        let row = try waitForEntry(id)
+        // Beside the iPad Activity list, the entry opened before stays in the detail until the
+        // selection changes, so its Edit already exists: a dropped tap then left Delete acting
+        // on the wrong entry (MAZ-195). Wait for this row to be selected, tapping again if not.
+        let showingAnother = element(AccessibilityID.Journeys.detailEdit).exists
+        row.tap()
+        if showingAnother {
+            let selected = NSPredicate(format: "isSelected == true")
+            var attempts = 1
+            while XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: selected, object: row)], timeout: 5)
+                != .completed
+            {
+                guard attempts < 3 else { throw UIExpectationFailed(description: "\(id) was not selected") }
+                row.tap()
+                attempts += 1
+            }
+        }
         // The detail's toolbar Edit, not `screen.entryDetail`: beside the iPad Activity list the
         // detail sits inside `screen.activity`, whose identifier replaces the detail's own.
         try wait(for: AccessibilityID.Journeys.detailEdit)

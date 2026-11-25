@@ -98,7 +98,7 @@ struct Penny {
     /// Each focus check is a snapshot, which takes seconds on a loaded iPad simulator once the
     /// keyboard is up, so wait long enough that a slow snapshot isn't taken for a dropped tap:
     /// a second tap then only adds queries to an app that's barely answering them.
-    private func focus(_ field: XCUIElement, id: String) throws {
+    func focus(_ field: XCUIElement, id: String) throws {
         let focused = NSPredicate(format: "hasKeyboardFocus == true")
         for _ in 0..<3 {
             field.tap()
@@ -107,6 +107,17 @@ struct Penny {
             if result == .completed { return }
         }
         throw UIExpectationFailed(description: "\(id) did not take keyboard focus after three taps")
+    }
+
+    /// Scrolls the Add entry form until `element` is above the iPhone amount keypad (the form's
+    /// bottom inset). At the largest text sizes the lower rows sit under it, where a tap reaches
+    /// a key instead (MAZ-195). Does nothing without the keypad (iPad, income).
+    func revealAboveKeypad(_ element: XCUIElement) {
+        let keypad = app.otherElements.matching(NSPredicate(format: "label == %@", "Amount keypad")).firstMatch
+        for _ in 0..<4 where keypad.exists && element.frame.maxY > keypad.frame.minY {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)))
+        }
     }
 
     /// The text a field holds.
@@ -119,6 +130,20 @@ struct Penny {
     /// Signs in with the password form and waits for the shell.
     func signIn(email: String, password: String) throws {
         try type(email, into: AccessibilityID.Auth.email)
+        // Return submits the form (the field's `onSubmit`), so nothing queries the app while the
+        // secure field's keyboard is up: on the hosted runner's iPad, the app's accessibility
+        // snapshot stopped answering for minutes right after the password was typed, and the
+        // check of the typed bullets then hit the test's time limit (MAZ-195). Sign-in fields
+        // don't drop input the way new-password fields do; if the shell still doesn't come, the
+        // password is typed again with that check and Sign in is tapped.
+        let field = try wait(for: AccessibilityID.Auth.password)
+        try focus(field, id: AccessibilityID.Auth.password)
+        field.typeText(password + "\n")
+        if (try? waitForShell()) != nil { return }
+        guard isShowingSignIn else { return try waitForShell() }
+        try focus(field, id: AccessibilityID.Auth.password)
+        let typed = (field.value as? String)?.count ?? 0
+        if typed > 0 { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: typed)) }
         try type(password, into: AccessibilityID.Auth.password)
         try tap(AccessibilityID.Auth.signIn)
         try waitForShell()

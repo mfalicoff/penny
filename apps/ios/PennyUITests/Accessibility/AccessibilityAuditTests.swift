@@ -219,7 +219,12 @@ final class AccessibilityAuditTests: PennyUITestCase {
                 if node.label.trimmingCharacters(in: .whitespaces).isEmpty
                     && (node.placeholderValue ?? "").isEmpty
                 {
-                    unlabeled.append("\(screen): \(node.elementType.rawValue) [\(node.identifier)]")
+                    // The frame and what the element holds say which control it is when it has no
+                    // identifier either.
+                    let inside = node.children.map { "\($0.elementType.rawValue) '\($0.identifier)' '\($0.label)'" }
+                    unlabeled.append(
+                        "\(screen): \(node.elementType.rawValue) [\(node.identifier)] at \(node.frame) holding \(inside)"
+                    )
                 }
             }
         }
@@ -246,7 +251,8 @@ final class AccessibilityAuditTests: PennyUITestCase {
             Variant(name: "xxxl", contentSize: "UICTContentSizeCategoryAccessibilityXXXL"))
         try penny.openAddEntry()
         let title = try penny.wait(for: AccessibilityID.EntryForm.title)
-        title.tap()
+        penny.revealAboveKeypad(title)
+        try penny.focus(title, id: AccessibilityID.EntryForm.title)
         title.typeText("Bakery")
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Penny.timeout), "no keyboard")
         let keyboard = app.keyboards.firstMatch.frame

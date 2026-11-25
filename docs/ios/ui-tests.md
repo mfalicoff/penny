@@ -31,7 +31,8 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | --- | --- |
 | `PENNY_UI_DEVICES` | `iphone`, `ipad` or `iphone ipad` (default) |
 | `PENNY_UI_ONLY` | Classes or tests, space-separated, e.g. `PennyUITests/AuthJourneyTests/test_whenPasswordIsWrong_SignIn_ShouldShowTheErrorAndKeepTheEmail` |
-| `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix) |
+| `PENNY_UI_SKIP` | Classes or tests to leave out, space-separated. The nightly matrix runs Full in two shards: one with a class list in `PENNY_UI_ONLY`, the other with the same list in `PENNY_UI_SKIP`, so a new class lands in the second |
+| `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix). A runtime that doesn't support the newest device type gets the newest one it does (iOS 26.0: iPhone 17 Pro) |
 | `PENNY_IPHONE`, `PENNY_IPAD` | Device types, as for `ios.sh test` |
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
 | `PENNY_STACK_SMTP=1` | The server sends email to an SMTP sink (`penny-env --smtp`, MAZ-124). The `iphone-forgot-password` and `iphone-invite-email` cards need it and are recorded as blocked without it; leave it off for the rest, since `iphone-sign-in` has no Forgot password |
@@ -65,10 +66,12 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 | | Minimum OS | Current OS |
 | --- | --- | --- |
 | Runtime | iOS/iPadOS 26.0 (the deployment target; `xcodebuild -downloadPlatform iOS -buildVersion 26.0`) | The newest runtime the pinned Xcode supports (27.0 with Xcode 27.2; 27.1 has no device types there) |
-| iPhone | Newest iPhone *N* Pro | same |
-| iPad | Newest iPad Pro 11-inch | same |
+| iPhone | Newest iPhone *N* Pro the runtime supports | same |
+| iPad | Newest iPad Pro 11-inch the runtime supports | same |
 | Smoke (PR) | | ✓ |
-| Full, Screenshots | ✓ | ✓ |
+| Full, Screenshots, Performance | ✓ | ✓ |
+
+`ios-ui-matrix.yml` runs each OS, plan and device as its own job, and Full in two class shards per device (`FULL_SHARD` in the workflow), so every job stays well inside its 120-minute limit: one device's whole Full plan took 84 minutes of tests alone on the hosted runner (MAZ-195). When a shard's timings in the job summary approach the limit, move a class from the list to the other shard.
 
 There is no older-OS fallback to test: iOS 26 is the floor (README, minimum OS), so the Liquid Glass control layer is real on every row.
 
@@ -172,6 +175,8 @@ Tests find elements only by identifier, never by visible text (except system-pro
 - **Fixed** (MAZ-212): card captures that sign in (`iphone-sign-in`, `iphone-add-income`) now and then hit the 5-minute limit, and the smoke journeys' sign-in timed out waiting for Home. With the keyboard up on the email or password field, which shows the system's Passwords AutoFill bar, every XCTest action logged "App animations complete notification not received" after waiting 60 s for the app to idle, while the spindump showed Penny's main thread asleep. `prepare_ui_device` now turns password AutoFill off on each simulator (`allowPasswordAutoFill` in its configuration-profile settings), and `Penny.type` taps a field again when the first tap didn't give it keyboard focus (the "Neither element nor any descendant has keyboard focus" failure on `auth.email`). `Stack` requests wait 60 s instead of 30 and retry a read that timed out (NSURLErrorDomain -1001 against a just-started API on a runner). A run that still hangs is stopped by the watchdog (see Hangs above).
 
 - **Mitigated, not confirmed** (MAZ-196): the Smoke plan's relaunch journey on iPad hit its 5-minute limit on a GitHub-hosted runner (the retry then ran 0 tests, the timed-out test being the last), while it passed locally. Right after the relaunch, `sidebar.activity` (already a typed query) took 30 s per existence check and failed with "Failed to get match". XCTest's spindump showed Penny's main thread evaluating the query in-process, blocked in `writev` on disk for each element attribute, with the app otherwise idle and only about 100 elements on screen, while XCTest recorded the large iPad screen as video (17 MB) on a 3-CPU runner. The plans now set `preferredScreenCaptureFormat` to `screenshots`, so failures keep step screenshots instead of a recording. Watch the iPad Smoke timings; if it recurs, the cause is elsewhere.
+- **Mitigated, not confirmed** (MAZ-195): the Smoke plan's sign-in on iPad hit its 5-minute limit on GitHub-hosted runners (pull requests and integration branches, at random). Right after the password was typed, the app's accessibility snapshot stopped answering for about two and a half minutes, so the check of the typed bullets (`field.elementType`, `field.value`) timed out three times. `Penny.signIn` now ends the password with Return, which submits the form without querying the app while the secure field's keyboard is up, and falls back to the checked typing and Sign in only if the shell doesn't come. It passes locally on both devices; watch the iPad Smoke runs.
+- **Fixed** (MAZ-195): Full journeys that failed every run on master were out of date with the screens, not app bugs. The wide iPad household and shared trip (`ipad-shared`, `ipad-trip`) have no section segments and select an expense beside the list (its page opens from Edit, history and receipt); on iPhone, Invite is in the … menu on People; a repaid share is a green Paid beside the name, not in its label; at the largest text the iPhone keypad covers the form's lower rows, so `Penny.revealAboveKeypad` scrolls them up first; on iPad, a tap on an Activity row while another entry's detail was showing was dropped, and Delete then removed that other entry, so `openEntry` waits for the row to be selected; and a dropped tap on the Activity search field is retried until it has keyboard focus.
 
 ## Debugging
 
