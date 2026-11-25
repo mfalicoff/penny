@@ -302,6 +302,15 @@ struct ProfileTests {
 
 /// A profile server in memory.
 final class FakeProfiles: ProfileService, @unchecked Sendable {
+    var export = AccountExport(data: Data("PK".utf8), filename: "penny-export-2026-11-22.zip")
+    var exports = 0
+
+    func exportAll() async throws -> AccountExport {
+        try check()
+        exports += 1
+        return export
+    }
+
     var me = WireMe(email: "contract-user@example.test")
     var profile = WireProfile(userId: "u-me", email: "contract-user@example.test")
     var failure: (any Error)?

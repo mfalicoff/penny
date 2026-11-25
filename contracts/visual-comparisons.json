@@ -2159,21 +2159,14 @@
       "id": "iphone-profile",
       "view": "Settings › Profile for a password account: picture, name, verified email, export and delete",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-171",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "The seeded account has no picture, so initials show. The Sign-in row shows Verified (MAZ-172); an unverified password account shows Not verified with a Resend link row while the server sends email. The footer with the server and the Privacy Policy link is built (MAZ-169).",
-        "deviations": [
-          {
-            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-152"
-          }
-        ]
+        "note": "The seeded account has no picture, so initials show. The Sign-in row shows Verified (MAZ-172); an unverified password account shows Not verified with a Resend link row while the server sends email. The footer with the server and the Privacy Policy link is built (MAZ-169). The Your data group (Export all your data, Delete account) is built (MAZ-152)."
       },
       "web": {
         "status": "matches",
@@ -2405,10 +2398,14 @@
       "id": "iphone-delete-account",
       "view": "Settings › Profile › Delete account confirmation",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-152",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no account deletion.",
-        "followUp": "MAZ-152"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured against the real API: the seeded household and trip are listed under Stays for others, and the server shows as its host. The password field is empty in the capture; the card shows it typed."
       },
       "web": {
         "status": "deviates",
@@ -2432,10 +2429,14 @@
       "id": "iphone-export-all",
       "view": "full data export ready to save or share",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-152",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no full data export.",
-        "followUp": "MAZ-152"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured once the real API has prepared the ZIP, so the file name, size and date are the seed’s. Save or share opens the system share sheet."
       },
       "web": {
         "status": "deviates",
@@ -2838,21 +2839,14 @@
       "id": "ipad-profile",
       "view": "Settings with Profile in the detail column",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-171",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "The seeded account has no picture, so initials show. The Sign-in row shows Verified (MAZ-172); an unverified password account shows Not verified with a Resend link row while the server sends email. The footer with the server and the Privacy Policy link is built (MAZ-169).",
-        "deviations": [
-          {
-            "summary": "No Your data group (Export all your data, Delete account): neither is built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-152"
-          }
-        ]
+        "note": "The seeded account has no picture, so initials show. The Sign-in row shows Verified (MAZ-172); an unverified password account shows Not verified with a Resend link row while the server sends email. The footer with the server and the Privacy Policy link is built (MAZ-169). The Your data group (Export all your data, Delete account) is built (MAZ-152)."
       },
       "web": {
         "status": "matches",
