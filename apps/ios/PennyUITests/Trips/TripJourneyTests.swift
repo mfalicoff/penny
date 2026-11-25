@@ -68,10 +68,10 @@ final class TripJourneyTests: PennyUITestCase {
         // Bea joins after it, then a second shared expense splits between both.
         let code = try await stack.invite(token: alex.token, household: household)
         try await stack.join(token: bea.token, code: code)
-        try penny.selectSegment("People", in: Shared.section)
+        try penny.showHouseholdSection("People")
         try penny.waitAfterRefresh(for: Shared.member(bea.userID), on: IDs.Screen.sharedTrip)
         screenshot("trip-people")
-        try penny.selectSegment("Expenses", in: Shared.section)
+        try penny.showHouseholdSection("Expenses")
         try addSharedExpense(penny, amount: "120", title: "Dinner")
         let expenses = try await stack.waitForExpenses(token: bea.token, household: household) { $0.count == 2 }
         func splits(_ title: String) -> [Int] {
@@ -89,8 +89,14 @@ final class TripJourneyTests: PennyUITestCase {
         screenshot("shared-trip-totals")
 
         // Balances settle by month.
-        try penny.selectSegment("Balances", in: Shared.section)
-        try penny.wait(for: Shared.balanceRow(bea.userID), timeout: 20)
+        // The wide iPad trip (`ipad-trip`) shows each person's balance on their People row.
+        if Device.isPad, !penny.element(Shared.section).waitForExistence(timeout: 3) {
+            let member = try penny.wait(for: Shared.member(bea.userID), timeout: 20)
+            XCTAssertTrue(member.label.contains("owes"), member.label)
+        } else {
+            try penny.showHouseholdSection("Balances")
+            try penny.wait(for: Shared.balanceRow(bea.userID), timeout: 20)
+        }
         screenshot("trip-balances")
     }
 

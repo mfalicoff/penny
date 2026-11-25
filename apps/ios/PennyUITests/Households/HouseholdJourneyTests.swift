@@ -32,7 +32,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
         // Invite: the code is shown as text and as a QR code with its countdown.
         try penny.showHouseholdSection("People")
         // Invite is in the … menu on the iPhone People section, a toolbar button otherwise.
-        try penny.tap(IDs.invite, orIn: IDs.more)
+        try penny.tapHouseholdAction(IDs.invite, titled: "Invite someone")
         try penny.wait(for: IDs.Screen.invite)
         try penny.wait(for: IDs.inviteQR)
         try penny.wait(for: IDs.inviteExpires)
@@ -62,10 +62,15 @@ final class HouseholdJourneyTests: PennyUITestCase {
         // The other member records that they paid their share; the app shows it repaid.
         try await stack.recordSharePayment(token: bea.token, household: household, expense: expense, from: bea.userID)
         try penny.tap(IDs.expense(expenseID))
+        // The wide iPad page selects the expense beside the list (`ipad-shared`); its page opens from
+        // Edit, history and receipt.
+        if Device.isPad, !penny.element(AccessibilityID.Screen.householdExpense).waitForExistence(timeout: 5) {
+            try penny.tap(IDs.selectedExpenseOpen)
+        }
         try penny.wait(for: AccessibilityID.Screen.householdExpense)
-        let share = try penny.wait(for: IDs.share(bea.userID))
-        try penny.waitForLabel(share, containing: "Repaid")
-        XCTAssertFalse(penny.element(IDs.markPaid(bea.userID)).exists, "an already-paid share offers no payment")
+        try penny.wait(for: IDs.share(bea.userID))
+        // Their row trades Mark as paid for a green Paid beside the name and amount.
+        try penny.waitForPaidShare(of: bea.userID)
         screenshot("expense-repaid")
 
         // A concurrent edit: open the form, the other member renames it, then save here.
@@ -89,7 +94,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
         (back.waitForExistence(timeout: 5) ? back : penny.app.navigationBars.buttons.element(boundBy: 0)).tap()
         try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
         try penny.showHouseholdSection("People")
-        try penny.tap(IDs.leave, orIn: IDs.more)
+        try penny.tapHouseholdAction(IDs.leave, titled: "Leave household")
         try penny.dialogButton("Leave").tap()
         // The refusal shows at the top of the page.
         for _ in 0..<3 { penny.app.collectionViews.firstMatch.swipeDown() }
@@ -216,6 +221,28 @@ extension Penny {
         segment.tap()
     }
 
+    /// A household action: its own button where the page shows one (the toolbar's Invite, the iPad
+    /// People column's actions), else the item with that title in the … menu, whose items carry no
+    /// identifier (SwiftUI drops it from menu items).
+    func tapHouseholdAction(_ id: String, titled title: String) throws {
+        let direct = element(id)
+        if direct.waitForExistence(timeout: 3), direct.isHittable { return direct.tap() }
+        if Device.isPad {
+            // The wide iPad household keeps its actions at the end of the People column, the
+            // second of its two lists (both are `screen.household`).
+            let lists = app.collectionViews.matching(identifier: AccessibilityID.Screen.household)
+            let list = lists.element(boundBy: max(lists.count - 1, 0))
+            for _ in 0..<5 where !(direct.exists && direct.isHittable) && list.exists { list.swipeUp() }
+            if direct.exists, direct.isHittable { return direct.tap() }
+        }
+        try tap(AccessibilityID.Households.more)
+        let item = app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
+        guard item.waitForExistence(timeout: Penny.timeout) else {
+            throw UIExpectationFailed(description: "No \(title) in the household's … menu")
+        }
+        item.tap()
+    }
+
     /// Shows a household section: its segment where the page has one (iPhone, a narrow iPad
     /// column), nothing where the wide iPad page shows the expenses with the balances and people
     /// beside them and has no segments (`ipad-shared`, MAZ-182).
@@ -263,6 +290,20 @@ extension Penny {
             }
             pullHouseholdToRefresh(AccessibilityID.Screen.householdExpense)
             _ = element.waitForExistence(timeout: 2)
+        }
+    }
+
+    /// Waits, pulling to refresh, until a member's share shows as paid: no Mark as paid for it, and
+    /// the green Paid beside their name (a separate element from the name and amount).
+    func waitForPaidShare(of userID: String, timeout: TimeInterval = 30) throws {
+        let markPaid = element(AccessibilityID.Households.markPaid(userID))
+        let paid = app.staticTexts.matching(NSPredicate(format: "label == %@", "Paid")).firstMatch
+        let deadline = Date().addingTimeInterval(timeout)
+        while markPaid.exists || !paid.waitForExistence(timeout: 2) {
+            guard Date() < deadline else {
+                throw UIExpectationFailed(description: "The share of \(userID) never showed as paid")
+            }
+            pullHouseholdToRefresh(AccessibilityID.Screen.householdExpense)
         }
     }
 

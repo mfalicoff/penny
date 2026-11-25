@@ -109,6 +109,17 @@ struct Penny {
         throw UIExpectationFailed(description: "\(id) did not take keyboard focus after three taps")
     }
 
+    /// Scrolls the Add entry form until `element` is above the iPhone amount keypad (the form's
+    /// bottom inset). At the largest text sizes the lower rows sit under it, where a tap reaches
+    /// a key instead (MAZ-195). Does nothing without the keypad (iPad, income).
+    func revealAboveKeypad(_ element: XCUIElement) {
+        let keypad = app.otherElements.matching(NSPredicate(format: "label == %@", "Amount keypad")).firstMatch
+        for _ in 0..<4 where keypad.exists && element.frame.maxY > keypad.frame.minY {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)))
+        }
+    }
+
     /// The text a field holds.
     func value(of id: String) throws -> String? {
         try wait(for: id).value as? String

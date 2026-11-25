@@ -246,7 +246,8 @@ final class AccessibilityAuditTests: PennyUITestCase {
             Variant(name: "xxxl", contentSize: "UICTContentSizeCategoryAccessibilityXXXL"))
         try penny.openAddEntry()
         let title = try penny.wait(for: AccessibilityID.EntryForm.title)
-        title.tap()
+        penny.revealAboveKeypad(title)
+        try penny.focus(title, id: AccessibilityID.EntryForm.title)
         title.typeText("Bakery")
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Penny.timeout), "no keyboard")
         let keyboard = app.keyboards.firstMatch.frame
