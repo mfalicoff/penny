@@ -19,6 +19,12 @@ ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
 ENABLE_PREVIEWS = YES
 LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
 
+// MAZ-170: native Sign in with Apple for a server provider marked `native`. It needs the Sign in
+// with Apple capability on the App ID and the com.apple.developer.applesignin entitlement, which
+// the app doesn't have yet (a human-only signing change, docs/ios/ipa.md). Until then NO, and
+// Apple signs in through the browser sheet like every other provider.
+PENNY_SIGN_IN_WITH_APPLE = NO
+
 // Signing (README.md#signing). Simulator builds sign ad hoc and need no team. For a
 // device, put DEVELOPMENT_TEAM in the git-ignored Configuration/Signing.local.xcconfig.
 // TestFlight archives in CI sign manually: `ios.sh archive` sets the PENNY_* values below

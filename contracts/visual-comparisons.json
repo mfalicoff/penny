@@ -2185,7 +2185,7 @@
       "native": {
         "status": "blocked",
         "owner": "MAZ-171",
-        "note": "The full-stack seeds have no account that signs in with a provider, so the read-only profile can't be captured; the PennyData profile tests cover it."
+        "note": "The Settings › Profile Sign-in row and the managed line show the provider's logo (MAZ-170), and a Google account's profile is reached in the Google sign-in journey (PENNY_STACK_OIDC_PROVIDERS=1). The local providers send no name or picture, so the card's read-only name and picture can't be captured; the PennyData profile and PennyUI ProviderButtons tests cover them."
       },
       "web": {
         "status": "blocked",
@@ -2249,10 +2249,14 @@
       "id": "iphone-sign-in-providers",
       "view": "sign-in with Apple, Google, SSO and email, with Forgot password and the privacy policy link",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267). Forgot password is built (MAZ-124: only while the server sends email). The app has no Apple or Google sign-in (MAZ-170).",
-        "followUp": "MAZ-170"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with PENNY_STACK_OIDC_PROVIDERS=1: the test server lists Apple, Google and its own SSO (local OIDC providers named and drawn as Apple and Google). Forgot password shows only while the server sends email (MAZ-124), which this stack doesn't."
       },
       "web": {
         "status": "deviates",
@@ -2285,10 +2289,14 @@
       "id": "iphone-create-account-providers",
       "view": "create account with Apple, Google or email, the name field and the privacy policy line",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no Apple or Google sign-up, name field or privacy policy line.",
-        "followUp": "MAZ-170"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with PENNY_STACK_OIDC_PROVIDERS=brands: the test server lists Apple and Google only, as the card's does. Screenshots leave out a secure field's bullets, so the typed password doesn't show."
       },
       "web": {
         "status": "deviates",

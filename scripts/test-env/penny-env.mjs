@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // One-command full-stack test environments (MAZ-62). See docs/reference/test-environment.md.
 //
-//   node scripts/test-env/penny-env.mjs up [--seed NAME] [--host 0.0.0.0] [--oidc] [--no-build] [--http]
+//   node scripts/test-env/penny-env.mjs up [--seed NAME] [--host 0.0.0.0] [--oidc] [--oidc-providers] [--no-build] [--http]
 //   node scripts/test-env/penny-env.mjs run [--seed NAME] [--oidc] -- <command...>
 //   node scripts/test-env/penny-env.mjs status | env | reset | clock <ISO|reset> | user [label]
 //   node scripts/test-env/penny-env.mjs fault '<json rule>' | fault clear
@@ -32,7 +32,7 @@ function parse(argv) {
   for (let index = 0; index < own.length; index++) {
     const item = own[index];
     if (!item.startsWith("--")) positional.push(item);
-    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker", "--email", "--smtp", "--http"].includes(item)) flags[item.slice(2)] = true;
+    else if (["--no-build", "--all", "--oidc", "--oidc-providers", "--oidc-brands-only", "--keep", "--no-worker", "--email", "--smtp", "--http"].includes(item)) flags[item.slice(2)] = true;
     else flags[item.slice(2)] = own[++index];
   }
   return { verb: positional.shift() ?? "help", positional, flags, command };
@@ -45,11 +45,19 @@ async function start(flags) {
   if (!validRunId(runId)) throw new Error("Run ids use 4–24 lowercase letters or digits.");
   const webPort = flags["web-port"] ? Number(flags["web-port"]) : await freePort();
   let oidc;
+  const extraOidc = [];
   let smtp;
   let tls;
   try {
     tls = writeCertificate(join(statePath(runId), "tls"));
-    if (flags.oidc) oidc = await startOidcProvider({ tls, webPorts: [webPort] });
+    // --oidc-brands-only leaves out the server's own SSO, so only Apple and Google are listed.
+    if ((flags.oidc || flags["oidc-providers"]) && !flags["oidc-brands-only"])
+      oidc = await startOidcProvider({ tls, webPorts: [webPort] });
+    // MAZ-170: two more local providers, listed as Apple and Google, for the provider cards and
+    // journeys. Each has its own issuer, so an account belongs to exactly one of them.
+    if (flags["oidc-providers"])
+      for (const [order, id, label] of [[1, "apple", "Apple"], [2, "google", "Google"]])
+        extraOidc.push({ id, label, icon: id, order, provider: await startOidcProvider({ tls, webPorts: [webPort] }) });
     if (flags.smtp) smtp = await startSmtpSink();
     const state = await up({
       runId,
@@ -62,14 +70,18 @@ async function start(flags) {
       build: !flags["no-build"],
       worker: !flags["no-worker"],
       oidc: oidc?.settings,
+      oidcProviders: extraOidc.map(({ provider, ...rest }) => ({ ...rest, settings: provider.settings })),
       email: flags.email === true,
       smtp: smtp ? { port: smtp.port } : undefined,
     });
     if (oidc) await oidc.attach(state);
+    for (const { provider } of extraOidc) await provider.attach(state);
     if (flags.seed) await seedInto(state, flags.seed);
-    return { state, oidc, smtp };
+    const providers = oidc ?? extraOidc[0]?.provider;
+    return { state, oidc: providers && { close: async () => { await oidc?.close(); for (const { provider } of extraOidc) await provider.close(); } }, smtp };
   } catch (error) {
     await oidc?.close();
+    for (const { provider } of extraOidc) await provider.close();
     await smtp?.close();
     // up() removes the run on failure; this covers a failure before it started.
     if (tls && !existsSync(join(statePath(runId), "env.json"))) rmSync(statePath(runId), { recursive: true, force: true });
@@ -204,7 +216,7 @@ async function main() {
 function help() {
   return [
     "penny-env: disposable .NET API + PostgreSQL environments for browser and simulator runs.",
-    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--email] [--smtp] [--http] [--no-build] [--no-worker] [--run-id ID]",
+    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--oidc-providers [--oidc-brands-only]] [--email] [--smtp] [--http] [--no-build] [--no-worker] [--run-id ID]",
     "     every run picks free ports and its own id; the API is HTTPS with the run's certificate (--http: plain HTTP)",
     "     --email: emailed receipts end to end: penny-render and the Email Worker (wrangler dev) (MAZ-184)",
     "     --smtp: the API sends email (password resets, invitations) to an SMTP sink in this process (MAZ-124)",
