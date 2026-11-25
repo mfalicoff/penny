@@ -45,6 +45,7 @@ public struct RootView: View {
         .environment(appearance)
         .environment(invites)
         .environment(services.lock)
+        .environment(services.telemetry)
         .environment(notifications)
         .modifier(LockCover(lock: services.lock))
         .task { await services.lock.start() }
@@ -110,7 +111,9 @@ struct LaunchView: View {
         let auth =
             auth
             ?? AuthController(
-                defaultServer: configuration.defaultServerURL, localData: store,
+                defaultServer: configuration.defaultServerURL,
+                // MAZ-129: spans, `traceparent` and server errors, only for what the person shares.
+                transport: TracingTransport(recorder: services.telemetry.recorder), localData: store,
                 devices: notifications?.devices ?? NoDeviceRegistration())
         _auth = State(initialValue: auth)
         _sync = State(initialValue: LedgerSyncModel(auth: auth, store: store))

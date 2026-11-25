@@ -32,7 +32,7 @@ function parse(argv) {
   for (let index = 0; index < own.length; index++) {
     const item = own[index];
     if (!item.startsWith("--")) positional.push(item);
-    else if (["--no-build", "--all", "--oidc", "--oidc-providers", "--oidc-brands-only", "--keep", "--no-worker", "--email", "--smtp", "--http"].includes(item)) flags[item.slice(2)] = true;
+    else if (["--no-build", "--all", "--oidc", "--oidc-providers", "--oidc-brands-only", "--keep", "--no-worker", "--email", "--smtp", "--telemetry", "--http"].includes(item)) flags[item.slice(2)] = true;
     else flags[item.slice(2)] = own[++index];
   }
   return { verb: positional.shift() ?? "help", positional, flags, command };
@@ -73,6 +73,7 @@ async function start(flags) {
       oidcProviders: extraOidc.map(({ provider, ...rest }) => ({ ...rest, settings: provider.settings })),
       email: flags.email === true,
       smtp: smtp ? { port: smtp.port } : undefined,
+      telemetry: flags.telemetry === true,
     });
     if (oidc) await oidc.attach(state);
     for (const { provider } of extraOidc) await provider.attach(state);
@@ -216,10 +217,11 @@ async function main() {
 function help() {
   return [
     "penny-env: disposable .NET API + PostgreSQL environments for browser and simulator runs.",
-    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--oidc-providers [--oidc-brands-only]] [--email] [--smtp] [--http] [--no-build] [--no-worker] [--run-id ID]",
+    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--oidc-providers [--oidc-brands-only]] [--email] [--smtp] [--telemetry] [--http] [--no-build] [--no-worker] [--run-id ID]",
     "     every run picks free ports and its own id; the API is HTTPS with the run's certificate (--http: plain HTTP)",
     "     --email: emailed receipts end to end: penny-render and the Email Worker (wrangler dev) (MAZ-184)",
     "     --smtp: the API sends email (password resets, invitations) to an SMTP sink in this process (MAZ-124)",
+    "     --telemetry: the API offers the iOS app crash and performance reports (MAZ-129); it forwards them to a closed loopback port, so they are dropped",
     "  mail --to ADDRESS [--subject S] [--attach FILE] [--eml FILE]   send through the Email Worker",
     "  run [up options] [--keep] -- <command...>   start, run, collect artifacts, always tear down",
     "  status | env | reset | clock <ISO|reset> | user [label] | fault '<json>'|clear | seed <scenario>",

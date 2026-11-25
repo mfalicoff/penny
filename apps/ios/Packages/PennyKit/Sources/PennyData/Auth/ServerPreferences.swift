@@ -14,15 +14,22 @@ public struct SavedServer: Codable, Equatable, Sendable {
     /// Whether `/api/info` last said the server sends email (MAZ-124): Forgot password on sign-in
     /// and Invite by email. False until a server says so, and on servers older than the field.
     public var emailEnabled: Bool
+    /// Whether `/api/info` last said the server takes the app's crash and performance reports
+    /// (`telemetry.native`, MAZ-129). False until a server says so.
+    public var nativeTelemetry: Bool
 
-    public init(server: ServerURL, version: String? = nil, privacyPolicy: URL? = nil, emailEnabled: Bool = false) {
+    public init(
+        server: ServerURL, version: String? = nil, privacyPolicy: URL? = nil, emailEnabled: Bool = false,
+        nativeTelemetry: Bool = false
+    ) {
         self.server = server
         self.version = version
         self.privacyPolicy = privacyPolicy
         self.emailEnabled = emailEnabled
+        self.nativeTelemetry = nativeTelemetry
     }
 
-    private enum CodingKeys: String, CodingKey { case url, version, privacyPolicyUrl, emailEnabled }
+    private enum CodingKeys: String, CodingKey { case url, version, privacyPolicyUrl, emailEnabled, nativeTelemetry }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -33,6 +40,7 @@ public struct SavedServer: Codable, Equatable, Sendable {
         version = try container.decodeIfPresent(String.self, forKey: .version)
         privacyPolicy = PrivacyPolicy.url(try? container.decodeIfPresent(String.self, forKey: .privacyPolicyUrl))
         emailEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .emailEnabled)) == true
+        nativeTelemetry = (try? container.decodeIfPresent(Bool.self, forKey: .nativeTelemetry)) == true
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -41,6 +49,7 @@ public struct SavedServer: Codable, Equatable, Sendable {
         try container.encodeIfPresent(version, forKey: .version)
         try container.encodeIfPresent(privacyPolicy?.absoluteString, forKey: .privacyPolicyUrl)
         if emailEnabled { try container.encode(true, forKey: .emailEnabled) }
+        if nativeTelemetry { try container.encode(true, forKey: .nativeTelemetry) }
     }
 }
 

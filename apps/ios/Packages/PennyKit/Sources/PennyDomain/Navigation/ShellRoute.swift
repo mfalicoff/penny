@@ -37,6 +37,8 @@ public enum DetailRoute: Hashable, Sendable {
 /// iPad sidebar lists directly.
 public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     case recurring, accounts, categories, appearance, currency, appLock, server, receiptEmail, receiptInbox, profile
+    /// MAZ-129: the crash and performance report switches and the privacy policy.
+    case privacy
 
     public static let manage: [SettingsRoute] = [.recurring, .accounts, .categories]
 
@@ -52,6 +54,7 @@ public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .receiptEmail: "Receipt email"
         case .receiptInbox: "Receipts to attach"
         case .profile: "Profile"
+        case .privacy: "Privacy"
         }
     }
 
