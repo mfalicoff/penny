@@ -459,6 +459,7 @@ public enum AccessibilityID {
         + Notifications.all
         + Journeys.all
         + Cards.all
+        + Monitoring.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =

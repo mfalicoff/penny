@@ -42,7 +42,7 @@ Make the value with `printf '%s:%s' <instanceID> <token> | base64`. Then restart
 
 ## Client telemetry
 
-MAZ-129. The web app (and, next, the iOS app) can report errors, crashes and performance, and the web app can record Session Replay. Everything is **opt-in twice**: off on the server until you configure it, and then off in each browser until the person agrees.
+MAZ-129. The web and iOS apps can report errors, crashes and performance, and the web app can record Session Replay (the iOS app has no replay). Everything is **opt-in twice**: off on the server until you configure it, and then off in each browser or on each device until the person agrees.
 
 Clients are untrusted, so they never talk to your collector. They post to the Penny API with their session (`POST /api/telemetry/faro` for the web app's Grafana Faro reports, `POST /api/telemetry/otlp/v1/traces` and `/v1/logs` for the iOS app's OTLP/HTTP JSON). The API:
 
@@ -86,9 +86,11 @@ What the web app sends when allowed (`apps/web/src/telemetry/`):
 - **Session Replay:** a recording of clicks, scrolling and page changes. Every text and every field is masked by the recorder (`maskTextSelector: "*"`, `maskAllInputs`), images, video and canvases are blocked, and both the browser and the API mask every attribute that can carry content (`aria-label`, `title`, `alt`, `placeholder`, ids, data attributes) and inline images. What remains is the page's layout and styles. Grafana Cloud keeps replays for 30 days. Self-hosted Alloy has no replay viewer, so leave replay off there.
 - No user id, email or name, no geolocation, and a random session id per tab.
 
+The iOS app (when `ClientTelemetry__OtlpEndpoint` is set) asks the same question once per install, after sign-in, and has **Settings › Privacy** with **Share crash reports** and **Share performance data**. When allowed it sends crashes and hangs (from Apple's MetricKit, on the launch after them, with frames to symbolicate with the build's dSYMs), server errors on its API calls, and spans for its API calls and cold launch, with `traceparent` on those calls. Crashes that happen before sign-in wait on the device and are sent after it. Details, scrubbing and symbolication: [native crash and performance reports](../ios/monitoring.md).
+
 ### What the apps send
 
-The contract the **Penny clients** dashboard and the crash alert read (the web app follows it through Faro; the iOS app follows it in its own phase):
+The contract the **Penny clients** dashboard and the crash alert read (the web app follows it through Faro, the iOS app through OTLP/HTTP JSON):
 
 - `service.name` is `penny-web` or `penny-ios`; `service.version` is the app version.
 - An **error** is a log record with severity ERROR (17–20) and `exception.type`. Faro exceptions (`kind=exception`) count too.

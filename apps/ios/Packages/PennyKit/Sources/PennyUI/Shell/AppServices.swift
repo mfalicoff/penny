@@ -24,6 +24,8 @@ public struct AppServices {
     public var startsInDemo = false
     /// What Appearance › System shows. Nil (always, outside Debug test controls) follows the device.
     public var systemColorScheme: ColorScheme?
+    /// Opt-in crash and performance reports (MAZ-129). Disabled outside `live()`.
+    public var telemetry: ClientTelemetry = .disabled()
 
     public init(
         preferences: any DevicePreferences, lock: AppLockController,
@@ -42,6 +44,11 @@ public struct AppServices {
     /// and in a build without the App Group entitlement.
     public var widgets: WidgetPublisher?
 
+    #if os(iOS)
+        /// Keeps the MetricKit subscriber alive (MetricKit holds it weakly).
+        var metricKit: MetricKitReports?
+    #endif
+
     /// The real device services.
     public static func live() -> AppServices {
         let preferences = UserDefaultsDevicePreferences()
@@ -49,6 +56,15 @@ public struct AppServices {
             preferences: preferences,
             lock: AppLockController(store: KeychainAppLockSettingStore(), preferences: preferences))
         services.widgets = WidgetPublisher.live()
+        let recorder = TelemetryRecorder(resource: .current(), pending: .standard())
+        services.telemetry = ClientTelemetry(store: UserDefaultsTelemetryChoiceStore(), recorder: recorder)
+        #if os(iOS)
+            // Crashes and hangs arrive on the launch after them; the recorder keeps them only when
+            // crash reports are on.
+            let reports = MetricKitReports(recorder: recorder)
+            reports.start()
+            services.metricKit = reports
+        #endif
         return services
     }
 }
