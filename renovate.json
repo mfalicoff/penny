@@ -1,6 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended",
+    "schedule:weekly"
+  ],
   "enabledManagers": ["npm", "github-actions", "dockerfile", "docker-compose", "nuget"],
   "automerge": false,
   "prConcurrentLimit": 14,

@@ -33,15 +33,29 @@ public sealed class FakeOidcProvider : IAsyncLifetime
     public const string WebRedirect = "https://penny.example.test/auth/callback";
     public const string NativeRedirect = "penny://auth/callback";
 
+    // MAZ-170: the same listener also plays Apple (form_post, a generated ES256 client secret,
+    // no UserInfo, string `email_verified`) and a second standard provider. Each issuer is
+    // told apart by the request host; every host is routed to this listener.
+    public const string AppleIssuer = "https://appleid.apple.com";
+    public const string AppleClientId = "test.penny.web";
+    public const string AppleNativeClientId = "test.penny.app";
+    public const string AppleTeamId = "TEAM123456";
+    public const string AppleKeyId = "KEY1234567";
+    public const string SecondIssuer = "https://second.example.test";
+    public const string SecondClientId = "penny-second";
+    public const string ApiOrigin = "https://penny.example.test";
+    public const string AppleCallback = ApiOrigin + "/api/auth/oidc/callback/apple";
+
     // The provider's `picture` URLs (MAZ-171); any path under /picture serves `Picture`.
     public const string PictureUrl = Issuer + "/picture/1.png";
     private const string KeyId = "synthetic-key";
 
     private readonly RSA signingKey = RSA.Create(2048);
     private readonly RSA wrongKey = RSA.Create(2048);
+    private readonly ECDsa appleClientKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
     private readonly ConcurrentDictionary<
         string,
-        (FakeOidcGrant Grant, string Nonce, string Challenge, string RedirectUri)
+        (FakeOidcGrant Grant, string Issuer, string Nonce, string Challenge, string RedirectUri)
     > codes = new();
     private readonly ConcurrentDictionary<string, FakeOidcGrant> accessTokens = new();
     private X509Certificate2 certificate = null!;
@@ -82,6 +96,7 @@ public sealed class FakeOidcProvider : IAsyncLifetime
         certificate?.Dispose();
         signingKey.Dispose();
         wrongKey.Dispose();
+        appleClientKey.Dispose();
     }
 
     public void Reset()
@@ -110,6 +125,46 @@ public sealed class FakeOidcProvider : IAsyncLifetime
             ["Backend:RequestTimeoutSeconds"] = "15",
         };
 
+    // MAZ-170: the single-provider settings (provider `sso`) plus Apple, relayed through the
+    // API's callback and accepting native ID tokens, and a second standard provider.
+    public Dictionary<string, string> MultiSettings(bool allowRegistration = true)
+    {
+        var settings = Settings(allowRegistration);
+        var registration = allowRegistration ? "true" : "false";
+        foreach (
+            var (key, value) in new Dictionary<string, string>
+            {
+                ["apple:Issuer"] = AppleIssuer,
+                ["apple:ClientId"] = AppleClientId,
+                ["apple:RedirectUris"] = $"{WebRedirect}, {NativeRedirect}",
+                ["apple:CallbackUri"] = AppleCallback,
+                ["apple:TeamId"] = AppleTeamId,
+                ["apple:KeyId"] = AppleKeyId,
+                ["apple:PrivateKey"] = appleClientKey.ExportPkcs8PrivateKeyPem(),
+                ["apple:NativeClientIds"] = AppleNativeClientId,
+                ["apple:AllowRegistration"] = registration,
+                ["apple:Order"] = "1",
+                ["second:Issuer"] = SecondIssuer,
+                ["second:ClientId"] = SecondClientId,
+                ["second:ClientSecret"] = ClientSecret,
+                ["second:RedirectUris"] = WebRedirect,
+                ["second:Label"] = "Second provider",
+                ["second:AllowRegistration"] = registration,
+                ["second:Order"] = "2",
+            }
+        )
+            settings["Oidc:Providers:" + key] = value;
+        return settings;
+    }
+
+    // An ID token as the platform's own sign-in hands it to the app (Sign in with Apple).
+    public string NativeIdToken(
+        string nonce,
+        FakeOidcGrant? grant = null,
+        string issuer = AppleIssuer,
+        string audience = AppleNativeClientId
+    ) => IdToken(grant ?? new FakeOidcGrant(), issuer, audience, nonce);
+
     public TestApiFactory CreateApi(
         string connectionString,
         IReadOnlyDictionary<string, string>? settings = null,
@@ -129,27 +184,99 @@ public sealed class FakeOidcProvider : IAsyncLifetime
     // app receives. Asserts the request is a code flow with S256 PKCE.
     public string Authorize(string authorizationUrl, FakeOidcGrant? grant = null)
     {
-        if (!authorizationUrl.StartsWith(Issuer + "/authorize?", StringComparison.Ordinal))
+        var (issuer, redirectUri, parameters) = Approve(authorizationUrl, grant);
+        if (issuer == AppleIssuer)
+            throw new InvalidOperationException("Apple posts its response; use AuthorizePost.");
+        return QueryHelpers.AddQueryString(redirectUri, parameters);
+    }
+
+    // Plays Apple: the response is a form the browser posts to the configured callback.
+    // `user` is the first-sign-in JSON Apple adds with the person's name.
+    public (string CallbackUri, Dictionary<string, string?> Form) AuthorizePost(
+        string authorizationUrl,
+        FakeOidcGrant? grant = null,
+        string? user = null
+    )
+    {
+        var (issuer, redirectUri, parameters) = Approve(authorizationUrl, grant);
+        if (issuer != AppleIssuer)
+            throw new InvalidOperationException("Only Apple posts its response.");
+        if (user is not null)
+            parameters["user"] = user;
+        return (redirectUri, parameters);
+    }
+
+    private (string Issuer, string RedirectUri, Dictionary<string, string?> Parameters) Approve(
+        string authorizationUrl,
+        FakeOidcGrant? grant
+    )
+    {
+        var url = new Uri(authorizationUrl);
+        var issuer = $"https://{url.Host}";
+        if (!authorizationUrl.StartsWith(issuer + "/authorize?", StringComparison.Ordinal))
             throw new InvalidOperationException("Unexpected authorization endpoint.");
-        var query = QueryHelpers.ParseQuery(new Uri(authorizationUrl).Query);
+        var query = QueryHelpers.ParseQuery(url.Query);
+        var apple = issuer == AppleIssuer;
         if (
             query["response_type"] != "code"
-            || query["client_id"] != ClientId
-            || query["scope"] != OidcProviderClient.Scope
+            || query["client_id"] != ClientIdOf(issuer)
+            || query["scope"] != (apple ? "openid email name" : OidcProviderClient.Scope)
             || query["code_challenge_method"] != "S256"
+            || (apple ? query["response_mode"] != "form_post" : query.ContainsKey("response_mode"))
         )
             throw new InvalidOperationException("Unexpected authorization request.");
         var code = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16));
         var redirectUri = query["redirect_uri"].ToString();
         codes[code] = (
             grant ?? new FakeOidcGrant(),
+            issuer,
             query["nonce"].ToString(),
             query["code_challenge"].ToString(),
             redirectUri
         );
-        var callback =
-            $"{redirectUri}?code={code}&state={Uri.EscapeDataString(query["state"].ToString())}";
-        return SendsIssuer ? callback + "&iss=" + Uri.EscapeDataString(Issuer) : callback;
+        var parameters = new Dictionary<string, string?>
+        {
+            ["code"] = code,
+            ["state"] = query["state"].ToString(),
+        };
+        if (SendsIssuer)
+            parameters["iss"] = issuer;
+        return (issuer, redirectUri, parameters);
+    }
+
+    private static string ClientIdOf(string issuer) =>
+        issuer switch
+        {
+            AppleIssuer => AppleClientId,
+            SecondIssuer => SecondClientId,
+            _ => ClientId,
+        };
+
+    // Apple's client secret is an ES256 JWT signed with the operator's key, for this client.
+    private bool IsClientSecret(string issuer, string? secret)
+    {
+        if (issuer != AppleIssuer)
+            return secret == ClientSecret;
+        if (secret is null)
+            return false;
+        var result = new JsonWebTokenHandler()
+            .ValidateTokenAsync(
+                secret,
+                new TokenValidationParameters
+                {
+                    ValidIssuer = AppleTeamId,
+                    ValidAudience = AppleIssuer,
+                    IssuerSigningKey = new ECDsaSecurityKey(appleClientKey),
+                    ValidAlgorithms = [SecurityAlgorithms.EcdsaSha256],
+                    ValidateLifetime = false,
+                }
+            )
+            .GetAwaiter()
+            .GetResult();
+        return result.IsValid
+            && result.SecurityToken is JsonWebToken token
+            && token.Subject == AppleClientId
+            && token.Kid == AppleKeyId;
     }
 
     private HttpMessageHandler CreateHandler() =>
@@ -181,25 +308,26 @@ public sealed class FakeOidcProvider : IAsyncLifetime
     private async Task HandleAsync(HttpContext context)
     {
         var ct = context.RequestAborted;
+        var issuer = $"https://{context.Request.Host.Host}";
         switch (context.Request.Path.Value)
         {
             case "/.well-known/openid-configuration" when Available:
-                await context.Response.WriteAsJsonAsync(
-                    new Dictionary<string, object>
-                    {
-                        ["issuer"] = DiscoveryIssuer,
-                        ["authorization_endpoint"] = Issuer + "/authorize",
-                        ["token_endpoint"] = Issuer + "/token",
-                        ["userinfo_endpoint"] = Issuer + "/userinfo",
-                        ["jwks_uri"] = Issuer + "/jwks",
-                        ["response_types_supported"] = new[] { "code" },
-                        ["subject_types_supported"] = new[] { "public" },
-                        ["id_token_signing_alg_values_supported"] = new[] { "RS256" },
-                        ["code_challenge_methods_supported"] = new[] { "S256" },
-                        ["authorization_response_iss_parameter_supported"] = SendsIssuer,
-                    },
-                    ct
-                );
+                var document = new Dictionary<string, object>
+                {
+                    ["issuer"] = issuer == Issuer ? DiscoveryIssuer : issuer,
+                    ["authorization_endpoint"] = issuer + "/authorize",
+                    ["token_endpoint"] = issuer + "/token",
+                    ["jwks_uri"] = issuer + "/jwks",
+                    ["response_types_supported"] = new[] { "code" },
+                    ["subject_types_supported"] = new[] { "public" },
+                    ["id_token_signing_alg_values_supported"] = new[] { "RS256" },
+                    ["code_challenge_methods_supported"] = new[] { "S256" },
+                    ["authorization_response_iss_parameter_supported"] = SendsIssuer,
+                };
+                // Apple has no UserInfo endpoint.
+                if (issuer != AppleIssuer)
+                    document["userinfo_endpoint"] = issuer + "/userinfo";
+                await context.Response.WriteAsJsonAsync(document, ct);
                 return;
             case "/jwks":
                 var key = signingKey.ExportParameters(false);
@@ -252,8 +380,12 @@ public sealed class FakeOidcProvider : IAsyncLifetime
         if (
             form["grant_type"] != "authorization_code"
             || !codes.TryRemove(form["code"].ToString(), out var issued)
-            || form["client_id"] != ClientId
-            || form["client_secret"] != ClientSecret
+            || issued.Issuer != $"https://{context.Request.Host.Host}"
+            || form["client_id"] != ClientIdOf(issued.Issuer)
+            || !IsClientSecret(
+                issued.Issuer,
+                form["client_secret"].ToString() is { Length: > 0 } secret ? secret : null
+            )
             || form["redirect_uri"] != issued.RedirectUri
             || Base64UrlEncoder.Encode(
                 SHA256.HashData(Encoding.ASCII.GetBytes(form["code_verifier"].ToString()))
@@ -267,31 +399,7 @@ public sealed class FakeOidcProvider : IAsyncLifetime
             );
             return;
         }
-        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var claims = new Dictionary<string, object?>
-        {
-            ["iss"] = Issuer,
-            ["sub"] = issued.Grant.Subject,
-            ["aud"] = ClientId,
-            ["iat"] = now,
-            ["exp"] = now + 300,
-            ["nonce"] = issued.Nonce,
-            ["email"] = issued.Grant.Email,
-            ["email_verified"] = true,
-        };
-        foreach (var (name, value) in issued.Grant.Claims)
-            claims[name] = value;
-        var payload = JsonSerializer.Serialize(
-            claims.Where(claim => claim.Value is not null).ToDictionary()
-        );
-        var key = new RsaSecurityKey(issued.Grant.WrongSigningKey ? wrongKey : signingKey)
-        {
-            KeyId = KeyId,
-        };
-        var idToken = new JsonWebTokenHandler().CreateToken(
-            payload,
-            new SigningCredentials(key, SecurityAlgorithms.RsaSha256)
-        );
+        var idToken = IdToken(issued.Grant, issued.Issuer, ClientIdOf(issued.Issuer), issued.Nonce);
         var accessToken = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16));
         accessTokens[accessToken] = issued.Grant;
         await context.Response.WriteAsJsonAsync(
@@ -303,6 +411,44 @@ public sealed class FakeOidcProvider : IAsyncLifetime
                 expires_in = 300,
             },
             context.RequestAborted
+        );
+    }
+
+    private string IdToken(FakeOidcGrant grant, string issuer, string audience, string nonce)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var apple = issuer == AppleIssuer;
+        var claims = new Dictionary<string, object?>
+        {
+            ["iss"] = issuer,
+            ["sub"] = grant.Subject,
+            ["aud"] = audience,
+            ["iat"] = now,
+            ["exp"] = now + 300,
+            ["nonce"] = nonce,
+            ["email"] = grant.Email,
+            // Apple writes booleans as strings.
+            ["email_verified"] = apple ? "true" : true,
+        };
+        if (apple)
+            claims["is_private_email"] = grant.Email.EndsWith(
+                "@privaterelay.appleid.com",
+                StringComparison.Ordinal
+            )
+                ? "true"
+                : "false";
+        foreach (var (name, value) in grant.Claims)
+            claims[name] = value;
+        var payload = JsonSerializer.Serialize(
+            claims.Where(claim => claim.Value is not null).ToDictionary()
+        );
+        var key = new RsaSecurityKey(grant.WrongSigningKey ? wrongKey : signingKey)
+        {
+            KeyId = KeyId,
+        };
+        return new JsonWebTokenHandler().CreateToken(
+            payload,
+            new SigningCredentials(key, SecurityAlgorithms.RsaSha256)
         );
     }
 

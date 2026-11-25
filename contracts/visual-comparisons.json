@@ -2255,10 +2255,30 @@
         "followUp": "MAZ-170"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
-        "followUp": "MAZ-170"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (decided in MAZ-239, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
@@ -2271,10 +2291,20 @@
         "followUp": "MAZ-170"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up. The name field (MAZ-171) and the privacy policy line (MAZ-169) are built.",
-        "followUp": "MAZ-170"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234, extended to this card in MAZ-170)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
@@ -3466,10 +3496,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in or Forgot password. The privacy policy link is built (MAZ-169).",
-        "followUp": "MAZ-170"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3481,10 +3514,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-170",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up. The name field (MAZ-171) and the privacy policy line (MAZ-169) are built.",
-        "followUp": "MAZ-170"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

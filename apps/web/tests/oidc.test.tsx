@@ -29,7 +29,7 @@ function ssoServer(complete: () => Response = () => json({ token, email: ALEX })
   let signedIn = false;
   const fetchMock = stubServer((url) => {
     if (url === "/api/auth/me") return signedIn ? json({ email: ALEX }) : json({ error: "Please sign in to continue." }, 401);
-    if (url === "/api/auth/oidc") return json({ enabled: true, label: "Acme SSO" });
+    if (url === "/api/auth/oidc") return json({ enabled: true, label: "Acme SSO", providers: [{ id: "sso", label: "Acme SSO", icon: "sso", native: false }] });
     if (url === "/api/auth/oidc/start") return start?.() ?? json({ transaction, authorizationUrl: providerUrl, expiresAt: Date.now() + 600_000 });
     if (url === "/api/auth/oidc/complete") {
       const response = complete();
@@ -68,7 +68,7 @@ describe("OIDC popup sign-in", () => {
       expect(popup.location.href).toBe(providerUrl);
     });
     const start = callsTo(fetchMock, "/api/auth/oidc/start")[0];
-    expect(bodyOf(start)).toEqual({ redirectUri: `${window.location.origin}/auth/callback` });
+    expect(bodyOf(start)).toEqual({ redirectUri: `${window.location.origin}/auth/callback`, provider: "sso" });
 
     const channel = popupReturns(callbackUrl());
     expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
@@ -159,7 +159,7 @@ describe("OIDC popup sign-in", () => {
     });
     const fetchMock = stubServer((url) => {
       if (url === "/api/auth/me") return json({ error: "no" }, 401);
-      if (url === "/api/auth/oidc") return json({ enabled: true, label: "Acme SSO" });
+      if (url === "/api/auth/oidc") return json({ enabled: true, label: "Acme SSO", providers: [{ id: "sso", label: "Acme SSO", icon: "sso", native: false }] });
       if (url === "/api/auth/oidc/start") return json({ transaction, authorizationUrl: providerUrl, expiresAt: Date.now() + 600_000 });
       if (url === "/api/auth/oidc/complete") return completing;
       return undefined;

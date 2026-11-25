@@ -30,6 +30,7 @@ import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { AccountPrivacyFooter } from "../legal/PrivacyPolicyLink";
 import { PictureCropDialog } from "./PictureCropDialog";
+import { ProviderLogo } from "../auth/ProviderLogo";
 import { SectionTitle } from "./SectionTitle";
 import { useSettingsLayout } from "./SettingsLayout";
 
@@ -537,7 +538,7 @@ function SignInRow({ profile }: { profile: Profile }) {
     <div className="profile__row">
       <span className="profile__row-icon" aria-hidden="true">
         {oidc ? (
-          <Icon name="key" size={18} />
+          <ProviderLogo icon={profile.providerIcon ?? "sso"} size={18} />
         ) : (
           <svg viewBox="0 0 512 512" width="18" height="18" focusable="false">
             <rect x="48" y="96" width="416" height="320" rx="40" ry="40" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="32" />

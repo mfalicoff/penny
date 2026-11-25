@@ -155,8 +155,10 @@ public sealed class ProfileService(
         await profiles.FindAsync(userId, cancellationToken)
         ?? throw new BackendFailure(FailureKind.Unauthorized, AuthService.SignInRequired);
 
-    private ProfileView View(StoredProfile profile) =>
-        new(
+    private ProfileView View(StoredProfile profile)
+    {
+        var provider = profile.OidcIssuer is { } issuer ? oidc?.ForIssuer(issuer) : null;
+        return new(
             profile.UserId,
             profile.Email,
             profile.DisplayName,
@@ -167,18 +169,13 @@ public sealed class ProfileService(
                 && !profile.NameFromProvider
                 && !profile.NamePromptDismissed,
             profile.OidcIssuer is null ? SignInMethod.Password : SignInMethod.Oidc,
-            profile.OidcIssuer is { } issuer ? ProviderLabel(issuer) : null,
+            provider?.Label,
             profile.OidcIssuer is null ? profile.PasswordChangedAt : null,
-            profile.EmailVerifiedAt
+            profile.EmailVerifiedAt,
+            provider?.Id,
+            provider?.Icon
         );
-
-    // The configured display name of the account's own provider, found by its issuer, so
-    // several configured providers each name themselves. Null when none is configured
-    // for that issuer any more; clients then say "your sign-in provider".
-    private string? ProviderLabel(string issuer) =>
-        oidc is not null && string.Equals(oidc.Issuer, issuer, StringComparison.Ordinal)
-            ? oidc.Label
-            : null;
+    }
 
     private static AvatarFile NewAvatar(byte[] encoded) =>
         new(encoded, AvatarFormat.StoredMime, SessionTokens.NewId());

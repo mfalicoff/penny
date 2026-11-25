@@ -9,6 +9,7 @@ namespace Penny.Backend.Api.Contracts;
 // a password account last changed its password, omitted before the first change.
 // `emailVerified` says whether the current email is proven (MAZ-172) and `emailVerifiedAt`
 // (Unix ms) when; clients show the unverified state only while the server sends email.
+// `providerId` and `providerIcon` (MAZ-170) match the account's entry in `GET /api/auth/oidc`.
 public sealed record ProfileResponse(
     string UserId,
     string Email,
@@ -21,7 +22,9 @@ public sealed record ProfileResponse(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Provider,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? PasswordChangedAt,
     bool EmailVerified,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? EmailVerifiedAt
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? EmailVerifiedAt,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProviderId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProviderIcon
 )
 {
     public static ProfileResponse From(ProfileView profile) =>
@@ -37,6 +40,8 @@ public sealed record ProfileResponse(
             profile.Provider,
             profile.PasswordChangedAt?.ToUnixTimeMilliseconds(),
             profile.EmailVerifiedAt is not null,
-            profile.EmailVerifiedAt?.ToUnixTimeMilliseconds()
+            profile.EmailVerifiedAt?.ToUnixTimeMilliseconds(),
+            profile.ProviderId,
+            profile.ProviderIcon
         );
 }

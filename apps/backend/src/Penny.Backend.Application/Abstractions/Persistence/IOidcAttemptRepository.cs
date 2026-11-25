@@ -20,5 +20,9 @@ public interface IOidcAttemptRepository
         CancellationToken cancellationToken
     );
 
+    // The pending attempt with this `state`, without consuming it, for the provider callback
+    // relay (MAZ-170). Null when none is pending.
+    Task<StoredOidcAttempt?> FindByStateAsync(string state, CancellationToken cancellationToken);
+
     Task RemoveAsync(string transactionHash, CancellationToken cancellationToken);
 }
