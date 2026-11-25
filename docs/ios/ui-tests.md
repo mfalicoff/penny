@@ -38,6 +38,7 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | `PENNY_STACK_SMTP=1` | The server sends email to an SMTP sink (`penny-env --smtp`, MAZ-124). The `iphone-forgot-password` and `iphone-invite-email` cards need it and are recorded as blocked without it; leave it off for the rest, since `iphone-sign-in` has no Forgot password |
 | `PENNY_UPGRADE_FROM_APP` | A previous `Penny.app`: installed and launched first, so the plan upgrades it in place |
 | `PENNY_UI_STALL_SECONDS` | Seconds without xcodebuild output before a device's run counts as hung, is stopped and runs once more (default 720) |
+| `PENNY_BOOT_SECONDS` | Seconds a simulator may take to finish booting before the run stops with an error (default 900). The minimum-OS matrix jobs build the downloaded runtime's dyld shared cache before booting: a first boot that built it never finished on the hosted runner (MAZ-195) |
 
 In Xcode: start an environment with `node scripts/test-env/penny-env.mjs up --oidc`, keep it running, choose the **PennyUITests** scheme, a simulator and a test plan, and test (⌘U). The runner finds the environment through `.cache/test-env/current`. Without one, every UI test is skipped (under `ios.sh` a missing stack is a failure instead). The API and the provider are HTTPS with the run's throwaway certificate, so trust it first: `xcrun simctl keychain booted add-root-cert <apiCertificate>` from `up`'s output (`ios.sh ui-test` does this itself).
 

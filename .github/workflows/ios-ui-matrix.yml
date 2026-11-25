@@ -89,7 +89,11 @@ jobs:
         run: nix build .#test-postgres --out-link .cache/test-postgres
       - name: Install the minimum-OS simulator runtime
         if: steps.selected.outputs.run == 'true' && matrix.os.download != ''
-        run: xcodebuild -downloadPlatform iOS -buildVersion "${{ matrix.os.download }}"
+        # A downloaded runtime builds its dyld shared cache on the first boot, which on this runner
+        # failed or never finished (MAZ-195); build it here instead, before any simulator boots.
+        run: |
+          xcodebuild -downloadPlatform iOS -buildVersion "${{ matrix.os.download }}"
+          xcrun simctl runtime dyld_shared_cache update --all
       - name: Cache search model
         if: steps.selected.outputs.run == 'true'
         uses: actions/cache@v6

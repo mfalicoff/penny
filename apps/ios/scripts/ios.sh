@@ -30,7 +30,7 @@
 # PENNY_STACK_SMTP=1 (the server sends email to an SMTP sink: the iphone-forgot-password and
 # iphone-invite-email cards),
 # PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from), PENNY_UI_STALL_SECONDS (silence that
-# counts as a hang, default 720).
+# counts as a hang, default 720). PENNY_BOOT_SECONDS: how long a simulator may take to boot (900).
 # archive/export/upload: PENNY_TEAM_ID, PENNY_BUILD_NUMBER, PENNY_ASC_KEY_PATH, PENNY_ASC_KEY_ID,
 # PENNY_ASC_ISSUER_ID (docs/ios/ipa.md).
 set -euo pipefail
@@ -216,6 +216,24 @@ clean_device() {
   done
   echo "error: no installed iOS runtime supports any of: $*. Install one with: xcodebuild -downloadPlatform iOS" >&2
   exit 1
+}
+
+# Boots a simulator and waits until it has finished booting, for at most PENNY_BOOT_SECONDS
+# (default 900: a first boot on a freshly installed runtime also builds its caches). On a hosted
+# runner an iOS 26.0 boot never finished and held the job for its whole 120 minutes (MAZ-195).
+boot() {
+  local id="$1" limit="${PENNY_BOOT_SECONDS:-900}" pid started=$SECONDS
+  xcrun simctl bootstatus "$id" -b >/dev/null &
+  pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    if ((SECONDS - started > limit)); then
+      kill "$pid" 2>/dev/null || true
+      echo "error: simulator $id did not finish booting in ${limit}s." >&2
+      exit 1
+    fi
+    sleep 2
+  done
+  wait "$pid"
 }
 
 devices() {
@@ -556,7 +574,7 @@ cmd_upload() {
 
 launch_on() {
   local id="$1" name="$2" app="$DERIVED/Build/Products/Debug-iphonesimulator/Penny.app"
-  xcrun simctl bootstatus "$id" -b >/dev/null
+  boot "$id"
   xcrun simctl install "$id" "$app"
   local pid
   pid="$(xcrun simctl launch "$id" com.mfalicoff.penny | sed -E 's/.*: ([0-9]+)$/\1/')"
@@ -624,7 +642,7 @@ ui_devices() { echo "${PENNY_UI_DEVICES:-iphone ipad}"; }
 # (seed_receipt_fixtures). Nothing is granted: tests set up permissions themselves.
 prepare_ui_device() {
   local id="$1"
-  xcrun simctl bootstatus "$id" -b >/dev/null
+  boot "$id"
   disable_password_autofill "$id"
   seed_receipt_fixtures "$id"
   local certificate
@@ -660,7 +678,7 @@ disable_password_autofill() {
       || /usr/bin/plutil -insert restrictedBool.allowPasswordAutoFill -dictionary "$file"
     /usr/bin/plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO "$file"
   done
-  xcrun simctl bootstatus "$id" -b >/dev/null
+  boot "$id"
 }
 
 # Receipt journeys (MAZ-78, docs/ios/receipts.md): synthetic files from receipt-fixtures.mjs. The
@@ -764,7 +782,7 @@ ui_test_run() {
       [[ $status == 124 && $attempt == 1 ]] || break
       echo "==> UI tests ($testplan) on $name hung; running them again"
       xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
-      xcrun simctl bootstatus "$id" -b >/dev/null
+      boot "$id"
     done
     [[ $status == 0 ]] || failed=1
     printf '%s\t%s\n' "$name" "$((SECONDS - started))" >> "$out/device-seconds.tsv"
@@ -814,7 +832,7 @@ main() {
     distribution-test) cmd_distribution_test ;;
     ci) cmd_lint; cmd_package_test; cmd_test; cmd_release_check; cmd_distribution_test ;;
     push) cmd_push "${2:-}" "${3:-booted}" ;;
-    *) sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    *) sed -n '2,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
   esac
 }
 
