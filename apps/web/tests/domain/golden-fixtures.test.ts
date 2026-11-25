@@ -25,6 +25,7 @@ const parse = <T>(schema: z.ZodType<T>, name: string): T => schema.parse(JSON.pa
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const frequency = z.enum(["weekly", "monthly", "yearly"]);
 const shareMode = z.enum(["full", "equal", "amount", "percent"]);
+const entryKind = z.enum(["expense", "income", "investment"]);
 
 const Money = z.strictObject({
   generator: z.string(),
@@ -38,6 +39,7 @@ const Money = z.strictObject({
     z.strictObject({ total: z.number().int().positive(), mode: shareMode, input: z.string(), error: z.string().min(1) }),
   ])).min(10),
   ledgerAmounts: z.array(z.strictObject({ total: z.number(), share: z.number(), valid: z.boolean() })).min(5),
+  ledgerParticipants: z.array(z.strictObject({ kind: entryKind, list: z.enum(["transaction", "recurring"]), participants: z.number().nullable(), valid: z.boolean() })).min(10),
 });
 
 const Recurrence = z.strictObject({
@@ -210,6 +212,20 @@ test("money fixtures match the amount parser, personal shares and ledger bounds"
   });
   for (const item of golden.ledgerAmounts)
     assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: ledger(item.total, item.share) }).success, item.valid, JSON.stringify(item));
+  // Contract 2.2.0: the optional participant count, built as the C# and Swift golden tests build it.
+  for (const item of golden.ledgerParticipants) {
+    const entry = {
+      id: "t", title: "Sample", kind: item.kind, total: 1000, share: item.kind === "expense" ? 500 : 1000,
+      ...(item.participants === null ? {} : { participants: item.participants }), categoryId: "c", date: "2026-10-01", note: "",
+    };
+    const written = {
+      version: 4, currency: "CAD", accounts: [], trips: [],
+      categories: [{ id: "c", name: "Category", icon: "cafe-outline", color: "#E47850", kind: item.kind }],
+      transactions: item.list === "transaction" ? [entry] : [],
+      recurring: item.list === "recurring" ? [{ ...entry, frequency: "monthly", nextDate: "2026-11-01", anchorDay: 1, active: true }] : [],
+    };
+    assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: written }).success, item.valid, JSON.stringify(item));
+  }
 });
 
 test("recurrence fixtures match next occurrence and keep the anchor", () => {

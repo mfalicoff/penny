@@ -9,6 +9,7 @@ public sealed record RecurringRule(
     string Kind,
     long Total,
     long Share,
+    int? Participants,
     string CategoryId,
     string? AccountId,
     DateOnly Date,

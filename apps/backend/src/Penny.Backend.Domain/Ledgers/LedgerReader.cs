@@ -87,6 +87,11 @@ public static class LedgerReader
                 categoryKinds.TryGetValue(categoryId, out var categoryKind) && categoryKind == kind
             );
         }
+        // Only expenses are split between people (contract 2.2.0).
+        foreach (var entry in transactions)
+            Require(entry.Participants is null || entry.Kind == "expense");
+        foreach (var rule in recurring)
+            Require(rule.Participants is null || rule.Kind == "expense");
         foreach (var entry in transactions)
             Require(
                 entry.TripId is null || (entry.Kind == "expense" && tripIds.Contains(entry.TripId))
@@ -161,6 +166,7 @@ public static class LedgerReader
             Choice(Required(fields, "kind"), LedgerLimits.Kinds),
             Integer(Required(fields, "total"), 1, LedgerLimits.MaxCents),
             Integer(Required(fields, "share"), 0, LedgerLimits.MaxCents),
+            OptionalParticipants(fields),
             Id(Required(fields, "categoryId")),
             OptionalId(fields, "accountId"),
             OptionalId(fields, "tripId"),
@@ -185,6 +191,7 @@ public static class LedgerReader
             Choice(Required(fields, "kind"), LedgerLimits.Kinds),
             Integer(Required(fields, "total"), 1, LedgerLimits.MaxCents),
             Integer(Required(fields, "share"), 0, LedgerLimits.MaxCents),
+            OptionalParticipants(fields),
             Id(Required(fields, "categoryId")),
             OptionalId(fields, "accountId"),
             Date(Required(fields, "date")),
@@ -238,6 +245,12 @@ public static class LedgerReader
 
     private static string? OptionalId(Dictionary<string, JsonElement> fields, string name) =>
         fields.TryGetValue(name, out var value) ? Id(value) : null;
+
+    // How many people split an expense, the person included: an integer from 2 to 100.
+    private static int? OptionalParticipants(Dictionary<string, JsonElement> fields) =>
+        fields.TryGetValue("participants", out var value)
+            ? (int)Integer(value, LedgerLimits.MinParticipants, LedgerLimits.MaxParticipants)
+            : null;
 
     internal static string Choice(JsonElement value, IReadOnlyList<string> choices)
     {

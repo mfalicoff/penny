@@ -189,4 +189,35 @@ struct LedgerMergeTests {
         #expect(pending.count == 5)
         #expect(PendingChanges(base: base, local: base) == .none)
     }
+
+    @Test("whenOnlyTheServerChangedParticipants_LedgerMerge_ShouldKeepTheRemoteValue")
+    func remoteParticipants() {
+        var rule = Sample.rule("rent", start: "2026-10-01", next: "2026-11-01")
+        rule.total = 8000
+        let base = Sample.ledger(
+            transactions: [Sample.entry("a", "2026-10-01", share: 500, total: 1000)], recurring: [rule])
+        var local = base
+        local.transactions[0].note = "From the phone"
+        local.recurring[0].title = "Rent (phone)"
+        var remote = base
+        remote.transactions[0].participants = 2
+        remote.recurring[0].participants = 2
+        let merged = LedgerMerge.merge(base: base, local: local, remote: remote)
+        #expect(merged.transactions[0].participants == 2 && merged.transactions[0].note == "From the phone")
+        #expect(merged.recurring[0].participants == 2 && merged.recurring[0].title == "Rent (phone)")
+    }
+
+    @Test("whenThisDeviceRecordedAnOccurrenceOfASplitRule_LedgerMerge_ShouldTreatItAsUntouched")
+    func untouchedSplitOccurrence() {
+        var rule = Sample.rule("rent", start: "2026-10-01", next: "2026-11-01")
+        rule.total = 8000
+        rule.participants = 2
+        let base = Sample.ledger(recurring: [rule])
+        let local = Recurrence.materialize(base, today: .day("2026-11-03"))
+        var remote = base
+        remote.recurring = []
+        // The server removed the rule; an untouched occurrence goes with it.
+        let merged = LedgerMerge.merge(base: base, local: local, remote: remote)
+        #expect(merged.transactions.isEmpty)
+    }
 }

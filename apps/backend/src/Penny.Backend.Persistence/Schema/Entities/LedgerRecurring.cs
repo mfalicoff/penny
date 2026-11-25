@@ -8,6 +8,7 @@ public sealed class LedgerRecurring
     public required string Kind { get; set; }
     public long TotalCents { get; set; }
     public long ShareCents { get; set; }
+    public int? Participants { get; set; }
     public required string CategoryId { get; set; }
     public string? AccountId { get; set; }
     public DateOnly StartDate { get; set; }

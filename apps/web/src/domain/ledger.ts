@@ -28,6 +28,10 @@ export type Transaction = {
   kind: Kind;
   total: number;
   share: number;
+  // How many people split an expense, the person included (2–100). An equal split sets it, so Home
+  // can say "split N ways"; absent when the entry isn't split or was split by amount or percent.
+  // Optional (contract 2.2.0), so older clients and ledgers stay valid. `| undefined` as for accountId.
+  participants?: number | undefined;
   categoryId: string;
   // `| undefined`: materialized occurrences copy an absent rule account as undefined (apps/web compiles this module with exactOptionalPropertyTypes).
   accountId?: string | undefined;
@@ -200,6 +204,22 @@ export function personalShare(
     throw new Error("Your share cannot exceed the receipt total.");
   return result;
 }
+/** The participant count a split records: the people of an equal split (checked by personalShare), else none. */
+export function splitParticipants(
+  mode: "full" | "equal" | "amount" | "percent",
+  input: string,
+): number | undefined {
+  return mode === "equal" ? Number(input) : undefined;
+}
+/**
+ * How the split form reopens a recorded entry or rule: equally between its participants while they
+ * still produce its share, else by amount when the share differs from the total, else in full.
+ */
+export function recordedSplit(entry: Pick<Transaction, "kind" | "total" | "share" | "participants">): "full" | "equal" | "amount" {
+  if (entry.kind !== "expense") return "full";
+  if (entry.participants !== undefined && Math.round(entry.total / entry.participants) === entry.share) return "equal";
+  return entry.share !== entry.total ? "amount" : "full";
+}
 export function nextOccurrence(
   date: string,
   frequency: Frequency,
@@ -232,6 +252,7 @@ export function materialize(ledger: Ledger, today = dateKey()): Ledger {
           kind: rule.kind,
           total: rule.total,
           share: rule.share,
+          ...(rule.participants !== undefined ? { participants: rule.participants } : {}),
           categoryId: rule.categoryId,
           accountId: rule.accountId,
           date: nextDate,
@@ -275,6 +296,8 @@ export function demoLedger(today = new Date()): Ledger {
     kind,
     date: `${month}-${String(Math.max(1, day - offset)).padStart(2, "0")}`,
     note: "",
+    // Half of the total: split equally between two people (MAZ-272).
+    ...(kind === "expense" && share * 2 === total ? { participants: 2 } : {}),
   });
   data.transactions = [
     make("Monthly salary", 480000, "salary", 20, 480000, "income"),

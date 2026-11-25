@@ -374,6 +374,35 @@ struct EntryFlowTests {
         #expect(DayText.medium(later, today: later) == "Today")
     }
 
+    /// `iphone-home`: "Today · split 2 ways" (contract 2.2.0: the entry's `participants`).
+    @Test("whenAnExpenseHasParticipants_EntryRow_ShouldSayHowManyWaysItIsSplit")
+    func rowMetaParticipants() throws {
+        let visa = PaymentAccount(id: "visa", name: "Visa", type: .credit)
+        var dinner = entry("d", title: "Dinner")
+        dinner.accountId = "visa"
+        dinner.date = today
+        dinner.total = 2000
+        dinner.share = 500
+        dinner.participants = 4
+        // Recorded participants win over what the amounts would suggest.
+        var taxi = entry("t", title: "Taxi")
+        taxi.total = 1000
+        taxi.share = 400
+        taxi.participants = 3
+        let ledger = Ledger(accounts: [visa], transactions: [dinner, taxi])
+        let report = LedgerReport(ledger: ledger)
+        func meta(_ id: String) throws -> String {
+            let row = try #require(report.recorded.first { $0.id == id })
+            return EntryRow.meta(row, category: nil, report: report, today: today)
+        }
+        #expect(try meta("d") == "Today · Visa · split 4 ways")
+        #expect(try meta("t") == "\(DayText.short(taxi.date, today: today)) · split 3 ways")
+        taxi.participants = nil
+        let unsplit = LedgerReport(ledger: Ledger(transactions: [taxi]))
+        let row = try #require(unsplit.recorded.first)
+        #expect(EntryRow.equalSplit(row) == nil)
+    }
+
     @Test("whenAnEntryRepeats_EntryText_ShouldNameTheCadenceFromItsDate")
     func repeatValue() {
         let payday = CalendarDate(year: 2026, month: 11, day: 15) ?? .earliest

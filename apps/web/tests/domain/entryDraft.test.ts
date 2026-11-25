@@ -57,3 +57,13 @@ test("schedule drafts preserve month-end anchors unless the next date changes", 
   assert.throws(() => buildSchedule({ ...draft, frequency: "none" }, categories, original), /Choose a repeat/);
   assert.throws(() => buildSchedule({ ...draft, date: "2026-02-30" }, categories, original), /valid date/);
 });
+
+test("an equal split records its people on the entry and its schedule; other splits and income record none (MAZ-272)", () => {
+  const { transaction, recurring } = buildEntry(draft, categories);
+  assert.equal(transaction.participants, 3);
+  assert.equal(recurring?.participants, 3);
+  assert.equal(buildEntry({ ...draft, split: "amount", shareInput: "5" }, categories).transaction.participants, undefined);
+  assert.equal(buildEntry({ ...draft, kind: "income", categoryId: "salary" }, categories).transaction.participants, undefined);
+  const schedule = buildSchedule({ ...draft, split: "percent", shareInput: "50" }, categories, { ...recurring!, participants: 3 });
+  assert.equal(schedule.participants, undefined);
+});

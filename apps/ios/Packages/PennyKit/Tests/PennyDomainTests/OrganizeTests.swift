@@ -270,4 +270,17 @@ struct OrganizeTests {
         let rule = Self.rule("late", next: "2100-11-30", anchor: 30)
         #expect(rule.upcomingDates(3).map(\.description) == ["2100-11-30", "2100-12-30"])
     }
+
+    @Test("whenEditingAnEqualSplitSchedule_EntryDraft_ShouldReopenAsTheEqualSplitAndRebuildIt")
+    func scheduleEqualSplit() throws {
+        var rule = Self.rule(total: 10_001, share: 3_334)
+        rule.participants = 3
+        let draft = EntryDraft(schedule: rule)
+        #expect(draft.split == .equal && draft.shareInput == "3")
+        #expect(try draft.buildSchedule(categories: Ledger.defaultCategories, original: rule) == rule)
+        var amount = draft
+        amount.split = .amount
+        amount.shareInput = "33.34"
+        #expect(try amount.buildSchedule(categories: Ledger.defaultCategories, original: rule).participants == nil)
+    }
 }

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Penny.Backend.Domain.Households;
 using Penny.Backend.Domain.Ledgers;
 using Penny.Backend.UnitTests.Ledgers;
@@ -74,6 +75,76 @@ public sealed class GoldenFixtureTests
         }
         // The largest parsed client amount is the server's cent ceiling.
         golden.Parse.Max(item => item.Cents ?? 0).ShouldBe(LedgerLimits.MaxCents);
+    }
+
+    // Built like `money()` in generate-golden.ts: one entry or rule of the case's kind.
+    [Fact]
+    public void whenLedgerParticipantsRead_LedgerReader_ShouldAcceptExactlyTheTypeScriptRule()
+    {
+        var golden = StrictJson.Read<MoneyFixture>("money.json");
+        golden.LedgerParticipants.ShouldNotBeEmpty();
+        foreach (var item in golden.LedgerParticipants)
+        {
+            var entry = new JsonObject
+            {
+                ["id"] = "t",
+                ["title"] = "Sample",
+                ["kind"] = item.Kind,
+                ["total"] = 1000,
+                ["share"] = item.Kind == "expense" ? 500 : 1000,
+                ["categoryId"] = "c",
+                ["date"] = "2026-10-01",
+                ["note"] = "",
+            };
+            if (item.Participants is { } participants)
+                entry["participants"] = participants;
+            var transactions = new JsonArray();
+            var recurring = new JsonArray();
+            if (item.List == "transaction")
+            {
+                transactions.Add(entry);
+            }
+            else
+            {
+                item.List.ShouldBe("recurring");
+                entry["frequency"] = "monthly";
+                entry["nextDate"] = "2026-11-01";
+                entry["anchorDay"] = 1;
+                entry["active"] = true;
+                recurring.Add(entry);
+            }
+            var body = new JsonObject
+            {
+                ["revision"] = 0,
+                ["ledger"] = new JsonObject
+                {
+                    ["version"] = 4,
+                    ["currency"] = "CAD",
+                    ["accounts"] = new JsonArray(),
+                    ["trips"] = new JsonArray(),
+                    ["categories"] = new JsonArray(
+                        new JsonObject
+                        {
+                            ["id"] = "c",
+                            ["name"] = "Category",
+                            ["icon"] = "cafe-outline",
+                            ["color"] = "#E47850",
+                            ["kind"] = item.Kind,
+                        }
+                    ),
+                    ["transactions"] = transactions,
+                    ["recurring"] = recurring,
+                },
+            };
+            using var document = JsonDocument.Parse(body.ToJsonString());
+            (LedgerReader.Read(document.RootElement) is not null).ShouldBe(
+                item.Valid,
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{item.Kind} {item.List}, participants {item.Participants?.ToString(CultureInfo.InvariantCulture) ?? "absent"}"
+                )
+            );
+        }
     }
 
     [Fact]

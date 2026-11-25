@@ -8,6 +8,7 @@ public sealed record Entry(
     string Kind,
     long Total,
     long Share,
+    int? Participants,
     string CategoryId,
     string? AccountId,
     string? TripId,

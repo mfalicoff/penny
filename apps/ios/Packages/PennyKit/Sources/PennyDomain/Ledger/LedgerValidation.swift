@@ -15,6 +15,9 @@ public enum LedgerViolation: Hashable, Sendable {
     case invalidTrip(String)
     case invalidTripDates(String)
     case invalidAnchorDay(String)
+    /// A participant count outside 2...100, or on an entry or rule that is not an expense
+    /// (contract 2.2.0).
+    case invalidParticipants(String)
 }
 
 extension Ledger {
@@ -81,9 +84,12 @@ extension Ledger {
         // A duplicate id is already a violation; the last one wins.
         let kinds = Dictionary(categories.map { ($0.id, $0.kind) }, uniquingKeysWith: { _, last in last })
         func amounts(
-            _ owner: String, kind: EntryKind, total: Int64, share: Int64, categoryId: String, accountId: String?,
-            title: String, note: String, on day: CalendarDate
+            _ owner: String, kind: EntryKind, total: Int64, share: Int64, participants: Int?, categoryId: String,
+            accountId: String?, title: String, note: String, on day: CalendarDate
         ) {
+            if let participants, kind != .expense || !(2...100).contains(participants) {
+                found.append(.invalidParticipants(owner))
+            }
             if !text(title, 1...100) || !text(note, 0...1000) { found.append(.invalidText(owner)) }
             if !Money.isValidAmounts(total: total, share: share) { found.append(.invalidAmounts(owner)) }
             if kind != .expense, share != total { found.append(.invalidShare(owner)) }
@@ -97,7 +103,8 @@ extension Ledger {
         }
         for entry in transactions {
             amounts(
-                entry.id, kind: entry.kind, total: entry.total, share: entry.share, categoryId: entry.categoryId,
+                entry.id, kind: entry.kind, total: entry.total, share: entry.share, participants: entry.participants,
+                categoryId: entry.categoryId,
                 accountId: entry.accountId, title: entry.title, note: entry.note, on: entry.date)
             if let tripId = entry.tripId, entry.kind != .expense || !tripIDs.contains(tripId) {
                 found.append(.invalidTrip(entry.id))
@@ -112,7 +119,8 @@ extension Ledger {
         }
         for rule in recurring {
             amounts(
-                rule.id, kind: rule.kind, total: rule.total, share: rule.share, categoryId: rule.categoryId,
+                rule.id, kind: rule.kind, total: rule.total, share: rule.share, participants: rule.participants,
+                categoryId: rule.categoryId,
                 accountId: rule.accountId, title: rule.title, note: rule.note, on: rule.date)
             date(rule.nextDate, rule.id)
             if !(1...31).contains(rule.anchorDay) { found.append(.invalidAnchorDay(rule.id)) }

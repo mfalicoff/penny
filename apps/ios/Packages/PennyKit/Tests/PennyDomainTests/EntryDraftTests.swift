@@ -145,4 +145,41 @@ struct EntryDraftTests {
         #expect(try build("2100-12-31", .monthly, editing: occurrence) == nil)
         #expect(LedgerRuleError.scheduleAfterLedgerRange.message.hasSuffix("."))
     }
+
+    // MARK: Participants (contract 2.2.0)
+
+    @Test("whenExpenseIsSplitEqually_Build_ShouldRecordThePeopleAsParticipants")
+    func equalSplitRecordsParticipants() throws {
+        let draft = EntryDraft(
+            kind: .expense, title: "Dinner", amount: "100.01", date: "2026-11-03", categoryId: "food",
+            split: .equal, shareInput: " 3 ", frequency: .monthly)
+        let (entry, rule) = try draft.build(categories: Self.categories, makeID: Self.ids())
+        #expect(entry.participants == 3 && entry.share == 3334)
+        #expect(rule?.participants == 3)
+    }
+
+    @Test(
+        "whenSplitIsNotEqualOrEntryIsNotAnExpense_Build_ShouldRecordNoParticipants",
+        arguments: [
+            (EntryKind.expense, Money.SplitMode.full, ""), (.expense, .amount, "40"), (.expense, .percent, "50"),
+            (.income, .equal, "2"), (.investment, .equal, "4"),
+        ])
+    func otherSplitsRecordNone(kind: EntryKind, split: Money.SplitMode, input: String) throws {
+        let category = Self.categories.first { $0.kind == kind }!.id
+        let draft = EntryDraft(
+            kind: kind, title: "Dinner", amount: "100", date: "2026-11-03", categoryId: category, split: split,
+            shareInput: input, frequency: .monthly)
+        let (entry, rule) = try draft.build(categories: Self.categories, makeID: Self.ids())
+        #expect(entry.participants == nil && rule?.participants == nil)
+    }
+
+    @Test("whenEqualSplitHeadCountIsInvalid_Build_ShouldRefuseIt", arguments: ["1", "101", "2.5", ""])
+    func invalidHeadCount(input: String) {
+        let draft = EntryDraft(
+            kind: .expense, title: "Dinner", amount: "100", date: "2026-11-03", categoryId: "food", split: .equal,
+            shareInput: input)
+        #expect(throws: LedgerRuleError.invalidSplitPeople) {
+            try draft.build(categories: Self.categories, makeID: Self.ids())
+        }
+    }
 }

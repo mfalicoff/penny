@@ -5,5 +5,6 @@ public sealed record MoneyFixture(
     string Description,
     IReadOnlyList<MoneyParseCase> Parse,
     IReadOnlyList<PersonalShareCase> PersonalShares,
-    IReadOnlyList<LedgerAmountCase> LedgerAmounts
+    IReadOnlyList<LedgerAmountCase> LedgerAmounts,
+    IReadOnlyList<LedgerParticipantsCase> LedgerParticipants
 );

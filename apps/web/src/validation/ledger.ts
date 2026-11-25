@@ -13,6 +13,8 @@ const entry = z.object({
   kind: z.enum(["income", "expense", "investment"]),
   total: amount.positive(),
   share: amount,
+  // Contract 2.2.0: how many people split an expense, the person included. Optional.
+  participants: z.number().int().min(2).max(100).optional(),
   categoryId: id,
   accountId: id.optional(),
   tripId: id.optional(),
@@ -76,6 +78,8 @@ const ledgerSchema = z
         ctx.addIssue({ code: "custom", message: "Invalid payment account" });
       if (t.share > t.total || (t.kind !== "expense" && t.share !== t.total))
         ctx.addIssue({ code: "custom", message: "Invalid personal share" });
+      if (t.participants !== undefined && t.kind !== "expense")
+        ctx.addIssue({ code: "custom", message: "Only expenses are split" });
       if (categories.get(t.categoryId)?.kind !== t.kind)
         ctx.addIssue({ code: "custom", message: "Invalid category" });
     }

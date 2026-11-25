@@ -83,6 +83,23 @@ public enum Money {
         return result
     }
 
+    /// The participant count a split records (contract 2.2.0): the head count of an equal split,
+    /// else nil. Full, amount and percent splits record none. Throws as `personalShare` does for
+    /// an invalid head count.
+    public static func splitParticipants(mode: SplitMode, input: String) throws(LedgerRuleError) -> Int? {
+        guard mode == .equal else { return nil }
+        return Int(try headCount(input))
+    }
+
+    /// The head count a recorded entry or rule reopens with as an equal split: its `participants`
+    /// when it is an expense whose share is still exactly that equal share of the total (the same
+    /// rounding as `personalShare`), else nil (the web's `recordedSplit`).
+    public static func equalSplitPeople(kind: EntryKind, total: Int64, share: Int64, participants: Int?) -> Int? {
+        guard kind == .expense, let participants, (2...100).contains(participants), (0...maxCents).contains(total)
+        else { return nil }
+        return divideRoundingHalfUp(total, by: Int64(participants)) == share ? participants : nil
+    }
+
     /// `numerator / denominator` rounded half up for a non-negative numerator.
     public static func divideRoundingHalfUp(_ numerator: Int64, by denominator: Int64) -> Int64 {
         precondition(numerator >= 0 && denominator > 0)

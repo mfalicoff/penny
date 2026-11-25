@@ -288,4 +288,28 @@ struct EntryEditorTests {
         #expect(try Money.cents(AmountInput.apply(.separator, to: "12")) == 1200)
         #expect(AmountInput.text(cents: 99_999_999_999) == "999999999.99")
     }
+
+    // MARK: Participants (contract 2.2.0)
+
+    @Test("whenEditingAnEqualSplitEntry_EntryDraft_ShouldReopenAsTheEqualSplit")
+    func editingEqualSplit() throws {
+        var entry = Sample.entry("a", "2026-11-02", share: 3334, total: 10001)
+        entry.participants = 3
+        let draft = EntryDraft(editing: entry)
+        #expect(draft.split == .equal && draft.shareInput == "3")
+        let (rebuilt, _) = try draft.build(
+            categories: PennyDomain.Ledger.defaultCategories, editing: entry, makeID: { "unused" })
+        #expect(rebuilt == entry)
+    }
+
+    @Test("whenParticipantsNoLongerProduceTheShare_EntryDraft_ShouldOpenAsAnAmountOrInFull")
+    func editingStaleParticipants() {
+        var entry = Sample.entry("a", "2026-11-02", share: 3000, total: 10001)
+        entry.participants = 3
+        let draft = EntryDraft(editing: entry)
+        #expect(draft.split == .amount && draft.shareInput == "30.00")
+        entry.share = entry.total
+        let whole = EntryDraft(editing: entry)
+        #expect(whole.split == .full && whole.shareInput.isEmpty)
+    }
 }

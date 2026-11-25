@@ -69,14 +69,18 @@ extension RecurringRule {
 extension EntryDraft {
     /// The schedule form's draft for editing `rule`:
     /// the amount as typed money, the next date as the date, and a share that differs from the
-    /// total as an amount split. Build it back with `buildSchedule(categories:original:)`;
+    /// total as an amount split, or as an equal split when the rule's `participants` still
+    /// produce its share. Build it back with `buildSchedule(categories:original:)`;
     /// an untouched draft rebuilds the same rule.
     public init(schedule rule: RecurringRule) {
+        let people = Money.equalSplitPeople(
+            kind: rule.kind, total: rule.total, share: rule.share, participants: rule.participants)
+        let mode: Money.SplitMode =
+            people != nil ? .equal : rule.kind == .expense && rule.share != rule.total ? .amount : .full
         self.init(
             kind: rule.kind, title: rule.title, amount: Self.moneyText(rule.total), date: rule.nextDate.description,
-            categoryId: rule.categoryId, accountId: rule.accountId, note: rule.note,
-            split: rule.kind == .expense && rule.share != rule.total ? .amount : .full,
-            shareInput: Self.moneyText(rule.share), frequency: rule.frequency)
+            categoryId: rule.categoryId, accountId: rule.accountId, note: rule.note, split: mode,
+            shareInput: people.map(String.init) ?? Self.moneyText(rule.share), frequency: rule.frequency)
     }
 
     /// A new schedule's draft: monthly from `today`, in the first category of `kind`.

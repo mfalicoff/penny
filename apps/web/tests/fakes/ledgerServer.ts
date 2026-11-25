@@ -6,7 +6,7 @@ import { bodyOf, emptySearch, json, stubServer } from "../render";
  * A revision-checked `GET`/`PUT /api/ledger` (409 on a stale write, never a merge), the shared
  * projection and search, for the entry form and Activity tests (MAZ-88). Synthetic data only.
  */
-export type WireEntry = { id: string; title: string; kind: string; total: number; share: number; categoryId: string; date: string; note: string; accountId?: string; tripId?: string; recurringId?: string };
+export type WireEntry = { id: string; title: string; kind: string; total: number; share: number; participants?: number; categoryId: string; date: string; note: string; accountId?: string; tripId?: string; recurringId?: string };
 
 export const entry = (id: string, title: string, extra: Partial<WireEntry> = {}): WireEntry => ({
   id,

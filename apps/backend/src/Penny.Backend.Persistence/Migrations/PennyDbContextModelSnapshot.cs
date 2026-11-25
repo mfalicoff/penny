@@ -1075,6 +1075,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("note")
                         .UseCollation("C");
 
+                    b.Property<int?>("Participants")
+                        .HasColumnType("integer")
+                        .HasColumnName("participants");
+
                     b.Property<string>("ReceiptId")
                         .HasColumnType("text")
                         .HasColumnName("receipt_id")
@@ -1123,6 +1127,10 @@ namespace Penny.Backend.Persistence.Migrations
                             t.HasCheckConstraint("ck_ledger_entries_kind", "kind IN ('income','expense','investment')");
 
                             t.HasCheckConstraint("ck_ledger_entries_note", "length(note) BETWEEN 0 AND 1000");
+
+                            t.HasCheckConstraint("ck_ledger_entries_participants", "participants IS NULL OR participants BETWEEN 2 AND 100");
+
+                            t.HasCheckConstraint("ck_ledger_entries_participants_kind", "participants IS NULL OR kind = 'expense'");
 
                             t.HasCheckConstraint("ck_ledger_entries_share", "share_cents BETWEEN 0 AND total_cents");
 
@@ -1185,6 +1193,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("note")
                         .UseCollation("C");
 
+                    b.Property<int?>("Participants")
+                        .HasColumnType("integer")
+                        .HasColumnName("participants");
+
                     b.Property<long>("ShareCents")
                         .HasColumnType("bigint")
                         .HasColumnName("share_cents");
@@ -1220,6 +1232,10 @@ namespace Penny.Backend.Persistence.Migrations
                             t.HasCheckConstraint("ck_ledger_recurring_kind", "kind IN ('income','expense','investment')");
 
                             t.HasCheckConstraint("ck_ledger_recurring_note", "length(note) BETWEEN 0 AND 1000");
+
+                            t.HasCheckConstraint("ck_ledger_recurring_participants", "participants IS NULL OR participants BETWEEN 2 AND 100");
+
+                            t.HasCheckConstraint("ck_ledger_recurring_participants_kind", "participants IS NULL OR kind = 'expense'");
 
                             t.HasCheckConstraint("ck_ledger_recurring_share", "share_cents BETWEEN 0 AND total_cents");
 

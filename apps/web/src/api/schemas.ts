@@ -163,6 +163,7 @@ export const entrySchema = z.object({
   kind: kindSchema,
   total: z.number().int().min(1).max(99_999_999_999),
   share: cents,
+  participants: z.number().int().min(2).max(100).optional(),
   categoryId: id,
   accountId: id.optional(),
   tripId: id.optional(),

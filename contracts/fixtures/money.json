@@ -1,6 +1,6 @@
 {
   "generator": "apps/web/scripts/fixtures/generate-golden.ts",
-  "description": "Integer-cent money: client amount parsing (cents), personal share entry, and the stored entry total/share bounds every server enforces.",
+  "description": "Integer-cent money: client amount parsing (cents), personal share entry, the stored entry total/share bounds every server enforces, and the optional participant count of a split expense (contract 2.2.0: an integer from 2 to 100, on expenses only; `participants: null` means the field is absent).",
   "parse": [
     {
       "input": "0",
@@ -239,6 +239,80 @@
     {
       "total": 500,
       "share": -1,
+      "valid": false
+    }
+  ],
+  "ledgerParticipants": [
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": null,
+      "valid": true
+    },
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": 2,
+      "valid": true
+    },
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": 100,
+      "valid": true
+    },
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": 1,
+      "valid": false
+    },
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": 0,
+      "valid": false
+    },
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": 101,
+      "valid": false
+    },
+    {
+      "kind": "expense",
+      "list": "transaction",
+      "participants": 2.5,
+      "valid": false
+    },
+    {
+      "kind": "income",
+      "list": "transaction",
+      "participants": 2,
+      "valid": false
+    },
+    {
+      "kind": "investment",
+      "list": "transaction",
+      "participants": 3,
+      "valid": false
+    },
+    {
+      "kind": "expense",
+      "list": "recurring",
+      "participants": 3,
+      "valid": true
+    },
+    {
+      "kind": "expense",
+      "list": "recurring",
+      "participants": 1,
+      "valid": false
+    },
+    {
+      "kind": "income",
+      "list": "recurring",
+      "participants": 2,
       "valid": false
     }
   ]
