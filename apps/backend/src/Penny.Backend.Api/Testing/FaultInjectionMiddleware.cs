@@ -34,7 +34,7 @@ public sealed class FaultInjectionMiddleware(RequestDelegate next, FaultRegistry
         {
             if (status == 503)
                 context.Response.Headers.RetryAfter = "1";
-            await ApiErrors.WriteAsync(context, status, Message);
+            await ApiErrors.WriteAsync(context, status, "test.injected_failure", Message);
             return;
         }
         await next(context);

@@ -557,7 +557,7 @@ describe("receipts on shared expenses", () => {
       if (url === "/api/receipts/rs1") return receiptAnswer();
       if (!url.startsWith("/api/households") && url !== "/api/ledger") return undefined;
       const body = (bodyOf(init) ?? {}) as Record<string, unknown>;
-      if (url === `/api/households/${id}/expenses` && init?.method === "POST" && body.receiptId) return json({ error: "Receipt is not available to this household." }, 400);
+      if (url === `/api/households/${id}/expenses` && init?.method === "POST" && body.receiptId) return json({ error: "Receipt is not available to this household.", code: "expense.receipt_unavailable" }, 400);
       const result = households.handle(ALEX, init?.method ?? "GET", url, body);
       return json(result.body, result.status);
     });

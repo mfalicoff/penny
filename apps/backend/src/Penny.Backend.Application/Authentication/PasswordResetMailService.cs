@@ -28,9 +28,17 @@ public sealed class PasswordResetMailService(
     )
     {
         if (!mail.Enabled)
-            throw new BackendFailure(FailureKind.NotFound, MailPolicy.Disabled);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.MailDisabled,
+                MailPolicy.Disabled
+            );
         var normalized = Credentials.NormalizeEmail(email)
-            ?? throw new BackendFailure(FailureKind.Invalid, PasswordResetService.InvalidEmail);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidEmail,
+                PasswordResetService.InvalidEmail
+            );
         var user = await accounts.FindByEmailAsync(normalized, cancellationToken);
         if (user is null)
             return;

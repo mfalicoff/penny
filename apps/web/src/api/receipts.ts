@@ -1,5 +1,5 @@
 import type { Receipt } from "@domain/ledger.ts";
-import { ApiError, currentTransport } from "./client";
+import { ApiError, currentTransport, errorBody } from "./client";
 import { receiptSchema } from "./schemas";
 
 /**
@@ -152,22 +152,22 @@ export interface ReceiptUploadBody {
   file: Blob;
 }
 
-const errorText = (text: string): string | undefined => {
+const uploadErrorBody = (text: string) => {
   try {
-    const value: unknown = JSON.parse(text);
-    return typeof value === "object" && value !== null && "error" in value && typeof value.error === "string" ? value.error : undefined;
+    return errorBody(JSON.parse(text));
   } catch {
-    return undefined;
+    return errorBody(undefined);
   }
 };
 
-/** An upload failure in words. 401 keeps its status so the caller can end the session. */
+/** An upload failure in words, keeping the server's `code`. 401 keeps its status so the caller can end the session. */
 function uploadError(status: number, text: string): ApiError {
-  if (status === 401) return new ApiError(401, RECEIPT_MESSAGES.expired);
-  if (status === 413) return new ApiError(413, RECEIPT_MESSAGES.requestTooLarge);
-  if (status === 400) return new ApiError(400, errorText(text) ?? RECEIPT_MESSAGES.unsupported);
+  const { message, code } = uploadErrorBody(text);
+  if (status === 401) return new ApiError(401, RECEIPT_MESSAGES.expired, { code });
+  if (status === 413) return new ApiError(413, RECEIPT_MESSAGES.requestTooLarge, { code });
+  if (status === 400) return new ApiError(400, message ?? RECEIPT_MESSAGES.unsupported, { code });
   if (status === 0) return new ApiError(0, RECEIPT_MESSAGES.offline);
-  return new ApiError(status, RECEIPT_MESSAGES.failed);
+  return new ApiError(status, RECEIPT_MESSAGES.failed, { code });
 }
 
 function parseReceipt(status: number, text: string): Receipt {

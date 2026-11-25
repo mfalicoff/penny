@@ -59,7 +59,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             {
                 var membership = await HistoricalMemberAsync(store, householdId, userId);
                 if (month is not null && !ExpenseReader.IsMonth(month))
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 return
                 [
                     .. (await store.ListExpensesAsync(householdId, month))
@@ -83,7 +87,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 var expense = await FindAsync(store, householdId, expenseId);
                 return expense is not null && CanSee(membership, expense, userId)
                     ? ExpenseView.From(expense, userId)
-                    : throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
+                    : throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.ExpenseNotFound,
+                        ExpenseNotFound
+                    );
             },
             cancellationToken
         );
@@ -103,10 +111,18 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 // Access is checked before the body.
                 var household = await RequireMemberAsync(store, householdId, actorId);
                 if (input is null)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var memberIds = await EligibleAsync(store, household, input);
                 if (!memberIds.Contains(input.PayerUserId, StringComparer.Ordinal))
-                    throw new BackendFailure(FailureKind.Invalid, PayerNotMember);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.ExpensePayerNotMember,
+                        PayerNotMember
+                    );
                 await ValidateAccountAsync(store, input.PayerUserId, actorId, input.AccountId);
                 await ValidateReceiptAsync(store, householdId, actorId, input.ReceiptId);
                 var shares = ExpenseSplit.Allocate(
@@ -163,17 +179,29 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 var locked = await LockAsync(store, householdId, destinationId);
                 var household = await LockedMemberAsync(store, locked, householdId, actorId);
                 if (update is null)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var input = update.Input;
                 var moving = !string.Equals(destinationId, householdId, StringComparison.Ordinal);
                 var destination = moving
                     ? await LockedMemberAsync(store, locked, destinationId, actorId)
                     : household;
                 var stored = await FindAsync(store, householdId, expenseId)
-                    ?? throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.ExpenseNotFound,
+                        ExpenseNotFound
+                    );
                 var before = ExpenseView.From(stored, actorId);
                 if (stored.Revision != update.Revision)
-                    throw new BackendFailure(FailureKind.Conflict, Changed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseChanged,
+                        Changed
+                    );
                 var paid = stored.Payments.Count > 0;
                 if (
                     paid
@@ -188,7 +216,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         || Month(input.Date) != Month(stored.Date)
                     )
                 )
-                    throw new BackendFailure(FailureKind.Conflict, PaidLocked);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpensePaidLocked,
+                        PaidLocked
+                    );
                 if (
                     moving
                     && !string.Equals(
@@ -197,13 +229,21 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         StringComparison.Ordinal
                     )
                 )
-                    throw new BackendFailure(FailureKind.Invalid, DestinationCurrency);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.ExpenseDestinationCurrency,
+                        DestinationCurrency
+                    );
                 // A paid expense keeps the participants it was paid with.
                 IReadOnlyList<string> memberIds = paid
                     ? [.. stored.Splits.Select(share => share.UserId)]
                     : await EligibleAsync(store, destination, input);
                 if (!paid && !memberIds.Contains(input.PayerUserId, StringComparer.Ordinal))
-                    throw new BackendFailure(FailureKind.Invalid, PayerNotMember);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.ExpensePayerNotMember,
+                        PayerNotMember
+                    );
                 // Another member's edit keeps the payer's private account; the payer
                 // replaces or clears it.
                 var accountId = input.AccountId
@@ -236,7 +276,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         || shares.Any(share => !stored.Splits.Contains(share))
                     )
                 )
-                    throw new BackendFailure(FailureKind.Conflict, PaidShares);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpensePaidShares,
+                        PaidShares
+                    );
                 if (
                     !await store.UpdateExpenseAsync(
                         householdId,
@@ -247,7 +291,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         now
                     )
                 )
-                    throw new BackendFailure(FailureKind.Conflict, Changed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseChanged,
+                        Changed
+                    );
                 var after = await ViewAsync(store, destinationId, expenseId, actorId);
                 // Search (MAZ-121): rewrite the document (household, payer, texts) before
                 // commit; a move changes its household id and so who can see it.
@@ -314,15 +362,35 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             {
                 await RequireMemberAsync(store, householdId, actorId);
                 if (revision is not { } expected)
-                    throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.HouseholdInvalidData,
+                        HouseholdService.InvalidData
+                    );
                 var stored = await FindAsync(store, householdId, expenseId)
-                    ?? throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.ExpenseNotFound,
+                        ExpenseNotFound
+                    );
                 if (stored.Revision != expected)
-                    throw new BackendFailure(FailureKind.Conflict, Changed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseChanged,
+                        Changed
+                    );
                 if (stored.Payments.Count > 0)
-                    throw new BackendFailure(FailureKind.Conflict, PaidDelete);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpensePaidDelete,
+                        PaidDelete
+                    );
                 if (!await store.DeleteExpenseAsync(householdId, expenseId, expected, actorId, now))
-                    throw new BackendFailure(FailureKind.Conflict, Changed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseChanged,
+                        Changed
+                    );
                 // Search (MAZ-121): the deleted expense leaves search before commit.
                 await store.IndexExpenseAsync(expenseId);
                 await AuditAsync(
@@ -355,27 +423,51 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     {
         // Payments validate the body before checking access.
         var request = ExpenseReader.ReadPayment(body)
-            ?? throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.HouseholdInvalidData,
+                HouseholdService.InvalidData
+            );
         var now = Now();
         return await expenses.WriteAsync(
             async store =>
             {
                 await RequireMemberAsync(store, householdId, actorId);
                 var stored = await FindAsync(store, householdId, expenseId)
-                    ?? throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
+                    ?? throw new BackendFailure(
+                        FailureKind.NotFound,
+                        ErrorCodes.ExpenseNotFound,
+                        ExpenseNotFound
+                    );
                 if (
                     !string.Equals(actorId, request.FromUserId, StringComparison.Ordinal)
                     && !string.Equals(actorId, stored.PayerId, StringComparison.Ordinal)
                 )
-                    throw new BackendFailure(FailureKind.Forbidden, PaymentForbidden);
+                    throw new BackendFailure(
+                        FailureKind.Forbidden,
+                        ErrorCodes.ExpensePaymentForbidden,
+                        PaymentForbidden
+                    );
                 if (string.Equals(request.FromUserId, stored.PayerId, StringComparison.Ordinal))
-                    throw new BackendFailure(FailureKind.Invalid, PayerOwnShare);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.ExpensePayerOwnShare,
+                        PayerOwnShare
+                    );
                 await RequireCurrentAsync(store, householdId, request.FromUserId);
                 await RequireCurrentAsync(store, householdId, stored.PayerId);
                 if (stored.Revision != request.Revision)
-                    throw new BackendFailure(FailureKind.Conflict, Changed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseChanged,
+                        Changed
+                    );
                 if (stored.PaymentsClosed)
-                    throw new BackendFailure(FailureKind.Conflict, PaymentsClosed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpensePaymentsClosed,
+                        PaymentsClosed
+                    );
                 if (
                     stored.Payments.Any(payment =>
                         string.Equals(
@@ -385,12 +477,20 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         )
                     )
                 )
-                    throw new BackendFailure(FailureKind.Conflict, AlreadyPaid);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseAlreadyPaid,
+                        AlreadyPaid
+                    );
                 var share = stored.Splits.FirstOrDefault(part =>
                     string.Equals(part.UserId, request.FromUserId, StringComparison.Ordinal)
                 );
                 if (share is null || share.AmountCents <= 0)
-                    throw new BackendFailure(FailureKind.Invalid, PositiveShare);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.ExpensePositiveShare,
+                        PositiveShare
+                    );
                 var month = Month(stored.Date);
                 var payment = new StoredReimbursement(
                     NewId(),
@@ -404,7 +504,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     expenseId
                 );
                 if (!await store.AddPaymentAsync(payment, request.Revision))
-                    throw new BackendFailure(FailureKind.Conflict, Changed);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.ExpenseChanged,
+                        Changed
+                    );
                 await AuditAsync(
                     store,
                     householdId,
@@ -446,9 +550,17 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     )
     {
         if (month is not null && !ExpenseReader.IsMonth(month))
-            throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.HouseholdInvalidData,
+                HouseholdService.InvalidData
+            );
         if (year is not null && !ExpenseReader.IsYear(year))
-            throw new BackendFailure(FailureKind.Invalid, InvalidYear);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ExpenseInvalidYear,
+                InvalidYear
+            );
         return expenses.ReadAsync(
             async store =>
             {
@@ -622,9 +734,17 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         if (accountId is null)
             return;
         if (!string.Equals(payerId, actorId, StringComparison.Ordinal))
-            throw new BackendFailure(FailureKind.Forbidden, PayerOnlyAccount);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.ExpensePayerOnlyAccount,
+                PayerOnlyAccount
+            );
         if (!await store.LockLedgerAccountAsync(payerId, accountId))
-            throw new BackendFailure(FailureKind.Invalid, AccountNotFound);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ExpenseAccountNotFound,
+                AccountNotFound
+            );
     }
 
     // A receipt is the actor's own upload, or one a live expense of the household
@@ -642,7 +762,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             !await store.ReceiptOwnedAsync(actorId, receiptId)
             && !await store.ReceiptLinkedAsync(householdId, receiptId)
         )
-            throw new BackendFailure(FailureKind.Invalid, ReceiptUnavailable);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ExpenseReceiptUnavailable,
+                ReceiptUnavailable
+            );
     }
 
     // Any membership, current or former, of a household archived or not.
@@ -655,7 +779,12 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             Storable(householdId) && Storable(userId)
                 ? await store.MembershipAsync(householdId, userId)
                 : null
-        ) ?? throw new BackendFailure(FailureKind.NotFound, HouseholdService.NotFound);
+        )
+        ?? throw new BackendFailure(
+            FailureKind.NotFound,
+            ErrorCodes.HouseholdNotFound,
+            HouseholdService.NotFound
+        );
 
     // Current members see every expense; former members only
     // those they have a share in.
@@ -712,8 +841,16 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             && await store.MembershipAsync(householdId, userId) is { IsCurrent: true }
         )
             return await store.FindAsync(householdId, includeArchived: false)
-                ?? throw new BackendFailure(FailureKind.NotFound, HouseholdService.NotFound);
-        throw new BackendFailure(FailureKind.NotFound, HouseholdService.NotFound);
+                ?? throw new BackendFailure(
+                    FailureKind.NotFound,
+                    ErrorCodes.HouseholdNotFound,
+                    HouseholdService.NotFound
+                );
+        throw new BackendFailure(
+            FailureKind.NotFound,
+            ErrorCodes.HouseholdNotFound,
+            HouseholdService.NotFound
+        );
     }
 
     // A current member of the household already locked by this unit.
@@ -724,7 +861,11 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     )
     {
         if (await store.MembershipAsync(householdId, userId) is not { IsCurrent: true })
-            throw new BackendFailure(FailureKind.NotFound, HouseholdService.NotFound);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.HouseholdNotFound,
+                HouseholdService.NotFound
+            );
     }
 
     private static Task<StoredExpense?> FindAsync(

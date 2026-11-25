@@ -29,6 +29,7 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         response.StatusCode.ShouldBe(expected);
         var body = await response.Content.ReadFromJsonAsync<ApiError>(Ct);
         body!.Error.ShouldBe("Synthetic domain failure.");
+        body.Code.ShouldBe("test.synthetic");
     }
 
     [Fact]
@@ -45,7 +46,12 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         using var missingRequest = Authorized(HttpMethod.Get, "/api/missing", bearer: token);
         using var missing = await Client.SendAsync(missingRequest, Ct);
         missing.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await missing.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldNotBeNullOrEmpty();
+        var notFound = (await missing.Content.ReadFromJsonAsync<ApiError>(Ct))!;
+        notFound.Error.ShouldNotBeNullOrEmpty();
+        notFound.Code.ShouldBe(ErrorCodes.RouteNotFound);
+        (await unexpected.Content.ReadFromJsonAsync<ApiError>(Ct))!.Code.ShouldBe(
+            ErrorCodes.ServerError
+        );
     }
 
     [Theory]
@@ -61,7 +67,9 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
             Ct
         );
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldNotBeNullOrEmpty();
+        var error = (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!;
+        error.Error.ShouldNotBeNullOrEmpty();
+        error.Code.ShouldBe(ErrorCodes.RequestInvalid);
     }
 
     [Fact]
@@ -85,7 +93,9 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         chunked.Content.Headers.ContentType = new("application/json");
         using var response = await Client.SendAsync(chunked, Ct);
         response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
-        (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldNotBeNullOrEmpty();
+        var error = (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!;
+        error.Error.ShouldNotBeNullOrEmpty();
+        error.Code.ShouldBe(ErrorCodes.RequestTooLarge);
     }
 
     // A client that uploads a body somewhat over the limit (a receipt a little too
@@ -102,9 +112,9 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
             content.Headers.ContentType = new("application/json");
             using var response = await Client.PostAsync("/api/test/body", content, Ct);
             response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
-            (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldBe(
-                "The upload is too large."
-            );
+            var error = (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!;
+            error.Error.ShouldBe("The upload is too large.");
+            error.Code.ShouldBe(ErrorCodes.RequestTooLarge);
         }
     }
 
@@ -145,7 +155,9 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         response.Headers.RetryAfter!.Delta.ShouldBe(TimeSpan.FromSeconds(5));
         response.Headers.CacheControl!.NoStore.ShouldBeTrue();
         response.Headers.GetValues("X-Content-Type-Options").Single().ShouldBe("nosniff");
-        (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldContain("timed out");
+        var timedOut = (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!;
+        timedOut.Error.ShouldContain("timed out");
+        timedOut.Code.ShouldBe(ErrorCodes.RequestTimedOut);
         Fixture
             .Factory.Services.GetRequiredService<ProbeSignals>()
             .Canceled.Task.IsCompleted.ShouldBeTrue();

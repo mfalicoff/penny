@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
 import { z } from "zod";
 import { requestPasswordReset, resetPassword } from "../../api/auth";
-import { ApiError } from "../../api/client";
+import { ApiError, hasCode } from "../../api/client";
 import { useEmailEnabled } from "../../api/info";
 import { RESET_CODE } from "../../api/schemas";
 import { clearResetCode, peekResetCode } from "../../auth/fragmentCodes";
@@ -16,7 +16,6 @@ import { AuthFrame, describeAuthError } from "./AuthScreen";
 export const RESEND_SECONDS = 60;
 
 const emailSchema = z.email().max(254);
-const INVALID_CODE = /invalid or has expired/i;
 
 /** The page's document title; these pages are outside the app shell, which sets it elsewhere. */
 export function useDocumentTitle(title: string) {
@@ -66,7 +65,7 @@ export function ForgotPasswordPage() {
       setFormError(null);
     },
     onError: (error) => {
-      if (error instanceof ApiError && error.status === 404) {
+      if (hasCode(error, "mail.disabled")) {
         void navigate({ to: "/reset-password", replace: true });
         return;
       }
@@ -249,7 +248,7 @@ export function ResetPasswordPage() {
       await navigate({ to: "/", replace: true });
     },
     onError: (error) => {
-      if (error instanceof ApiError && error.status === 400 && INVALID_CODE.test(error.message)) {
+      if (hasCode(error, "password_reset.invalid_token")) {
         if (fromLink) {
           clearResetCode();
           setLinkExpired(true);

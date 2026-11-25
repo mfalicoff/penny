@@ -48,16 +48,32 @@ public sealed class AuthService(
     )
     {
         if (!policy.AllowRegistration)
-            throw new BackendFailure(FailureKind.Forbidden, RegistrationDisabled);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.AuthRegistrationDisabled,
+                RegistrationDisabled
+            );
         var credentials = Credentials.Normalize(email, password)
-            ?? throw new BackendFailure(FailureKind.Invalid, InvalidRegistration);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.AuthInvalidRegistration,
+                InvalidRegistration
+            );
         // The name is optional (older apps don't send it); a blank one counts as none.
         string? name = null;
         if (!DisplayName.IsBlank(displayName))
             name = DisplayName.Normalize(displayName)
-                ?? throw new BackendFailure(FailureKind.Invalid, ProfileService.InvalidName);
+                ?? throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.ProfileInvalidName,
+                    ProfileService.InvalidName
+                );
         if (await accounts.FindByEmailAsync(credentials.Email, cancellationToken) is not null)
-            throw new BackendFailure(FailureKind.Conflict, DuplicateEmail);
+            throw new BackendFailure(
+                FailureKind.Conflict,
+                ErrorCodes.AuthDuplicateEmail,
+                DuplicateEmail
+            );
         var userId = SessionTokens.NewId();
         var hash = passwords.Hash(credentials.Password);
         // Another registration may commit while the password is hashed.
@@ -68,7 +84,11 @@ public sealed class AuthService(
                 cancellationToken
             )
         )
-            throw new BackendFailure(FailureKind.Conflict, DuplicateEmail);
+            throw new BackendFailure(
+                FailureKind.Conflict,
+                ErrorCodes.AuthDuplicateEmail,
+                DuplicateEmail
+            );
         // MAZ-172: a new password account starts unverified; the email waits in the outbox.
         await verification.QueueAsync(
             userId,
@@ -87,12 +107,20 @@ public sealed class AuthService(
     )
     {
         var credentials = Credentials.Normalize(email, password)
-            ?? throw new BackendFailure(FailureKind.Unauthorized, InvalidCredentials);
+            ?? throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthInvalidCredentials,
+                InvalidCredentials
+            );
         var user = await accounts.FindByEmailAsync(credentials.Email, cancellationToken);
         // Always verify, so unknown emails cost the same as wrong passwords.
         var check = passwords.Verify(user?.Password, credentials.Password);
         if (user is null || check == PasswordCheck.Failed)
-            throw new BackendFailure(FailureKind.Unauthorized, InvalidCredentials);
+            throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthInvalidCredentials,
+                InvalidCredentials
+            );
         if (check == PasswordCheck.SuccessRehashNeeded)
             await accounts.UpdatePasswordAsync(
                 user.Id,
@@ -123,12 +151,24 @@ public sealed class AuthService(
             return new(await IssueAsync(existing.Id, cancellationToken), existing.Email);
         }
         if (!allowRegistration)
-            throw new BackendFailure(FailureKind.Forbidden, OidcRegistrationDisabled);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.AuthOidcRegistrationDisabled,
+                OidcRegistrationDisabled
+            );
         // A new account needs the verified email; an existing one is found without it.
         if (identity.Email is not { } email)
-            throw new BackendFailure(FailureKind.Unauthorized, OidcService.NotVerified);
+            throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.OidcNotVerified,
+                OidcService.NotVerified
+            );
         if (await accounts.FindByEmailAsync(email, cancellationToken) is not null)
-            throw new BackendFailure(FailureKind.Conflict, OidcEmailInUse);
+            throw new BackendFailure(
+                FailureKind.Conflict,
+                ErrorCodes.AuthOidcEmailInUse,
+                OidcEmailInUse
+            );
         var userId = SessionTokens.NewId();
         // OIDC-only accounts have an empty password, which never verifies.
         // The provider said the email is verified (MAZ-172).
@@ -142,7 +182,11 @@ public sealed class AuthService(
                 cancellationToken
             )
         )
-            throw new BackendFailure(FailureKind.Conflict, OidcAccountExists);
+            throw new BackendFailure(
+                FailureKind.Conflict,
+                ErrorCodes.AuthOidcAccountExists,
+                OidcAccountExists
+            );
         await profiles.ApplyProviderAsync(userId, identity.Profile, cancellationToken);
         return new(await IssueAsync(userId, cancellationToken), email);
     }
@@ -159,14 +203,26 @@ public sealed class AuthService(
     )
     {
         var user = await accounts.FindByIdAsync(session.UserId, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.Unauthorized, SignInRequired);
+            ?? throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthSignInRequired,
+                SignInRequired
+            );
         if (user.Password.Length == 0)
-            throw new BackendFailure(FailureKind.Forbidden, NoPassword);
+            throw new BackendFailure(FailureKind.Forbidden, ErrorCodes.AuthNoPassword, NoPassword);
         if (!Credentials.IsValidPassword(newPassword))
-            throw new BackendFailure(FailureKind.Invalid, InvalidNewPassword);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.AuthInvalidNewPassword,
+                InvalidNewPassword
+            );
         // Always verify, so a missing current password costs the same as a wrong one.
         if (passwords.Verify(user.Password, currentPassword ?? "") == PasswordCheck.Failed)
-            throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.AuthWrongCurrentPassword,
+                WrongCurrentPassword
+            );
         if (
             !await accounts.TryChangePasswordAsync(
                 user.Id,
@@ -177,7 +233,11 @@ public sealed class AuthService(
                 cancellationToken
             )
         )
-            throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.AuthWrongCurrentPassword,
+                WrongCurrentPassword
+            );
     }
 
     // A signed-in email change for a password account (MAZ-172): the current password must
@@ -194,18 +254,38 @@ public sealed class AuthService(
     )
     {
         var user = await accounts.FindByIdAsync(session.UserId, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.Unauthorized, SignInRequired);
+            ?? throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthSignInRequired,
+                SignInRequired
+            );
         if (user.Password.Length == 0)
-            throw new BackendFailure(FailureKind.Forbidden, EmailManaged);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.AuthEmailManaged,
+                EmailManaged
+            );
         var normalized = Credentials.NormalizeEmail(email)
-            ?? throw new BackendFailure(FailureKind.Invalid, PasswordResetService.InvalidEmail);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidEmail,
+                PasswordResetService.InvalidEmail
+            );
         // Always verify, so a missing password costs the same as a wrong one.
         if (passwords.Verify(user.Password, password ?? "") == PasswordCheck.Failed)
-            throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.AuthWrongCurrentPassword,
+                WrongCurrentPassword
+            );
         if (!string.Equals(normalized, user.Email, StringComparison.Ordinal))
         {
             if (await accounts.FindByEmailAsync(normalized, cancellationToken) is not null)
-                throw new BackendFailure(FailureKind.Conflict, EmailInUse);
+                throw new BackendFailure(
+                    FailureKind.Conflict,
+                    ErrorCodes.AuthEmailInUse,
+                    EmailInUse
+                );
             switch (
                 await accounts.TryChangeEmailAsync(
                     user.Id,
@@ -216,9 +296,17 @@ public sealed class AuthService(
             )
             {
                 case EmailChangeResult.Duplicate:
-                    throw new BackendFailure(FailureKind.Conflict, EmailInUse);
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.AuthEmailInUse,
+                        EmailInUse
+                    );
                 case EmailChangeResult.Stale:
-                    throw new BackendFailure(FailureKind.Invalid, WrongCurrentPassword);
+                    throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.AuthWrongCurrentPassword,
+                        WrongCurrentPassword
+                    );
             }
             await verification.QueueAsync(
                 user.Id,

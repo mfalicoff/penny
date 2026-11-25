@@ -34,7 +34,11 @@ public sealed class SearchService(ISearchRepository search, ITextEmbedder embedd
         SearchPosition? after = null;
         if (request.Cursor is { } cursor)
             after = SearchCursor.Decode(cursor, fingerprint, request.Sort)
-                ?? throw new BackendFailure(FailureKind.Invalid, SearchCursor.Invalid);
+                ?? throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.SearchInvalidCursor,
+                    SearchCursor.Invalid
+                );
         // The meaning tier needs a query with a letter or digit.
         var vector = SearchText.HasLetterOrDigit(request.Query)
             ? embedder.EmbedQuery(request.Query)

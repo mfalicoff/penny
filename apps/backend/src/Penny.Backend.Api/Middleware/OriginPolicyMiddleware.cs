@@ -1,6 +1,7 @@
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.InboundMail;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Middleware;
 
@@ -30,7 +31,7 @@ public sealed class OriginPolicyMiddleware(RequestDelegate next, AuthOptions opt
             && !string.IsNullOrEmpty(origin.ToString())
             && !options.AllowedOrigins.Contains(origin.ToString(), StringComparer.Ordinal)
         )
-            return ApiErrors.WriteAsync(context, 403, Message);
+            return ApiErrors.WriteAsync(context, 403, ErrorCodes.OriginForbidden, Message);
         return next(context);
     }
 }

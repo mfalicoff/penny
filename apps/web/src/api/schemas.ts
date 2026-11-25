@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ERROR_CODES } from "./errorCodes";
 
 /**
  * Zod models for the DTOs the web app consumes. They mirror `contracts/openapi.json`;
@@ -11,7 +12,8 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const cents = z.number().int().min(0).max(99_999_999_999);
 export const kindSchema = z.enum(["income", "expense", "investment"]);
 
-export const errorSchema = z.object({ error: z.string() });
+/** Every error body (contract 2.1.0): the message to show and its machine-readable code (MAZ-187). */
+export const errorSchema = z.object({ error: z.string(), code: z.enum(ERROR_CODES) });
 export const okSchema = z.object({ ok: z.boolean() });
 
 /** `POST /api/auth/login` and `/register` body. */

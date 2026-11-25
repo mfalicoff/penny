@@ -198,9 +198,9 @@ export function inboxServer(options: {
           state.sharedConflicts -= 1;
           shared.revision += 1;
           shared.title = `${shared.title} (edited)`;
-          return reply({ error: "This expense changed. Reload it and try again." }, 409);
+          return reply({ error: "This expense changed. Reload it and try again.", code: "expense.changed" }, 409);
         }
-        if (body.revision !== shared.revision) return reply({ error: "This expense changed. Reload it and try again." }, 409);
+        if (body.revision !== shared.revision) return reply({ error: "This expense changed. Reload it and try again.", code: "expense.changed" }, 409);
         shared.revision += 1;
         delete shared.receipt;
         if (body.receiptId) shared.receiptId = body.receiptId;

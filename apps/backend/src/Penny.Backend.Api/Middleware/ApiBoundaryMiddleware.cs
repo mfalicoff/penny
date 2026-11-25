@@ -4,6 +4,7 @@ using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Application.InboundMail;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Middleware;
 
@@ -33,7 +34,12 @@ public sealed partial class ApiBoundaryMiddleware(
         if (context.Request.ContentLength is { } declared && declared > maxBody)
         {
             await DiscardOversizedBodyAsync(context, limit, declared, maxBody);
-            await ApiErrors.WriteAsync(context, 413, "The upload is too large.");
+            await ApiErrors.WriteAsync(
+                context,
+                413,
+                ErrorCodes.RequestTooLarge,
+                ApiErrors.TooLarge
+            );
             return;
         }
         if (limit is { IsReadOnly: false })
@@ -50,7 +56,10 @@ public sealed partial class ApiBoundaryMiddleware(
                     context,
                     context.Response.StatusCode,
                     context.Response.StatusCode == 404
-                        ? "API route not found."
+                        ? ErrorCodes.RouteNotFound
+                        : ErrorCodes.RequestFailed,
+                    context.Response.StatusCode == 404
+                        ? ApiErrors.RouteNotFound
                         : "The request could not be completed."
                 );
         }
@@ -60,7 +69,7 @@ public sealed partial class ApiBoundaryMiddleware(
         }
         catch (Exception error) when (!context.Response.HasStarted)
         {
-            var (status, message) = ApiErrors.Map(error);
+            var (status, code, message) = ApiErrors.Map(error);
             // Deliberately do not log exception text, request paths/bodies, credentials or SQL.
             // The W3C trace id (MAZ-127) finds the request trace; "-" when not traced.
             if (status == 500)
@@ -73,7 +82,7 @@ public sealed partial class ApiBoundaryMiddleware(
             // A dependency timeout (search statement timeout) is retryable.
             if (status == 503)
                 context.Response.Headers.RetryAfter = "1";
-            await ApiErrors.WriteAsync(context, status, message);
+            await ApiErrors.WriteAsync(context, status, code, message);
         }
     }
 

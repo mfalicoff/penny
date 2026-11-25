@@ -99,14 +99,22 @@ public sealed class OidcController(
         )
             ? Request.HasFormContentType
                 ? await Request.ReadFormAsync(cancellationToken)
-                : throw new BackendFailure(FailureKind.Invalid, OidcService.InvalidResponse)
+                : throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.OidcInvalidResponse,
+                    OidcService.InvalidResponse
+                )
             : Request.Query;
         var parameters = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var (name, values) in received)
         {
             // Protocol parameters must not repeat.
             if (values.Count != 1)
-                throw new BackendFailure(FailureKind.Invalid, OidcService.InvalidResponse);
+                throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.OidcInvalidResponse,
+                    OidcService.InvalidResponse
+                );
             parameters[name] = values[0] ?? "";
         }
         var target = await Configured().RelayAsync(provider, parameters, cancellationToken);
@@ -197,5 +205,10 @@ public sealed class OidcController(
     }
 
     private OidcService Configured() =>
-        oidc ?? throw new BackendFailure(FailureKind.NotFound, OidcService.NotConfigured);
+        oidc
+        ?? throw new BackendFailure(
+            FailureKind.NotFound,
+            ErrorCodes.OidcNotConfigured,
+            OidcService.NotConfigured
+        );
 }

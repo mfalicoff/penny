@@ -22,7 +22,12 @@ public sealed partial class PushDeviceService(IPushRepository devices, TimeProvi
         devices.RegisterAsync(
             session.UserId,
             session.TokenHash,
-            Parse(body) ?? throw new BackendFailure(FailureKind.Invalid, InvalidDevice),
+            Parse(body)
+                ?? throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.PushInvalidDevice,
+                    InvalidDevice
+                ),
             clock.GetUtcNow(),
             cancellationToken
         );
@@ -39,7 +44,11 @@ public sealed partial class PushDeviceService(IPushRepository devices, TimeProvi
             || value.ValueKind != JsonValueKind.String
             || TryText(value) is not { } token
         )
-            throw new BackendFailure(FailureKind.Invalid, InvalidDevice);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PushInvalidDevice,
+                InvalidDevice
+            );
         // Any other token cannot be stored, so it matches nothing.
         if (!ApnsToken().IsMatch(token))
             return Task.CompletedTask;

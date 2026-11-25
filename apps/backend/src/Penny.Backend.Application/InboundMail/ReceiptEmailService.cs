@@ -46,7 +46,12 @@ public sealed class ReceiptEmailService(
             now.AddDays(-1),
             settings.MaxAddressesPerDay,
             cancellationToken
-        ) ?? throw new BackendFailure(FailureKind.RateLimited, TooManyAddresses);
+        )
+            ?? throw new BackendFailure(
+                FailureKind.RateLimited,
+                ErrorCodes.ReceiptEmailTooManyAddresses,
+                TooManyAddresses
+            );
     }
 
     // `{ "extend": true, "allowedSenders": ["…"] }`: either or both. Extending restarts
@@ -59,27 +64,47 @@ public sealed class ReceiptEmailService(
     {
         RequireEnabled();
         if (body is not { ValueKind: JsonValueKind.Object } root)
-            throw new BackendFailure(FailureKind.Invalid, InvalidUpdate);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptEmailInvalidUpdate,
+                InvalidUpdate
+            );
         var extend = false;
         IReadOnlyList<string>? senders = null;
         if (root.TryGetProperty("extend", out var extendValue))
         {
             if (extendValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
-                throw new BackendFailure(FailureKind.Invalid, InvalidUpdate);
+                throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.ReceiptEmailInvalidUpdate,
+                    InvalidUpdate
+                );
             extend = extendValue.GetBoolean();
         }
         if (root.TryGetProperty("allowedSenders", out var sendersValue))
         {
             if (sendersValue.ValueKind != JsonValueKind.Array)
-                throw new BackendFailure(FailureKind.Invalid, AllowedSenders.Invalid);
+                throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.ReceiptEmailInvalidSenders,
+                    AllowedSenders.Invalid
+                );
             var raw = new List<string?>();
             foreach (var item in sendersValue.EnumerateArray())
                 raw.Add(item.ValueKind == JsonValueKind.String ? Text(item) : null);
             senders = AllowedSenders.Normalize(raw)
-                ?? throw new BackendFailure(FailureKind.Invalid, AllowedSenders.Invalid);
+                ?? throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.ReceiptEmailInvalidSenders,
+                    AllowedSenders.Invalid
+                );
         }
         if (!extend && senders is null)
-            throw new BackendFailure(FailureKind.Invalid, InvalidUpdate);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptEmailInvalidUpdate,
+                InvalidUpdate
+            );
         var now = clock.GetUtcNow();
         return await addresses.UpdateAsync(
             userId,
@@ -87,7 +112,12 @@ public sealed class ReceiptEmailService(
             extend ? now + settings.AddressLifetime : null,
             senders,
             cancellationToken
-        ) ?? throw new BackendFailure(FailureKind.NotFound, NoAddress);
+        )
+            ?? throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.ReceiptEmailNoAddress,
+                NoAddress
+            );
     }
 
     // Idempotent: revoking when there is no live address succeeds.
@@ -100,7 +130,11 @@ public sealed class ReceiptEmailService(
     private void RequireEnabled()
     {
         if (!settings.Enabled)
-            throw new BackendFailure(FailureKind.NotFound, NotEnabled);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.ReceiptEmailNotEnabled,
+                NotEnabled
+            );
     }
 
     private static string? Text(JsonElement value)

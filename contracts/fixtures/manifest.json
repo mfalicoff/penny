@@ -21,7 +21,7 @@
     },
     {
       "file": "http-journey.json",
-      "sha256": "14f27b09cd6cf42f3ac68d8f9d2881862c5868e856b829c2da4b02949c12d292",
+      "sha256": "385b2c22f52a966121d53b14378b36ba3b78b76083b3ae926481c5e13e715bda",
       "generatedBy": null,
       "consumers": {
         "typescript": [

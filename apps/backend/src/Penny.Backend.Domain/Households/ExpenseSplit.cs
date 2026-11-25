@@ -31,7 +31,11 @@ public static class ExpenseSplit
             memberIds.Count == 0
             || memberIds.Distinct(StringComparer.Ordinal).Count() != memberIds.Count
         )
-            throw new BackendFailure(FailureKind.Invalid, DistinctMembers);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.SplitDistinctMembers,
+                DistinctMembers
+            );
         if (string.Equals(mode, Equal, StringComparison.Ordinal))
             return Calculate(() => HouseholdSplits.Equal(totalCents, memberIds));
         if (
@@ -42,11 +46,15 @@ public static class ExpenseSplit
             || allocations.Select(item => item.UserId).Distinct(StringComparer.Ordinal).Count()
                 != memberIds.Count
         )
-            throw new BackendFailure(FailureKind.Invalid, EveryMember);
+            throw new BackendFailure(FailureKind.Invalid, ErrorCodes.SplitEveryMember, EveryMember);
         if (string.Equals(mode, Exact, StringComparison.Ordinal))
         {
             if (allocations.Any(item => item.AmountCents is null))
-                throw new BackendFailure(FailureKind.Invalid, ExactAmounts);
+                throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.SplitExactAmounts,
+                    ExactAmounts
+                );
             return Calculate(() =>
                 HouseholdSplits.Exact(
                     totalCents,
@@ -60,7 +68,11 @@ public static class ExpenseSplit
             );
         }
         if (allocations.Any(item => item.PercentBasisPoints is null))
-            throw new BackendFailure(FailureKind.Invalid, PercentAmounts);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.SplitPercentAmounts,
+                PercentAmounts
+            );
         return Calculate(() =>
             HouseholdSplits.Percent(
                 totalCents,
@@ -143,7 +155,7 @@ public static class ExpenseSplit
         }
         catch (ArgumentException)
         {
-            throw new BackendFailure(FailureKind.Invalid, Total);
+            throw new BackendFailure(FailureKind.Invalid, ErrorCodes.SplitTotalMismatch, Total);
         }
     }
 }

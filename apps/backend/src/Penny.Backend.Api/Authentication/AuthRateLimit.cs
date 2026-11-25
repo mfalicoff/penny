@@ -7,6 +7,7 @@ using Penny.Backend.Api.Households;
 using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Application.Diagnostics;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Authentication;
 
@@ -43,22 +44,22 @@ public static class AuthRateLimit
                 ?.Metadata.GetMetadata<EnableRateLimitingAttribute>()
                 ?.PolicyName;
             BackendTelemetry.RateLimitRejected(policy ?? Policy);
+            var (code, message) = policy switch
+            {
+                InviteRateLimit.Policy => (ErrorCodes.RateLimitInvite, InviteRateLimit.Message),
+                SearchRateLimit.Policy => (ErrorCodes.RateLimitSearch, SearchRateLimit.Message),
+                InboundMailRateLimit.Policy => (
+                    ErrorCodes.RateLimitInboundMail,
+                    InboundMailRateLimit.Message
+                ),
+                ClientTelemetry.ClientTelemetryRateLimit.Policy => (
+                    ErrorCodes.RateLimitTelemetry,
+                    ClientTelemetry.ClientTelemetryRateLimit.Message
+                ),
+                _ => (ErrorCodes.RateLimitAuth, Message),
+            };
             return new ValueTask(
-                ApiErrors.WriteAsync(
-                    rejected.HttpContext,
-                    429,
-                    policy switch
-                    {
-                        InviteRateLimit.Policy => InviteRateLimit.Message,
-                        SearchRateLimit.Policy => SearchRateLimit.Message,
-                        InboundMailRateLimit.Policy => InboundMailRateLimit.Message,
-                        ClientTelemetry.ClientTelemetryRateLimit.Policy => ClientTelemetry
-                            .ClientTelemetryRateLimit
-                            .Message,
-                        _ => Message,
-                    },
-                    cancellationToken
-                )
+                ApiErrors.WriteAsync(rejected.HttpContext, 429, code, message, cancellationToken)
             );
         };
     }

@@ -67,7 +67,7 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                 && !cancellationToken.IsCancellationRequested
             )
         {
-            throw new BackendFailure(FailureKind.Unavailable, TimedOut);
+            throw new BackendFailure(FailureKind.Unavailable, ErrorCodes.SearchTimedOut, TimedOut);
         }
     }
 

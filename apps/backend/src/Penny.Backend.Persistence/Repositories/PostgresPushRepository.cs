@@ -54,7 +54,11 @@ public sealed class PostgresPushRepository(NpgsqlDataSource source) : IPushRepos
                 )
             {
                 // The session ended (logout) between authentication and this write.
-                throw new BackendFailure(FailureKind.Unauthorized, AuthService.SignInRequired);
+                throw new BackendFailure(
+                    FailureKind.Unauthorized,
+                    ErrorCodes.AuthSignInRequired,
+                    AuthService.SignInRequired
+                );
             }
         }
     }

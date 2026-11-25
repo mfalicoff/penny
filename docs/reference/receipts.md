@@ -13,13 +13,17 @@ Both require a session (cookie or bearer); `POST` also passes the origin check f
 
 ### Upload checks, in order
 
-| Check | Failure |
-| --- | --- |
-| Request body at most `Backend__MaxRequestBodyBytes` (20 MB); a declared `Content-Length` is checked first, a chunked body while it is read | `413 The upload is too large.` |
-| Origin, then session | `403`, `401 Please sign in to continue.` |
-| A JSON body (`Content-Type: application/json`): the base64 upload of apps from before contract 2.0.0 | `400 Update Penny to upload receipts.` |
-| Headers: `Content-Disposition` carries exactly one `filename*=UTF-8''…` parameter whose percent-decoded bytes are valid UTF-8 and give a storable name of 1–255 UTF-16 units; `Content-Type` is one of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/heic`, `image/heif` (case-insensitive, parameters ignored, stored lowercase). The disposition type and a plain `filename` parameter are ignored | `400 Choose a photo or PDF smaller than 10 MB.` |
-| Body size 1 byte to 10 MiB (10,485,760 bytes) and the signature of the declared type: `%PDF-`; JPEG `FF D8 FF`; PNG's 8-byte signature; `GIF87a`/`GIF89a`; WebP `RIFF`…`WEBP` in the first 12 bytes; HEIC/HEIF `ftyp` at offset 4 | `400 This file is not a supported photo or PDF, or exceeds 10 MB.` |
+Each failure keeps its contract message; its [`code`](api-reference.md#error-codes) (contract 2.1.0) tells apart the checks that share one.
+
+| Check | Failure | `code` |
+| --- | --- | --- |
+| Request body at most `Backend__MaxRequestBodyBytes` (20 MB); a declared `Content-Length` is checked first, a chunked body while it is read | `413 The upload is too large.` | `request.too_large` |
+| Origin, then session | `403`, `401 Please sign in to continue.` | `origin.forbidden`, `auth.sign_in_required` |
+| A JSON body (`Content-Type: application/json`): the base64 upload of apps from before contract 2.0.0 | `400 Update Penny to upload receipts.` | `receipt.outdated_client` |
+| `Content-Type` is one of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/heic`, `image/heif` (case-insensitive, parameters ignored, stored lowercase) | `400 Choose a photo or PDF smaller than 10 MB.` | `receipt.unsupported_type` |
+| `Content-Disposition` carries exactly one `filename*=UTF-8''…` parameter whose percent-decoded bytes are valid UTF-8 and give a storable name of 1–255 UTF-16 units. The disposition type and a plain `filename` parameter are ignored | `400 Choose a photo or PDF smaller than 10 MB.` | `receipt.invalid_name` |
+| Body at most 10 MiB (10,485,760 bytes) | `400 This file is not a supported photo or PDF, or exceeds 10 MB.` | `receipt.too_large` |
+| Body at least 1 byte, with the signature of the declared type: `%PDF-`; JPEG `FF D8 FF`; PNG's 8-byte signature; `GIF87a`/`GIF89a`; WebP `RIFF`…`WEBP` in the first 12 bytes; HEIC/HEIF `ftyp` at offset 4 | `400 This file is not a supported photo or PDF, or exceeds 10 MB.` | `receipt.unsupported_file` |
 
 The body is the file itself, read once into a buffer (MAZ-131). The buffer starts at the declared `Content-Length` but at most 1 MiB and grows as bytes arrive, so a slow client that declares 10 MiB cannot hold 10 MiB of server memory before sending it; this endpoint has no request timeout. A body over 10 MiB but within the request limit is read to the end and discarded before the 400, so clients that send the whole body before reading the response see the message rather than a reset. The name accepts the characters JavaScript `encodeURIComponent` leaves literal (`' ( ) * !`) as well as their RFC 8187 escapes. There is no multipart or resumable upload.
 

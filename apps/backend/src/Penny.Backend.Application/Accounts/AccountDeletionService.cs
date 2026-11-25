@@ -42,14 +42,22 @@ public sealed class AccountDeletionService(
     )
     {
         var user = await accounts.FindByIdAsync(session.UserId, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.Unauthorized, AuthService.SignInRequired);
+            ?? throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthSignInRequired,
+                AuthService.SignInRequired
+            );
         // Always verify a password account, so a missing password costs the same as a
         // wrong one. OIDC accounts have an empty hash and no password to ask for.
         if (
             user.Password.Length > 0
             && passwords.Verify(user.Password, password ?? "") == PasswordCheck.Failed
         )
-            throw new BackendFailure(FailureKind.Invalid, WrongPassword);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.AccountWrongPassword,
+                WrongPassword
+            );
         var now = MembershipDates.Truncate(clock.GetUtcNow());
         var deleted = await deletion.DeleteAsync(
             user.Id,
@@ -59,7 +67,11 @@ public sealed class AccountDeletionService(
             cancellationToken
         );
         if (!deleted)
-            throw new BackendFailure(FailureKind.Unauthorized, AuthService.SignInRequired);
+            throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthSignInRequired,
+                AuthService.SignInRequired
+            );
     }
 
     // Households are locked in id order, so two deletions never wait on each other in a
@@ -86,10 +98,15 @@ public sealed class AccountDeletionService(
                 )
                     throw new BackendFailure(
                         FailureKind.Conflict,
+                        ErrorCodes.AccountCreatorWithMembers,
                         CreatorWithMembers(current.Name)
                     );
                 if (!HouseholdSettlement.IsSettled(await store.BalancesAsync(current.Id), userId))
-                    throw new BackendFailure(FailureKind.Conflict, Unsettled(current.Name));
+                    throw new BackendFailure(
+                        FailureKind.Conflict,
+                        ErrorCodes.AccountUnsettled,
+                        Unsettled(current.Name)
+                    );
             }
             await store.ClosePeriodAsync(household.Id, userId, now);
             await HouseholdService.AuditAsync(

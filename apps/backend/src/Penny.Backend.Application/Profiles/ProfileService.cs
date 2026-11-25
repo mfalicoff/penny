@@ -46,11 +46,23 @@ public sealed class ProfileService(
             var normalized = name.Value is null
                 ? null
                 : DisplayName.Normalize(name.Value)
-                    ?? throw new BackendFailure(FailureKind.Invalid, InvalidName);
+                    ?? throw new BackendFailure(
+                        FailureKind.Invalid,
+                        ErrorCodes.ProfileInvalidName,
+                        InvalidName
+                    );
             if (profile.NameFromProvider)
-                throw new BackendFailure(FailureKind.Forbidden, NameManaged);
+                throw new BackendFailure(
+                    FailureKind.Forbidden,
+                    ErrorCodes.ProfileNameManaged,
+                    NameManaged
+                );
             if (!await profiles.TrySetNameAsync(userId, normalized, cancellationToken))
-                throw new BackendFailure(FailureKind.Forbidden, NameManaged);
+                throw new BackendFailure(
+                    FailureKind.Forbidden,
+                    ErrorCodes.ProfileNameManaged,
+                    NameManaged
+                );
         }
         if (dismissPrompt)
             await profiles.DismissNamePromptAsync(userId, cancellationToken);
@@ -66,13 +78,29 @@ public sealed class ProfileService(
     {
         var profile = await FindAsync(userId, cancellationToken);
         if (profile.AvatarFromProvider)
-            throw new BackendFailure(FailureKind.Forbidden, AvatarManaged);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.ProfileAvatarManaged,
+                AvatarManaged
+            );
         if (content is null || !AvatarFormat.IsAcceptable(mime, content))
-            throw new BackendFailure(FailureKind.Invalid, InvalidPicture);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ProfileInvalidPicture,
+                InvalidPicture
+            );
         var encoded = await images.ProcessAsync(content, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.Invalid, UnreadablePicture);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ProfileUnreadablePicture,
+                UnreadablePicture
+            );
         if (!await profiles.TrySetAvatarAsync(userId, NewAvatar(encoded), cancellationToken))
-            throw new BackendFailure(FailureKind.Forbidden, AvatarManaged);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.ProfileAvatarManaged,
+                AvatarManaged
+            );
         return await GetAsync(userId, cancellationToken);
     }
 
@@ -86,7 +114,11 @@ public sealed class ProfileService(
             profile.AvatarFromProvider
             || !await profiles.TrySetAvatarAsync(userId, null, cancellationToken)
         )
-            throw new BackendFailure(FailureKind.Forbidden, AvatarManaged);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.ProfileAvatarManaged,
+                AvatarManaged
+            );
         return await GetAsync(userId, cancellationToken);
     }
 
@@ -98,7 +130,11 @@ public sealed class ProfileService(
         CancellationToken cancellationToken
     ) =>
         await profiles.ReadAvatarAsync(viewerId, userId, cancellationToken)
-        ?? throw new BackendFailure(FailureKind.NotFound, PictureNotFound);
+        ?? throw new BackendFailure(
+            FailureKind.NotFound,
+            ErrorCodes.ProfilePictureNotFound,
+            PictureNotFound
+        );
 
     // Called at every OIDC sign-in. A provider that sends a field takes it over; one that
     // sends nothing leaves the stored value (and who manages it) alone. Picture failures
@@ -153,7 +189,11 @@ public sealed class ProfileService(
         CancellationToken cancellationToken
     ) =>
         await profiles.FindAsync(userId, cancellationToken)
-        ?? throw new BackendFailure(FailureKind.Unauthorized, AuthService.SignInRequired);
+        ?? throw new BackendFailure(
+            FailureKind.Unauthorized,
+            ErrorCodes.AuthSignInRequired,
+            AuthService.SignInRequired
+        );
 
     private ProfileView View(StoredProfile profile)
     {
