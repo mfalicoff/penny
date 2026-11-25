@@ -79,7 +79,7 @@ There is no older-OS fallback to test: iOS 26 is the floor (README, minimum OS),
 ## Test environment, isolation and determinism
 
 - **Accounts**: every test creates its own account (`POST /api/test/users`, `<label>-<n>-<random>@penny.test`, random password). Tests never share data and can run in any order; the database itself is per run.
-- **Clock**: the first stack access pins the server clock to `2026-10-15T12:00:00Z` (the seeds' clock), the app's "today" to `2026-10-15` (`PENNY_TEST_TODAY`) and its "now" to that instant (`PENNY_TEST_NOW`, sent only while today is that instant's day), so "2 min ago" and the month's payment window read as on the server. Tests that move the clock (session expiry) do so explicitly; the next test pins it again.
+- **Clock**: the first stack access pins the server clock to `2026-10-15T12:00:00Z` (the seeds' clock), the app's "today" to `2026-10-15` (`PENNY_TEST_TODAY`) and its "now" to that instant (`PENNY_TEST_NOW`, sent only while today is that instant's day; without it, a pinned today pins now to noon UTC that day), so the app never reads the device clock while its day is pinned and "2 min ago" and the month's payment window read as on the server. Tests that move the clock (session expiry) do so explicitly; the next test pins it again.
 - **Single sign-on** tests unpin the server clock first (`Stack.unpinClock()`): the API's HTTP `Date` header is real time while the attempt's `expiresAt` follows the pinned clock, so at the pinned 2026-10-15 the app sees an already-expired attempt ("Sign-in expired"). The provider's ID tokens use real time anyway.
 - **Faults**: injected with `PUT /api/test/faults` (abort or status, per method and path prefix) and always cleared in `tearDown`. Faults are global to the environment, which is why plans are not parallelized.
 - **App state**: every test's first launch sets `PENNY_TEST_RESET=1`, which erases the app's defaults, App Group container, Application Support, Documents, Caches and Keychain items before anything reads them: the same state as a fresh install. `relaunch()` terminates and relaunches without it, keeping the session, the offline ledger and preferences. The runner additionally creates new simulators for every run and deletes them afterwards (MAZ-212): `penny-run <type> <pid> <checkout>`, deleted on exit, Ctrl-C or SIGTERM, so concurrent sessions on one Mac never share a device. A run that was killed outright leaves its pair behind; the next run deletes every `penny-run` device whose process is gone, and `penny-ci` devices (the older name) once they have been idle for two hours.
@@ -95,7 +95,7 @@ Debug-only (`#if PENNY_TEST_CONTROLS`); `ios.sh release-check` fails if any `PEN
 | `PENNY_TEST_SERVER_URL` | Default server (the stack) |
 | `PENNY_TEST_DEMO=1` | Open the demo |
 | `PENNY_TEST_RESET=1` | Erase all stored state first (a fresh install) |
-| `PENNY_TEST_TODAY=yyyy-MM-dd` | Pin the app's today |
+| `PENNY_TEST_TODAY=yyyy-MM-dd` | Pin the app's today, and its now to noon UTC that day unless `PENNY_TEST_NOW` is set |
 | `PENNY_TEST_NOW=<ISO 8601 instant>` | Pin the app's now (relative times, the monthly payment window) |
 | `PENNY_TEST_CONTAINER_SEED=<path>` | Apply a seed property list after the reset |
 | `PENNY_TEST_REDUCE_TRANSPARENCY=1`, `PENNY_TEST_REDUCE_MOTION=1` | Force those settings for Penny's own views (system controls follow the simulator) |
