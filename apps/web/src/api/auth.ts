@@ -56,10 +56,11 @@ export const oidcConfigQuery = queryOptions({
   staleTime: 5 * 60_000,
 });
 
-export function startOidc(redirectUri: string, signal?: AbortSignal) {
+/** Starts a sign-in with the configured provider `provider` (an `id` from `GET /api/auth/oidc`). */
+export function startOidc(provider: string, redirectUri: string, signal?: AbortSignal) {
   return apiFetch("/api/auth/oidc/start", oidcChallengeSchema, {
     method: "POST",
-    body: { redirectUri },
+    body: { redirectUri, provider },
     ...(signal ? { signal } : {}),
   });
 }

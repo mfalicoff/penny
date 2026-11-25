@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
   // Emailed receipts (MAZ-184) are off on this server; the route still answers 200.
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
   // Settings › Server & sync names the sign-in methods.
-  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
 });
 
 test("production build renders Home with the bundled font and no console errors", async ({ page }) => {

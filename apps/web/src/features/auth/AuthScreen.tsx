@@ -12,9 +12,12 @@ import { OidcError, signInWithPopup, signInWithRedirect } from "../../auth/oidc"
 import { startDemo } from "../../demo/demo";
 import { cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import type { OidcProvider } from "../../api/schemas";
+import { ProviderLogo } from "./ProviderLogo";
+import { isBrandProvider, providerAction, providersPlacement, type Mode } from "./providers";
 import { PrivacyPolicyLink, useHasPrivacyPolicy } from "../legal/PrivacyPolicyLink";
 
-type Mode = "sign-in" | "create-account";
+
 
 const emailSchema = z.email().max(254);
 const passwordSchema = z.string().min(10).max(256);
@@ -76,8 +79,9 @@ export function AuthScreen() {
               Your account was deleted, and every device was signed out.
             </p>
           ) : null}
+          <ProviderButtons mode={mode} placement="before-form" />
           <CredentialsForm key={mode} mode={mode} />
-          <SsoButton />
+          <ProviderButtons mode={mode} placement="after-form" />
           {creating ? <CreateAccountLegal /> : null}
           <p className="auth__switch">
             {creating ? "Already have an account? " : "New here? "}
@@ -338,42 +342,52 @@ function PasswordStrength({ password, requirementId }: { password: string; requi
   );
 }
 
-function SsoButton() {
+/** Which button is waiting, and the outcome of the last attempt. */
+type ProviderState = { provider: string; status: "waiting" | "cancelled" | "blocked" | "error"; mode: "popup" | "tab" };
+
+/**
+ * One sign-in button per provider the server lists (MAZ-170), in its order; none when it lists
+ * none. Apple and Google follow their own button rules and, as on web-sign-in-providers and
+ * iphone-sign-in-providers, every provider then comes before the email form under "or use your
+ * email". A server with only its own single sign-on keeps web-sign-in's layout: the form, "or",
+ * then the button.
+ */
+function ProviderButtons({ mode, placement }: { mode: Mode; placement: "before-form" | "after-form" }) {
   const queryClient = useQueryClient();
   const config = useQuery(oidcConfigQuery);
-  const [state, setState] = useState<"idle" | "waiting" | "cancelled" | "blocked" | "error">("idle");
-  const [mode, setMode] = useState<"popup" | "tab">("popup");
+  const [state, setState] = useState<ProviderState | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [popupClosed, setPopupClosed] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
-  if (!config.data?.enabled) return null;
-  const label = config.data.label ?? "Single sign-on";
+  const providers = config.data?.providers ?? [];
+  if (providers.length === 0 || providersPlacement(providers) !== placement) return null;
+  const waiting = state?.status === "waiting";
 
-  const cancelled = () => {
-    setState("cancelled");
+  const cancelled = (provider: string) => {
+    setState({ provider, status: "cancelled", mode: "popup" });
     setMessage("Sign-in was cancelled. Nothing changed.");
   };
 
-  function fail(error: unknown) {
+  function fail(provider: string, error: unknown) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      cancelled();
+      cancelled(provider);
       return;
     }
-    setState("error");
+    setState({ provider, status: "error", mode: "popup" });
     setMessage(describeAuthError(error));
   }
 
-  function onClick() {
-    if (state === "waiting") return;
+  function start(provider: OidcProvider) {
+    if (waiting) return;
     const controller = new AbortController();
     abort.current = controller;
-    setState("waiting");
-    setMode("popup");
+    setState({ provider: provider.id, status: "waiting", mode: "popup" });
     setMessage(null);
     setPopupClosed(false);
     // signInWithPopup opens the window synchronously, before its first await.
     signInWithPopup({
+      provider: provider.id,
       signal: controller.signal,
       onPopupClosed: () => {
         setPopupClosed(true);
@@ -381,36 +395,54 @@ function SsoButton() {
     }).then(
       async (result) => {
         if (result) await beginSession(queryClient, result.email);
-        else cancelled();
+        else cancelled(provider.id);
       },
       (error: unknown) => {
         if (error instanceof OidcError && error.code === "blocked") {
-          setState("blocked");
+          setState({ provider: provider.id, status: "blocked", mode: "popup" });
           setMessage("Your browser blocked the sign-in window. Allow pop-ups for this site, or continue in this tab.");
         } else {
-          fail(error);
+          fail(provider.id, error);
         }
       },
     );
   }
 
-  function continueInTab() {
-    setState("waiting");
-    setMode("tab");
+  function continueInTab(provider: string) {
+    setState({ provider, status: "waiting", mode: "tab" });
     setMessage(null);
-    signInWithRedirect().catch(fail);
+    signInWithRedirect(provider).catch((error: unknown) => {
+      fail(provider, error);
+    });
   }
 
+  const divider = placement === "before-form" ? "or use your email" : "or";
   return (
-    <div className="auth__sso">
-      <p className="auth__or" aria-hidden="true">
-        or
-      </p>
-      <button type="button" className="button button--sso button--block" onClick={onClick} aria-disabled={state === "waiting"}>
-        <Icon name="key" size={19} />
-        {state === "waiting" ? `Waiting for ${label}…` : `Continue with ${label}`}
-      </button>
-      {state === "waiting" && mode === "popup" ? (
+    <div className={cx("auth__sso", placement === "before-form" && "auth__sso--first")}>
+      {placement === "after-form" ? (
+        <p className="auth__or" aria-hidden="true">
+          {divider}
+        </p>
+      ) : null}
+      {providers.map((provider) => {
+        const busy = waiting && state.provider === provider.id;
+        const brand = isBrandProvider(provider.icon);
+        return (
+          <button
+            key={provider.id}
+            type="button"
+            className={cx("button button--block", brand ? `button--provider button--${provider.icon}` : "button--sso")}
+            onClick={() => {
+              start(provider);
+            }}
+            aria-disabled={waiting}
+          >
+            <ProviderLogo icon={provider.icon} />
+            {busy ? `Waiting for ${provider.label}…` : providerAction(provider, mode)}
+          </button>
+        );
+      })}
+      {waiting && state.mode === "popup" ? (
         <>
           {popupClosed ? (
             <p className="notice" role="status">
@@ -429,14 +461,25 @@ function SsoButton() {
         </>
       ) : null}
       {message ? (
-        <p className={state === "error" ? "form-error" : "notice"} role={state === "error" ? "alert" : "status"}>
+        <p className={state?.status === "error" ? "form-error" : "notice"} role={state?.status === "error" ? "alert" : "status"}>
           {message}
         </p>
       ) : null}
-      {state === "blocked" ? (
-        <button type="button" className="button button--secondary button--block" onClick={continueInTab}>
+      {state?.status === "blocked" ? (
+        <button
+          type="button"
+          className="button button--secondary button--block"
+          onClick={() => {
+            continueInTab(state.provider);
+          }}
+        >
           Continue in this tab
         </button>
+      ) : null}
+      {placement === "before-form" ? (
+        <p className="auth__or" aria-hidden="true">
+          {divider}
+        </p>
       ) : null}
     </div>
   );

@@ -25,7 +25,9 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
         using (var config = await Client.GetAsync("/api/auth/oidc", Ct))
         {
             config.StatusCode.ShouldBe(HttpStatusCode.OK);
-            (await config.Content.ReadAsStringAsync(Ct)).ShouldBe("""{"enabled":false}""");
+            (await config.Content.ReadAsStringAsync(Ct)).ShouldBe(
+                """{"enabled":false,"providers":[]}"""
+            );
         }
         foreach (var path in new[] { "/api/auth/oidc/start", "/api/auth/oidc/complete" })
         {
@@ -56,7 +58,9 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
         using var client = CreateClient(api);
         (await client.GetFromJsonAsync<JsonElement>("/api/auth/oidc", Ct))
             .GetRawText()
-            .ShouldBe("""{"enabled":true,"label":"Synthetic SSO"}""");
+            .ShouldBe(
+                """{"enabled":true,"label":"Synthetic SSO","providers":[{"id":"sso","label":"Synthetic SSO","icon":"sso","native":false}]}"""
+            );
         var now = DateTimeOffset.FromUnixTimeMilliseconds(1_900_000_000_123);
         api.Clock.Set(now);
 

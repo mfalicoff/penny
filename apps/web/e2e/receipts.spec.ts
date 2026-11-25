@@ -83,7 +83,7 @@ async function mockApi(context: BrowserContext, transactions: Entry[] = []): Pro
     const request = route.request();
     const { pathname } = new URL(request.url());
     if (pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
-    if (pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false, providers: [] } });
     if (server.expireOnReceiptRead && request.method() === "GET" && /^\/api\/receipts\/[^/]+$/.test(pathname)) server.expired = true;
     if (server.expired) return route.fulfill({ status: 401, json: { error: "Please sign in to continue." } });
     if (pathname === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
