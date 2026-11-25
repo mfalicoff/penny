@@ -188,7 +188,12 @@ namespace Penny.Backend.Persistence.Migrations
                         .IsDescending(false, false, true, true)
                         .HasDatabaseName("ix_household_audit_expense_history");
 
-                    b.ToTable("household_audit", "penny");
+                    b.ToTable("household_audit", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_household_audit_after_private", "NOT (jsonb_typeof(after_json) = 'object' AND after_json ? 'accountId') AND NOT (jsonb_typeof(after_json -> 'receipt') = 'object' AND (after_json -> 'receipt') ? 'name')");
+
+                            t.HasCheckConstraint("ck_household_audit_before_private", "NOT (jsonb_typeof(before_json) = 'object' AND before_json ? 'accountId') AND NOT (jsonb_typeof(before_json -> 'receipt') = 'object' AND (before_json -> 'receipt') ? 'name')");
+                        });
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.HouseholdEmailInvite", b =>
