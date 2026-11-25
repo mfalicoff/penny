@@ -7,7 +7,7 @@
 - Base path `/api`. Health/info, register/login and OIDC discovery/start/complete precede authentication. Candidate-server verification calls info with credentials omitted and redirects rejected; the native client accepts `{name:"penny",version:<nonempty string>}`. Web uses its hosting origin.
 - Web uses `penny_session`, a 64 lowercase hex token in an HttpOnly, SameSite=Lax `/api` cookie, max age 30 days; Secure follows deployment settings. Native uses `Authorization: Bearer <token>`. A syntactically valid bearer takes precedence over cookies (including expired bearers); malformed bearers fall back to a valid cookie. Storage holds SHA-256 token hashes; logout revokes one session and its devices.
 - Configured CORS with credentials, Origin checks on non-GET requests, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, 20MB JSON and 10MB decoded receipt limits. Keep cookie/proxy/OIDC callback paths when deploying the web bundle and API separately.
-- JSON errors are `{error:string}`. Branch on status, not English text: 400 invalid input, 401 session, 403 origin/permission, 404 absent/private, 409 revision/domain conflict, 413 size, 429 rate limit, generic 500. Maintenance and search timeouts use 503 with Retry-After and never acknowledge a save. OIDC attempts are expiring and single-use, with server-side PKCE/nonce/issuer verification.
+- JSON errors are `{error:string, code:string}` ([error codes](#error-codes)). Branch on `code` to tell failures apart, or on status for the class of failure, never on the English text: 400 invalid input, 401 session, 403 origin/permission, 404 absent/private, 409 revision/domain conflict, 413 size, 415 media type (client telemetry only), 429 rate limit, generic 500. Maintenance and search timeouts use 503 with Retry-After and never acknowledge a save. OIDC attempts are expiring and single-use, with server-side PKCE/nonce/issuer verification.
 - Clients send no capability/minimum-version signal, and there is no mandatory header or 426. Negotiate future breaking changes explicitly before enforcing them.
 
 ## Values and revision units
@@ -38,6 +38,158 @@ Shared expense/rule edits and deletes carry the entity revision; creation begins
 - **Emailed receipts (MAZ-184, in progress).** `getApiReceiptEmail`, `postApiReceiptEmail` (create or rotate), `patchApiReceiptEmail` (`extend`, `allowedSenders`) and `deleteApiReceiptEmail` manage one live private address per user; GET reports `enabled: false` when `InboundMail__Enabled` is off, and the other operations then answer 404. `postApiInboundMail` and `getApiInboundMailRecipients` are for the Cloudflare Email Worker only: no session, an HMAC signature (`webhookSignature`), not routed by the public web proxy. `getApiReceiptInbox` lists the owner-only receipt inbox (newest first, `status=to_attach|attached`, `before` cursor); `deleteApiReceiptInboxId` discards an item and `postApiReceiptInboxIdDone` finishes a partly attached one, both deleting only files nothing links. Attaching uses the normal entry and shared expense saves with the file's `receiptId`; those saves keep the item's status in step. See [emailed receipts](../plans/email-receipts.md).
 - **Push devices (MAZ-61).** `postApiPushDevices` and `deleteApiPushDevices` register APNs device tokens (`provider: "apns"`, `environment` `sandbox` or `production`); a PostgreSQL-leased worker delivers. See [push](push.md).
 - **Search v1 (MAZ-121).** Authenticated `POST /api/v1/search/transactions` over personal entries and visible shared expenses: accent- and case-insensitive substring, typo-tolerant and meaning-based (on-server embedding) matching, relevance or date/amount sorting, authorization before count/page, keyset cursors and explicit local pending/offline scope. See [search](search.md).
+
+## Error codes
+
+Since contract 2.1.0 (MAZ-187) every error body carries a stable, machine-readable `code` next to the English `error` message, for example `{"error":"Your data changed on another device. Please refresh and try again.","code":"ledger.conflict"}`. The message is unchanged, so clients that read only `error` keep working.
+
+- A code is `area.snake_case` and names one failure. It never changes meaning; a new failure gets a new code rather than reusing one. Codes are only ever added, so a client treats a code it doesn't know like its status.
+- Failures that share one message can have different codes. Receipt uploads, for example, answer `receipt.unsupported_type` or `receipt.invalid_name` with the same "Choose a photo or PDF smaller than 10 MB." message, and `receipt.too_large` or `receipt.unsupported_file` with "This file is not a supported photo or PDF, or exceeds 10 MB.".
+- A server before contract 2.1.0 sends `error` only.
+- `ErrorCodes` (`apps/backend/src/Penny.Backend.Domain/Errors/ErrorCodes.cs`) is the catalogue. The `Error` schema in `contracts/openapi.json` lists every value, and the .NET `DocumentationTests` and the web `tests/api-errors.test.ts` (against `src/api/errorCodes.ts`) fail when the three disagree. The integration tests check that every error they assert carries a catalogued code.
+- A body that isn't `application/json` still counts as no body on the JSON endpoints, so validation answers it (for example `400 Invalid ledger data.`, `ledger.invalid`). It does not become `415`; see [legacy compatibility](legacy-compatibility.md#decisions).
+
+Messages ending in "…" are shortened here; `<household>` is the household's name.
+
+| Code | Status | Message |
+| --- | --- | --- |
+| `account.creator_with_members` | 409 | You created <household>, and other people are still in it. … |
+| `account.unsettled` | 409 | Settle every monthly balance in <household> before you delete your account. |
+| `account.wrong_password` | 400 | Your password is incorrect. |
+| `auth.duplicate_email` | 409 | An account with this email already exists. Please sign in. |
+| `auth.email_in_use` | 409 | Another account already uses this email. |
+| `auth.email_managed` | 403 | Your sign-in provider manages your email. Change it with your provider. |
+| `auth.invalid_credentials` | 401 | Email or password is incorrect. |
+| `auth.invalid_new_password` | 400 | Use a new password of 10–256 characters. |
+| `auth.invalid_registration` | 400 | Enter a valid email and a password of 10–256 characters. |
+| `auth.no_password` | 403 | Your account signs in with your sign-in provider, so it has no password to change. |
+| `auth.oidc_account_exists` | 409 | This account already exists. Please try signing in again. |
+| `auth.oidc_email_in_use` | 409 | An account already uses this email. Sign in with its existing method; automatic account linking is disabled. |
+| `auth.oidc_registration_disabled` | 403 | New single sign-on accounts are disabled on this server. |
+| `auth.registration_disabled` | 403 | Account registration is disabled on this server. |
+| `auth.sign_in_required` | 401 | Please sign in to continue. |
+| `auth.wrong_current_password` | 400 | Your current password is incorrect. |
+| `email_verification.invalid_token` | 400 | This verification link is invalid or has expired. |
+| `email_verification.unknown_email` | 404 | No account uses this email. Emails match exactly after trimming and lowercasing. |
+| `expense.account_not_found` | 400 | Payment account not found. |
+| `expense.already_paid` | 409 | This share is already paid. |
+| `expense.changed` | 409 | Expense changed. Refresh and try again. |
+| `expense.destination_currency` | 400 | The destination must use the same currency. |
+| `expense.invalid_year` | 400 | Invalid year. |
+| `expense.not_found` | 404 | Expense not found. |
+| `expense.paid_delete` | 409 | Paid expenses cannot be deleted. |
+| `expense.paid_locked` | 409 | Paid expenses cannot change payer, total, month or household. |
+| `expense.paid_shares` | 409 | Paid expenses cannot change share allocations. |
+| `expense.payer_not_member` | 400 | The payer must be a current household member. |
+| `expense.payer_only_account` | 403 | Only the payer can attach a payment account. |
+| `expense.payer_own_share` | 400 | The payer cannot pay their own share. |
+| `expense.payment_forbidden` | 403 | Only the debtor or expense payer can record this payment. |
+| `expense.payments_closed` | 409 | This month already has monthly reimbursements. Settle the remaining monthly balance instead. |
+| `expense.positive_share` | 400 | Choose a member with a positive share. |
+| `expense.receipt_unavailable` | 400 | Receipt is not available to this household. |
+| `health.database_unavailable` | 503 | Database is unavailable. … |
+| `health.disk_space` | 503 | Receipt storage is low on free disk space. … |
+| `health.permissions` | 503 | Database user cannot read compatibility metadata. … |
+| `health.postgres_version` | 503 | The backend requires PostgreSQL 18. |
+| `health.receipt_storage` | 503 | Receipt storage is not writable. … |
+| `health.schema` | 503 | Database schema is missing or incompatible. … |
+| `health.search_extensions` | 503 | Database is missing the pg_trgm or vector extension. … |
+| `household.already_member` | 409 | You are already a member. |
+| `household.creator_cannot_be_removed` | 400 | The creator cannot remove themselves. |
+| `household.creator_cannot_leave` | 409 | The creator cannot leave while other members remain. |
+| `household.creator_only` | 403 | Only the household creator can manage members. |
+| `household.currency` | 400 | Household currency must match your ledger currency. |
+| `household.invalid_data` | 400 | Invalid household data. |
+| `household.invalid_invite` | 400 | Invite code is invalid or expired. |
+| `household.not_found` | 404 | Household not found. |
+| `household.trip_currency` | 400 | Trip currency must match your ledger currency. |
+| `household.trip_not_found` | 404 | Trip not found. |
+| `household.unsettled_archive` | 409 | Settle all monthly balances before archiving. |
+| `household.unsettled_exit` | 409 | Settle every monthly balance before leaving. |
+| `inbound_mail.bad_signature` | 401 | The request signature is missing or invalid. |
+| `inbound_mail.empty` | 400 | The message is empty. |
+| `inbound_mail.rate_limited` | 429 | Too many messages for this address. Try again later. |
+| `inbound_mail.too_large` | 413 | The message is too large. |
+| `inbound_mail.unknown_address` | 404 | Unknown address. |
+| `invite.invalid_email` | 400 | Enter a valid email address. |
+| `invite.joined` | 409 | They already joined with this invitation. |
+| `invite.not_found` | 404 | Invitation not found. |
+| `invite.too_many` | 429 | Too many invitation emails today. Try again tomorrow, or share a code instead. |
+| `ledger.conflict` | 409 | Your data changed on another device. Please refresh and try again. |
+| `ledger.currency_mismatch` | 400 | Your ledger currency must match your active households. |
+| `ledger.foreign_receipt` | 400 | Receipt does not belong to this account. |
+| `ledger.invalid` | 400 | Invalid ledger data. |
+| `ledger.linked_account` | 400 | Remove household expense links before deleting this payment account. |
+| `mail.disabled` | 404 | This server doesn't send email. |
+| `oidc.expired` | 401 | Sign-in expired. Please try again. |
+| `oidc.invalid_response` | 400 | Invalid sign-in response. |
+| `oidc.native_not_configured` | 400 | This sign-in provider can't be used from the app's own sign-in. |
+| `oidc.not_configured` | 404 | Single sign-on is not configured. |
+| `oidc.not_verified` | 401 | Sign-in could not be verified. Please try again and allow access to your verified email. |
+| `oidc.provider_not_configured` | 404, 400 | This sign-in provider is not configured on the server. |
+| `oidc.provider_unavailable` | 400 | The sign-in provider is unavailable. Please try again. |
+| `oidc.redirect_not_configured` | 400 | This sign-in redirect is not configured on the server. |
+| `oidc.too_many_attempts` | 403 | Too many sign-in attempts. Try again later. |
+| `origin.forbidden` | 403 | This origin is not allowed. |
+| `password_reset.invalid_email` | 400 | Enter a valid email address. |
+| `password_reset.invalid_password` | 400 | Enter a password of 10–256 characters. |
+| `password_reset.invalid_token` | 400 | This reset code is invalid or has expired. |
+| `password_reset.unknown_email` | 404 | No account uses this email. Emails match exactly after trimming and lowercasing. |
+| `profile.avatar_managed` | 403 | Your sign-in provider manages your picture. Change it with your provider. |
+| `profile.invalid_body` | 400 | Send displayName as a string or null, and namePromptDismissed as true. |
+| `profile.invalid_name` | 400 | Enter a name of 1 to 60 characters, without line breaks or control characters. |
+| `profile.invalid_picture` | 400 | Choose a PNG, JPEG, HEIC or WebP picture up to 10 MB. |
+| `profile.name_managed` | 403 | Your sign-in provider manages your name. Change it with your provider. |
+| `profile.picture_not_found` | 404 | Picture not found. |
+| `profile.unreadable_picture` | 400 | Penny couldn't read this picture. Choose another one. |
+| `push.invalid_device` | 400 | Invalid push device. |
+| `rate_limit.auth` | 429 | Too many attempts. Please try again in 15 minutes. |
+| `rate_limit.inbound_mail` | 429 | Too many recipient list requests. Try again later. |
+| `rate_limit.invite` | 429 | Too many invite attempts. Try again later. |
+| `rate_limit.search` | 429 | Too many searches. Try again in a minute. |
+| `rate_limit.telemetry` | 429 | Too many telemetry reports. Try again later. |
+| `receipt.changed` | 409 | A receipt changed while you were saving. Reload and try again. |
+| `receipt.invalid_name` | 400 | Choose a photo or PDF smaller than 10 MB. |
+| `receipt.not_found` | 404 | Receipt not found. |
+| `receipt.outdated_client` | 400 | Update Penny to upload receipts. |
+| `receipt.too_large` | 400 | This file is not a supported photo or PDF, or exceeds 10 MB. |
+| `receipt.unsupported_file` | 400 | This file is not a supported photo or PDF, or exceeds 10 MB. |
+| `receipt.unsupported_type` | 400 | Choose a photo or PDF smaller than 10 MB. |
+| `receipt_email.invalid_senders` | 400 | Allowed senders must be email addresses or domains, at most 50 of them. |
+| `receipt_email.invalid_update` | 400 | Send extend: true, allowedSenders, or both to change the receipt address. |
+| `receipt_email.no_address` | 404 | There is no receipt address. Create one first. |
+| `receipt_email.not_enabled` | 404 | Receipt email is not enabled on this server. |
+| `receipt_email.too_many_addresses` | 429 | Too many new receipt addresses today. Try again tomorrow. |
+| `receipt_inbox.invalid_filter` | 400 | status must be to_attach or attached. |
+| `receipt_inbox.not_found` | 404 | Inbox item not found. |
+| `recurring.payer_not_current` | 400 | Payer must be a current member. |
+| `recurring.rule_changed` | 409 | Recurring rule changed. Refresh and try again. |
+| `recurring.rule_not_found` | 404 | Recurring rule not found. |
+| `request.failed` | 4xx | The request could not be completed. |
+| `request.invalid` | 400 | Invalid request. |
+| `request.invalid_json` | 400 | Invalid JSON. |
+| `request.timed_out` | 503 | The request timed out. Please retry. |
+| `request.too_large` | 413 | The upload is too large. |
+| `route.not_found` | 404 | API route not found. |
+| `search.invalid_cursor` | 400 | Invalid search cursor. |
+| `search.invalid_request` | 400 | Invalid search request. |
+| `search.timed_out` | 503 | Search took too long. Please retry. |
+| `server.busy` | 503 | The server was busy. Please retry. |
+| `server.error` | 500 | The server could not complete this request. |
+| `settlement.month_not_found` | 404 | Month not found. |
+| `settlement.month_open` | 409 | Record reimbursements on the last day of the month or later. |
+| `settlement.not_involved` | 403 | Only people involved can record a reimbursement. |
+| `settlement.not_suggested` | 409 | This is no longer the full suggested reimbursement. |
+| `settlement.same_member` | 400 | Choose two different members. |
+| `split.distinct_members` | 400 | Select distinct members. |
+| `split.every_member` | 400 | Provide one split for every eligible member. |
+| `split.exact_amounts` | 400 | Exact splits need amounts. |
+| `split.percent_amounts` | 400 | Percentage splits need percentages. |
+| `split.total_mismatch` | 400 | Split shares must add up to the expense total. |
+| `telemetry.invalid` | 400 | The telemetry report is not valid. |
+| `telemetry.media_type` | 415 | Send telemetry as uncompressed application/json. |
+| `telemetry.off` | 404 | Client telemetry is off on this server. |
+| `telemetry.too_large` | 413 | The telemetry report is too large. |
 
 ## Drift gates
 

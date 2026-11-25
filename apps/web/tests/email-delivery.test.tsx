@@ -100,7 +100,7 @@ describe("/forgot-password", () => {
   });
 
   it("sends the person to the reset code page when the server stopped sending email", async () => {
-    signedOut(true, (url) => (url === "/api/auth/password-reset/request" ? json({ error: "This server doesn't send email." }, 404) : undefined));
+    signedOut(true, (url) => (url === "/api/auth/password-reset/request" ? json({ error: "This server doesn't send email.", code: "mail.disabled" }, 404) : undefined));
     const user = userEvent.setup();
     const { router } = renderApp("/forgot-password");
     await user.type(await screen.findByLabelText("Email"), "max@example.com");
@@ -137,7 +137,7 @@ describe("/reset-password", () => {
   });
 
   it("says an expired link is expired and offers a new one when email is on", async () => {
-    signedOut(true, (url) => (url === "/api/auth/password-reset" ? json({ error: "This reset code is invalid or has expired." }, 400) : undefined));
+    signedOut(true, (url) => (url === "/api/auth/password-reset" ? json({ error: "This reset code is invalid or has expired.", code: "password_reset.invalid_token" }, 400) : undefined));
     const user = userEvent.setup();
     renderApp(`/reset-password#code=${CODE}`);
     await user.type(await screen.findByLabelText("New password"), PASSWORD);
@@ -149,7 +149,7 @@ describe("/reset-password", () => {
   });
 
   it("takes an operator's code when there is no link, and keeps the server's message on a bad code", async () => {
-    const fetchMock = signedOut(false, (url) => (url === "/api/auth/password-reset" ? json({ error: "This reset code is invalid or has expired." }, 400) : undefined));
+    const fetchMock = signedOut(false, (url) => (url === "/api/auth/password-reset" ? json({ error: "This reset code is invalid or has expired.", code: "password_reset.invalid_token" }, 400) : undefined));
     const user = userEvent.setup();
     renderApp("/reset-password");
     await user.type(await screen.findByLabelText("Reset code"), "not a code");

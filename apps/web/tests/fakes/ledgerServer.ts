@@ -80,7 +80,7 @@ export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: 
       if (state.down) throw new TypeError("Failed to fetch");
       if (init?.method === "PUT") {
         const body = bodyOf(init) as { revision: number; ledger: Ledger };
-        if (body.revision !== state.revision) return json({ error: "The ledger changed." }, 409);
+        if (body.revision !== state.revision) return json({ error: "The ledger changed.", code: "ledger.conflict" }, 409);
         state.revision += 1;
         state.puts += 1;
         state.ledger = body.ledger;

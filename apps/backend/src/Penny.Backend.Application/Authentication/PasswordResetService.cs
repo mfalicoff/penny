@@ -32,9 +32,17 @@ public sealed class PasswordResetService(
     )
     {
         var normalized = Credentials.NormalizeEmail(email)
-            ?? throw new BackendFailure(FailureKind.Invalid, InvalidEmail);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidEmail,
+                InvalidEmail
+            );
         var user = await accounts.FindByEmailAsync(normalized, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.NotFound, UnknownEmail);
+            ?? throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.PasswordResetUnknownEmail,
+                UnknownEmail
+            );
         var token = SessionTokens.Create();
         var now = Now();
         var expiresAt = now + policy.Lifetime;
@@ -58,13 +66,25 @@ public sealed class PasswordResetService(
     )
     {
         if (!SessionTokens.IsWellFormed(token))
-            throw new BackendFailure(FailureKind.Invalid, InvalidToken);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidToken,
+                InvalidToken
+            );
         if (!Credentials.IsValidPassword(password))
-            throw new BackendFailure(FailureKind.Invalid, InvalidPassword);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidPassword,
+                InvalidPassword
+            );
         // Hashed outside the transaction; unknown codes cost the same work.
         var hash = passwords.Hash(password);
         if (!await resets.TryRedeemAsync(SessionTokens.Hash(token), hash, Now(), cancellationToken))
-            throw new BackendFailure(FailureKind.Invalid, InvalidToken);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidToken,
+                InvalidToken
+            );
     }
 
     // Whole milliseconds, like session expiry.

@@ -64,9 +64,17 @@ public sealed class EmailVerificationService(
     )
     {
         if (!mail.Enabled)
-            throw new BackendFailure(FailureKind.NotFound, MailPolicy.Disabled);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.MailDisabled,
+                MailPolicy.Disabled
+            );
         var user = await accounts.FindByIdAsync(session.UserId, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.Unauthorized, AuthService.SignInRequired);
+            ?? throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.AuthSignInRequired,
+                AuthService.SignInRequired
+            );
         if (user.EmailVerifiedAt is not null)
             return;
         await QueueAsync(user.Id, user.Email, locale, ResendInterval, cancellationToken);
@@ -78,12 +86,21 @@ public sealed class EmailVerificationService(
     public async Task<string> VerifyAsync(string? token, CancellationToken cancellationToken)
     {
         if (!SessionTokens.IsWellFormed(token))
-            throw new BackendFailure(FailureKind.Invalid, InvalidToken);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.EmailVerificationInvalidToken,
+                InvalidToken
+            );
         return await verifications.TryRedeemAsync(
             SessionTokens.Hash(token),
             Now(),
             cancellationToken
-        ) ?? throw new BackendFailure(FailureKind.Invalid, InvalidToken);
+        )
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.EmailVerificationInvalidToken,
+                InvalidToken
+            );
     }
 
     // Mail runner: issues a code for the account's current address and renders its email.
@@ -123,9 +140,17 @@ public sealed class EmailVerificationService(
     public async Task<bool> MarkVerifiedAsync(string? email, CancellationToken cancellationToken)
     {
         var normalized = Credentials.NormalizeEmail(email)
-            ?? throw new BackendFailure(FailureKind.Invalid, PasswordResetService.InvalidEmail);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.PasswordResetInvalidEmail,
+                PasswordResetService.InvalidEmail
+            );
         var user = await accounts.FindByEmailAsync(normalized, cancellationToken)
-            ?? throw new BackendFailure(FailureKind.NotFound, UnknownEmail);
+            ?? throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.EmailVerificationUnknownEmail,
+                UnknownEmail
+            );
         return await accounts.MarkEmailVerifiedAsync(user.Id, Now(), cancellationToken);
     }
 

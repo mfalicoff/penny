@@ -60,7 +60,11 @@ public sealed class OidcService(
             redirectUri is null
             || !provider.RedirectUris.Contains(redirectUri, StringComparer.Ordinal)
         )
-            throw new BackendFailure(FailureKind.Invalid, RedirectNotConfigured);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.OidcRedirectNotConfigured,
+                RedirectNotConfigured
+            );
         var attempt = await CreateAttemptAsync(provider.Id, redirectUri, cancellationToken);
         string authorizationUrl;
         try
@@ -75,7 +79,11 @@ public sealed class OidcService(
             await attempts.RemoveAsync(attempt.Stored.TransactionHash, CancellationToken.None);
             if (error is OperationCanceledException && cancellationToken.IsCancellationRequested)
                 throw;
-            throw new BackendFailure(FailureKind.Invalid, ProviderUnavailable);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.OidcProviderUnavailable,
+                ProviderUnavailable
+            );
         }
         return new(
             attempt.Transaction,
@@ -94,7 +102,11 @@ public sealed class OidcService(
     )
     {
         if (settings.Find(providerId) is not { Relayed: true })
-            throw new BackendFailure(FailureKind.NotFound, ProviderNotConfigured);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.OidcProviderNotConfigured,
+                ProviderNotConfigured
+            );
         if (
             !parameters.TryGetValue("state", out var state)
             || state.Length is 0 or > 256
@@ -103,7 +115,7 @@ public sealed class OidcService(
             || attempt.ProviderId != providerId
             || attempt.ExpiresAt <= Now()
         )
-            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+            throw new BackendFailure(FailureKind.Unauthorized, ErrorCodes.OidcExpired, Expired);
         var query = string.Join(
             '&',
             RelayedParameters
@@ -112,7 +124,11 @@ public sealed class OidcService(
         );
         var target = $"{redirectUri}?{query}";
         if (target.Length > MaxCallbackLength)
-            throw new BackendFailure(FailureKind.Invalid, InvalidResponse);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.OidcInvalidResponse,
+                InvalidResponse
+            );
         return target;
     }
 
@@ -127,10 +143,14 @@ public sealed class OidcService(
             || callbackUrl is null
             || callbackUrl.Length > MaxCallbackLength
         )
-            throw new BackendFailure(FailureKind.Invalid, InvalidResponse);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.OidcInvalidResponse,
+                InvalidResponse
+            );
         var (attempt, provider, client) = await ConsumeAsync(transaction!, cancellationToken);
         if (attempt.RedirectUri is null)
-            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+            throw new BackendFailure(FailureKind.Unauthorized, ErrorCodes.OidcExpired, Expired);
         var identity = await VerifyAsync(
             () => client.ExchangeAsync(callbackUrl, attempt, cancellationToken),
             provider,
@@ -146,7 +166,11 @@ public sealed class OidcService(
     {
         var (provider, _) = Resolve(providerId ?? "");
         if (!provider.Native)
-            throw new BackendFailure(FailureKind.Invalid, NativeNotConfigured);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.OidcNativeNotConfigured,
+                NativeNotConfigured
+            );
         var attempt = await CreateAttemptAsync(provider.Id, null, cancellationToken);
         return new(
             attempt.Transaction,
@@ -172,10 +196,14 @@ public sealed class OidcService(
             || givenName?.Length > MaxNameLength
             || familyName?.Length > MaxNameLength
         )
-            throw new BackendFailure(FailureKind.Invalid, InvalidResponse);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.OidcInvalidResponse,
+                InvalidResponse
+            );
         var (attempt, provider, client) = await ConsumeAsync(transaction!, cancellationToken);
         if (attempt.RedirectUri is not null || !provider.Native)
-            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+            throw new BackendFailure(FailureKind.Unauthorized, ErrorCodes.OidcExpired, Expired);
         var name = DisplayName.FromProvider(null, givenName, familyName);
         var identity = await VerifyAsync(
             () => client.VerifyNativeAsync(idToken, attempt, name, cancellationToken),
@@ -190,7 +218,11 @@ public sealed class OidcService(
         var provider = providerId is null
             ? settings.Providers[0]
             : settings.Find(providerId)
-                ?? throw new BackendFailure(FailureKind.Invalid, ProviderNotConfigured);
+                ?? throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.OidcProviderNotConfigured,
+                    ProviderNotConfigured
+                );
         return (provider, clients[provider.Id]);
     }
 
@@ -212,7 +244,11 @@ public sealed class OidcService(
             now + Lifetime
         );
         if (!await attempts.TryCreateAsync(attempt, now, MaxPendingAttempts, cancellationToken))
-            throw new BackendFailure(FailureKind.Forbidden, TooManyAttempts);
+            throw new BackendFailure(
+                FailureKind.Forbidden,
+                ErrorCodes.OidcTooManyAttempts,
+                TooManyAttempts
+            );
         return (transaction, attempt);
     }
 
@@ -234,7 +270,7 @@ public sealed class OidcService(
             || attempt.ExpiresAt <= Now()
             || settings.Find(attempt.ProviderId) is not { } provider
         )
-            throw new BackendFailure(FailureKind.Unauthorized, Expired);
+            throw new BackendFailure(FailureKind.Unauthorized, ErrorCodes.OidcExpired, Expired);
         return (attempt, provider, clients[provider.Id]);
     }
 
@@ -254,13 +290,21 @@ public sealed class OidcService(
                 || !cancellationToken.IsCancellationRequested
             )
         {
-            throw new BackendFailure(FailureKind.Unauthorized, NotVerified);
+            throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.OidcNotVerified,
+                NotVerified
+            );
         }
         if (
             !string.Equals(identity.Issuer, provider.Issuer, StringComparison.Ordinal)
             || identity.Subject.Length == 0
         )
-            throw new BackendFailure(FailureKind.Unauthorized, NotVerified);
+            throw new BackendFailure(
+                FailureKind.Unauthorized,
+                ErrorCodes.OidcNotVerified,
+                NotVerified
+            );
         return identity;
     }
 

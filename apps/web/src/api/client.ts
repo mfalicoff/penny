@@ -1,16 +1,25 @@
 import type { z } from "zod";
+import type { ErrorCode } from "./errorCodes";
 
 /**
  * A failed call to the Penny API. `status` is the HTTP status (0 when the request
- * never reached the server); `message` is the API's `{ error }` text when present.
+ * never reached the server); `message` is the API's `{ error }` text when present, and
+ * `code` its machine-readable `code` (MAZ-187), undefined when the server sent none.
  */
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | undefined;
 
-  constructor(status: number, message: string, options?: { cause?: unknown }) {
+  constructor(status: number, message: string, options?: { cause?: unknown; code?: string | undefined }) {
     super(message, options);
     this.name = "ApiError";
     this.status = status;
+    this.code = options?.code;
+  }
+
+  /** Whether the server named this failure `code`. Branch on this, never on `message`. */
+  is(code: ErrorCode): boolean {
+    return this.code === code;
   }
 
   /** Client errors are final: retrying the same request cannot succeed. */
@@ -43,10 +52,16 @@ export function currentTransport(): Transport | null {
   return transport;
 }
 
-const errorBody = (value: unknown): string | undefined =>
-  typeof value === "object" && value !== null && "error" in value && typeof value.error === "string"
-    ? value.error
-    : undefined;
+/** The `{ error, code }` of an API error body; either is undefined when missing or not a string. */
+export function errorBody(value: unknown): { message: string | undefined; code: string | undefined } {
+  if (typeof value !== "object" || value === null) return { message: undefined, code: undefined };
+  const message = "error" in value && typeof value.error === "string" ? value.error : undefined;
+  const code = "code" in value && typeof value.code === "string" ? value.code : undefined;
+  return { message, code };
+}
+
+/** Whether `error` is an API failure the server named `code`. */
+export const hasCode = (error: unknown, code: ErrorCode): error is ApiError => error instanceof ApiError && error.is(code);
 
 /**
  * Calls the .NET API on the page's own origin. Paths must start with `/api/`: the
@@ -88,7 +103,8 @@ export async function apiFetch<Schema extends z.ZodType>(
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, errorBody(json) ?? `Request failed (${response.status}).`);
+    const body = errorBody(json);
+    throw new ApiError(response.status, body.message ?? `Request failed (${response.status}).`, { code: body.code });
   }
 
   const parsed = schema.safeParse(json);

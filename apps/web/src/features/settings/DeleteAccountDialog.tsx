@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId, useRef, useState, type SyntheticEvent } from "react";
 import { ACCOUNT_MESSAGES, deleteAccount } from "../../api/account";
-import { ApiError } from "../../api/client";
+import { ApiError, hasCode } from "../../api/client";
 import { householdsQuery } from "../../api/households";
 import type { Profile } from "../../api/schemas";
 import { accountDeleted } from "../../auth/lifecycle";
@@ -57,7 +57,7 @@ export function DeleteAccountDialog({ profile, onClose }: { profile: Profile; on
     },
     onSuccess: () => accountDeleted(queryClient),
     onError: (failure) => {
-      if (failure instanceof ApiError && failure.status === 400) {
+      if (hasCode(failure, "account.wrong_password")) {
         setError(failure.message || ACCOUNT_MESSAGES.wrongPassword);
         if (passwordRef.current) passwordRef.current.value = "";
         passwordRef.current?.focus();

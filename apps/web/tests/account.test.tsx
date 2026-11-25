@@ -110,7 +110,7 @@ describe("Settings › Profile › Delete account", () => {
     const fetchMock = stubServer((url, init) => {
       if (url === "/api/profile") return json(profile());
       if (url === "/api/households") return json({ households: [household("a", "Apartment"), household("l", "Lisbon")] });
-      if (url === "/api/account/delete" && init?.method === "POST") return json({ error: "Your password is incorrect." }, 400);
+      if (url === "/api/account/delete" && init?.method === "POST") return json({ error: "Your password is incorrect.", code: "account.wrong_password" }, 400);
       return undefined;
     });
     const user = userEvent.setup();

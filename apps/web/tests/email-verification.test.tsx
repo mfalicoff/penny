@@ -104,7 +104,7 @@ describe("Check your email", () => {
       if (url === "/api/auth/me") return json({ email: current.email });
       if (url === "/api/auth/email") {
         const body = bodyOf(init) as { email: string; password: string };
-        if (body.password !== "the password") return json({ error: "Your current password is incorrect." }, 400);
+        if (body.password !== "the password") return json({ error: "Your current password is incorrect.", code: "auth.wrong_current_password" }, 400);
         current = profile({ email: body.email });
         return json(current);
       }

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useRef, useState, type SyntheticEvent } from "react";
-import { ApiError } from "../../api/client";
+import { ApiError, hasCode } from "../../api/client";
 import { userKey } from "../../api/keys";
 import { changePassword, PROFILE_MESSAGES } from "../../api/profile";
 import { Button } from "../../design/controls";
@@ -9,7 +9,6 @@ import { useToast } from "../../design/states";
 
 const MIN = 10;
 const MAX = 256;
-const WRONG = "Your current password is incorrect.";
 
 /**
  * Change password (MAZ-171), opened from the Sign-in group of Settings › Profile. The current
@@ -33,8 +32,8 @@ export function ChangePasswordDialog({ email, onClose }: { email: string; onClos
       onClose();
     },
     onError: (error) => {
-      if (error instanceof ApiError && error.message === WRONG) {
-        setErrors({ current: WRONG });
+      if (hasCode(error, "auth.wrong_current_password")) {
+        setErrors({ current: error.message });
         if (currentRef.current) currentRef.current.value = "";
         currentRef.current?.focus();
         return;

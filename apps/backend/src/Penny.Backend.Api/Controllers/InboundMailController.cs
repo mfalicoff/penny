@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Application.InboundMail;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Controllers;
 
@@ -36,18 +37,18 @@ public sealed class InboundMailController(InboundMailService ingress) : Controll
     public async Task<IActionResult> Receive(CancellationToken cancellationToken)
     {
         if (!ingress.Enabled)
-            return Error(404, NotFoundMessage);
+            return Error(404, ErrorCodes.RouteNotFound, NotFoundMessage);
         var recipient = Header(InboundMailHeaders.Recipient);
         var timestamp = Header(InboundMailHeaders.Timestamp);
         var signature = Header(InboundMailHeaders.Signature);
         // Unsigned or stale requests are refused before the body is read.
         if (!ingress.HasSignedHeaders(recipient, timestamp, signature))
-            return Error(401, BadSignature);
+            return Error(401, ErrorCodes.InboundMailBadSignature, BadSignature);
         if (Request.ContentLength > ingress.MaxMessageBytes)
-            return Error(413, TooLargeMessage);
+            return Error(413, ErrorCodes.InboundMailTooLarge, TooLargeMessage);
         var raw = await ReadBodyAsync(ingress.MaxMessageBytes, cancellationToken);
         if (raw is null)
-            return Error(413, TooLargeMessage);
+            return Error(413, ErrorCodes.InboundMailTooLarge, TooLargeMessage);
         return await ingress.ReceiveAsync(
             recipient,
             timestamp,
@@ -60,11 +61,19 @@ public sealed class InboundMailController(InboundMailService ingress) : Controll
                 202,
                 new OkResponse(true)
             ),
-            InboundOutcome.UnknownAddress => Error(404, UnknownAddressMessage),
-            InboundOutcome.RateLimited => Error(429, RateLimitedMessage),
-            InboundOutcome.TooLarge => Error(413, TooLargeMessage),
-            InboundOutcome.Invalid => Error(400, InvalidMessage),
-            _ => Error(401, BadSignature),
+            InboundOutcome.UnknownAddress => Error(
+                404,
+                ErrorCodes.InboundMailUnknownAddress,
+                UnknownAddressMessage
+            ),
+            InboundOutcome.RateLimited => Error(
+                429,
+                ErrorCodes.InboundMailRateLimited,
+                RateLimitedMessage
+            ),
+            InboundOutcome.TooLarge => Error(413, ErrorCodes.InboundMailTooLarge, TooLargeMessage),
+            InboundOutcome.Invalid => Error(400, ErrorCodes.InboundMailEmpty, InvalidMessage),
+            _ => Error(401, ErrorCodes.InboundMailBadSignature, BadSignature),
         };
     }
 
@@ -78,14 +87,14 @@ public sealed class InboundMailController(InboundMailService ingress) : Controll
     public async Task<IActionResult> Recipients(CancellationToken cancellationToken)
     {
         if (!ingress.Enabled)
-            return Error(404, NotFoundMessage);
+            return Error(404, ErrorCodes.RouteNotFound, NotFoundMessage);
         var list = await ingress.RecipientsAsync(
             Header(InboundMailHeaders.Timestamp),
             Header(InboundMailHeaders.Signature),
             cancellationToken
         );
         if (list is null)
-            return Error(401, BadSignature);
+            return Error(401, ErrorCodes.InboundMailBadSignature, BadSignature);
         var etag = $"\"{list.Version}\"";
         Response.Headers.ETag = etag;
         if (Request.Headers.IfNoneMatch.Any(value => value == etag || value == list.Version))
@@ -117,6 +126,6 @@ public sealed class InboundMailController(InboundMailService ingress) : Controll
         return buffer.ToArray();
     }
 
-    private ObjectResult Error(int status, string message) =>
-        StatusCode(status, new ApiError(message));
+    private ObjectResult Error(int status, string code, string message) =>
+        StatusCode(status, new ApiError(message, code));
 }

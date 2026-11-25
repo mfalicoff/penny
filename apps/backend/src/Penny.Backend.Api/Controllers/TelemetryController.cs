@@ -8,6 +8,7 @@ using Penny.Backend.Api.ClientTelemetry;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Application.Diagnostics;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Controllers;
 
@@ -47,7 +48,7 @@ public sealed class TelemetryController(
     public async Task<IActionResult> Faro(CancellationToken cancellationToken)
     {
         if (options.FaroUrl is null)
-            return StatusCode(404, new ApiError(OffMessage));
+            return StatusCode(404, new ApiError(OffMessage, ErrorCodes.TelemetryOff));
         return await AcceptAsync(
             "faro",
             options.FaroUrl,
@@ -68,7 +69,7 @@ public sealed class TelemetryController(
     private async Task<IActionResult> Otlp(string signal, CancellationToken cancellationToken)
     {
         if (options.OtlpEndpoint is null)
-            return StatusCode(404, new ApiError(OffMessage));
+            return StatusCode(404, new ApiError(OffMessage, ErrorCodes.TelemetryOff));
         var target = new Uri(options.OtlpEndpoint.AbsoluteUri.TrimEnd('/') + "/v1/" + signal);
         return await AcceptAsync(
             signal,
@@ -95,12 +96,12 @@ public sealed class TelemetryController(
             || !contentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase)
             || Request.Headers.ContentEncoding.Count > 0
         )
-            return Refuse(kind, 415, MediaTypeMessage);
+            return Refuse(kind, 415, ErrorCodes.TelemetryMediaType, MediaTypeMessage);
         if (Request.ContentLength > options.MaxPayloadBytes)
-            return Refuse(kind, 413, TooLargeMessage);
+            return Refuse(kind, 413, ErrorCodes.TelemetryTooLarge, TooLargeMessage);
         var bytes = await ReadAsync(Request.Body, options.MaxPayloadBytes, cancellationToken);
         if (bytes is null)
-            return Refuse(kind, 413, TooLargeMessage);
+            return Refuse(kind, 413, ErrorCodes.TelemetryTooLarge, TooLargeMessage);
 
         JsonObject? payload;
         try
@@ -112,7 +113,7 @@ public sealed class TelemetryController(
             payload = null;
         }
         if (payload is null)
-            return Refuse(kind, 400, InvalidMessage);
+            return Refuse(kind, 400, ErrorCodes.TelemetryInvalid, InvalidMessage);
 
         var key = Request.Headers[IdempotencyKeys.Header].ToString();
         if (
@@ -135,10 +136,10 @@ public sealed class TelemetryController(
         return StatusCode(202, new OkResponse(true));
     }
 
-    private ObjectResult Refuse(string kind, int status, string message)
+    private ObjectResult Refuse(string kind, int status, string code, string message)
     {
         BackendTelemetry.ClientTelemetry(kind, "invalid");
-        return StatusCode(status, new ApiError(message));
+        return StatusCode(status, new ApiError(message, code));
     }
 
     // The body, or null when it is longer than `limit` bytes.

@@ -33,6 +33,7 @@ using Penny.Backend.Application.Profiles;
 using Penny.Backend.Application.Push;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
+using Penny.Backend.Domain.Errors;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
 using Penny.Backend.Persistence.InboundMail;
@@ -80,7 +81,7 @@ public static class BackendServices
         builder.Services.AddSingleton<IStorageReadiness, PostgresReadiness>();
         builder.Services.Configure<ApiBehaviorOptions>(api =>
             api.InvalidModelStateResponseFactory = _ => new BadRequestObjectResult(
-                new ApiError("Invalid request.")
+                new ApiError(ApiErrors.InvalidRequest, ErrorCodes.RequestInvalid)
             )
         );
         builder.Services.Configure<HostOptions>(host =>
@@ -102,6 +103,7 @@ public static class BackendServices
                     return ApiErrors.WriteAsync(
                         context,
                         503,
+                        ErrorCodes.RequestTimedOut,
                         "The request timed out. Please retry.",
                         clientCancellation
                     );

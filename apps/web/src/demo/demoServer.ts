@@ -258,7 +258,7 @@ export function createDemoServer(today = new Date()): Transport {
         return json(state);
       case "PUT /api/ledger": {
         const next = body as { revision: number; ledger: typeof state.ledger };
-        if (next.revision !== state.revision) return json({ error: "The ledger changed." }, 409);
+        if (next.revision !== state.revision) return json({ error: "The ledger changed.", code: "ledger.conflict" }, 409);
         state.revision += 1;
         state.ledger = next.ledger;
         return json(state);

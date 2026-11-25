@@ -1,6 +1,7 @@
 using System.Net;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Push;
+using Penny.Backend.Domain.Errors;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
 using Xunit;
@@ -118,7 +119,7 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await response.Content.ReadAsStringAsync(Ct)).ShouldBe(
-            $$"""{"error":"{{PushDeviceService.InvalidDevice}}"}"""
+            $$"""{"error":"{{PushDeviceService.InvalidDevice}}","code":"{{ErrorCodes.PushInvalidDevice}}"}"""
         );
         (await CountAsync("SELECT count(*) FROM penny.push_devices")).ShouldBe(0);
     }

@@ -52,11 +52,16 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
         }
 
         using (var stale = await PutAsync(token, updated))
+        {
             await AuthTests.ShouldBeErrorAsync(
                 stale,
                 HttpStatusCode.Conflict,
                 LedgerService.Conflict
             );
+            JsonNode
+                .DeepEquals(await ReadNodeAsync(stale), journey["staleWrite"]!["response"])
+                .ShouldBeTrue();
+        }
         var remote = await GetAsync(otherDevice);
         remote["revision"]!.GetValue<long>().ShouldBe(1);
         JsonNode

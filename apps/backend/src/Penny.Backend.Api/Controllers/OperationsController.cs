@@ -4,6 +4,7 @@ using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Mail;
+using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Controllers;
 
@@ -56,25 +57,37 @@ public sealed class OperationsController(
         if (failure is null)
             return Ok(new HealthResponse(true));
         Response.Headers.RetryAfter = "5";
-        return StatusCode(
-            503,
-            new ApiError(
-                failure.Code switch
-                {
-                    "postgres-version" => "The backend requires PostgreSQL 18.",
-                    "schema" =>
-                        "Database schema is missing or incompatible. Restart the API to migrate, and check its startup log.",
-                    "permissions" =>
-                        "Database user cannot read compatibility metadata. Check its privileges.",
-                    "search-extensions" =>
-                        "Database is missing the pg_trgm or vector extension. Create them as administrator.",
-                    "receipt-storage" =>
-                        "Receipt storage is not writable. Check the Receipts__Root volume and its permissions.",
-                    "disk-space" =>
-                        "Receipt storage is low on free disk space. Free space or grow the volume.",
-                    _ => "Database is unavailable. Check connectivity and configuration.",
-                }
-            )
-        );
+        var (code, message) = failure.Code switch
+        {
+            "postgres-version" => (
+                ErrorCodes.HealthPostgresVersion,
+                "The backend requires PostgreSQL 18."
+            ),
+            "schema" => (
+                ErrorCodes.HealthSchema,
+                "Database schema is missing or incompatible. Restart the API to migrate, and check its startup log."
+            ),
+            "permissions" => (
+                ErrorCodes.HealthPermissions,
+                "Database user cannot read compatibility metadata. Check its privileges."
+            ),
+            "search-extensions" => (
+                ErrorCodes.HealthSearchExtensions,
+                "Database is missing the pg_trgm or vector extension. Create them as administrator."
+            ),
+            "receipt-storage" => (
+                ErrorCodes.HealthReceiptStorage,
+                "Receipt storage is not writable. Check the Receipts__Root volume and its permissions."
+            ),
+            "disk-space" => (
+                ErrorCodes.HealthDiskSpace,
+                "Receipt storage is low on free disk space. Free space or grow the volume."
+            ),
+            _ => (
+                ErrorCodes.HealthDatabaseUnavailable,
+                "Database is unavailable. Check connectivity and configuration."
+            ),
+        };
+        return StatusCode(503, new ApiError(message, code));
     }
 }

@@ -41,7 +41,11 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
     )
     {
         var write = (body is { } value ? LedgerReader.Read(value) : null)
-            ?? throw new BackendFailure(FailureKind.Invalid, InvalidLedger);
+            ?? throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.LedgerInvalid,
+                InvalidLedger
+            );
         var ledger = write.Ledger;
         if (
             !await ledgers.TrySaveAsync(
@@ -52,7 +56,7 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
                 cancellationToken
             )
         )
-            throw new BackendFailure(FailureKind.Conflict, Conflict);
+            throw new BackendFailure(FailureKind.Conflict, ErrorCodes.LedgerConflict, Conflict);
         var receiptInfo = await receipts.DescribeAsync(
             userId,
             LedgerMapper.ReceiptIds(ledger.Transactions.Select(entry => entry.Receipt?.Id)),
@@ -65,21 +69,37 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
     {
         var ledger = write.Ledger;
         if (state.HouseholdCurrencies.Any(currency => currency != ledger.Currency))
-            throw new BackendFailure(FailureKind.Invalid, CurrencyMismatch);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.LedgerCurrencyMismatch,
+                CurrencyMismatch
+            );
         var accountIds = ledger
             .Accounts.Select(account => account.Id)
             .ToHashSet(StringComparer.Ordinal);
         if (state.LinkedAccountIds.Any(accountId => !accountIds.Contains(accountId)))
-            throw new BackendFailure(FailureKind.Invalid, LinkedAccount);
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.LedgerLinkedAccount,
+                LinkedAccount
+            );
         foreach (var entry in ledger.Transactions)
             if (entry.Receipt is not null && !state.OwnedReceiptIds.Contains(entry.Receipt.Id))
-                throw new BackendFailure(FailureKind.Invalid, ForeignReceipt);
+                throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.LedgerForeignReceipt,
+                    ForeignReceipt
+                );
         // Shared trip links must name a real household (a foreign key).
         foreach (var trip in ledger.Trips)
             if (
                 trip.SharedHouseholdId is not null
                 && !state.ExistingHouseholdIds.Contains(trip.SharedHouseholdId)
             )
-                throw new BackendFailure(FailureKind.Invalid, InvalidLedger);
+                throw new BackendFailure(
+                    FailureKind.Invalid,
+                    ErrorCodes.LedgerInvalid,
+                    InvalidLedger
+                );
     }
 }

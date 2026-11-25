@@ -10,6 +10,30 @@ namespace Penny.Backend.IntegrationTests.Contracts;
 
 public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
+    // MAZ-187: the contract lists exactly the codes the API can send, each once.
+    [Fact]
+    public void whenContractRead_ErrorCodes_ShouldMatchTheServerCatalogue()
+    {
+        var error = ContractFixtures.OpenApi()["components"]!["schemas"]!["Error"]!;
+        error["required"]!
+            .AsArray()
+            .Select(item => item!.GetValue<string>())
+            .ShouldBe(["error", "code"], ignoreOrder: true);
+        var contract = error["properties"]!["code"]!["enum"]!
+            .AsArray()
+            .Select(item => item!.GetValue<string>())
+            .ToList();
+        contract.Distinct(StringComparer.Ordinal).Count().ShouldBe(contract.Count);
+        contract.ShouldBe(ErrorCodeCatalog.All, ignoreOrder: true);
+        foreach (var code in contract)
+            System
+                .Text.RegularExpressions.Regex.IsMatch(
+                    code,
+                    "^[a-z]+(_[a-z]+)*\\.[a-z0-9]+(_[a-z0-9]+)*$"
+                )
+                .ShouldBeTrue(code);
+    }
+
     [Fact]
     public async Task whenDocumentationRequested_GenerateOpenApi_ShouldDescribeOperationsWithContractIds()
     {

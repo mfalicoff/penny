@@ -7,6 +7,7 @@ using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Application.Receipts;
+using Penny.Backend.Domain.Errors;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
 using Xunit;
@@ -114,28 +115,53 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
         // Header failures: a missing, malformed or out-of-range name, or a type that is
         // not an accepted receipt type.
         foreach (
-            var (disposition, mime) in new (string?, string?)[]
+            var (disposition, mime, code) in new (string?, string?, string)[]
             {
-                (null, "application/pdf"),
-                ("attachment", "application/pdf"),
-                ("attachment; filename=a.pdf", "application/pdf"),
-                ("attachment; filename*=UTF-8''a b.pdf", "application/pdf"),
-                ("attachment; filename*=ISO-8859-1''a.pdf", "application/pdf"),
-                (Disposition(""), "application/pdf"),
-                (Disposition(new string('n', 256)), "application/pdf"),
+                (null, "application/pdf", ErrorCodes.ReceiptInvalidName),
+                ("attachment", "application/pdf", ErrorCodes.ReceiptInvalidName),
+                ("attachment; filename=a.pdf", "application/pdf", ErrorCodes.ReceiptInvalidName),
+                (
+                    "attachment; filename*=UTF-8''a b.pdf",
+                    "application/pdf",
+                    ErrorCodes.ReceiptInvalidName
+                ),
+                (
+                    "attachment; filename*=ISO-8859-1''a.pdf",
+                    "application/pdf",
+                    ErrorCodes.ReceiptInvalidName
+                ),
+                (Disposition(""), "application/pdf", ErrorCodes.ReceiptInvalidName),
+                (
+                    Disposition(new string('n', 256)),
+                    "application/pdf",
+                    ErrorCodes.ReceiptInvalidName
+                ),
                 // NUL is not storable; an encoded lone surrogate is not UTF-8.
-                ("attachment; filename*=UTF-8''%00.pdf", "application/pdf"),
-                ("attachment; filename*=UTF-8''%ED%A0%80.pdf", "application/pdf"),
-                (Disposition("a.pdf"), null),
-                (Disposition("a.pdf"), "image/svg+xml"),
-                (Disposition("a.pdf"), "application/octet-stream"),
-                (Disposition("a.pdf"), "not a type"),
+                (
+                    "attachment; filename*=UTF-8''%00.pdf",
+                    "application/pdf",
+                    ErrorCodes.ReceiptInvalidName
+                ),
+                (
+                    "attachment; filename*=UTF-8''%ED%A0%80.pdf",
+                    "application/pdf",
+                    ErrorCodes.ReceiptInvalidName
+                ),
+                (Disposition("a.pdf"), null, ErrorCodes.ReceiptUnsupportedType),
+                (Disposition("a.pdf"), "image/svg+xml", ErrorCodes.ReceiptUnsupportedType),
+                (
+                    Disposition("a.pdf"),
+                    "application/octet-stream",
+                    ErrorCodes.ReceiptUnsupportedType
+                ),
+                (Disposition("a.pdf"), "not a type", ErrorCodes.ReceiptUnsupportedType),
             }
         )
             await ShouldFailAsync(
                 UploadAsync(token, disposition, mime, pdf),
                 HttpStatusCode.BadRequest,
-                ReceiptService.InvalidUpload
+                ReceiptService.InvalidUpload,
+                code
             );
         // A name of 255 UTF-16 units is accepted.
         (await UploadedAsync(token, new string('n', 255), "application/pdf", pdf))
@@ -149,7 +175,8 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
                 $$"""{"name":"a.pdf","mime":"application/pdf","base64":"{{Convert.ToBase64String(pdf)}}"}"""
             ),
             HttpStatusCode.BadRequest,
-            ReceiptService.OutdatedClient
+            ReceiptService.OutdatedClient,
+            ErrorCodes.ReceiptOutdatedClient
         );
 
         // Content: signatures must match the declared type and size must be 1 byte to
@@ -170,7 +197,8 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
             await ShouldFailAsync(
                 UploadAsync(token, Disposition("a.bin"), mime, content),
                 HttpStatusCode.BadRequest,
-                ReceiptService.UnsupportedFile
+                ReceiptService.UnsupportedFile,
+                ErrorCodes.ReceiptUnsupportedFile
             );
 
         (await CountAsync("SELECT count(*) FROM penny.receipts")).ShouldBe(1L);
@@ -216,7 +244,8 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
         await ShouldFailAsync(
             UploadAsync(token, Disposition("too-large.pdf"), "application/pdf", larger, client),
             HttpStatusCode.BadRequest,
-            ReceiptService.UnsupportedFile
+            ReceiptService.UnsupportedFile,
+            ErrorCodes.ReceiptTooLarge
         );
         using (var chunked = Authorized(HttpMethod.Post, "/api/receipts", bearer: token))
         {
@@ -230,7 +259,8 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
             await ShouldFailAsync(
                 client.SendAsync(chunked, Ct),
                 HttpStatusCode.BadRequest,
-                ReceiptService.UnsupportedFile
+                ReceiptService.UnsupportedFile,
+                ErrorCodes.ReceiptTooLarge
             );
         }
         // A body over the request limit is refused before it is read.
@@ -243,7 +273,8 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
                 client
             ),
             HttpStatusCode.RequestEntityTooLarge,
-            "The upload is too large."
+            "The upload is too large.",
+            ErrorCodes.RequestTooLarge
         );
         (await CountAsync("SELECT count(*) FROM penny.receipts")).ShouldBe(1L);
     }

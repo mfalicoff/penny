@@ -30,7 +30,11 @@ public sealed class ReceiptInboxService(
         {
             null or "" or "to_attach" => false,
             "attached" => true,
-            _ => throw new BackendFailure(FailureKind.Invalid, InvalidFilter),
+            _ => throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.ReceiptInboxInvalidFilter,
+                InvalidFilter
+            ),
         };
         if (before is not null && !IsId(before))
             return ([], null);
@@ -56,7 +60,11 @@ public sealed class ReceiptInboxService(
     {
         RequireEnabled();
         return (IsId(itemId) ? await inbox.DiscardAsync(userId, itemId, cancellationToken) : null)
-            ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+            ?? throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.ReceiptInboxNotFound,
+                NotFound
+            );
     }
 
     public async Task<InboxCleanup> DoneAsync(
@@ -70,13 +78,22 @@ public sealed class ReceiptInboxService(
             IsId(itemId)
                 ? await inbox.DoneAsync(userId, itemId, clock.GetUtcNow(), cancellationToken)
                 : null
-        ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+        )
+            ?? throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.ReceiptInboxNotFound,
+                NotFound
+            );
     }
 
     private void RequireEnabled()
     {
         if (!settings.Enabled)
-            throw new BackendFailure(FailureKind.NotFound, ReceiptEmailService.NotEnabled);
+            throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.ReceiptEmailNotEnabled,
+                ReceiptEmailService.NotEnabled
+            );
     }
 
     private static bool IsId(string value) =>
