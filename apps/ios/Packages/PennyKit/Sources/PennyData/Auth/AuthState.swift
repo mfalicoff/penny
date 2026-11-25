@@ -215,14 +215,14 @@ public struct AccountDeletionFailure: Error, Equatable, Sendable {
             return
         }
         switch error {
-        case .badRequest(let message): self.init(.wrongPassword, message ?? Self.wrongPasswordMessage)
-        case .conflict(let message): self.init(.blocked, message ?? Self.failedMessage)
+        case .badRequest(let message, _): self.init(.wrongPassword, message ?? Self.wrongPasswordMessage)
+        case .conflict(let message, _): self.init(.blocked, message ?? Self.failedMessage)
         case .unauthorized: self.init(.sessionEnded, "Your session ended. Sign in again.")
         case .offline, .timeout, .unreachable: self.init(.failed, Self.offlineMessage)
-        case .rateLimited(let after):
+        case .rateLimited(let after, _):
             let minutes = after.map { max(1, Int(($0 / 60).rounded(.up))) } ?? 15
             self.init(.failed, "Too many attempts. Please try again in \(minutes) minute\(minutes == 1 ? "" : "s").")
-        case .forbidden(let message), .server(_, let message), .unavailable(_, let message):
+        case .forbidden(let message, _), .server(_, let message, _), .unavailable(_, let message, _):
             self.init(.failed, message ?? Self.failedMessage)
         default: self.init(.failed, Self.failedMessage)
         }

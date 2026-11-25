@@ -62,7 +62,7 @@ public enum ReceiptInboxFailure {
             return "You've made several new addresses today. Try again tomorrow."
         case .notFound:
             return "This isn't available anymore. It may have been discarded on another device, or it expired."
-        case .forbidden(let message), .badRequest(let message), .conflict(let message):
+        case .forbidden(let message, _), .badRequest(let message, _), .conflict(let message, _):
             return message ?? "The server refused this change. Try again."
         case .unauthorized: return "Your session ended. Sign in again."
         default: return "Penny couldn't reach your receipts. Try again."

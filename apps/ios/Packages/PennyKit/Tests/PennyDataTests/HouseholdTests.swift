@@ -145,7 +145,7 @@ struct HouseholdClientTests {
         let failure = HouseholdFailure(error)
         #expect(failure.kind == kind)
         #expect(!failure.message.isEmpty)
-        if case .conflict(let message?) = error, kind == .restricted {
+        if case .conflict(let message?, _) = error, kind == .restricted {
             #expect(failure.message == message, "a restriction shows the server's own words")
         }
     }

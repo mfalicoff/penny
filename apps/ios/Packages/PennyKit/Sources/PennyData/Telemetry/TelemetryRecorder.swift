@@ -172,7 +172,7 @@ public final class TelemetryRecorder: Sendable {
         } catch APIError.notFound {
             state.withLock { $0.serverOff = true }
             return true
-        } catch APIError.rateLimited(let after) {
+        } catch APIError.rateLimited(let after, _) {
             let until = now().addingTimeInterval(min(max(after ?? 60, 1), 3600))
             state.withLock { $0.pausedUntil = until }
             return true

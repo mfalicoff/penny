@@ -68,7 +68,7 @@ extension HouseholdService {
 
 extension APIError {
     /// The 404 a server answers while it sends no email (MAZ-124).
-    static let emailOff = APIError.notFound(message: "This server doesn't send email.")
+    static let emailOff = APIError.notFound(message: "This server doesn't send email.", code: .mailDisabled)
 }
 
 /// The signed-in account's households, straight from the API. A 401 ends the session it was

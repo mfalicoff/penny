@@ -38,6 +38,9 @@ final class FakeLedgerServer: Sendable {
     /// When set, the receipts `GET /api/receipts/{id}` serves instead of `receipts` (one the
     /// account can read that its ledger still can't link).
     let readableReceipts = Mutex<Set<String>?>(nil)
+    /// When set, the foreign-receipt refusal is a contract 2.1.0 one: `ledger.foreign_receipt` with
+    /// this message, which need not be the one a server before 2.1.0 sent (MAZ-187).
+    let codedForeignReceipt = Mutex<String?>(nil)
     let log = CallLog()
 
     init() {}
@@ -131,6 +134,9 @@ final class FakeLedgerServer: Sendable {
             if let held = receipts.withLock({ $0 }),
                 body.ledger.transactions.contains(where: { $0.receipt.map { !held.contains($0.id) } ?? false })
             {
+                if let message = codedForeignReceipt.withLock({ $0 }) {
+                    return Self.json(400, #"{"error":"\#(message)","code":"ledger.foreign_receipt"}"#)
+                }
                 return Self.json(400, #"{"error":"Receipt does not belong to this account."}"#)
             }
             return accounts.withLock { accounts in

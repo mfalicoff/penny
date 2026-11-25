@@ -190,8 +190,10 @@ public final class ProfileModel {
             return .changed
         } catch let error as APIError {
             switch error {
-            case .badRequest(let message):
-                if message == PasswordRules.wrongCurrent { return .wrongCurrentPassword(PasswordRules.wrongCurrent) }
+            case .badRequest(let message, _):
+                if error.matches(.authWrongCurrentPassword, legacy: { _ in message == PasswordRules.wrongCurrent }) {
+                    return .wrongCurrentPassword(PasswordRules.wrongCurrent)
+                }
                 return .invalidNewPassword(message ?? PasswordRules.lengthMessage)
             case .forbidden:
                 return .notAllowed("Your account signs in with a provider, so it has no password to change.")
@@ -220,12 +222,12 @@ public final class ProfileModel {
         guard let error = error as? APIError else { return fallback }
         switch error {
         case .offline, .timeout, .unreachable: return "Penny can't reach the server. Try again when you're online."
-        case .rateLimited(let after):
+        case .rateLimited(let after, _):
             let minutes = after.map { max(1, Int(($0 / 60).rounded(.up))) } ?? 15
             return "Too many attempts. Please try again in \(minutes) minute\(minutes == 1 ? "" : "s")."
         case .payloadTooLarge: return "This picture is too large. Choose one under 10 MB."
-        case .forbidden(let message): return message ?? "Your sign-in provider manages this."
-        case .badRequest(let message): return message ?? fallback
+        case .forbidden(let message, _): return message ?? "Your sign-in provider manages this."
+        case .badRequest(let message, _): return message ?? fallback
         case .unauthorized: return "Your session ended. Sign in again."
         default: return fallback
         }
