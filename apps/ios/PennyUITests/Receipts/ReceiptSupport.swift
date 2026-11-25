@@ -141,7 +141,15 @@ extension Penny {
     }
 
     func openDetails() throws {
-        try tap(AccessibilityID.Receipt.moreDetails)
+        let details = try wait(for: AccessibilityID.Receipt.moreDetails)
+        // At the largest text sizes the row sits under the iPhone keypad (the form's bottom
+        // inset), where a tap reaches a key instead: scroll the form until it is above the keypad.
+        let keypad = app.otherElements.matching(NSPredicate(format: "label == %@", "Amount keypad")).firstMatch
+        for _ in 0..<4 where keypad.exists && details.frame.maxY > keypad.frame.minY {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)))
+        }
+        details.tap()
         try wait(for: AccessibilityID.Screen.entryExtras)
     }
 

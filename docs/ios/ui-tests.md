@@ -31,7 +31,8 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | --- | --- |
 | `PENNY_UI_DEVICES` | `iphone`, `ipad` or `iphone ipad` (default) |
 | `PENNY_UI_ONLY` | Classes or tests, space-separated, e.g. `PennyUITests/AuthJourneyTests/test_whenPasswordIsWrong_SignIn_ShouldShowTheErrorAndKeepTheEmail` |
-| `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix) |
+| `PENNY_UI_SKIP` | Classes or tests to leave out, space-separated. The nightly matrix runs Full in two shards: one with a class list in `PENNY_UI_ONLY`, the other with the same list in `PENNY_UI_SKIP`, so a new class lands in the second |
+| `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix). A runtime that doesn't support the newest device type gets the newest one it does (iOS 26.0: iPhone 17 Pro) |
 | `PENNY_IPHONE`, `PENNY_IPAD` | Device types, as for `ios.sh test` |
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
 | `PENNY_STACK_SMTP=1` | The server sends email to an SMTP sink (`penny-env --smtp`, MAZ-124). The `iphone-forgot-password` and `iphone-invite-email` cards need it and are recorded as blocked without it; leave it off for the rest, since `iphone-sign-in` has no Forgot password |
@@ -65,10 +66,12 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 | | Minimum OS | Current OS |
 | --- | --- | --- |
 | Runtime | iOS/iPadOS 26.0 (the deployment target; `xcodebuild -downloadPlatform iOS -buildVersion 26.0`) | The newest runtime the pinned Xcode supports (27.0 with Xcode 27.2; 27.1 has no device types there) |
-| iPhone | Newest iPhone *N* Pro | same |
-| iPad | Newest iPad Pro 11-inch | same |
+| iPhone | Newest iPhone *N* Pro the runtime supports | same |
+| iPad | Newest iPad Pro 11-inch the runtime supports | same |
 | Smoke (PR) | | ✓ |
-| Full, Screenshots | ✓ | ✓ |
+| Full, Screenshots, Performance | ✓ | ✓ |
+
+`ios-ui-matrix.yml` runs each OS, plan and device as its own job, and Full in two class shards per device (`FULL_SHARD` in the workflow), so every job stays well inside its 120-minute limit: one device's whole Full plan took 84 minutes of tests alone on the hosted runner (MAZ-195). When a shard's timings in the job summary approach the limit, move a class from the list to the other shard.
 
 There is no older-OS fallback to test: iOS 26 is the floor (README, minimum OS), so the Liquid Glass control layer is real on every row.
 

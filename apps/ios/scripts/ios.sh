@@ -25,7 +25,8 @@
 # Xcode is pinned by apps/ios/.xcode-version. Outputs go to .cache/ios (git-ignored).
 # PENNY_IPHONE / PENNY_IPAD choose simulator device types (default: the newest iPhone
 # Pro and iPad Pro 11-inch the selected Xcode offers). PENNY_RUNTIME pins a runtime identifier.
-# ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_STACK_BUILD=0 (reuse the API build),
+# ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_UI_ONLY / PENNY_UI_SKIP (tests or
+# classes to run or leave out), PENNY_STACK_BUILD=0 (reuse the API build),
 # PENNY_STACK_SMTP=1 (the server sends email to an SMTP sink: the iphone-forgot-password and
 # iphone-invite-email cards),
 # PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from), PENNY_UI_STALL_SECONDS (silence that
@@ -142,11 +143,13 @@ runtimes() {
     | sed -E 's/.* - (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+).*/\1/'
 }
 
-device_type() {
-  # $1: override, $2: pattern for `simctl list devicetypes` names. Prints the newest
-  # matching type's identifier (simctl's own order is not by age, so sort by version).
+device_types() {
+  # $1: override, $2: pattern for `simctl list devicetypes` names. Prints the matching types'
+  # identifiers, newest first (simctl's own order is not by age, so sort by version). An older
+  # runtime doesn't support the newest types (iOS 26.0 has no iPhone 18 Pro), so clean_device
+  # tries them in turn.
   if [[ -n "$1" ]]; then echo "$1"; return; fi
-  xcrun simctl list devicetypes | grep -E "$2" | sort -V | tail -1 \
+  xcrun simctl list devicetypes | grep -E "$2" | sort -V -r \
     | sed -E 's/.*\((com\.apple\.CoreSimulator\.SimDeviceType\.[^)]+)\)$/\1/'
 }
 
@@ -193,36 +196,43 @@ sweep_stale_devices() {
 }
 
 # Creates a fresh simulator (no state from earlier runs) on the newest runtime that supports
-# the device type, and sets CREATED_ID. An installed runtime can support no device types
-# with this Xcode (iOS 27.1 under Xcode 27.2 does), so older runtimes are tried in turn.
+# one of the device types ($@, newest first), as the newest of them that runtime supports, and
+# sets CREATED_ID. An installed runtime can support no device types with this Xcode (iOS 27.1
+# under Xcode 27.2 does), so older runtimes are tried in turn; a pinned older runtime
+# (PENNY_RUNTIME, the minimum-OS matrix jobs) gets the newest type it knows.
 clean_device() {
-  local type="$1" runtime
+  local runtime type
   CREATED_ID=""
-  [[ -n "$type" ]] || { echo "error: no matching simulator device type." >&2; exit 1; }
+  [[ $# -gt 0 && -n "$1" ]] || { echo "error: no matching simulator device type." >&2; exit 1; }
   for runtime in $(runtimes); do
-    if CREATED_ID="$(xcrun simctl create "$RUN_DEVICE_PREFIX ${type##*.} $$ $(checkout_tag)" "$type" "$runtime" 2>/dev/null)" \
-      && [[ "$CREATED_ID" =~ ^[0-9A-F-]{36}$ ]]; then
-      CREATED_DEVICES+=("$CREATED_ID")
-      echo "Simulator ${type##*.} on ${runtime##*.}: $CREATED_ID"
-      return
-    fi
+    for type in "$@"; do
+      if CREATED_ID="$(xcrun simctl create "$RUN_DEVICE_PREFIX ${type##*.} $$ $(checkout_tag)" "$type" "$runtime" 2>/dev/null)" \
+        && [[ "$CREATED_ID" =~ ^[0-9A-F-]{36}$ ]]; then
+        CREATED_DEVICES+=("$CREATED_ID")
+        echo "Simulator ${type##*.} on ${runtime##*.}: $CREATED_ID"
+        return
+      fi
+    done
   done
-  echo "error: no installed iOS runtime supports $type. Install one with: xcodebuild -downloadPlatform iOS" >&2
+  echo "error: no installed iOS runtime supports any of: $*. Install one with: xcodebuild -downloadPlatform iOS" >&2
   exit 1
 }
 
 devices() {
-  local iphone_type ipad_type
-  iphone_type="$(device_type "${PENNY_IPHONE:-}" '^iPhone [0-9]+ Pro \(com')"
-  ipad_type="$(device_type "${PENNY_IPAD:-}" '^iPad Pro 11-inch \(M[0-9]+\) \(com')"
+  local iphone_types ipad_types
+  # Identifiers have no spaces: word-split into clean_device's arguments below.
+  iphone_types="$(device_types "${PENNY_IPHONE:-}" '^iPhone [0-9]+ Pro \(com')"
+  ipad_types="$(device_types "${PENNY_IPAD:-}" '^iPad Pro 11-inch \(M[0-9]+\) \(com')"
   # A signal ends the run through exit, so the EXIT trap deletes the devices then too.
   trap cleanup_devices EXIT
   trap 'exit 129' HUP
   trap 'exit 130' INT
   trap 'exit 143' TERM
   sweep_stale_devices
-  clean_device "$iphone_type"; IPHONE_ID="$CREATED_ID"
-  clean_device "$ipad_type"; IPAD_ID="$CREATED_ID"
+  # shellcheck disable=SC2086
+  clean_device $iphone_types; IPHONE_ID="$CREATED_ID"
+  # shellcheck disable=SC2086
+  clean_device $ipad_types; IPAD_ID="$CREATED_ID"
 }
 
 # PennyKit's generated scheme runs every package test target. Package test targets listed
@@ -733,6 +743,8 @@ ui_test_run() {
   # PENNY_UI_ONLY: tests or classes, space-separated, e.g. PennyUITests/AuthJourneyTests (debugging).
   local selected
   for selected in ${PENNY_UI_ONLY:-}; do only+=("-only-testing:$selected"); done
+  # PENNY_UI_SKIP: tests or classes to leave out (the nightly matrix's shards of Full).
+  for selected in ${PENNY_UI_SKIP:-}; do only+=("-skip-testing:$selected"); done
   devices
   rm -rf "$out"/*.xcresult "$out"/*-attachments "$out/device-seconds.tsv" "$out/timings.json"
   mkdir -p "$out"

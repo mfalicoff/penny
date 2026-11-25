@@ -49,8 +49,15 @@ final class TripJourneyTests: PennyUITestCase {
             let trips = ledger["trips"] as? [[String: Any]] ?? []
             return trips.contains { $0["id"] as? String == tripID && $0["sharedHouseholdId"] as? String == household }
         }
-        try penny.scroll(to: IDs.onlyYou, in: IDs.Screen.sharedTrip)
-        try penny.scroll(to: AccessibilityID.Row.entry("airport-train"), in: IDs.Screen.sharedTrip)
+        // iPhone: its own "Only you" section; the wide iPad trip (`ipad-trip`) lists the private
+        // row among the shared ones, marked "Only you" on the row itself.
+        if Device.isPad {
+            let row = try penny.scroll(to: AccessibilityID.Row.entry("airport-train"), in: IDs.Screen.sharedTrip)
+            XCTAssertTrue(row.label.contains("Only you"), row.label)
+        } else {
+            try penny.scroll(to: IDs.onlyYou, in: IDs.Screen.sharedTrip)
+            try penny.scroll(to: AccessibilityID.Row.entry("airport-train"), in: IDs.Screen.sharedTrip)
+        }
         screenshot("shared-trip-only-you")
         penny.scrollToTop(of: IDs.Screen.sharedTrip)
 

@@ -30,8 +30,9 @@ final class HouseholdJourneyTests: PennyUITestCase {
         screenshot("household-created")
 
         // Invite: the code is shown as text and as a QR code with its countdown.
-        try penny.selectSegment("People", in: IDs.section)
-        try penny.tap(IDs.invite)
+        try penny.showHouseholdSection("People")
+        // Invite is in the … menu on the iPhone People section, a toolbar button otherwise.
+        try penny.tap(IDs.invite, orIn: IDs.more)
         try penny.wait(for: IDs.Screen.invite)
         try penny.wait(for: IDs.inviteQR)
         try penny.wait(for: IDs.inviteExpires)
@@ -42,7 +43,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
         try penny.waitAfterRefresh(for: IDs.member(bea.userID))
 
         // Add an expense split equally between the two members.
-        try penny.selectSegment("Expenses", in: IDs.section)
+        try penny.showHouseholdSection("Expenses")
         try penny.tap(IDs.addExpense)
         try penny.wait(for: IDs.Screen.expenseForm)
         try penny.enterAmount("90", into: IDs.formAmount)
@@ -87,7 +88,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
             .matching(NSPredicate(format: "label BEGINSWITH %@ OR label == %@", "Apartment", "Back")).firstMatch
         (back.waitForExistence(timeout: 5) ? back : penny.app.navigationBars.buttons.element(boundBy: 0)).tap()
         try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
-        try penny.selectSegment("People", in: IDs.section)
+        try penny.showHouseholdSection("People")
         try penny.tap(IDs.leave, orIn: IDs.more)
         try penny.dialogButton("Leave").tap()
         // The refusal shows at the top of the page.
@@ -127,7 +128,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
             try penny.value(of: IDs.code)?.replacingOccurrences(of: " ", with: ""), code, "the link fills in the code")
         try penny.tap(IDs.joinButton)
         try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
-        try penny.selectSegment("People", in: IDs.section)
+        try penny.showHouseholdSection("People")
         try penny.waitAfterRefresh(for: IDs.member(guest.userID))
         screenshot("joined-by-link")
     }
@@ -213,6 +214,18 @@ extension Penny {
             throw UIExpectationFailed(description: "No \(title) segment in \(id)")
         }
         segment.tap()
+    }
+
+    /// Shows a household section: its segment where the page has one (iPhone, a narrow iPad
+    /// column), nothing where the wide iPad page shows the expenses with the balances and people
+    /// beside them and has no segments (`ipad-shared`, MAZ-182).
+    func showHouseholdSection(_ title: String) throws {
+        let picker = element(AccessibilityID.Households.section)
+        guard picker.waitForExistence(timeout: Device.isPad ? 3 : Penny.timeout) else {
+            if Device.isPad { return }
+            throw UIExpectationFailed(description: "No household sections")
+        }
+        try selectSegment(title, in: AccessibilityID.Households.section)
     }
 
     /// The invite code as the server issued it (the label spells it out for VoiceOver).
