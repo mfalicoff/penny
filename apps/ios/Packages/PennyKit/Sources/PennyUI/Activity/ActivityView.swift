@@ -81,6 +81,8 @@ struct ActivityView: View {
         .sheet(isPresented: $filtersPresented) {
             ActivityFiltersSheet().environment(shell)
         }
+        // The filters opening or closing (MAZ-287).
+        .pennyHaptic(.disclosure, trigger: filtersPresented)
         .onChange(of: shell.month) {
             if case .month = shell.activityFilters.period { shell.activityFilters.period = .month(shell.month) }
         }
@@ -92,7 +94,10 @@ struct ActivityView: View {
 
     private func list(selects: Bool) -> some View {
         WorkspaceContent { ledger in
-            ActivityList(ledger: ledger, selects: selects, showFilters: { filtersPresented = true })
+            // A container for the month slide, so the old and new month overlap while they change.
+            ZStack {
+                ActivityList(ledger: ledger, selects: selects, showFilters: { filtersPresented = true })
+            }
         }
     }
 }
@@ -162,6 +167,8 @@ private struct ActivityList: View {
     @State private var deleting: LedgerEntry?
     @State private var deletingShared: SharedDeleteRequest?
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
 
     static let pageSize = 200
 
@@ -240,6 +247,14 @@ private struct ActivityList: View {
             footer(rows: rows, shown: shown, search: search, server: server != nil)
         }
         .insetGroupedList()
+        // Rows inserted (a save, a sync, Undo) or deleted animate in place (MAZ-287); another month
+        // replaces the list, its content sliding in from the side it comes from.
+        .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: shown.map(\.id))
+        .id(filters.period)
+        .transition(
+            Motion.monthTransition(
+                earlier: shell.monthMovedEarlier, layoutDirection: layoutDirection, reduceMotion: reduceMotion)
+        )
         // The spoken-only rows (totals, the server results line) are one point tall, not a row's height.
         .environment(\.defaultMinListRowHeight, 1)
         .overlay { emptyState(rows: rows, filters: filters) }
@@ -650,7 +665,9 @@ struct ActivityChip: View {
             .foregroundStyle(selected ? PennyColor.background : PennyColor.label)
             .background(selected ? PennyColor.label : PennyColor.fill, in: Capsule())
         }
-        .buttonStyle(.plain)
+        // A chip that toggles a filter: the press scale and a light impact (MAZ-287).
+        .buttonStyle(.pennyPress)
+        .pennyHaptic(.openClose, trigger: selected) { _, new in new }
         .accessibilityAddTraits(selected && !removable ? .isSelected : [])
         .accessibilityHint(removable ? "Removes this filter" : "")
     }

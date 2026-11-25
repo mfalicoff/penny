@@ -184,7 +184,7 @@ public struct PennyButton: View {
             .background(background, in: Capsule())
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pennyPress)
     }
 
     private var foreground: Color {
@@ -245,9 +245,10 @@ public struct PillButtonStyle: ButtonStyle {
             .frame(minHeight: height)
             .foregroundStyle(selected ? PennyColor.surface : PennyColor.label)
             .background(selected ? PennyColor.label : PennyColor.fill, in: Capsule())
-            .opacity(configuration.isPressed ? 0.7 : 1)
             .frame(minHeight: Metrics.minTouchTarget)
             .contentShape(Rectangle())
+            // Penny's press (MAZ-287): scale, or the dim under Reduce Motion.
+            .modifier(PressEffect(isPressed: configuration.isPressed))
     }
 }
 

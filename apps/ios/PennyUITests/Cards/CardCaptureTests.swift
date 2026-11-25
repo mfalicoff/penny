@@ -675,7 +675,7 @@ final class CardCaptureTests: CardTestCase {
     /// A fresh install that signs up a new password account and stops on Check your email.
     @MainActor
     private func signUpFresh(_ card: CardContext) async throws -> Penny {
-        var options = LaunchOptions()
+        var options = LaunchOptions.capture
         options.seed = ContainerSeed(standardDefaults: ["penny.appearance": card.appearance])
         let penny = try await launch(options)
         try penny.wait(for: AccessibilityID.Auth.email, timeout: 30)

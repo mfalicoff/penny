@@ -136,6 +136,7 @@ struct CenteredConfirmationContent {
 
 private struct CenteredConfirmationCard: View {
     @ScaledMetric(relativeTo: .title) private var tile: Double = 48
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown = false
     let content: CenteredConfirmationContent
     let close: () -> Void
@@ -175,7 +176,8 @@ private struct CenteredConfirmationCard: View {
                 .frame(maxWidth: 340)
                 .padding(.horizontal, 40)
                 .frame(maxWidth: .infinity)
-                .scaleEffect(shown ? 1 : 1.08)
+                // As the web dialog: it fades in while rising `nudge`; under Reduce Motion it only fades.
+                .offset(y: shown || reduceMotion ? 0 : Motion.Distance.nudge)
                 .opacity(shown ? 1 : 0)
             }
             .scrollBounceBehavior(.basedOnSize)
@@ -184,7 +186,9 @@ private struct CenteredConfirmationCard: View {
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .accessibilityIdentifier(content.identifier)
-        .onAppear { withAnimation(.snappy(duration: 0.22)) { shown = true } }
+        // A sign-out or leave with pending changes is destructive: the warning haptic (MAZ-287).
+        .pennyHaptic(.destructiveConfirmation, trigger: shown && content.tone == .danger)
+        .onAppear { withAnimation(Motion.animation(.standard, reduceMotion: reduceMotion)) { shown = true } }
     }
 }
 
@@ -206,6 +210,7 @@ struct DeleteConfirmationSheet: View {
     @ScaledMetric(relativeTo: .body) private var tile: Double = 40
     @ScaledMetric(relativeTo: .body) private var buttonHeight = ControlSize.button
     @State private var height: Double = 320
+    @State private var warned = false
 
     struct Subject {
         let title: String
@@ -292,5 +297,8 @@ struct DeleteConfirmationSheet: View {
         // A container, so the screen identifier doesn't replace the buttons' own.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("screen.deleteConfirm")
+        // A destructive confirmation appears: the warning haptic (MAZ-287).
+        .pennyHaptic(.destructiveConfirmation, trigger: warned)
+        .onAppear { warned = true }
     }
 }

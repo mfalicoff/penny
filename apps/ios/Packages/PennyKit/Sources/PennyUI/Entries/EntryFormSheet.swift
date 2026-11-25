@@ -424,7 +424,9 @@ private struct EntryForm: View {
         } message: {
             Text("Keep it as a draft to finish later, or discard what you entered.")
         }
-        .sensoryFeedback(.error, trigger: model.refusedCount)
+        .pennyHaptic(.refused, trigger: model.refusedCount)
+        // Opening or closing one of the form's own pickers (the category menu, date, split): a light impact.
+        .pennyHaptic(.openClose, trigger: overlay)
         // The shelf always holds the latest unsaved draft while the sheet is open, so a sheet
         // replaced by a deep link or Settings (even from a pushed page) leaves it behind. Save
         // and Discard remove it.
@@ -544,6 +546,8 @@ private struct EntryForm: View {
                 .accessibilityLabel("Currency \(currency)")
         }
         .frame(maxWidth: .infinity)
+        // A save the rules refuse shakes the amount, with the error haptic (MAZ-287).
+        .pennyShake(trigger: model.refusedCount)
     }
 
     /// The labelled rows, as on the cards: Date, Account and Split, then "Receipt, repeat, trip"

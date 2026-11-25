@@ -77,12 +77,14 @@ struct UITestLaunchControlsTests {
     func flags() {
         let on = TestControls.fromProcess([
             "PENNY_TEST_RESET": "1", "PENNY_TEST_REDUCE_TRANSPARENCY": "1", "PENNY_TEST_REDUCE_MOTION": "1",
+            "PENNY_TEST_DISABLE_ANIMATIONS": "1",
         ])
-        #expect(on.resetsState && on.reduceTransparency && on.reduceMotion)
+        #expect(on.resetsState && on.reduceTransparency && on.reduceMotion && on.disablesAnimations)
         let off = TestControls.fromProcess([
             "PENNY_TEST_RESET": "true", "PENNY_TEST_REDUCE_TRANSPARENCY": "yes", "PENNY_TEST_REDUCE_MOTION": "",
+            "PENNY_TEST_DISABLE_ANIMATIONS": "true",
         ])
-        #expect(!off.resetsState && !off.reduceTransparency && !off.reduceMotion)
+        #expect(!off.resetsState && !off.reduceTransparency && !off.reduceMotion && !off.disablesAnimations)
         #expect(TestControls.fromProcess([:]) == TestControls())
     }
 

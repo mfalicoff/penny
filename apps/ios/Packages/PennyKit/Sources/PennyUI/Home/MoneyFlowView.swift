@@ -175,7 +175,11 @@ struct SankeyChart: View {
         .accessibilityLabel("Money flow chart")
         .accessibilityChartDescriptor(FlowChartDescriptor(flow: flow, currency: currency))
         .accessibilityIdentifier("moneyFlow.chart")
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: focused)
+        // Focusing a band dims the others (`quick`, a fade, so it stays under Reduce Motion) and
+        // plays the selection haptic; the bands move to a new month's values (`emphasized`).
+        .animation(Motion.animation(.quick, reduceMotion: reduceMotion), value: focused)
+        .pennyChartMotion(flow)
+        .pennyHaptic(.focusChart, trigger: focused) { _, new in new != nil }
     }
 
     struct Geometry {
@@ -356,7 +360,8 @@ struct FlowTable: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button {
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { isOpen.toggle() }
+                // The table grows into place (`standard`); at once under Reduce Motion.
+                withAnimation(Motion.movement(.standard, reduceMotion: reduceMotion)) { isOpen.toggle() }
             } label: {
                 HStack(spacing: 4) {
                     Text("Show as a table")
@@ -364,6 +369,7 @@ struct FlowTable: View {
                         Image(systemName: "chevron.down")
                             .font(.footnote.weight(.semibold))
                             .rotationEffect(.degrees(isOpen ? 180 : 0))
+                            .animation(Motion.movement(.quick, reduceMotion: reduceMotion), value: isOpen)
                     }
                 }
                 .font(.subheadline.weight(.semibold))
@@ -375,9 +381,13 @@ struct FlowTable: View {
             .accessibilityValue(isOpen ? "Expanded" : "Collapsed")
             .accessibilityHint(isOpen ? "Hides the list of values" : "Lists every value of the money flow")
             .accessibilityIdentifier("moneyFlow.table")
+            .pennyHaptic(.openClose, trigger: isOpen)
             if isOpen {
-                FlowDetailsList(flow: flow, summary: summary, currency: currency, focused: $focused)
-                FlowRecordedNote()
+                Group {
+                    FlowDetailsList(flow: flow, summary: summary, currency: currency, focused: $focused)
+                    FlowRecordedNote()
+                }
+                .transition(.opacity)
             }
         }
         // A new month starts closed, like the focus.

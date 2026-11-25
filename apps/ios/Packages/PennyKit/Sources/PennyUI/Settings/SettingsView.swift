@@ -269,6 +269,8 @@ private struct AccountHeader: View {
                 .accessibilityHidden(true)
             Text(SyncText.line(sync))
         }
+        // The icon and text crossfade as the status changes (MAZ-287).
+        .pennyCrossfade(sync)
         .font(.subheadline)
         .foregroundStyle(
             selected
