@@ -356,6 +356,19 @@ struct LedgerSyncEngineTests {
         #expect(checks == ["GET /api/receipts/expired", "GET /api/receipts/fresh"])
     }
 
+    @Test("whenTheServerNamesTheForeignReceiptByCode_Engine_ShouldDropTheDeadLinkWhateverTheMessage")
+    func deadReceiptDroppedByCode() async throws {
+        server.receipts.withLock { $0 = [] }
+        server.codedForeignReceipt.withLock { $0 = "Reworded by a newer server." }
+        let engine = try await synced()
+        try await engine.commit(.saveEntry(entry("bakery", receipt: "expired")))
+
+        #expect(await engine.sync(using: try Offline.client(server)) == .synced)
+
+        let saved = try #require(server.ledger(Offline.alex))
+        #expect(saved.transactions.first { $0.id == "bakery" }?.receipt == nil)
+    }
+
     @Test("whenEveryLinkedReceiptIsStillThere_Engine_ShouldKeepTheRefusalAndTheLink")
     func foreignReceiptKept() async throws {
         let engine = try await synced()

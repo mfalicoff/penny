@@ -62,27 +62,27 @@ public struct HouseholdFailure: Error, Equatable, Sendable {
             self.init(.signIn, "Your session ended. Sign in again; nothing was changed.")
         case .rateLimited:
             self.init(.rateLimited, "Too many attempts. Wait a few minutes and try again.")
-        case .notFound(let message):
-            if message?.localizedCaseInsensitiveContains("household not found") == true || message == nil {
+        case .notFound(let message, let code):
+            if Self.isHouseholdGone(code: code, message: message) {
                 self.init(
                     .membership,
                     "You're no longer a member of this household, or it was archived. Nothing was changed.")
-            } else if message?.localizedCaseInsensitiveContains("month not found") == true {
+            } else if error.matches(.settlementMonthNotFound, legacyText: "month not found") {
                 self.init(.membership, "You left this household before that month, so it isn't available.")
             } else {
                 self.init(.gone, "This was deleted by someone else. Nothing was changed.")
             }
-        case .conflict(let message):
+        case .conflict(let message, let code):
             let text = message ?? "Someone changed this. Refresh and try again."
-            self.init(Self.isStale(text) ? .stale : .restricted, text)
-        case .badRequest(let message):
+            self.init(Self.isStale(code: code, message: text) ? .stale : .restricted, text)
+        case .badRequest(let message, _):
             let text = message ?? "Check what you entered and try again."
-            if text.localizedCaseInsensitiveContains("invite code is invalid or expired") {
+            if error.matches(.householdInvalidInvite, legacyText: "invite code is invalid or expired") {
                 self.init(.invalidInvite, text)
             } else {
                 self.init(.invalid, text)
             }
-        case .forbidden(let message):
+        case .forbidden(let message, _):
             self.init(.restricted, message ?? "Only the household creator can do that.")
         case .invalidRequest:
             self.init(.invalid, "Check what you entered and try again.")
@@ -98,17 +98,17 @@ public struct HouseholdFailure: Error, Equatable, Sendable {
     /// daily limit, whose 429 carries no text the client keeps.
     public static func emailInvite(_ error: any Error) -> HouseholdFailure {
         switch error as? APIError {
-        case .notFound(let message?) where message.localizedCaseInsensitiveContains("send email"):
+        case let api? where api.status == 404 && api.matches(.mailDisabled, legacyText: "send email"):
             return HouseholdFailure(
                 .emailOff, "This server no longer sends email, so nothing was sent. Share a code instead.")
-        case .notFound(let message?) where message.localizedCaseInsensitiveContains("invitation not found"):
+        case let api? where api.status == 404 && api.matches(.inviteNotFound, legacyText: "invitation not found"):
             return HouseholdFailure(.gone, "This invitation was already revoked. Nothing was changed.")
         case .rateLimited:
             return HouseholdFailure(
                 .rateLimited, "Too many invitation emails today. Try again tomorrow, or share a code instead.")
-        case .conflict(let message):
+        case .conflict(let message, _):
             return HouseholdFailure(.restricted, message ?? "They already joined with this invitation.")
-        case .badRequest(let message):
+        case .badRequest(let message, _):
             return HouseholdFailure(.invalid, message ?? "Enter a valid email address.")
         case .invalidRequest:
             return HouseholdFailure(.invalid, "Enter a valid email address.")
@@ -117,10 +117,20 @@ public struct HouseholdFailure: Error, Equatable, Sendable {
         }
     }
 
-    /// The 409 messages that mean the person's copy is out of date (shared-expenses.md,
-    /// settlement.md, shared-recurrence.md).
-    static func isStale(_ message: String) -> Bool {
+    /// The 409s that mean the person's copy is out of date (shared-expenses.md, settlement.md,
+    /// shared-recurrence.md). A server before contract 2.1.0 sends no code, so its message decides.
+    static func isStale(code: APIErrorCode?, message: String) -> Bool {
+        if let code { return staleCodes.contains(code) }
         let lower = message.lowercased()
         return lower.contains("changed. refresh") || lower.contains("no longer the full suggested")
+    }
+
+    static let staleCodes: Set<APIErrorCode> = [.expenseChanged, .recurringRuleChanged, .settlementNotSuggested]
+
+    /// The 404 that means the household is gone for this person: `household.not_found`, or from a
+    /// server before contract 2.1.0, its message or none at all.
+    static func isHouseholdGone(code: APIErrorCode?, message: String?) -> Bool {
+        if let code { return code == .householdNotFound }
+        return message == nil || message?.localizedCaseInsensitiveContains("household not found") == true
     }
 }

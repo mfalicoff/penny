@@ -1,6 +1,6 @@
 # Native API client (MAZ-67)
 
-The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`. It speaks the contract in `contracts/openapi.json` (2.0.0) and is independent of any view or storage. It imports only Foundation, so its tests run on the Mac host (`ios.sh package-test`).
+The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`. It speaks the contract in `contracts/openapi.json` (2.1.0) and is independent of any view or storage. It imports only Foundation, so its tests run on the Mac host (`ios.sh package-test`).
 
 ## Layout
 
@@ -12,6 +12,7 @@ The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`
 | `APIClient.swift` | Async client: info, register, login, OIDC availability/start/complete, me, logout, ledger get/put, receipt upload/download, search |
 | `SearchCoordinator.swift` | Latest-query-wins paging and stale-answer protection |
 | `Errors.swift` | `APIError` |
+| `APIErrorCode.swift` | `APIErrorCode`: every error `code` of contract 2.1.0 |
 | `Transport.swift` | `HTTPTransport` and the production `URLSessionTransport` |
 
 The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with MAZ-68; sign-in, the Keychain and session handling built on this client are in [native sign-in](authentication.md). Households, invites, shared expenses, payments, month recaps, monthly reimbursements, audit and shared rules arrived with MAZ-75 (`APIClient+Households.swift`, `HouseholdWireModels.swift`, [native households](households.md)). Push registration (`registerPushDevice`, `unregisterPushDevice`: `POST`/`DELETE /api/push/devices` with the native APNs body) arrived with MAZ-79 (`APIClient+Push.swift`, [native notifications](notifications.md)). Password reset (`POST /api/auth/password-reset`, whose native screen is still open) is not in this client yet; it follows the same conventions.
@@ -41,13 +42,19 @@ Credentials are scoped to the server that issued them:
 - `APIClient` refuses (`invalidRequest(.wrongServer)`) to be created with a session from another server, and `signedIn(as:)` checks the same.
 - `URLSessionTransport` never follows redirects, so a redirect cannot carry the token to another host, and uses an ephemeral session with no cookie, credential or URL cache storage. The `Set-Cookie` the server also sends is ignored; the app authenticates with `Authorization: Bearer`.
 - Unauthenticated calls (`info`, `login`, `register`, the OIDC routes) never send a token. `APIClient.anonymous(_:transport:)` makes a client that has none.
-- The client does not log. `APIError` carries status and the server's message, never a request or credential.
+- The client does not log. `APIError` carries status, the server's message and its `code`, never a request or credential.
 
 The token is persisted per server in the Keychain by `KeychainSessionStore` ([native sign-in](authentication.md#keychain-storage)).
 
 ## Errors and retries
 
-Branch on the `APIError` case, never on message text.
+Branch on the `APIError` case and its `code`, never on message text.
+
+Every status case also carries the `code` the server sent (contract 2.1.0, MAZ-187; [error codes](../reference/api-reference.md#error-codes)), for example `expense.changed` or `mail.disabled`. Use it to tell failures of one status apart. A server before 2.1.0 sends no code, and a newer one may send a code `APIErrorCode` doesn't name, so:
+
+- `error.matches(.code, legacyText:)` (or `legacy:`) is true for that code; with no code it falls back to the status-and-message match the app made before 2.1.0. Another code is never a match, whatever the message says.
+- Keep the class of failure on status: 401 (`requiresSignIn`), offline and timeout, 5xx, a generic 429 retry and the sync engine's 409 retry (`ledger.conflict`, `receipt.changed`) don't look at the code.
+- `APIErrorCodeTests` keeps `APIErrorCode.all` equal to the contract's `Error.code` enum.
 
 | Case | Source | What to do |
 | --- | --- | --- |

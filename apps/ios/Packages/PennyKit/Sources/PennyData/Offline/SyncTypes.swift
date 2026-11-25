@@ -36,12 +36,12 @@ public enum SyncIssue: Equatable, Sendable {
         switch error {
         case .offline: .offline
         case .timeout, .unreachable: .serverUnreachable
-        case .rateLimited(let after): .serverUnavailable(retryAfter: after)
-        case .unavailable(let after, _): .serverUnavailable(retryAfter: after)
+        case .rateLimited(let after, _): .serverUnavailable(retryAfter: after)
+        case .unavailable(let after, _, _): .serverUnavailable(retryAfter: after)
         case .server, .unexpectedStatus, .malformedResponse: .serverUnavailable(retryAfter: nil)
         case .conflict: .conflictRetriesExhausted
-        case .badRequest(let message), .forbidden(let message), .payloadTooLarge(let message),
-            .notFound(let message):
+        case .badRequest(let message, _), .forbidden(let message, _), .payloadTooLarge(let message, _),
+            .notFound(let message, _):
             .rejected(message: message)
         case .unauthorized, .invalidRequest: .rejected(message: nil)
         }

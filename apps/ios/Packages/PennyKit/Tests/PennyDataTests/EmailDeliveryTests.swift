@@ -81,6 +81,45 @@ struct EmailDeliveryTests {
         #expect(preferences.savedServer()?.emailEnabled == false)
     }
 
+    @Test("whenTheResetRouteIsMissing_AuthController_ShouldNotTakeItForEmailOff")
+    func requestRouteMissing() async {
+        let preferences = EphemeralAuthPreferences(server: SavedServer(server: AuthFixtures.server, emailEnabled: true))
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport([
+                "POST /api/auth/password-reset/request": Routes.json(
+                    404, #"{"error":"Not found.","code":"route.not_found"}"#)
+            ]), preferences: preferences)
+        await controller.restore()
+        do {
+            _ = try await controller.requestPasswordReset(email: "bea@example.test")
+            Issue.record("a missing route was taken for a sent request")
+        } catch {
+            #expect(error.kind == .notAPennyServer)
+        }
+        #expect(controller.server?.emailEnabled == true)
+    }
+
+    @Test(
+        "whenAResetIsRefusedWithACode_AuthController_ShouldGoByTheCodeNotTheMessage",
+        arguments: [
+            (#"{"error":"That code won't work.","code":"password_reset.invalid_token"}"#, AuthFailure.Kind.invalidCode),
+            (
+                #"{"error":"The code is fine, but this password is invalid or has expired rules.","code":"password_reset.invalid_password"}"#,
+                .invalidInput
+            ),
+        ] as [(String, AuthFailure.Kind)])
+    func resetRefusedByCode(body: String, kind: AuthFailure.Kind) async {
+        let transport = Routes.transport(["POST /api/auth/password-reset": Routes.json(400, body)])
+        let controller = AuthFixtures.controller(transport: transport)
+        await controller.restore()
+        do {
+            try await controller.resetPassword(code: Self.code, password: "a new long password")
+            Issue.record("a refused reset succeeded")
+        } catch {
+            #expect(error.kind == kind)
+        }
+    }
+
     @Test(
         "whenAResetRequestFails_AuthController_ShouldSayWhatToDo",
         arguments: [
