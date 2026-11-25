@@ -47,6 +47,9 @@ public enum SignedOutReason: Equatable, Sendable {
     /// MAZ-124: a reset code set a new password, and the server signed every device out. Sign-in
     /// says so.
     case passwordReset
+    /// MAZ-152: the person deleted their account. The server signed every device out and this
+    /// device removed the account's local data. Sign-in says so.
+    case accountDeleted
 }
 
 public enum SignInMethod: Equatable, Sendable {
@@ -169,4 +172,54 @@ public enum EmailChangeOutcome: Equatable, Sendable {
     /// The password is missing or wrong: clear and refocus Password.
     case wrongPassword(String)
     case failed(String)
+}
+
+/// Why Delete account didn't go ahead (MAZ-152). Nothing was deleted, and the session stays
+/// unless `kind` is `sessionEnded`.
+public struct AccountDeletionFailure: Error, Equatable, Sendable {
+    public enum Kind: Equatable, Sendable {
+        /// A wrong or missing password (400): clear and refocus the password.
+        case wrongPassword
+        /// A household rule blocks leaving (409), such as a balance to settle. `message` names it.
+        case blocked
+        /// The server couldn't be reached, or failed. Try again.
+        case failed
+        /// The session had already ended (401): sign-in shows next.
+        case sessionEnded
+        case notSignedIn
+    }
+
+    public let kind: Kind
+    /// What the sheet shows, the server's own words where it sent some.
+    public let message: String
+
+    public init(_ kind: Kind, _ message: String) {
+        self.kind = kind
+        self.message = message
+    }
+
+    public static let wrongPasswordMessage = "Your password is incorrect."
+    public static let enterPasswordMessage = "Enter your password to delete your account."
+    public static let offlineMessage = "Penny can't reach the server. Check your connection, then try again."
+    public static let failedMessage = "Your account wasn't deleted. Try again."
+
+    /// The failure for an error from `POST /api/account/delete`.
+    public init(_ error: any Error) {
+        guard let error = error as? APIError else {
+            self.init(.failed, Self.failedMessage)
+            return
+        }
+        switch error {
+        case .badRequest(let message): self.init(.wrongPassword, message ?? Self.wrongPasswordMessage)
+        case .conflict(let message): self.init(.blocked, message ?? Self.failedMessage)
+        case .unauthorized: self.init(.sessionEnded, "Your session ended. Sign in again.")
+        case .offline, .timeout, .unreachable: self.init(.failed, Self.offlineMessage)
+        case .rateLimited(let after):
+            let minutes = after.map { max(1, Int(($0 / 60).rounded(.up))) } ?? 15
+            self.init(.failed, "Too many attempts. Please try again in \(minutes) minute\(minutes == 1 ? "" : "s").")
+        case .forbidden(let message), .server(_, let message), .unavailable(_, let message):
+            self.init(.failed, message ?? Self.failedMessage)
+        default: self.init(.failed, Self.failedMessage)
+        }
+    }
 }

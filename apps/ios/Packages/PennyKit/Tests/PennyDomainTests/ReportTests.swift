@@ -182,6 +182,36 @@ struct ReportTests {
         }
     }
 
+    /// shared-categories.json (MAZ-286), generated from the web's `ledgerWithHouseholds`: a
+    /// shared expense counts under the personal expense category with the same name.
+    @Test("whenSharedCategoryNameMatchesPersonalExpense_Report_ShouldCountItUnderThatCategory")
+    func sharedCategoriesFixture() throws {
+        let fixture = try Fixtures.decode(SharedCategoriesFixture.self, from: "shared-categories.json")
+        let ledger = try ContractLedger.ledger(fixture.ledger)
+        let shared = try fixture.projection.map { row in
+            SharedExpenseShare(
+                id: row.id, householdId: row.householdId, currency: ledger.currency, title: row.id,
+                date: try ContractLedger.date(row.date), total: row.totalCents, share: row.shareCents,
+                category: .init(name: row.category.name, icon: row.category.icon, color: row.category.color))
+        }
+        let report = LedgerReport(ledger: ledger, shared: shared)
+        for row in fixture.projection {
+            let entry = try #require(report.recorded.first { $0.id == "household:\(row.householdId):\(row.id)" })
+            #expect(entry.categoryId == fixture.expected.categoryIds[row.id], "\(row.id)")
+        }
+        #expect(Array(report.categories.prefix(ledger.categories.count)) == ledger.categories)
+        let added = report.categories.dropFirst(ledger.categories.count).map {
+            [$0.id, $0.name, $0.icon, $0.color, $0.kind.rawValue]
+        }
+        #expect(added == fixture.expected.addedCategories.map { [$0.id, $0.name, $0.icon, $0.color, $0.kind] })
+        let month = try #require(MonthKey(fixture.month))
+        let spending = report.month(month).spending
+        #expect(
+            Dictionary(uniqueKeysWithValues: spending.map { ($0.category.id, $0.amount) }) == fixture.expected.spending)
+        // One row per name: a personal and a shared Sports are one category.
+        #expect(Set(spending.map { $0.category.name.lowercased() }).count == spending.count)
+    }
+
     @Test("whenFutureIncomeSeeded_MonthSummary_ShouldMatchRedesignTotalsInThePersonsTimeZone")
     func redesignFutureIncomeTotals() throws {
         let states = try Fixtures.decode(RedesignStates.self, from: "redesign-states.json")

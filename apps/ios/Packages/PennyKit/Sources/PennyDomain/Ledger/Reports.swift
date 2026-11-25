@@ -175,9 +175,24 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
 }
 
 extension SharedExpenseShare {
-    /// Shared categories are matched by look, not id (`household-category:name:icon:color`).
+    /// A shared category with no personal match is its own category, by look
+    /// (`household-category:name:icon:color`).
     static func categoryID(_ category: Category) -> String {
         "household-category:\(category.name):\(category.icon):\(category.color)"
+    }
+
+    /// The category a shared expense counts under in the personal view (MAZ-286), as the web's
+    /// `sharedCategoryId`: the person's own expense category with the same name, compared
+    /// trimmed and without case (icon and colour may differ), the first in ledger order. Income
+    /// and investment categories never match. With no match, `categoryID(_:)`.
+    /// - Parameter personal: the ledger's own categories, not the view's.
+    static func categoryID(_ category: Category, in personal: [LedgerCategory]) -> String {
+        func key(_ name: String) -> [UInt16] { Array(JavaScriptText.lowercase(JavaScriptText.trim(name)).utf16) }
+        let name = key(category.name)
+        guard !name.isEmpty, let match = personal.first(where: { $0.kind == .expense && key($0.name) == name }) else {
+            return categoryID(category)
+        }
+        return match.id
     }
 
     /// One row per view id, in first-seen order, holding the last copy (a JavaScript `Map`
@@ -236,7 +251,10 @@ public struct LedgerReport: Sendable {
         func view(_ item: SharedExpenseShare) -> ReportEntry? {
             guard item.currency == ledger.currency, Money.isValidAmounts(total: item.total, share: item.share)
             else { return nil }
-            let entry = ReportEntry(shared: item)
+            var entry = ReportEntry(shared: item)
+            // Counted under the person's expense category of the same name (MAZ-286); a shared
+            // category with no match gets its own expense category, added once.
+            entry.categoryId = SharedExpenseShare.categoryID(item.category, in: ledger.categories)
             if categoryIDs.insert(entry.categoryId).inserted {
                 categories.append(
                     LedgerCategory(

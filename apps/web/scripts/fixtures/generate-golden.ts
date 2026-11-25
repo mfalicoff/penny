@@ -13,6 +13,7 @@ import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } fro
 import { mergeLedger } from "../../src/domain/merge.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
+import { ledgerWithHouseholds, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const directory = new URL("../../../../contracts/fixtures/", import.meta.url);
@@ -196,6 +197,59 @@ function monthTotals() {
   };
 }
 
+// MAZ-286: a shared expense counts under the person's expense category with the same name
+// (trimmed, without case; icon and colour may differ), the first in ledger order. Income and
+// investment categories never match; a shared category with no match keeps its own
+// `household-category:` row. Expectations: each row's category id in the view, the categories
+// the view adds, and October's spending by category id (`summarizeMonth` totals per category).
+function sharedCategories() {
+  const categories: Ledger["categories"] = [
+    { id: "sports", name: "Sports", icon: "football-outline", color: "#3E8E5E", kind: "expense" },
+    { id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" },
+    // Differs from "Food" only in case: the first in ledger order wins.
+    { id: "food-2", name: "FOOD", icon: "pizza-outline", color: "#B15B7D", kind: "expense" },
+    { id: "gifts-in", name: "Gifts", icon: "gift-outline", color: "#5B7DB1", kind: "income" },
+    { id: "savings", name: "Savings", icon: "trending-up-outline", color: "#5B7DB1", kind: "investment" },
+  ];
+  const personal = [
+    { id: "tennis", title: "Tennis", kind: "expense", total: 4000, share: 4000, categoryId: "sports", date: "2026-10-03", note: "" },
+    { id: "lunch", title: "Lunch", kind: "expense", total: 1500, share: 1500, categoryId: "food", date: "2026-10-04", note: "" },
+  ];
+  const base = ledger(personal, { categories });
+  const row = (id: string, shareCents: number, category: ProjectedExpense["category"]): ProjectedExpense => ({
+    id, householdId: "maison", householdName: "Maison", householdCurrency: base.currency, title: id, date: "2026-10-10",
+    totalCents: shareCents * 2, shareCents, category, note: "", payerUserId: "bea",
+  });
+  const projection = [
+    row("ski-pass", 6000, { name: "Sports", icon: "football-outline", color: "#3E8E5E" }),
+    // Same name, another icon and colour, other case and padding: still the personal Sports.
+    row("climbing", 2500, { name: "  sports ", icon: "trophy-outline", color: "#123456" }),
+    row("groceries", 3000, { name: "food", icon: "basket-outline", color: "#0FA3A3" }),
+    // Only an income category is called Gifts: a shared expense never joins it.
+    row("present", 2000, { name: "Gifts", icon: "gift-outline", color: "#5B7DB1" }),
+    row("hydro", 4500, { name: "Utilities", icon: "flash-outline", color: "#3B82F6" }),
+    row("internet", 1500, { name: "Utilities", icon: "flash-outline", color: "#3B82F6" }),
+    row("savings-pot", 1000, { name: "Savings", icon: "wallet-outline", color: "#5B7DB1" }),
+  ];
+  const view = ledgerWithHouseholds(base, projection);
+  const viewIds = new Map(view.transactions.map((entry) => [entry.id, entry.categoryId]));
+  const spending: Record<string, number> = {};
+  for (const entry of monthBreakdown(view, "2026-10", { today: "2026-10-31" }).recordedEntries)
+    if (entry.kind === "expense") spending[entry.categoryId] = (spending[entry.categoryId] ?? 0) + entry.share;
+  return {
+    generator,
+    description: "Shared expenses in the personal view (MAZ-286). A shared expense carries its household's category by value; it counts under the person's expense category with the same name, compared trimmed and without case (icon and colour may differ), the first in ledger order. Income and investment categories never match. With no match it gets its own expense category `household-category:<name>:<icon>:<color>`, added to the view once. `expected.categoryIds` maps each projection row id to its category id in the view; `expected.addedCategories` lists the categories the view adds, in order; `expected.spending` is the month's recorded expense share per category id.",
+    month: "2026-10",
+    ledger: base,
+    projection: projection.map(({ id, householdId, date, totalCents, shareCents, category }) => ({ id, householdId, date, totalCents, shareCents, category })),
+    expected: {
+      categoryIds: Object.fromEntries(projection.map((item) => [item.id, viewIds.get(`household:${item.householdId}:${item.id}`)!])),
+      addedCategories: view.categories.slice(categories.length),
+      spending,
+    },
+  };
+}
+
 // Which suites consume each fixture. A language with no implementation yet names the
 // issue that adds it; a fixture only meaningful to some layers says so.
 const consumers: Record<string, Record<string, string[] | string>> = {
@@ -203,6 +257,7 @@ const consumers: Record<string, Record<string, string[] | string>> = {
   "recurrence.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "merge-conflicts.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"] },
   "month-totals.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
+  "shared-categories.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: shared expenses join the personal view on the client", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "parity-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "settlement.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
@@ -227,6 +282,7 @@ export function generated(): Record<string, string> {
     "recurrence.json": serialize(recurrence()),
     "merge-conflicts.json": serialize(merge()),
     "month-totals.json": serialize(monthTotals()),
+    "shared-categories.json": serialize(sharedCategories()),
   };
 }
 

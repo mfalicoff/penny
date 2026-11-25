@@ -12,7 +12,8 @@ import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
-import { isExpected, summarizeMonth } from "../../src/domain/summary.ts";
+import { isExpected, monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
+import { ledgerWithHouseholds, sharedCategoryId, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
 import { selectOverview } from "../../src/domain/selectors/overview.ts";
 import { generated, manifest, sha256 } from "../../scripts/fixtures/generate-golden.ts";
 import { applyPendingEdits } from "../../../../scripts/test-env/seed.mjs";
@@ -71,6 +72,23 @@ const MonthTotals = z.strictObject({
       expectedIds: z.array(z.string()), scheduledIds: z.array(z.string()),
     }),
   })).min(5),
+});
+
+const SharedCategory = z.strictObject({ name: z.string(), icon: z.string(), color: z.string() });
+const SharedCategories = z.strictObject({
+  generator: z.string(),
+  description: z.string(),
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  ledger: LedgerShape,
+  projection: z.array(z.strictObject({
+    id: z.string().min(1), householdId: z.string().min(1), date, totalCents: z.number().int().positive(),
+    shareCents: z.number().int().nonnegative(), category: SharedCategory,
+  })).min(5),
+  expected: z.strictObject({
+    categoryIds: z.record(z.string(), z.string().min(1)),
+    addedCategories: z.array(z.strictObject({ id: z.string().min(1), kind: z.literal("expense"), name: z.string(), icon: z.string(), color: z.string() })),
+    spending: z.record(z.string(), z.number().int().positive()),
+  }),
 });
 
 const Manifest = z.strictObject({
@@ -231,6 +249,28 @@ test("month-totals fixtures: income dated after today is expected, at the bounda
     // The entry never changes: projected is the same whatever today is.
     assert.deepEqual(summary.projected, summarizeMonth(ledger, item.month, { today: "2000-01-01" }).projected, item.name);
   }
+});
+
+test("shared-categories fixtures: a shared expense counts under the personal expense category of the same name", () => {
+  const golden = parse(SharedCategories, "shared-categories.json");
+  const rows: ProjectedExpense[] = golden.projection.map((item) => ({
+    ...item, householdName: "Household", householdCurrency: golden.ledger.currency, title: item.id, note: "", payerUserId: "payer",
+  }));
+  const view = ledgerWithHouseholds(golden.ledger, rows);
+  for (const item of golden.projection) {
+    const entry = view.transactions.find((candidate) => candidate.id === `household:${item.householdId}:${item.id}`)!;
+    assert.equal(entry.categoryId, golden.expected.categoryIds[item.id], item.id);
+    assert.equal(sharedCategoryId(golden.ledger.categories, item.category), golden.expected.categoryIds[item.id], item.id);
+  }
+  assert.deepEqual(view.categories.slice(0, golden.ledger.categories.length), golden.ledger.categories);
+  assert.deepEqual(view.categories.slice(golden.ledger.categories.length), golden.expected.addedCategories);
+  const spending: Record<string, number> = {};
+  const recorded = monthBreakdown(view, golden.month, { today: `${golden.month}-31` }).recordedEntries.filter((entry) => entry.kind === "expense");
+  for (const entry of recorded) spending[entry.categoryId] = (spending[entry.categoryId] ?? 0) + entry.share;
+  assert.deepEqual(spending, golden.expected.spending);
+  // Independent of the implementation: one row per name for a personal match, by look otherwise.
+  const byName = new Set(Object.keys(golden.expected.spending).map((id) => view.categories.find((category) => category.id === id)!.name.trim().toLowerCase()));
+  assert.equal(byName.size, Object.keys(golden.expected.spending).length);
 });
 
 test("fixture manifest hashes every shared fixture and names each consumer", () => {

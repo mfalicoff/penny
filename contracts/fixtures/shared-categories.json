@@ -1,0 +1,204 @@
+{
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
+  "description": "Shared expenses in the personal view (MAZ-286). A shared expense carries its household's category by value; it counts under the person's expense category with the same name, compared trimmed and without case (icon and colour may differ), the first in ledger order. Income and investment categories never match. With no match it gets its own expense category `household-category:<name>:<icon>:<color>`, added to the view once. `expected.categoryIds` maps each projection row id to its category id in the view; `expected.addedCategories` lists the categories the view adds, in order; `expected.spending` is the month's recorded expense share per category id.",
+  "month": "2026-10",
+  "ledger": {
+    "version": 4,
+    "currency": "CAD",
+    "accounts": [
+      {
+        "id": "chq",
+        "name": "Chequing",
+        "type": "bank"
+      }
+    ],
+    "trips": [],
+    "recurring": [],
+    "categories": [
+      {
+        "id": "sports",
+        "name": "Sports",
+        "icon": "football-outline",
+        "color": "#3E8E5E",
+        "kind": "expense"
+      },
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "food-2",
+        "name": "FOOD",
+        "icon": "pizza-outline",
+        "color": "#B15B7D",
+        "kind": "expense"
+      },
+      {
+        "id": "gifts-in",
+        "name": "Gifts",
+        "icon": "gift-outline",
+        "color": "#5B7DB1",
+        "kind": "income"
+      },
+      {
+        "id": "savings",
+        "name": "Savings",
+        "icon": "trending-up-outline",
+        "color": "#5B7DB1",
+        "kind": "investment"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "tennis",
+        "title": "Tennis",
+        "kind": "expense",
+        "total": 4000,
+        "share": 4000,
+        "categoryId": "sports",
+        "date": "2026-10-03",
+        "note": ""
+      },
+      {
+        "id": "lunch",
+        "title": "Lunch",
+        "kind": "expense",
+        "total": 1500,
+        "share": 1500,
+        "categoryId": "food",
+        "date": "2026-10-04",
+        "note": ""
+      }
+    ]
+  },
+  "projection": [
+    {
+      "id": "ski-pass",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 12000,
+      "shareCents": 6000,
+      "category": {
+        "name": "Sports",
+        "icon": "football-outline",
+        "color": "#3E8E5E"
+      }
+    },
+    {
+      "id": "climbing",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 5000,
+      "shareCents": 2500,
+      "category": {
+        "name": "  sports ",
+        "icon": "trophy-outline",
+        "color": "#123456"
+      }
+    },
+    {
+      "id": "groceries",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 6000,
+      "shareCents": 3000,
+      "category": {
+        "name": "food",
+        "icon": "basket-outline",
+        "color": "#0FA3A3"
+      }
+    },
+    {
+      "id": "present",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 4000,
+      "shareCents": 2000,
+      "category": {
+        "name": "Gifts",
+        "icon": "gift-outline",
+        "color": "#5B7DB1"
+      }
+    },
+    {
+      "id": "hydro",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 9000,
+      "shareCents": 4500,
+      "category": {
+        "name": "Utilities",
+        "icon": "flash-outline",
+        "color": "#3B82F6"
+      }
+    },
+    {
+      "id": "internet",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 3000,
+      "shareCents": 1500,
+      "category": {
+        "name": "Utilities",
+        "icon": "flash-outline",
+        "color": "#3B82F6"
+      }
+    },
+    {
+      "id": "savings-pot",
+      "householdId": "maison",
+      "date": "2026-10-10",
+      "totalCents": 2000,
+      "shareCents": 1000,
+      "category": {
+        "name": "Savings",
+        "icon": "wallet-outline",
+        "color": "#5B7DB1"
+      }
+    }
+  ],
+  "expected": {
+    "categoryIds": {
+      "ski-pass": "sports",
+      "climbing": "sports",
+      "groceries": "food",
+      "present": "household-category:Gifts:gift-outline:#5B7DB1",
+      "hydro": "household-category:Utilities:flash-outline:#3B82F6",
+      "internet": "household-category:Utilities:flash-outline:#3B82F6",
+      "savings-pot": "household-category:Savings:wallet-outline:#5B7DB1"
+    },
+    "addedCategories": [
+      {
+        "id": "household-category:Gifts:gift-outline:#5B7DB1",
+        "kind": "expense",
+        "name": "Gifts",
+        "icon": "gift-outline",
+        "color": "#5B7DB1"
+      },
+      {
+        "id": "household-category:Utilities:flash-outline:#3B82F6",
+        "kind": "expense",
+        "name": "Utilities",
+        "icon": "flash-outline",
+        "color": "#3B82F6"
+      },
+      {
+        "id": "household-category:Savings:wallet-outline:#5B7DB1",
+        "kind": "expense",
+        "name": "Savings",
+        "icon": "wallet-outline",
+        "color": "#5B7DB1"
+      }
+    ],
+    "spending": {
+      "sports": 12500,
+      "food": 4500,
+      "household-category:Gifts:gift-outline:#5B7DB1": 2000,
+      "household-category:Utilities:flash-outline:#3B82F6": 6000,
+      "household-category:Savings:wallet-outline:#5B7DB1": 1000
+    }
+  }
+}
