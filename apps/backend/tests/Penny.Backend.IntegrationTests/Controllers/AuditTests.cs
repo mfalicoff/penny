@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Npgsql;
 using Penny.Backend.Application.Households;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -8,7 +9,7 @@ using Xunit;
 namespace Penny.Backend.IntegrationTests.Controllers;
 
 // Household audit history (GET /api/households/{id}/audit): order, expense filter,
-// former-member visibility, the 500-event limit and private-data redaction. All data
+// former-member visibility, the 500-event limit and the private-data checks. All data
 // is synthetic.
 public sealed class AuditTests(ApiFixture fixture) : SettlementTestBase(fixture)
 {
@@ -107,41 +108,71 @@ public sealed class AuditTests(ApiFixture fixture) : SettlementTestBase(fixture)
         );
     }
 
-    [Fact]
-    public async Task whenStoredSnapshotHasPrivateData_Audit_ShouldRedactIt()
+    [Theory]
+    [InlineData("before_json", """{"title":"Old","accountId":"acct-secret"}""")]
+    [InlineData("after_json", """{"title":"New","accountId":"acct-secret"}""")]
+    [InlineData("before_json", """{"receipt":{"id":"r9","name":"Secret.pdf"}}""")]
+    [InlineData("after_json", """{"receipt":{"id":"r9","name":"Secret.pdf"}}""")]
+    public async Task whenSnapshotHasPrivateData_AuditInsert_ShouldFailTheCheck(
+        string column,
+        string snapshot
+    )
     {
-        var (alex, alexId, bea, _, _, _, home) = await HomeAsync();
-        // A stored row that still carries the payer's account and the receipt name.
-        await Fixture.SqlAsync(
-            $$$"""
-            INSERT INTO penny.household_audit (id, household_id, expense_id, actor_id, action, before_json, after_json, created_at)
-            VALUES ('unredacted-event', '{{{home}}}', 'unredacted-expense', '{{{alexId}}}', 'expense.updated',
-              '{"title":"Old","accountId":"acct-secret","receipt":{"id":"r9","name":"Secret.pdf","mime":"application/pdf"}}',
-              '{"title":"New","accountId":"acct-secret"}', TIMESTAMPTZ '2026-09-28 12:30:00+00');
+        // Snapshots are stored without the payer's account and the receipt's filename,
+        // so the response never redacts them: a writer that adds either one back fails.
+        var (_, alexId, _, _, _, _, home) = await HomeAsync();
+        var error = await Should.ThrowAsync<PostgresException>(() =>
+            InsertAuditAsync(home, alexId, "private-event", column, snapshot)
+        );
+        error.SqlState.ShouldBe(PostgresErrorCodes.CheckViolation);
+        error.ConstraintName.ShouldBe(
+            column == "before_json"
+                ? "ck_household_audit_before_private"
+                : "ck_household_audit_after_private"
+        );
+    }
+
+    [Fact]
+    public async Task whenSnapshotHasNoPrivateData_AuditInsert_ShouldStoreIt()
+    {
+        // The receipt id, its other fields, and snapshots that aren't objects stay allowed.
+        var (alex, alexId, _, _, _, _, home) = await HomeAsync();
+        await InsertAuditAsync(
+            home,
+            alexId,
+            "receipt-event",
+            "after_json",
+            """{"receiptId":"r9","receipt":{"id":"r9","mime":"application/pdf"}}"""
+        );
+        await InsertAuditAsync(home, alexId, "array-event", "after_json", """["accountId"]""");
+        await InsertAuditAsync(home, alexId, "null-event", "before_json", "null");
+        var stored = await AuditAsync(home, alex, "?expenseId=check-expense");
+        stored
+            .Select(item => item.GetProperty("id").GetString())
+            .ShouldBe(["null-event", "array-event", "receipt-event"]);
+        stored[^1]
+            .GetProperty("after")
+            .GetProperty("receipt")
+            .GetProperty("mime")
+            .GetString()
+            .ShouldBe("application/pdf");
+    }
+
+    private Task InsertAuditAsync(
+        string home,
+        string actorId,
+        string id,
+        string column,
+        string snapshot
+    ) =>
+        Fixture.SqlAsync(
+            $"""
+            INSERT INTO penny.household_audit (id, household_id, expense_id, actor_id, action, {column}, created_at)
+            VALUES ('{id}', '{home}', 'check-expense', '{actorId}', 'expense.updated', '{snapshot}',
+              TIMESTAMPTZ '2026-09-28 12:30:00+00');
             """,
             Ct
         );
-        foreach (var token in new[] { alex, bea })
-        {
-            var unredacted = (
-                await AuditAsync(home, token, "?expenseId=unredacted-expense")
-            ).Single();
-            unredacted.GetProperty("before").TryGetProperty("accountId", out _).ShouldBeFalse();
-            unredacted
-                .GetProperty("before")
-                .GetProperty("receipt")
-                .TryGetProperty("name", out _)
-                .ShouldBeFalse();
-            unredacted
-                .GetProperty("before")
-                .GetProperty("receipt")
-                .GetProperty("id")
-                .GetString()
-                .ShouldBe("r9");
-            unredacted.GetProperty("after").TryGetProperty("accountId", out _).ShouldBeFalse();
-            unredacted.GetProperty("after").GetProperty("title").GetString().ShouldBe("New");
-        }
-    }
 
     [Fact]
     public async Task whenMemberLeft_Audit_ShouldShowOnlyTheirHistory()

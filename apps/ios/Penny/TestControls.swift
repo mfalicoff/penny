@@ -96,12 +96,23 @@
                 environment: configuration.environment, defaultServerURL: serverURL, appGroup: configuration.appGroup)
         }
 
+        /// The app's pinned now: `PENNY_TEST_NOW`, else noon UTC on the pinned today (the stack's
+        /// convention), so a pinned day never decides the month's payment window or "2 min ago" on
+        /// the device clock. Nil when neither is pinned.
+        var pinnedNow: Date? {
+            if let now { return now }
+            guard let today else { return nil }
+            var utc = Calendar(identifier: .gregorian)
+            utc.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+            return utc.date(from: DateComponents(year: today.year, month: today.month, day: today.day, hour: 12))
+        }
+
         @MainActor
         func apply(_ services: AppServices) -> AppServices {
             var services = services
             services.startsInDemo = startsInDemo
             if let today { services.today = { today } }
-            if let now { services.now = { now } }
+            if let now = pinnedNow { services.now = { now } }
             switch systemAppearance {
             case "dark": services.systemColorScheme = .dark
             case "light": services.systemColorScheme = .light

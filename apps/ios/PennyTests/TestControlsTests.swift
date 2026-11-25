@@ -57,6 +57,22 @@ struct UITestLaunchControlsTests {
         #expect(TestControls.fromProcess([:]).now == nil)
     }
 
+    @Test("whenOnlyTodayIsPinned_TestControls_ShouldPinNowToNoonUTCOnThatDay")
+    @MainActor
+    func nowFollowsToday() throws {
+        let controls = TestControls.fromProcess(["PENNY_TEST_TODAY": "2026-10-15"])
+        let noon = Date(timeIntervalSince1970: 1_792_065_600)  // 2026-10-15T12:00:00Z
+        #expect(controls.pinnedNow == noon)
+        #expect(controls.apply(AppServices.live()).now() == noon)
+        let october = try #require(MonthKey(year: 2026, month: 10))
+        #expect(!SettlementCalendar.monthlyPaymentsOpen(october, at: controls.apply(AppServices.live()).now()))
+        let both = TestControls.fromProcess([
+            "PENNY_TEST_TODAY": "2026-10-15", "PENNY_TEST_NOW": "2026-10-15T08:00:00Z",
+        ])
+        #expect(both.pinnedNow == Date(timeIntervalSince1970: 1_792_051_200), "an explicit now wins")
+        #expect(TestControls.fromProcess([:]).pinnedNow == nil)
+    }
+
     @Test("whenFlagsSet_TestControls_ShouldReadOnlyTheExactValueOne")
     func flags() {
         let on = TestControls.fromProcess([

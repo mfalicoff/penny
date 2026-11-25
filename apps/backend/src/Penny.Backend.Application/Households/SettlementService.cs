@@ -204,8 +204,8 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
                         entry.ExpenseId,
                         entry.ActorId,
                         entry.Action,
-                        AuditRedaction.Redact(entry.BeforeJson),
-                        AuditRedaction.Redact(entry.AfterJson),
+                        entry.BeforeJson,
+                        entry.AfterJson,
                         entry.CreatedAt.ToUnixTimeMilliseconds()
                     )),
                 ];
