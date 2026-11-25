@@ -276,8 +276,13 @@ async function main() {
       },
       420_000,
     );
-    const crashes = (await grafanaApi("/api/prometheus/grafana/api/v1/rules")).data.groups.flatMap((group) => group.rules).find((rule) => rule.name === "Penny app crashes");
-    check(crashes?.state === "firing", "the app crash alert fires for the synthetic crash", crashes?.state);
+    // The crash reaches Loki through the API's queue and Alloy's batch, so it may land after the
+    // rule's first evaluation; the rule runs every minute.
+    await waitFor(
+      "the app crash alert fires for the synthetic crash",
+      async () => (await grafanaApi("/api/prometheus/grafana/api/v1/rules")).data.groups.flatMap((group) => group.rules).find((rule) => rule.name === "Penny app crashes")?.state === "firing",
+      180_000,
+    );
 
     passed = failures === 0;
   } finally {
