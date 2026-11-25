@@ -286,6 +286,26 @@
     "materials": {
       "requirement": "Native iOS 26 Liquid Glass on the control layer only: tab bar, toolbars, month picker, search and floating buttons. Money and lists stay on solid surfaces.",
       "note": "The --pk-glass values are a CSS approximation for the cards and web; use .glassEffect in SwiftUI and opaque surfaces under Reduce Transparency."
+    },
+    "motion": {
+      "source": "docs/design/motion.md",
+      "duration": {
+        "quick": 150,
+        "standard": 250,
+        "emphasized": 400,
+        "linger": 1000
+      },
+      "easing": {
+        "standard": "cubic-bezier(0.2, 0, 0, 1)",
+        "exit": "cubic-bezier(0.4, 0, 1, 1)",
+        "linear": "linear"
+      },
+      "distance": {
+        "nudge": 8,
+        "shift": 24,
+        "shake": 6
+      },
+      "press": 0.97
     }
   },
   "navigation": {

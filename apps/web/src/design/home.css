@@ -1180,10 +1180,6 @@
   outline: none;
 }
 
-.flow-node path {
-  transition: fill-opacity 0.15s;
-}
-
 .flow-node__ring {
   fill: transparent;
   stroke: transparent;
@@ -1232,7 +1228,7 @@
 }
 
 .flow__table summary svg {
-  transition: transform 0.15s;
+  transition: transform calc(var(--pk-dur-quick) * var(--pk-motion)) var(--pk-ease-standard);
 }
 
 .flow__table[open] summary svg {
@@ -1244,11 +1240,6 @@
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .flow__table summary svg {
-    transition: none;
-  }
-}
 
 /* ---------- tables ---------- */
 .table-scroll {

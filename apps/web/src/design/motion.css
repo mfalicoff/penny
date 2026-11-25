@@ -1,0 +1,243 @@
+/*
+ * Motion (docs/design/motion.md, MAZ-287). Every duration and easing comes from the tokens in
+ * tokens.css. Every distance is multiplied by --pk-motion, which global.css sets to 0 under
+ * prefers-reduced-motion, so the same rules become a quick fade there. A duration multiplied by
+ * --pk-motion (layout changes: rows making room, bars resizing) happens at once instead.
+ * JavaScript drives the rest (counting totals, the month slide, rows leaving, dialogs closing):
+ * see motion.ts.
+ */
+
+:root {
+  /* Lets height and width transition to and from `auto` (row inserts, disclosures) where supported. */
+  interpolate-size: allow-keywords;
+}
+
+@keyframes pk-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pk-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--pk-nudge) * var(--pk-motion));
+  }
+}
+
+@keyframes pk-drop-in {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--pk-nudge) * var(--pk-motion) * -1);
+  }
+}
+
+@keyframes pk-pop-in {
+  from {
+    opacity: 0;
+    scale: calc(1 - (1 - 0.97) * var(--pk-motion));
+  }
+}
+
+@keyframes pk-panel-in {
+  from {
+    opacity: 0;
+    translate: calc(var(--pk-shift) * var(--pk-motion)) 0;
+  }
+}
+
+/* ---------- 1. Saving ---------- */
+
+/* The saved toast rises in (its exit is in ToastProvider). */
+.pk-toast {
+  animation: pk-rise-in var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+.pk-toast--leaving {
+  pointer-events: none;
+  animation: pk-rise-in var(--pk-dur-quick) var(--pk-ease-exit) reverse forwards;
+}
+
+/* The saved row's highlight appears at once and fades over `linger` when its toast goes. */
+.activity-row--unsaving .activity-row__main {
+  transition: background-color var(--pk-dur-linger) linear;
+}
+
+/* Totals that count (HeroMoney, CountingMoney) keep their width while counting. */
+.hero-money,
+.money--counting {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 2. Month and period changes: charts move to their new values ---------- */
+.breakdown__fill,
+.summary-bar__part,
+.spending__bar i {
+  transition: width calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+.daily__bar,
+.six-months__bar {
+  transition: height calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+/* The money flow: bands and bars move and resize (Chromium and Firefox read `d` from CSS; Safari shows the new diagram at once). */
+.flow-band,
+.flow-bar {
+  transition:
+    d calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard),
+    y calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard),
+    height calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard),
+    fill-opacity var(--pk-dur-quick) linear;
+}
+
+/* ---------- 3. Lists ---------- */
+
+/* An inserted row rises in while making room. Only once the list has settled (`data-animate-inserts`), never with a new month. */
+.results[data-animate-inserts] > .results__row,
+.activity-table[data-animate-inserts] .activity-table__row {
+  transition:
+    opacity var(--pk-dur-standard) var(--pk-ease-standard),
+    translate var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+.results[data-animate-inserts] > .results__row {
+  transition:
+    opacity var(--pk-dur-standard) var(--pk-ease-standard),
+    translate var(--pk-dur-standard) var(--pk-ease-standard),
+    height calc(var(--pk-dur-standard) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+@starting-style {
+  .results[data-animate-inserts] > .results__row {
+    height: 0;
+    opacity: 0;
+    translate: 0 calc(var(--pk-nudge) * var(--pk-motion));
+  }
+
+  .activity-table[data-animate-inserts] .activity-table__row {
+    opacity: 0;
+    translate: 0 calc(var(--pk-nudge) * var(--pk-motion));
+  }
+}
+
+[data-period-changing] .results__row,
+[data-period-changing] .activity-table__row {
+  transition: none;
+}
+
+/* A row leaving (motion.ts `exitRow`) can't be reached while it fades. */
+[data-leaving] {
+  pointer-events: none;
+}
+
+/* The selection bar rises in from the bottom. */
+.selection-bar {
+  animation: pk-rise-in var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+/* ---------- 4. Sheets, menus and disclosures ---------- */
+
+/* Dialogs: the scrim fades and the panel rises `nudge`. Closing is in ModalDialog (a quick fade of a copy). */
+.dialog {
+  animation: pk-fade-in var(--pk-dur-quick) linear;
+}
+
+.dialog > .dialog__panel {
+  animation: pk-rise-in var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+.dialog--leaving {
+  pointer-events: none;
+  animation: pk-fade-in var(--pk-dur-quick) var(--pk-ease-exit) reverse forwards;
+}
+
+.dialog--leaving > .dialog__panel {
+  animation: pk-rise-in var(--pk-dur-quick) var(--pk-ease-exit) reverse forwards;
+}
+
+/* Menus and popovers fade in, scaling from 0.97 at the edge they open from. */
+.bulk-menu,
+.more-menu__list {
+  transform-origin: top left;
+  animation: pk-pop-in var(--pk-dur-quick) var(--pk-ease-standard);
+}
+
+.more-menu__list {
+  transform-origin: top right;
+}
+
+/* Disclosures: the chevron turns and the content grows (where `::details-content` is supported; elsewhere it opens at once). */
+details.flow__table::details-content {
+  block-size: 0;
+  overflow: clip;
+  opacity: 0;
+  transition:
+    block-size calc(var(--pk-dur-standard) * var(--pk-motion)) var(--pk-ease-standard),
+    opacity var(--pk-dur-quick) linear,
+    content-visibility var(--pk-dur-standard) allow-discrete;
+}
+
+details.flow__table[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+/* ---------- 5. Feedback ---------- */
+
+/* Press: custom buttons scale to `press` while held; under reduced motion they dim instead. */
+.wbtn {
+  transition:
+    scale var(--pk-dur-quick) var(--pk-ease-standard),
+    opacity var(--pk-dur-quick) linear;
+}
+
+.wbtn:active:not(:disabled, [aria-disabled="true"]) {
+  scale: var(--pk-press);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wbtn:active:not(:disabled, [aria-disabled="true"]) {
+    opacity: 0.7;
+  }
+}
+
+/* Switches: the thumb slides (at once under reduced motion), the track's color fades. */
+.switch {
+  transition: background-color var(--pk-dur-quick) linear;
+}
+
+.switch::after {
+  transition: left calc(var(--pk-dur-quick) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+/* The sync line crossfades when its state changes; banners drop in from above. */
+.sync-line > span,
+.sync-line > svg {
+  animation: pk-fade-in var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+.pk-banner {
+  animation: pk-drop-in var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+/* ---------- 6. Navigation: the Activity detail panel ---------- */
+/* Opening, the panel fades in sliding `shift` from the trailing edge; choosing another entry only crossfades it. */
+.entry-panel {
+  animation: pk-panel-in var(--pk-dur-emphasized) var(--pk-ease-standard);
+}
+
+.entry-panel--switch {
+  animation: pk-fade-in var(--pk-dur-quick) linear;
+}
+
+[dir="rtl"] .entry-panel:not(.entry-panel--switch) {
+  animation-name: pk-panel-in-rtl;
+}
+
+@keyframes pk-panel-in-rtl {
+  from {
+    opacity: 0;
+    translate: calc(var(--pk-shift) * var(--pk-motion) * -1) 0;
+  }
+}

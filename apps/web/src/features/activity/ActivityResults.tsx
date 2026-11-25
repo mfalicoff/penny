@@ -20,6 +20,7 @@ import { categoryIcon, repeatLabel, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
 import { categoryName, dayTotal, groupByDay, localRows, type ActivityRow, type RowFilters, type SharedState } from "./data";
 import type { ActivitySearch } from "./filters";
+import { leavingProps, useListMotion } from "../../design/motion";
 import { activeDay, KIND_FILTERS, periodOf, searchRange, shortPeriodLabel } from "./filters";
 
 const PAGE = 50;
@@ -96,6 +97,8 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
   const [limit, setLimit] = useState(PAGE);
 
   const localLedger = sync?.ledger ?? null;
+  // docs/design/motion.md, Lists: a change of filters or search is a new list, not an edit, so its rows don't animate.
+  const motionContext = JSON.stringify([filters, range]);
   // Personal amounts are in the ledger's currency, from the offline store's copy (MAZ-242).
   const currency = useLedgerCurrency().data;
   if (sync && localLedger) {
@@ -115,7 +118,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
             {shared.status === "ready" ? "Shared expenses are as Penny last loaded them; smarter matching needs a connection." : "Shared expenses and smarter matching need a connection."}
           </p>
           {rows.length === 0 ? <NoResults search={search} onClear={onClear} /> : null}
-          <RowList rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} selection={layout === "table" ? selection : undefined} />
+          <RowList key="rows" motionContext={motionContext} rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} selection={layout === "table" ? selection : undefined} />
           {rows.length > limit ? (
             <Button variant="secondary" onClick={() => { setLimit((value) => value + PAGE); }}>
               Show more
@@ -181,7 +184,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
       </p>
       {total === 0 && !serverSearch.hasNextPage ? <NoResults search={search} onClear={onClear} /> : null}
       {/* A search with words is ranked by relevance, not date, so only browsing is grouped by day. */}
-      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} selection={layout === "table" ? selection : undefined} />
+      <RowList key="rows" motionContext={motionContext} rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} selection={layout === "table" ? selection : undefined} />
       {pageFailed || refreshFailed ? (
         <div role="alert">
           <p>{describeSearchError(serverSearch.error)}</p>
@@ -269,6 +272,8 @@ export type RowLayout = "list" | "table";
 
 interface RowListProps {
   rows: ActivityRow[];
+  /** What the list shows (filters and range): when it changes, rows come and go without motion. */
+  motionContext: string;
   /** Rows are in date order: show them in day sections with each day's total. */
   grouped: boolean;
   /** Every matching row is listed; otherwise the last day may continue on the next page and gets no total. */
@@ -300,8 +305,13 @@ interface RowContext {
  * with the day's total, then that day's rows. On a desktop the rows are a table (Entry, Account,
  * Split, Amount) with each row's Edit and Delete, and the keyboard moves through it.
  */
-function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKey, onOpen, autoSelect, selection }: RowListProps) {
+const rowKey = (row: ActivityRow) => row.key;
+
+function RowList({ rows, motionContext, grouped, complete, ledger, currency, layout, selectedKey, onOpen, autoSelect, selection }: RowListProps) {
   const today = useToday();
+  // Deleted rows fade and close their space; inserted ones (Undo, sync) rise in.
+  const { rows: shown, animateInserts } = useListMotion(rows, rowKey, motionContext);
+  const leaving = new Set(shown.flatMap((item) => (item.leaving ? [item.key] : [])));
   // MAZ-276: tell Activity which personal entries are listed, so a hidden one leaves the selection.
   const listedIds = rows.flatMap((row) => (row.source === "personal" ? [row.entry.id] : [])).join(" ");
   const report = selection?.listed;
@@ -322,7 +332,7 @@ function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKe
     const row = [...document.querySelectorAll<HTMLElement>("[data-row-key]")].find((element) => element.dataset.rowKey === pickKey);
     if (row) autoSelect({ entry: first.entry, row });
   }, [autoSelect, pickKey, first]);
-  if (rows.length === 0) return null;
+  if (shown.length === 0) return null;
   const context: RowContext = {
     categories: new Map(ledger?.categories.map((category) => [category.id, category])),
     accounts: new Map(ledger?.accounts.map((account) => [account.id, account.name])),
@@ -334,23 +344,33 @@ function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKe
     onOpen,
     selection,
   };
-  const groups = grouped ? groupByDay(rows) : [{ date: "", rows }];
+  const groups = grouped ? groupByDay(shown.map((item) => item.item)) : [{ date: "", rows: shown.map((item) => item.item) }];
+  // Totals count only the rows still listed, not those fading out.
+  const listedGroups = grouped ? groupByDay(rows) : [{ date: "", rows }];
   const totalOf = (index: number) => {
-    const group = groups[index];
-    return group && grouped && (complete || index < groups.length - 1) ? dayTotal(group.rows, currency, today) : null;
+    const date = groups[index]?.date;
+    const at = listedGroups.findIndex((group) => group.date === date);
+    const group = listedGroups[at];
+    return group && grouped && (complete || at < listedGroups.length - 1) ? dayTotal(group.rows, currency, today) : null;
   };
   const dayTotalText = (total: { cents: number; currency: string } | null) =>
     total ? (
       <span className="day-group__total">
         <span className="visually-hidden">Day total </span>
-        <Money cents={total.cents} currency={total.currency} tone={total.cents > 0 ? "income" : "expense"} signed />
+        <Money count cents={total.cents} currency={total.currency} tone={total.cents > 0 ? "income" : "expense"} signed />
       </span>
     ) : null;
 
-  if (layout === "table") return <RowTable groups={groups} context={context} totalOf={totalOf} dayTotalText={dayTotalText} />;
+  const inserts = animateInserts ? "" : undefined;
+  if (layout === "table") return <RowTable groups={groups} context={context} totalOf={totalOf} dayTotalText={dayTotalText} leaving={leaving} animateInserts={animateInserts} />;
 
-  const row = (item: ActivityRow) => <Row key={item.key} row={item} context={context} />;
-  if (!grouped) return <ul className="results">{rows.map(row)}</ul>;
+  const row = (item: ActivityRow) => <Row key={item.key} row={item} context={context} leaving={leaving.has(item.key)} />;
+  if (!grouped)
+    return (
+      <ul className="results" data-animate-inserts={inserts}>
+        {groups[0]?.rows.map(row)}
+      </ul>
+    );
   return (
     <div className="day-groups">
       {groups.map((group, index) => (
@@ -361,7 +381,9 @@ function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKe
             </h2>
             {dayTotalText(totalOf(index))}
           </div>
-          <ul className="results day-group__rows">{group.rows.map(row)}</ul>
+          <ul className="results day-group__rows" data-animate-inserts={inserts}>
+            {group.rows.map(row)}
+          </ul>
         </div>
       ))}
     </div>
@@ -403,7 +425,8 @@ function sharedSplit(entry: SharedEntry): string {
   return ways ? `${payerName(entry.payer)} paid · ${String(ways)} ways` : `${payerName(entry.payer)} paid`;
 }
 
-function Row({ row, context }: { row: ActivityRow; context: RowContext }) {
+function Row({ row, context, leaving }: { row: ActivityRow; context: RowContext; leaving: boolean }) {
+  const motion = leaving ? leavingProps : undefined;
   const { categories, accounts, ledger, currency, today, grouped, selectedKey, onOpen } = context;
   const selected = row.key === selectedKey;
   if (row.source === "personal") {
@@ -417,7 +440,7 @@ function Row({ row, context }: { row: ActivityRow; context: RowContext }) {
     // `iphone-activity`: the account (or the category), then the split and the repeat.
     const meta = [row.pending ? "Waiting to sync" : null, expected ? "Expected" : null, account ?? category?.name, split ? (split.people ? `split ${String(split.people)} ways` : "your share") : null, repeat ? repeat.toLowerCase() : null].filter(Boolean).join(" · ");
     return (
-      <li className={cx("results__row activity-row", selected && "activity-row--selected")} style={tileStyle({ ...category, entryKind: entry.kind })}>
+      <li className={cx("results__row activity-row", selected && "activity-row--selected")} style={tileStyle({ ...category, entryKind: entry.kind })} {...motion}>
         <button
           type="button"
           className="activity-row__main"
@@ -449,7 +472,7 @@ function Row({ row, context }: { row: ActivityRow; context: RowContext }) {
   }
   const { entry } = row;
   return (
-    <li className="results__row activity-row" style={tileStyle(entry.category)}>
+    <li className="results__row activity-row" style={tileStyle(entry.category)} {...motion}>
       <Link to="/households/$id/expenses/$expenseId" params={{ id: entry.householdId, expenseId: entry.id }} className="activity-row__main" data-row-key={row.key}>
         <span className="category-dot">
           <Icon name={categoryIcon(entry.category.icon)} size={18} />
@@ -525,14 +548,19 @@ function RowTable({
   context,
   totalOf,
   dayTotalText,
+  leaving,
+  animateInserts,
 }: {
   groups: { date: string; rows: ActivityRow[] }[];
+  /** Rows fading out after a delete: drawn, but not counted or reachable. */
+  leaving: ReadonlySet<string>;
+  animateInserts: boolean;
   context: RowContext;
   totalOf: (index: number) => { cents: number; currency: string } | null;
   dayTotalText: (total: { cents: number; currency: string } | null) => ReactNode;
 }) {
   const hintId = useId();
-  const personal = new Map(groups.flatMap((group) => group.rows).flatMap((row) => (row.source === "personal" ? [[row.key, row.entry] as const] : [])));
+  const personal = new Map(groups.flatMap((group) => group.rows).flatMap((row) => (row.source === "personal" && !leaving.has(row.key) ? [[row.key, row.entry] as const] : [])));
   const { selection } = context;
   const picking = Boolean(selection && selection.ids.size > 0);
 
@@ -573,7 +601,7 @@ function RowTable({
 
   return (
     <>
-      <table className={cx("activity-table", picking && "activity-table--picking")} aria-describedby={hintId} onKeyDown={onKeyDown}>
+      <table className={cx("activity-table", picking && "activity-table--picking")} aria-describedby={hintId} onKeyDown={onKeyDown} data-animate-inserts={animateInserts ? "" : undefined}>
         <TableHead pick={Boolean(selection)} rows={[...personal.values()]} selection={selection} />
         {groups.map((group, index) => (
           <tbody key={group.date || "results"}>
@@ -588,7 +616,7 @@ function RowTable({
               </tr>
             ) : null}
             {group.rows.map((row) => (
-              <TableRow key={row.key} row={row} context={context} />
+              <TableRow key={row.key} row={row} context={context} leaving={leaving.has(row.key)} />
             ))}
           </tbody>
         ))}
@@ -615,7 +643,8 @@ function RowTable({
   );
 }
 
-function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
+function TableRow({ row, context, leaving }: { row: ActivityRow; context: RowContext; leaving: boolean }) {
+  const motion = leaving ? leavingProps : undefined;
   const { categories, accounts, ledger, today, grouped, selectedKey, onOpen } = context;
   const selected = row.key === selectedKey;
   if (row.source === "shared") {
@@ -623,7 +652,7 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
     // Only the payer gets the account they paid with (`web-activity`: Rent's Main chequing).
     const paidWith = entry.accountId ? accounts.get(entry.accountId) : undefined;
     return (
-      <tr className="activity-table__row" style={tileStyle(entry.category)}>
+      <tr className="activity-table__row" style={tileStyle(entry.category)} {...motion}>
         {/* A shared expense belongs to its household: no checkbox (MAZ-276, owner decision). */}
         {context.selection ? <td className="activity-table__pick" /> : null}
         <td>
@@ -654,7 +683,7 @@ function TableRow({ row, context }: { row: ActivityRow; context: RowContext }) {
   const { selection } = context;
   const picked = selection?.ids.has(entry.id) ?? false;
   return (
-    <tr className={cx("activity-table__row", selected && "activity-table__row--selected", picked && "activity-table__row--picked")} style={tileStyle({ ...category, entryKind: entry.kind })}>
+    <tr className={cx("activity-table__row", selected && "activity-table__row--selected", picked && "activity-table__row--picked")} style={tileStyle({ ...category, entryKind: entry.kind })} {...motion}>
       {selection ? (
         <td className="activity-table__pick">
           {/* X ticks the focused row, as E and ⌫ reach the row's actions, so the box stays out of the tab order. */}

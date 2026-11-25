@@ -12,6 +12,7 @@
 @import "./inbox.css";
 @import "./settings.css";
 @import "./profile.css";
+@import "./motion.css";
 
 *,
 *::before,
@@ -40,14 +41,41 @@ body {
   outline-offset: 2px;
 }
 
+/*
+ * Reduced motion (docs/design/motion.md#reduced-motion): nothing slides, scales, shakes or counts.
+ * Every distance is multiplied by --pk-motion, so at 0 the same keyframes become a fade, and the
+ * longer durations drop to `quick`. Fades stay. `data-motion="off"` (tests and card captures, see
+ * src/design/motion.ts) also drops every duration to 0, so nothing is captured mid-way.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+  :root {
+    --pk-motion: 0;
+    --pk-press: 1;
+    --pk-dur-standard: var(--pk-dur-quick);
+    --pk-dur-emphasized: var(--pk-dur-quick);
+  }
+
+  html {
     scroll-behavior: auto !important;
   }
+}
+
+:root[data-motion="off"] {
+  --pk-motion: 0;
+  --pk-press: 1;
+  --pk-dur-quick: 0ms;
+  --pk-dur-standard: 0ms;
+  --pk-dur-emphasized: 0ms;
+  --pk-dur-linger: 0ms;
+}
+
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
 }
 
 .visually-hidden {

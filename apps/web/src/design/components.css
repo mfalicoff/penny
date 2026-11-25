@@ -263,7 +263,6 @@
   border-radius: 16px;
   background: var(--pk-fill);
   cursor: pointer;
-  transition: background-color 0.15s;
 }
 
 .switch::after {
@@ -276,7 +275,6 @@
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
-  transition: left 0.15s;
 }
 
 .switch:checked {
@@ -709,7 +707,6 @@
   padding: 8px 8px 8px 14px;
   border-radius: 22px;
   pointer-events: auto;
-  animation: toast-in 0.2s ease-out;
 }
 
 .pk-toast > .icon {
@@ -780,13 +777,6 @@
   background: var(--pk-fill);
   color: var(--pk-tint-text);
   font-size: 0.9375rem;
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
 }
 
 /* ---------- lists of links ---------- */

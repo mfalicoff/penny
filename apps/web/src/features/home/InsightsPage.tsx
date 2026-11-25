@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useId, useMemo } from "react";
+import { useId, useMemo, useRef } from "react";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { Icon } from "../../design/Icon";
 import { categoryTint, tileStyle } from "../../design/categoryTint";
@@ -10,6 +10,7 @@ import { currentMonth, monthLabel, shiftMonth } from "../households/model";
 import { categoryComparison, groupSmall, monthsEnding, percentOf, spendingChange, type CategoryChange, type InsightsSearch, type MonthReport } from "./model";
 import { MoneyFlowChart } from "./MoneyFlowChart";
 import { MonthBar, Panel } from "./parts";
+import { usePeriodSlide } from "../../design/motion";
 import { useMonthReport } from "./useMonthReport";
 import { useMonthTotals } from "./useMonthTotals";
 
@@ -32,6 +33,9 @@ const monthName = (month: string) => monthLabel(month).split(" ")[0] ?? month;
 export function InsightsPage({ search }: { search: InsightsSearch }) {
   const navigateTo = useNavigate({ from: "/insights" });
   const month = search.month ?? currentMonth();
+  // docs/design/motion.md, Month and period changes.
+  const content = useRef<HTMLDivElement>(null);
+  usePeriodSlide(content, month);
   const previousMonth = shiftMonth(month, -1);
   const { ledger, report } = useMonthReport(month);
   const { report: previous } = useMonthReport(previousMonth);
@@ -41,7 +45,7 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
   const label = monthLabel(month);
 
   return (
-    <div className="page insights">
+    <div ref={content} className="page insights">
       <MonthBar
         month={month}
         onChange={(next) => {
@@ -56,19 +60,19 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
             <div>
               <dt>Came in</dt>
               <dd>
-                <Money cents={report.recorded.income} currency={currency} />
+                <Money count cents={report.recorded.income} currency={currency} />
               </dd>
             </div>
             <div>
               <dt>Went out</dt>
               <dd>
-                <Money cents={report.recorded.expense + report.recorded.investment} currency={currency} />
+                <Money count cents={report.recorded.expense + report.recorded.investment} currency={currency} />
               </dd>
             </div>
             <div>
               <dt>{report.recordedNet < 0 ? "Overspent" : "Left over"}</dt>
               <dd>
-                <Money cents={Math.abs(report.recordedNet)} currency={currency} />
+                <Money count cents={Math.abs(report.recordedNet)} currency={currency} />
               </dd>
             </div>
             <div>

@@ -22,6 +22,7 @@ import { useLedgerWorkspace } from "../organize/workspace";
 import type { HouseholdView } from "./context";
 import { useLedgerChoices, type LedgerAccountChoice } from "./choices";
 import { describeSharedError } from "./errors";
+import { shake } from "../../design/motion";
 import {
   centsToInput,
   eligibleMembers,
@@ -366,6 +367,9 @@ export function ExpenseFormDialog({
       else if (first === "date") dateRef.current?.focus();
       else if (first === "payer") payerRef.current?.querySelector<HTMLInputElement>("input:not([disabled])")?.focus();
       else (splitRef.current?.querySelector<HTMLInputElement>("input[type=text]:not([disabled]), input[inputmode]:not([disabled])") ?? splitRef.current)?.focus();
+      // docs/design/motion.md, Feedback: the refused field shakes (not under reduced motion); its error text says why.
+      const focused = document.activeElement;
+      if (focused instanceof HTMLElement) shake(focused.closest(".field, fieldset") ?? focused);
       return;
     }
     if (result.input) save.mutate({ input: result.input, date: draft.date, repeat: draft.repeat, active: draft.active, revision });

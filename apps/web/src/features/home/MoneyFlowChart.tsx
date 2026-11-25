@@ -123,19 +123,19 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action, ca
             <div>
               <dt>Came in</dt>
               <dd>
-                <Money cents={flow.income} currency={currency} />
+                <Money count cents={flow.income} currency={currency} />
               </dd>
             </div>
             <div>
               <dt>Went out</dt>
               <dd>
-                <Money cents={flow.expense + flow.investment} currency={currency} />
+                <Money count cents={flow.expense + flow.investment} currency={currency} />
               </dd>
             </div>
             <div>
               <dt>{flow.gap ? "Beyond income" : "Left over"}</dt>
               <dd>
-                <Money cents={flow.gap || flow.remaining} currency={currency} />
+                <Money count cents={flow.gap || flow.remaining} currency={currency} />
               </dd>
             </div>
           </dl>
@@ -279,8 +279,9 @@ function Sankey({ flow, selected, hovered, onHover, currency, describe, toggle, 
               }}
             >
               <title>{`${node.label}: ${formatCents(node.amount, currency)}`}</title>
-              <path d={path} fill={color} fillOpacity={opacity(node.id)} />
-              <rect x={left ? leftX : rightX} y={node.y} width={BAR} height={Math.max(2, node.height)} rx={3} fill={color} />
+              {/* docs/design/motion.md: bands and bars move to a new month's values; CSS reads `d`, `y` and `height` from the style. */}
+              <path className="flow-band" d={path} style={{ d: `path("${path}")` }} fill={color} fillOpacity={opacity(node.id)} />
+              <rect className="flow-bar" x={left ? leftX : rightX} y={node.y} width={BAR} height={Math.max(2, node.height)} style={{ y: node.y, height: Math.max(2, node.height) }} rx={3} fill={color} />
               <rect className="flow-node__ring" x={left ? 4 : rightX - 4} y={ringTop} width={left ? leftX : width - rightX} height={ringBottom - ringTop} rx={8} />
               <text x={labelX} y={center - 4} textAnchor={left ? "end" : "start"} className="flow-node__label">
                 {shortLabel(node.label, geometry.label)}

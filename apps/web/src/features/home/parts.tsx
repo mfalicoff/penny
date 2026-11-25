@@ -12,6 +12,7 @@ import { Icon } from "../../design/Icon";
 import { categoryTint, tileStyle } from "../../design/categoryTint";
 import { Money } from "../../design/Money";
 import { useToastEntry } from "../../design/states";
+import { leavingProps, useFadingHighlight, useListMotion } from "../../design/motion";
 import { categoryIcon, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
 import { currentMonth, dayLabel, monthLabel, shiftMonth } from "../households/model";
@@ -152,7 +153,7 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
  * calendar sheet's selected day, `iphone-calendar`) sit under the day's heading, so they leave
  * the date out: "Main chequing · monthly".
  */
-export function EntryRows({ entries, ledger, currency, onOpen, recent = false, day = false }: { entries: readonly OverviewEntry[]; ledger: Ledger; currency: string | undefined; onOpen: (entry: Transaction, opener: HTMLElement) => void; recent?: boolean; day?: boolean }) {
+export function EntryRows({ entries, ledger, currency, onOpen, recent = false, day = false, context = "" }: { entries: readonly OverviewEntry[]; ledger: Ledger; currency: string | undefined; onOpen: (entry: Transaction, opener: HTMLElement) => void; recent?: boolean; day?: boolean; context?: string }) {
   const categories = new Map(ledger.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger.accounts.map((account) => [account.id, account.name]));
   const today = useToday();
@@ -161,9 +162,13 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
   const rules = new Map(ledger.recurring.map((rule) => [rule.id, rule.frequency]));
   // iphone-saved-toast: the row just saved is tinted with its category while its toast shows.
   const saved = useToastEntry();
+  const unsaving = useFadingHighlight(saved);
+  // docs/design/motion.md, Lists: a saved row rises in, a deleted one fades and its space closes.
+  const { rows, animateInserts } = useListMotion(entries, entryKey, context);
   return (
-    <ul className="results home-rows">
-      {entries.map((entry) => {
+    <ul className="results home-rows" data-animate-inserts={animateInserts ? "" : undefined}>
+      {rows.map(({ item: entry, leaving }) => {
+        const motion = leaving ? leavingProps : undefined;
         const category = categories.get(entry.categoryId);
         const shared = isSharedEntry(entry) ? entry : null;
         const account = !shared && entry.accountId ? accounts.get(entry.accountId) : undefined;
@@ -226,14 +231,14 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
         );
         if (entry.scheduled) {
           return (
-            <li key={entry.id} className="results__row activity-row">
+            <li key={entry.id} className="results__row activity-row" {...motion}>
               <div className="activity-row__main activity-row__main--static">{body}</div>
             </li>
           );
         }
         if (shared) {
           return (
-            <li key={entry.id} className="results__row activity-row">
+            <li key={entry.id} className="results__row activity-row" {...motion}>
               <Link to="/households/$id/expenses/$expenseId" params={{ id: shared.householdId, expenseId: shared.householdExpenseId }} className="activity-row__main">
                 {body}
               </Link>
@@ -242,7 +247,7 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
         }
         const highlighted = saved === entry.id;
         return (
-          <li key={entry.id} className={cx("results__row activity-row", highlighted && "activity-row--saved")} style={highlighted ? tileStyle({ ...category, entryKind: entry.kind }) : undefined}>
+          <li key={entry.id} className={cx("results__row activity-row", highlighted && "activity-row--saved", unsaving === entry.id && "activity-row--unsaving")} style={highlighted || unsaving === entry.id ? tileStyle({ ...category, entryKind: entry.kind }) : undefined} {...motion}>
             <button
               type="button"
               className="activity-row__main"
@@ -259,6 +264,8 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
     </ul>
   );
 }
+
+const entryKey = (entry: OverviewEntry) => entry.id;
 
 /** Recent's date, as the cards write it: "Today", "Yesterday", else "Oct 9". */
 function recentDay(date: string, today: string): string {

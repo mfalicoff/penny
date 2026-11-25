@@ -1,4 +1,4 @@
-import { test as base, type Request } from "@playwright/test";
+import { test as base, type Page, type Request } from "@playwright/test";
 
 export { expect } from "@playwright/test";
 
@@ -83,3 +83,14 @@ export const test = base.extend<{ mockedApi: MockedApi }>({
     { auto: true },
   ],
 });
+
+/**
+ * Turns motion off for a page (docs/design/motion.md#tests-and-captures): `<html data-motion="off">`
+ * drops every motion token to 0 and stops the JavaScript tweens, so a capture never lands mid-way.
+ * For screenshots and card captures only; journey tests keep motion on, as a person sees the app.
+ */
+export async function motionOff(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    document.documentElement.dataset.motion = "off";
+  });
+}

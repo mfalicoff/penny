@@ -61,13 +61,13 @@ export function EntryDetailDialog({ entry, onClose, initialAction = "detail" }: 
  * On a desktop the panel steps aside while Edit is open (`web-edit-entry`: Activity with nothing
  * selected behind the form), and `onEditing` tells Activity so, to drop the row's selection.
  */
-export function EntryDetailPanel({ entry, onClose, initialAction = "detail", touch = false, onEditing }: DetailProps & { touch?: boolean; onEditing?: (editing: boolean) => void }) {
+export function EntryDetailPanel({ entry, onClose, initialAction = "detail", touch = false, onEditing, switching = false }: DetailProps & { touch?: boolean; onEditing?: (editing: boolean) => void; switching?: boolean | undefined }) {
   const titleId = useId();
   const editRef = useRef<HTMLButtonElement>(null);
   return (
     <EntryDetailFrame entry={entry} onClose={onClose} initialAction={initialAction} keepOnSave={touch} onModeChange={onEditing ? (mode) => { onEditing(mode === "edit"); } : undefined}>
       {(sheet, mode) => (
-        <aside className={touch ? "entry-panel entry-panel--pane" : "entry-panel"} aria-labelledby={titleId} hidden={!touch && mode === "edit"}>
+        <aside className={cx(touch ? "entry-panel entry-panel--pane" : "entry-panel", switching && "entry-panel--switch")} aria-labelledby={titleId} hidden={!touch && mode === "edit"}>
           {touch ? <div className="entry-panel__glow" aria-hidden="true" /> : null}
           {sheet({ titleId, editRef, layout: touch ? "pane" : "panel" })}
         </aside>

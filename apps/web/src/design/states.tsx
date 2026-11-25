@@ -1,6 +1,7 @@
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button, cx } from "./controls";
 import { Icon, type IconName } from "./Icon";
+import { duration } from "./motion";
 
 /**
  * Named loading, empty, error, offline and saving states (MAZ-85; specimens `offline`,
@@ -234,11 +235,18 @@ function keyboardFocus(target: Element): boolean {
 /** Hosts one toast at a time (specimen `saved-toast`), announced politely, with optional Undo. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastState | null>(null);
+  // The toast that was just dismissed, kept while it fades out (docs/design/motion.md, Saving).
+  const [leaving, setLeaving] = useState<ToastState | null>(null);
+  const current = useRef<ToastState | null>(null);
+  useEffect(() => {
+    current.current = toast;
+  }, [toast]);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const sequence = useRef(0);
 
   const dismiss = useCallback(() => {
+    if (current.current && duration("quick") > 0) setLeaving(current.current);
     setToast(null);
     setHovered(false);
     setFocused(false);
@@ -246,6 +254,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback((input: ToastInput) => {
     sequence.current += 1;
     setToast({ ...input, id: sequence.current });
+    setLeaving(null);
     // A new toast is a new element: whatever held the last one doesn't hold this one.
     setHovered(false);
     setFocused(false);
@@ -261,13 +270,27 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     };
   }, [toast, delay, dismiss]);
 
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = window.setTimeout(() => {
+      setLeaving(null);
+    }, duration("quick") + 50);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [leaving]);
+
   const api = useMemo(() => ({ show, dismiss }), [show, dismiss]);
-  const undoOnly = Boolean(toast?.onUndo) && !toast?.action;
 
   return (
     <ToastContext value={api}>
       <ToastEntryContext value={toast?.entryId ?? null}>{children}</ToastEntryContext>
       <div className="toast-region" aria-live="polite" aria-atomic="true">
+        {leaving && !toast ? (
+          <div key={leaving.id} className={cx("pk-toast", "glass", "pk-toast--leaving", leaving.tone === "error" && "pk-toast--error", Boolean(leaving.action) && "pk-toast--stacked")} inert aria-hidden="true">
+            <ToastContent toast={leaving} onDismiss={() => undefined} />
+          </div>
+        ) : null}
         {toast ? (
           <div
             key={toast.id}
@@ -286,48 +309,58 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               if (!(next instanceof Node && event.currentTarget.contains(next))) setFocused(false);
             }}
           >
-            {toast.tile && toast.tone !== "error" ? (
-              <span className="pk-toast__tile" style={{ background: toast.tile.color }} aria-hidden="true">
-                <Icon name={toast.tile.icon} size={20} />
-              </span>
-            ) : (
-              <Icon name={toast.tone === "error" ? "alert-circle" : "checkmark-circle"} size={22} />
-            )}
-            <div className="pk-toast__body">
-              <div className="pk-toast__title">{toast.title}</div>
-              {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
-            </div>
-            <div className="pk-toast__actions">
-              {toast.action ? (
-                <Button
-                  variant="quiet"
-                  onClick={() => {
-                    toast.action?.onClick();
-                    dismiss();
-                  }}
-                >
-                  {toast.action.label}
-                </Button>
-              ) : null}
-              {toast.onUndo ? (
-                <Button
-                  variant="quiet"
-                  className={undoOnly ? "pk-toast__undo" : undefined}
-                  onClick={() => {
-                    toast.onUndo?.();
-                    dismiss();
-                  }}
-                >
-                  Undo
-                </Button>
-              ) : null}
-              {/* Undo alone is the saved toast's only button (`iphone-saved-toast`); others keep a close button (`web-receipt-attached-toast`). */}
-              {undoOnly ? null : <Button variant="quiet" iconOnly icon="close" aria-label="Dismiss" onClick={dismiss} />}
-            </div>
+            <ToastContent toast={toast} onDismiss={dismiss} />
           </div>
         ) : null}
       </div>
     </ToastContext>
+  );
+}
+
+/** A toast's tile or icon, text and buttons; the dismissed copy draws the same while it fades. */
+function ToastContent({ toast, onDismiss }: { toast: ToastState; onDismiss: () => void }) {
+  const undoOnly = Boolean(toast.onUndo) && !toast.action;
+  return (
+    <>
+      {toast.tile && toast.tone !== "error" ? (
+        <span className="pk-toast__tile" style={{ background: toast.tile.color }} aria-hidden="true">
+          <Icon name={toast.tile.icon} size={20} />
+        </span>
+      ) : (
+        <Icon name={toast.tone === "error" ? "alert-circle" : "checkmark-circle"} size={22} />
+      )}
+      <div className="pk-toast__body">
+        <div className="pk-toast__title">{toast.title}</div>
+        {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
+      </div>
+      <div className="pk-toast__actions">
+        {toast.action ? (
+          <Button
+            variant="quiet"
+            onClick={() => {
+              toast.action?.onClick();
+              onDismiss();
+            }}
+          >
+            {toast.action.label}
+          </Button>
+        ) : null}
+        {toast.onUndo ? (
+          <Button
+            variant="quiet"
+            className={undoOnly ? "pk-toast__undo" : undefined}
+            onClick={() => {
+              toast.onUndo?.();
+              onDismiss();
+            }}
+          >
+            Undo
+          </Button>
+        ) : null}
+        {/* Undo alone is the saved toast's only button (`iphone-saved-toast`); others keep a close button (`web-receipt-attached-toast`). */}
+        {undoOnly ? null : <Button variant="quiet" iconOnly icon="close" aria-label="Dismiss" onClick={onDismiss} />}
+      </div>
+    </>
   );
 }
 

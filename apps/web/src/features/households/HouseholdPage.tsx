@@ -26,6 +26,7 @@ import { byWeek, currentMonth, isCurrent, memberName, monthLabel, people } from 
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab, useManageActions } from "./PeopleTab";
 import { RuleDialog } from "./RuleDialog";
+import { usePeriodSlide } from "../../design/motion";
 import type { HouseholdSearch, HouseholdTab } from "./search";
 
 /**
@@ -98,6 +99,9 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   const emailEnabled = useEmailEnabled();
   const [inviting, setInviting] = useState(false);
   const recordHintId = useId();
+  // docs/design/motion.md, Month and period changes.
+  const content = useRef<HTMLDivElement>(null);
+  usePeriodSlide(content, month);
   const who = people(detail, email);
   const view = householdView(householdId, detail, who, month, archived);
   const manage = useManageActions(view, recap.data);
@@ -180,7 +184,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   );
 
   return (
-    <div className={cx("page household", split && "household--split")}>
+    <div ref={content} className={cx("page household", split && "household--split")}>
       <GroupToolbar ownAdd lead={tab === "expenses" || tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next }); }} /> : null}>
         {historyInBar ? (
           <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "history" })} className={toolClass()} aria-current={tab === "history" ? "page" : undefined}>
