@@ -29,7 +29,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 | Accounts and categories | `OrganizeJourneyTests` | Create an account; create, use and rename a category (one id, new name everywhere) | App relaunch | Yes |
 | Recurrence | `OrganizeJourneyTests` | New monthly schedule records its first date; relaunching on a later day records the next occurrence | App relaunch at a later date | Yes (2 × amount) |
 | Offline, reconnect, conflicts | `NetworkFailureTests`, `SyncConflictTests`, `EntryJourneyTests` | Dropped connections and 500s, pending banner, terminate while offline, field-by-field merge of two devices, delete-versus-edit | App relaunch while offline | Yes |
-| Households and shared expenses | `HouseholdJourneyTests` | Two users on the real API: invite, join, split, payment, stale edit, links, scanner without camera | — | Split amounts |
+| Households and shared expenses | `HouseholdJourneyTests` | Two users on the real API: invite, join, split, payment, stale edit, links, scanner without camera, a shared schedule opened from Recurring | — | Split amounts |
 | Trips | `TripJourneyTests` | Personal trip shared with earlier private expenses, splits, totals counted once, delete guard | — | Yes |
 | Receipts | `ReceiptJourneyTests` | Photo and PDF round trips (SHA-256), failures, oversized and renamed files, session end during upload | — | Bytes |
 | Reports | `OverviewJourneyTests` | Left to spend before Projected, money flow focus, the calendar sheet's day selection and Close, Insights from the flow card's pill, Show as a table, XXXL value lists | — | Demo data |
@@ -73,7 +73,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-trip-detail` | `TripJourneyTests` | Only you, balances, totals counted once | Covered (MAZ-76) |
 | `iphone-trip-form` | `TripJourneyTests` | New trip | Covered (MAZ-76) |
 | `iphone-settings` | `SmokeJourneyTests`, `SettingsJourneyTests`, `AccessibilityAuditTests` | Currency persistence, audits at XXXL | Covered |
-| `iphone-recurring` | `OrganizeJourneyTests` | New schedule saved on the server | Covered; pause/remove swipe has no UI journey (unit-tested) |
+| `iphone-recurring` | `OrganizeJourneyTests`, `HouseholdJourneyTests` | New schedule saved on the server; a shared schedule opens its household with its form | Covered; pause/remove swipe has no UI journey (unit-tested) |
 | `iphone-schedule-detail` | `OrganizeJourneyTests` | Occurrences recorded across relaunches at a later day | Partly: anchor-31 is unit-tested only |
 | `iphone-accounts` | `OrganizeJourneyTests` | — | Covered; in-use removal guard is unit-tested only |
 | `iphone-account-form` | `OrganizeJourneyTests` | — | Covered |

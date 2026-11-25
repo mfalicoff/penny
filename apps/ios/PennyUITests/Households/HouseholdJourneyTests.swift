@@ -162,6 +162,37 @@ final class HouseholdJourneyTests: PennyUITestCase {
         try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
     }
 
+    /// Recurring lists a household's shared schedule with the personal ones; tapping its row
+    /// opens the household with the schedule's form over it (MAZ-198's routing, tapped for real).
+    @MainActor
+    func test_whenASharedScheduleIsTappedOnRecurring_Household_ShouldOpenWithItsForm() async throws {
+        let stack = try await stack()
+        let alex = try await makeAccount("shared-schedule")
+        let household = try await stack.createHousehold(token: alex.token, name: "Maison \(Device.name)")
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        let nextDate = formatter.string(from: Date().addingTimeInterval(10 * 86_400))
+        let rule = try await stack.createSharedRecurring(
+            token: alex.token, household: household, payer: alex.userID, title: "Streaming", cents: 1600,
+            nextDate: nextDate)
+        let penny = try await launch()
+        try penny.signIn(email: alex.email, password: alex.password)
+
+        try penny.openSettingsPage("recurring", screen: AccessibilityID.Screen.recurring)
+        let row = AccessibilityID.Organize.sharedSchedule(rule)
+        try penny.wait(for: row, timeout: 20)
+        screenshot("recurring-shared-schedule")
+        try penny.tap(row)
+
+        try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
+        try penny.wait(for: IDs.Screen.expenseForm, timeout: 20)
+        XCTAssertEqual(try penny.value(of: IDs.formTitle), "Streaming", "the tapped schedule's form is open")
+        try penny.waitForAbsence(of: AccessibilityID.Screen.recurring)
+        screenshot("shared-schedule-form-over-household")
+    }
+
     /// The scanner asks for the camera only when it opens; without one (the simulator has no
     /// camera, or access is denied) typed entry keeps working. An expired code says so.
     @MainActor

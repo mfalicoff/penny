@@ -47,6 +47,23 @@ extension Stack {
         return id
     }
 
+    /// Adds a monthly shared repeating expense, split equally and paid by `payer`, whose first
+    /// date is `nextDate` (`yyyy-MM-dd`). Returns the rule's id.
+    func createSharedRecurring(
+        token: String, household: String, payer: String, title: String, cents: Int, nextDate: String
+    ) async throws -> String {
+        let body: [String: Any] = [
+            "title": title, "totalCents": cents, "payerUserId": payer, "splitMode": "equal",
+            "category": ["name": "Fun", "icon": "tv-outline", "color": "#B15B7D"], "nextDate": nextDate,
+            "frequency": "monthly",
+        ]
+        let created = try await send("POST", api("/\(household)/recurring"), body: body, token: token)
+        guard let id = (created["rule"] as? [String: Any])?["id"] as? String ?? created["id"] as? String else {
+            throw StackError.malformed("POST /api/households/{id}/recurring")
+        }
+        return id
+    }
+
     func expenses(token: String, household: String) async throws -> [[String: Any]] {
         try await send("GET", api("/\(household)/expenses"), token: token)["expenses"] as? [[String: Any]] ?? []
     }
