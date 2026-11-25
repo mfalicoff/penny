@@ -128,9 +128,23 @@ describe("Activity", () => {
     renderApp("/transactions?month=2026-11");
     const link = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("link", { name: /Hydro/ });
     expect(link).toHaveAttribute("href", "/households/h1/expenses/e1");
-    expect(link).toHaveTextContent("Shared · Maison");
+    expect(link).toHaveTextContent("Maison · Bea paid");
     expect(link).toHaveTextContent("your share");
     expect(within(results()).getByRole("button", { name: /Weekend groceries/ })).toBeInTheDocument();
+  });
+
+  it("says who paid a shared row: a member by name, you with the total (iphone-activity, MAZ-275)", async () => {
+    const theirs = { ...sharedRow({ id: "e2", title: "Costco run", date: "2026-11-04", shareCents: 6140, totalCents: 18420 }), payer: { email: "jo@example.test", displayName: "Jo" }, paidByYou: false };
+    const mine = { ...sharedRow({ id: "e3", title: "Shared rent", date: "2026-11-01", shareCents: 145000 }), payerUserId: "me", payer: { email: "me@example.test" }, paidByYou: true };
+    const gone = { ...sharedRow({ id: "e4", title: "Old bill", date: "2026-11-02", shareCents: 1000 }), payer: { email: "deleted@penny.invalid", deleted: true as const }, paidByYou: false };
+    ledgerServer({ transactions: [] }, { shared: [theirs, mine, gone], search: () => [sharedHit(theirs), sharedHit(mine), sharedHit(gone)] });
+    renderApp("/transactions?month=2026-11");
+    const list = await screen.findByRole("region", { name: "Search results" });
+    expect(await within(list).findByRole("link", { name: /Costco run/ })).toHaveTextContent("Maison · Jo paid");
+    expect(within(list).getByRole("link", { name: /Shared rent/ })).toHaveTextContent("Maison · you paid $2,900");
+    const old = within(list).getByRole("link", { name: /Old bill/ });
+    expect(old).toHaveTextContent("Maison · Former member paid");
+    expect(old).not.toHaveTextContent("deleted@penny.invalid");
   });
 
   it("shows this device's entries and the cached shared rows while offline", async () => {
@@ -296,6 +310,21 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("toolbar")).not.toBeInTheDocument();
     expect(within(rentRow).getByRole("checkbox", { name: "Select Rent" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("says who paid a shared row in the Split column, and the payer's account (web-activity, MAZ-275)", async () => {
+    stubDesktop();
+    const theirs = { ...sharedRow({ id: "e2", title: "Costco run", date: "2026-11-04", shareCents: 6140, totalCents: 18420 }), payer: { email: "jo@example.test", displayName: "Jo" }, paidByYou: false };
+    const mine = { ...sharedRow({ id: "e3", title: "Shared rent", date: "2026-11-01", shareCents: 145000 }), payerUserId: "me", payer: { email: "me@example.test" }, paidByYou: true, accountId: "chq" };
+    ledgerServer({ transactions: [] }, { shared: [theirs, mine, hydro], search: () => [sharedHit(theirs), sharedHit(mine), sharedHit(hydro)] });
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    const cells = (name: RegExp) => [...within(table).getByRole("row", { name }).querySelectorAll("td")].map((cell) => cell.textContent);
+    expect(cells(/Costco run/).slice(-4, -2)).toEqual(["—", "Jo paid · 3 ways"]);
+    await waitFor(() => {
+      expect(cells(/Shared rent/).slice(-4, -2)).toEqual(["Chequing", "You paid"]);
+    });
+    expect(cells(/Hydro/).slice(-4, -2)).toEqual(["—", "Bea paid · 2 ways"]);
   });
 
   it("lists the period as a table and opens an entry in the panel beside it, with its split", async () => {

@@ -25,6 +25,8 @@ const shared = {
     totalCents: 9000,
     shareCents: 3000,
     payerUserId: "u1",
+    payer: { email: "bea@example.test" },
+    paidByYou: false,
     category: { name: "Bills", icon: "flash-outline", color: "#336699" },
     note: "",
   },
@@ -63,7 +65,7 @@ describe("search results", () => {
     renderApp("/transactions?q=beverage");
     expect(await screen.findByText("Coffee beans")).toBeInTheDocument();
     expect(screen.getByText("2 matching transactions")).toBeInTheDocument();
-    expect(screen.getByText(/Shared · Maison/)).toBeInTheDocument();
+    expect(screen.getByText(/Maison · bea@example.test paid/)).toBeInTheDocument();
     expect(screen.getByText("−€30.00")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
   });

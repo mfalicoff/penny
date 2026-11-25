@@ -405,14 +405,34 @@ internal sealed class PostgresSharedExpenseTransaction(
             .Households.AsNoTracking()
             .Where(household => householdIds.Contains(household.Id))
             .ToDictionaryAsync(household => household.Id, StringComparer.Ordinal, Cancellation);
+        var payers = await PayersAsync(loaded.Select(expense => expense.PayerId));
         return
         [
             .. loaded.Select(expense => new StoredProjectedExpense(
                 expense,
                 households[expense.HouseholdId].Name,
-                households[expense.HouseholdId].Currency
+                households[expense.HouseholdId].Currency,
+                payers[expense.PayerId]
             )),
         ];
+    }
+
+    // The payers' profiles by user id. Every payer has a user row: a deleted account
+    // stays as a tombstone (MAZ-152).
+    private async Task<Dictionary<string, StoredPayer>> PayersAsync(IEnumerable<string> userIds)
+    {
+        var ids = userIds.Distinct(StringComparer.Ordinal).ToList();
+        if (ids.Count == 0)
+            return new(StringComparer.Ordinal);
+        return await Context
+            .Users.AsNoTracking()
+            .Where(user => ids.Contains(user.Id))
+            .ToDictionaryAsync(
+                user => user.Id,
+                user => new StoredPayer(user.Email, user.DisplayName, user.DeletedAt != null),
+                StringComparer.Ordinal,
+                Cancellation
+            );
     }
 
     public async Task<IReadOnlyList<StoredSharedRule>> ScheduledRulesAsync(
@@ -451,6 +471,7 @@ internal sealed class PostgresSharedExpenseTransaction(
                 .Where(allocation => ruleIds.Contains(allocation.RecurringId))
                 .ToListAsync(Cancellation)
         ).ToLookup(allocation => allocation.RecurringId, StringComparer.Ordinal);
+        var payers = await PayersAsync(rows.Select(row => row.Rule.PayerId));
         return
         [
             .. rows.OrderBy(row => row.Rule.NextDate)
@@ -482,7 +503,8 @@ internal sealed class PostgresSharedExpenseTransaction(
                     row.Rule.AccountId,
                     row.Rule.Frequency,
                     row.Rule.NextDate,
-                    row.Rule.AnchorDay
+                    row.Rule.AnchorDay,
+                    payers[row.Rule.PayerId]
                 )),
         ];
     }

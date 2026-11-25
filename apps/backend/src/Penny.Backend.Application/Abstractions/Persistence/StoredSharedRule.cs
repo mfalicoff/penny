@@ -3,7 +3,7 @@ using Penny.Backend.Domain.Households;
 namespace Penny.Backend.Application.Abstractions.Persistence;
 
 // An active shared recurring rule as the projection previews it, with its household's
-// name and currency. `AccountId` is the payer's private account.
+// name and currency and who pays it. `AccountId` is the payer's private account.
 public sealed record StoredSharedRule(
     string Id,
     string HouseholdId,
@@ -19,5 +19,6 @@ public sealed record StoredSharedRule(
     string? AccountId,
     string Frequency,
     DateOnly NextDate,
-    int AnchorDay
+    int AnchorDay,
+    StoredPayer Payer
 );

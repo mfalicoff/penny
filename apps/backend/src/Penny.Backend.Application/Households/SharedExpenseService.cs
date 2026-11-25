@@ -535,6 +535,8 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         rule.TotalCents,
                         share.AmountCents,
                         rule.PayerId,
+                        ExpensePayerView.From(rule.Payer),
+                        string.Equals(rule.PayerId, userId, StringComparison.Ordinal),
                         rule.Category,
                         rule.Note,
                         null,

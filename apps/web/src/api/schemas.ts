@@ -170,6 +170,14 @@ export const entrySchema = z.object({
   recurringId: id.optional(),
 });
 
+/** `ExpensePayer`: who paid a shared expense (MAZ-275). `deleted`: show "Former member", never the email. */
+export const expensePayerSchema = z.object({
+  email: z.string(),
+  displayName: displayName.optional(),
+  deleted: z.literal(true).optional(),
+});
+export type ExpensePayer = z.infer<typeof expensePayerSchema>;
+
 export const projectedExpenseSchema = z.object({
   id,
   householdId: id,
@@ -180,6 +188,9 @@ export const projectedExpenseSchema = z.object({
   totalCents: z.number().int().min(1).max(99_999_999_999),
   shareCents: cents,
   payerUserId: id,
+  // MAZ-275: who paid, as the household sees them, and whether it was you.
+  payer: expensePayerSchema,
+  paidByYou: z.boolean(),
   category: z.object({
     name: z.string().min(1).max(50),
     icon: z.string().max(80),
