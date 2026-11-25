@@ -45,6 +45,11 @@ public actor LedgerSyncEngine {
     /// (`LedgerService.ForeignReceipt`).
     static let foreignReceipt = "Receipt does not belong to this account."
 
+    /// The same refusal from a server before contract 2.1.0, which sends no `ledger.foreign_receipt`.
+    static func isForeignReceipt(_ error: APIError) -> Bool {
+        error.status == 400 && error.message == foreignReceipt
+    }
+
     public init(
         scope: AccountScope, files: LedgerFileStore, today: @escaping @Sendable () -> PennyDomain.CalendarDate,
         now: @escaping @Sendable () -> Date = { Date() }, retry: ConflictRetryPolicy = .standard
@@ -242,13 +247,14 @@ public actor LedgerSyncEngine {
                     guard storage == .ready else { return .notReady }
                     return finish(
                         revision: server.revision, remote: try Ledger(wire: server.ledger), captured: captured)
-                } catch APIError.badRequest(let message) where message == Self.foreignReceipt {
+                } catch let error as APIError where error.matches(.ledgerForeignReceipt, legacy: Self.isForeignReceipt)
+                {
                     // An upload linked offline (or in a kept draft) for longer than the server keeps
                     // unlinked receipts was cleaned up (MAZ-199): drop the dead links, keep the
                     // entries and merge again onto the same server ledger.
                     switch try await dropDeadReceipts(client, sent: merged, remote: remote) {
                     case .dropped: guard storage == .ready else { return .notReady }
-                    case .noneGone: throw APIError.badRequest(message: message)
+                    case .noneGone: throw error
                     case .writeFailed: return .failed(.storageWriteFailed)
                     }
                 } catch APIError.conflict {

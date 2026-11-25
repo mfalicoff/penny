@@ -192,7 +192,7 @@ public struct ReceiptUploadFailure: Equatable, Sendable {
         switch error {
         case .unauthorized: self.init(message: Self.expired, canRetry: false)
         case .payloadTooLarge: self.init(message: Self.requestTooLarge, canRetry: false)
-        case .badRequest(let message):
+        case .badRequest(let message, _):
             self.init(message: message ?? ReceiptRefusal.unsupported.message, canRetry: false)
         case .invalidRequest: self.init(message: ReceiptRefusal.unsupported.message, canRetry: false)
         case .offline, .timeout, .unreachable: self.init(message: Self.offline, canRetry: true)
