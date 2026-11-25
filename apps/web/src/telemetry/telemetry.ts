@@ -1,50 +1,107 @@
 import { z } from "zod";
+import type { TelemetryChoices } from "./consent";
 
 /**
- * Opt-in browser telemetry (MAZ-129). Off unless the server that serves the app sets a
- * collector: the web container's PENNY_WEB_TELEMETRY_URL (or the NixOS module's
- * `webTelemetryUrl`) is published as `/telemetry.json`. Nothing about the collector is compiled
- * into the bundle, and the Faro SDK is downloaded only when it is on.
+ * Opt-in browser telemetry (MAZ-129). Nothing is sent unless all of these hold:
+ *
+ * - the server offers it (`/api/info` `telemetry.web`, set by the operator's
+ *   `ClientTelemetry__FaroUrl`);
+ * - the person is signed in, outside the demo;
+ * - they chose to share at least one kind (./consent.ts).
+ *
+ * Reports go to the API (`POST /api/telemetry/faro`) with the session cookie, never to a
+ * collector: the API checks, scrubs and forwards them on its private network. The Faro SDK
+ * is downloaded only once telemetry is wanted. Errors before sign-in are not reported.
  */
-export const telemetryConfigSchema = z.object({
-  // Empty when the server has telemetry off. Grafana Cloud's Faro collector, or your own Alloy
-  // (browsers refuse an http collector from an https page).
-  collectorUrl: z.union([z.literal(""), z.url({ protocol: /^https?$/ })]).catch(""),
-});
+export interface TelemetryState {
+  /** Signed in, and not the demo. */
+  active: boolean;
+  serverWeb: boolean;
+  serverReplay: boolean;
+  choices: TelemetryChoices;
+}
 
-export type TelemetryConfig = z.infer<typeof telemetryConfigSchema>;
+export const OFF: TelemetryState = {
+  active: false,
+  serverWeb: false,
+  serverReplay: false,
+  choices: { errors: false, performance: false, replay: false, decided: false },
+};
 
-/** Reads the server's telemetry settings; any failure means telemetry stays off. */
-export async function loadTelemetryConfig(fetcher: typeof fetch = fetch): Promise<TelemetryConfig> {
-  try {
-    const response = await fetcher("/telemetry.json", { cache: "no-store", credentials: "omit" });
-    if (!response.ok) return { collectorUrl: "" };
-    return telemetryConfigSchema.parse(await response.json());
-  } catch {
-    return { collectorUrl: "" };
-  }
+let state: TelemetryState = OFF;
+
+/** The state Faro's beforeSend reads for every item. */
+export function telemetryState(): TelemetryState {
+  return state;
+}
+
+/** Whether any report may be sent now. */
+export function wantsTelemetry(next: TelemetryState): boolean {
+  const { errors, performance, replay } = next.choices;
+  return (
+    next.active &&
+    next.serverWeb &&
+    (errors || performance || (replay && next.serverReplay))
+  );
+}
+
+/** Whether Session Replay may record now. */
+export function wantsReplay(next: TelemetryState): boolean {
+  return (
+    next.active && next.serverWeb && next.serverReplay && next.choices.replay
+  );
 }
 
 async function loadVersion(fetcher: typeof fetch): Promise<string> {
   try {
-    const response = await fetcher("/version.json", { cache: "no-store", credentials: "omit" });
+    const response = await fetcher("/version.json", {
+      cache: "no-store",
+      credentials: "omit",
+    });
     if (!response.ok) return "unknown";
-    const { version } = z.object({ version: z.string().min(1).max(100) }).parse(await response.json());
+    const { version } = z
+      .object({ version: z.string().min(1).max(100) })
+      .parse(await response.json());
     return version;
   } catch {
     return "unknown";
   }
 }
 
-/** Starts telemetry when the server turned it on. Never throws and never blocks the app. */
-export async function startTelemetry(fetcher: typeof fetch = fetch): Promise<boolean> {
-  const { collectorUrl } = await loadTelemetryConfig(fetcher);
-  if (!collectorUrl) return false;
-  try {
-    const [version, { startFaro }] = await Promise.all([loadVersion(fetcher), import("./faro")]);
-    startFaro({ collectorUrl, version });
-    return true;
-  } catch {
-    return false;
-  }
+interface Running {
+  pause: () => void;
+  resume: () => void;
+  setReplay: (on: boolean) => Promise<void>;
+}
+
+let running: Promise<Running | null> | null = null;
+
+/**
+ * Applies the latest state: starts Faro the first time it is wanted, pauses it when it isn't
+ * (sign-out, the demo, every switch off), and starts or pauses Session Replay. Never throws and
+ * never blocks the app; an SDK that fails to load leaves telemetry off.
+ */
+export async function applyTelemetry(
+  next: TelemetryState,
+  fetcher: typeof fetch = fetch,
+): Promise<void> {
+  state = next;
+  const wanted = wantsTelemetry(next);
+  if (!wanted && !running) return;
+  running ??= (async () => {
+    try {
+      const [version, { startFaro }] = await Promise.all([
+        loadVersion(fetcher),
+        import("./faro"),
+      ]);
+      return startFaro({ version, state: telemetryState });
+    } catch {
+      return null;
+    }
+  })();
+  const faro = await running;
+  if (!faro || state !== next) return;
+  if (wanted) faro.resume();
+  else faro.pause();
+  await faro.setReplay(wantsReplay(next));
 }

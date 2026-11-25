@@ -29,6 +29,7 @@ import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsCurrencyRouteImport } from './routes/settings/currency'
 import { Route as SettingsExportRouteImport } from './routes/settings/export'
+import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy'
 import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
 import { Route as SettingsReceiptEmailRouteImport } from './routes/settings/receipt-email'
 import { Route as SettingsServerRouteImport } from './routes/settings/server'
@@ -137,6 +138,11 @@ const SettingsExportRoute = SettingsExportRouteImport.update({
   path: '/export',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
+const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
 const SettingsProfileRoute = SettingsProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
   '/settings/profile': typeof SettingsProfileRoute
   '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
   '/settings/profile': typeof SettingsProfileRoute
   '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
   '/settings/profile': typeof SettingsProfileRoute
   '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
@@ -282,6 +291,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
+    | '/settings/privacy'
     | '/settings/profile'
     | '/settings/receipt-email'
     | '/settings/server'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
+    | '/settings/privacy'
     | '/settings/profile'
     | '/settings/receipt-email'
     | '/settings/server'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
+    | '/settings/privacy'
     | '/settings/profile'
     | '/settings/receipt-email'
     | '/settings/server'
@@ -515,6 +527,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsExportRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
+    '/settings/privacy': {
+      id: '/settings/privacy'
+      path: '/privacy'
+      fullPath: '/settings/privacy'
+      preLoaderRoute: typeof SettingsPrivacyRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
     '/settings/profile': {
       id: '/settings/profile'
       path: '/profile'
@@ -571,6 +590,7 @@ interface SettingsRouteRouteChildren {
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsCurrencyRoute: typeof SettingsCurrencyRoute
   SettingsExportRoute: typeof SettingsExportRoute
+  SettingsPrivacyRoute: typeof SettingsPrivacyRoute
   SettingsProfileRoute: typeof SettingsProfileRoute
   SettingsReceiptEmailRoute: typeof SettingsReceiptEmailRoute
   SettingsServerRoute: typeof SettingsServerRoute
@@ -581,6 +601,7 @@ const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsCurrencyRoute: SettingsCurrencyRoute,
   SettingsExportRoute: SettingsExportRoute,
+  SettingsPrivacyRoute: SettingsPrivacyRoute,
   SettingsProfileRoute: SettingsProfileRoute,
   SettingsReceiptEmailRoute: SettingsReceiptEmailRoute,
   SettingsServerRoute: SettingsServerRoute,

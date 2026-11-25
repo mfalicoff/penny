@@ -5,13 +5,15 @@
 #   cp .env.example .env && chmod 600 .env    # once: set GRAFANA_ADMIN_PASSWORD
 #   docker compose up -d --wait               # after deploy/compose.yaml is up
 #
-# Then in deploy/api.env: OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317 and restart the API.
+# Then in deploy/api.env: OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317 and restart the API. For opt-in
+# client telemetry also set ClientTelemetry__FaroUrl=http://alloy:12347/collect and
+# ClientTelemetry__OtlpEndpoint=http://alloy:4319 (docs/self-hosting/observability.md#client-telemetry).
 # Guide: docs/self-hosting/observability.md.
 #
 # Alloy joins Penny's network (`penny_penny`, created by deploy/compose.yaml) under the name
 # `alloy`, so the API reaches it without a published port. Everything else stays on this
-# stack's own network. Only loopback ports are published: Grafana, and the two client ingest
-# endpoints for a reverse proxy to expose (docs/self-hosting/observability.md#client-ingest).
+# stack's own network. Only Grafana is published, on loopback. Clients send telemetry to the API,
+# never to Alloy.
 #
 # Sized for a modest server (example: i7-4790K, 32 GB): single-binary Loki and Tempo,
 # local disk, short retention, and memory limits that add up to under 4 GiB.
@@ -77,15 +79,12 @@ services:
       - --disable-reporting
       - /etc/alloy/config.alloy
     environment:
-      PENNY_TELEMETRY_ORIGINS: ${PENNY_TELEMETRY_ORIGINS:-}
       PENNY_CLIENT_SERVICES: ${PENNY_CLIENT_SERVICES:-}
     volumes:
       - ./config.alloy:/etc/alloy/config.alloy:ro
       - alloy:/var/lib/alloy/data
-    ports:
-      # Client ingest only (OTLP/HTTP and Faro). The API's OTLP ports 4317/4318 stay internal.
-      - "${PENNY_INGEST_BIND:-127.0.0.1}:${PENNY_OTLP_CLIENT_PORT:-4319}:4319"
-      - "${PENNY_INGEST_BIND:-127.0.0.1}:${PENNY_FARO_PORT:-12347}:12347"
+    # No published ports (MAZ-129): the API reaches Alloy on the penny network, and clients
+    # send telemetry to the API, never here.
     networks:
       observability: {}
       penny:

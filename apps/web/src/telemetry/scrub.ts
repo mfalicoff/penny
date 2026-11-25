@@ -74,3 +74,147 @@ function walk(value: unknown, key: string | undefined): unknown {
   }
   return value;
 }
+
+// Session Replay (MAZ-129). Attributes that describe layout or state, never content; every other
+// attribute value is masked. The API applies the same list again (ReplayEvent.cs).
+const STRUCTURAL_ATTRIBUTES = new Set([
+  "class",
+  "style",
+  "rel",
+  "type",
+  "role",
+  "tabindex",
+  "lang",
+  "dir",
+  "charset",
+  "media",
+  "width",
+  "height",
+  "viewbox",
+  "preserveaspectratio",
+  "xmlns",
+  "focusable",
+  "d",
+  "points",
+  "transform",
+  "cx",
+  "cy",
+  "r",
+  "rx",
+  "ry",
+  "x",
+  "y",
+  "x1",
+  "y1",
+  "x2",
+  "y2",
+  "fill",
+  "stroke",
+  "stroke-width",
+  "stroke-linecap",
+  "stroke-linejoin",
+  "stroke-dasharray",
+  "opacity",
+  "fill-opacity",
+  "stroke-opacity",
+  "fill-rule",
+  "clip-rule",
+  "disabled",
+  "checked",
+  "selected",
+  "hidden",
+  "open",
+  "readonly",
+  "required",
+  "multiple",
+  "aria-hidden",
+  "aria-expanded",
+  "aria-selected",
+  "aria-current",
+  "aria-checked",
+  "aria-pressed",
+  "aria-disabled",
+  "aria-haspopup",
+  "aria-modal",
+  "aria-busy",
+  "aria-live",
+  "aria-invalid",
+  "aria-orientation",
+  "colspan",
+  "rowspan",
+  "autocomplete",
+  "inputmode",
+  "data-theme",
+  "rr_width",
+  "rr_height",
+  "rr_scrollleft",
+  "rr_scrolltop",
+  "rr_mediastate",
+  "_csstext",
+]);
+const LINK_ATTRIBUTES = new Set([
+  "href",
+  "src",
+  "xlink:href",
+  "action",
+  "poster",
+]);
+// Strings that are page text or what someone typed.
+const CONTENT_KEYS = new Set(["textContent", "text", "value"]);
+
+/** Replaces every visible character with `*`, keeping whitespace. */
+export function mask(text: string): string {
+  return text.replace(/\S/g, "*");
+}
+
+function maskAttributes(
+  attributes: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(attributes).map(([name, value]) => {
+      if (
+        typeof value !== "string" ||
+        STRUCTURAL_ATTRIBUTES.has(name.toLowerCase())
+      )
+        return [name, value];
+      if (LINK_ATTRIBUTES.has(name.toLowerCase()))
+        return [name, /^data:/i.test(value) ? "data:," : scrubUrl(value)];
+      return [name, mask(value)];
+    }),
+  );
+}
+
+function maskNode(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(maskNode);
+  if (!value || typeof value !== "object") return value;
+  const node = value as Record<string, unknown>;
+  const isStyle = node.isStyle === true;
+  return Object.fromEntries(
+    Object.entries(node).map(([name, entry]) => {
+      if (
+        name === "attributes" &&
+        entry &&
+        typeof entry === "object" &&
+        !Array.isArray(entry)
+      )
+        return [name, maskAttributes(entry as Record<string, unknown>)];
+      if (typeof entry === "string") {
+        if (name === "textContent" && isStyle) return [name, entry];
+        if (CONTENT_KEYS.has(name)) return [name, mask(entry)];
+        if (name === "href") return [name, scrubUrl(entry)];
+        return [name, entry];
+      }
+      if (name === "payload") return [name, null];
+      return [name, maskNode(entry)];
+    }),
+  );
+}
+
+/**
+ * Masks one rrweb event before Faro sends it: text and typed values (already masked by the
+ * recorder's own options, so this is a second line), and the attributes the recorder leaves
+ * alone, such as `aria-label`, `title`, `alt`, `placeholder`, ids and data attributes.
+ */
+export function maskReplayEvent<T>(event: T): T {
+  return maskNode(event) as T;
+}

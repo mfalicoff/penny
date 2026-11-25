@@ -33,6 +33,7 @@ public static class TelemetryServices
             )
             .WithTracing(tracing =>
                 tracing
+                    .SetSampler(ClientParentSampler.From(builder.Configuration))
                     .AddSource(BackendTelemetry.Name)
                     .AddAspNetCoreInstrumentation(aspNetCore =>
                     {

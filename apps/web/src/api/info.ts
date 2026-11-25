@@ -15,7 +15,9 @@ const policyUrlSchema = z
     if (!value) return null;
     try {
       const url = new URL(value);
-      return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+      return url.protocol === "https:" || url.protocol === "http:"
+        ? url.href
+        : null;
     } catch {
       return null;
     }
@@ -29,6 +31,15 @@ export const serverInfoSchema = z.object({
   privacyPolicyUrl: policyUrlSchema,
   // MAZ-124: whether the server sends email. Absent on older servers, and anything but a boolean, means no.
   emailEnabled: z.boolean().optional().catch(false),
+  // MAZ-129: which opt-in client telemetry the server accepts. Absent or malformed means all off.
+  telemetry: z
+    .object({
+      web: z.boolean().catch(false),
+      sessionReplay: z.boolean().catch(false),
+      native: z.boolean().catch(false),
+    })
+    .optional()
+    .catch(undefined),
 });
 
 export type ServerInfo = z.infer<typeof serverInfoSchema>;
@@ -50,4 +61,13 @@ export function usePrivacyPolicyUrl(): string | null {
  */
 export function useEmailEnabled(): boolean {
   return useQuery(serverInfoQuery).data?.emailEnabled === true;
+}
+
+/** The client telemetry the server offers (MAZ-129); all off while loading, on older servers and in the demo's server. */
+export function useServerTelemetry(): { web: boolean; sessionReplay: boolean } {
+  const telemetry = useQuery(serverInfoQuery).data?.telemetry;
+  return {
+    web: telemetry?.web === true,
+    sessionReplay: telemetry?.web === true && telemetry.sessionReplay,
+  };
 }

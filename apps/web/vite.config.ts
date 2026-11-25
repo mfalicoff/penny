@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin, type ProxyOptions } from "vite";
-import { contentSecurityPolicyFor } from "./scripts/security-headers.ts";
+import { contentSecurityPolicy } from "./scripts/security-headers.ts";
 
 const designKit = fileURLToPath(new URL("../../design-kit", import.meta.url));
 const appRoot = fileURLToPath(new URL(".", import.meta.url));
@@ -41,27 +41,6 @@ const apiProxy: Record<string, ProxyOptions> = {
   },
 };
 
-// Opt-in browser telemetry (MAZ-129) in development and preview, the way the production front
-// ends publish it: PENNY_WEB_TELEMETRY_URL (a Faro collector, such as Grafana Cloud's) becomes
-// /telemetry.json and is allowed in the preview CSP. Read here, never compiled into the bundle.
-// Unset, public/telemetry.json keeps telemetry off.
-const telemetryUrl = process.env.PENNY_WEB_TELEMETRY_URL ?? "";
-if (telemetryUrl && !/^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~/-]*)?$/.test(telemetryUrl)) {
-  throw new Error("PENNY_WEB_TELEMETRY_URL must be an http(s) URL with no query, quotes, spaces or semicolons");
-}
-
-function telemetryConfig(): Plugin {
-  const serve = (server: { middlewares: { use: (path: string, handler: (req: unknown, res: import("node:http").ServerResponse) => void) => void } }) => {
-    if (!telemetryUrl) return;
-    server.middlewares.use("/telemetry.json", (_req, res) => {
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader("Cache-Control", "no-store");
-      res.end(JSON.stringify({ collectorUrl: telemetryUrl }));
-    });
-  };
-  return { name: "penny-telemetry-config", configureServer: serve, configurePreviewServer: serve };
-}
-
 // Ships the bundled font's license next to the font in every production build.
 function thirdPartyLicenses(): Plugin {
   return {
@@ -90,7 +69,6 @@ export default defineConfig({
     tanstackRouter({ target: "react", autoCodeSplitting: true, routeFileIgnorePattern: "\\.test\\." }),
     react(),
     thirdPartyLicenses(),
-    telemetryConfig(),
   ],
   resolve: {
     alias: { "@design-kit": designKit, "@domain": sharedDomain },
@@ -108,7 +86,7 @@ export default defineConfig({
     port: webPort,
     strictPort,
     proxy: apiProxy,
-    headers: { "Content-Security-Policy": contentSecurityPolicyFor(telemetryUrl) },
+    headers: { "Content-Security-Policy": contentSecurityPolicy },
   },
   build: {
     target: "es2022",

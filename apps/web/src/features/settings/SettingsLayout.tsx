@@ -13,6 +13,7 @@ import { Avatar, cx } from "../../design/controls";
 import { Icon, type IconName } from "../../design/Icon";
 import { SignOutButton } from "../auth/SignOut";
 import { useLedgerWorkspace } from "../organize/workspace";
+import { useServerTelemetry } from "../../api/info";
 import { useInboxStatus } from "../receiptInbox/useInbox";
 
 /**
@@ -41,7 +42,7 @@ const THEME_NAMES: Record<Theme, string> = {
   system: "System",
 };
 
-type SectionPath = "/settings/profile" | "/settings/appearance" | "/settings/currency" | "/settings/receipt-email" | "/settings/server" | "/settings/export";
+type SectionPath = "/settings/profile" | "/settings/appearance" | "/settings/currency" | "/settings/receipt-email" | "/settings/server" | "/settings/privacy" | "/settings/export";
 
 /** Settings: the section list beside the open section (one URL per section, so Back works). */
 export function SettingsLayout() {
@@ -79,6 +80,7 @@ function DoneButton() {
 
 function SectionList({ layout }: { layout: SettingsLayoutKind }) {
   const { enabled: receiptEmail } = useInboxStatus();
+  const { web: reports } = useServerTelemetry();
   const { theme } = usePreferences();
   const { ledger } = useLedgerWorkspace();
   const demo = useIsDemo();
@@ -95,6 +97,7 @@ function SectionList({ layout }: { layout: SettingsLayoutKind }) {
           <Row to="/settings/currency" icon="cash" label="Currency" />
           {receiptEmail ? <Row to="/settings/receipt-email" icon="receipt" label="Receipt email" /> : null}
           <Row to="/settings/server" icon="server" label="Server & sync" />
+          {reports ? <Row to="/settings/privacy" icon="lock-closed" label="Privacy" /> : null}
           {demo ? null : <Row to="/settings/export" icon="document-text" label="Export data" />}
           <li>{demo ? <LeaveDemo className="settings__link settings__link--danger" /> : <SignOutButton className="settings__link settings__link--danger" />}</li>
         </ul>
@@ -112,6 +115,7 @@ function SectionList({ layout }: { layout: SettingsLayoutKind }) {
           <Row to="/settings/appearance" icon="sunny" label="Appearance" value={THEME_NAMES[theme]} />
           <Row to="/settings/currency" icon="cash" label="Currency" value={currency} trailing={locked ? "lock-closed" : "chevron-forward"} />
           {receiptEmail ? <Row to="/settings/receipt-email" icon="receipt" label="Receipt email" /> : null}
+          {reports ? <Row to="/settings/privacy" icon="lock-closed" label="Privacy" /> : null}
         </Group>
         <Group title="Server">
           <Row to="/settings/server" icon="server" label={demo ? "Demo" : host} detail={demo ? "Sample data in this tab" : "Sign out to change servers"} trailing="lock-closed" />

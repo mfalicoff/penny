@@ -7,14 +7,13 @@ MAZ-128. A reference stack that collects Penny's telemetry and shows it in Grafa
 Everything is optional. Penny runs the same without it, and telemetry stays off until you set `OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 - [Grafana Cloud](#grafana-cloud) instead of running the stack
-- [Web app telemetry](#web-app-telemetry)
+- [Client telemetry](#client-telemetry) from the web and iOS apps, through the API
 - [What runs](#what-runs)
 - [Start the stack](#start-the-stack)
 - [Connect the API](#connect-the-api)
-- [Client ingest](#client-ingest) and the [client telemetry contract](#client-telemetry)
 - [Configuration](#configuration)
 - [Retention and disk use](#retention-and-disk-use)
-- [Securing Grafana and the ingest endpoint](#securing-grafana-and-the-ingest-endpoint)
+- [Securing Grafana](#securing-grafana)
 - [Dashboards](#dashboards)
 - [Alerts](#alerts)
 - [Follow a user-reported error end to end](#follow-a-user-reported-error-end-to-end)
@@ -35,54 +34,81 @@ OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=home
 
 Make the value with `printf '%s:%s' <instanceID> <token> | base64`. Then restart the API.
 
-**Web app.** See [Web app telemetry](#web-app-telemetry): Cloud's Frontend Observability gives the browser its own collector URL, so no token goes into the app.
+**Web and iOS apps.** See [Client telemetry](#client-telemetry): the API forwards the apps' reports to Cloud with a URL or key only the server holds, so nothing secret goes into an app.
 
 **Dashboards.** Import each file from `apps/backend/development/observability/grafana/dashboards/` (Dashboards → New → Import) and pick your `grafanacloud-…-prom`, `-logs` and `-traces` data sources. They have not been checked against Cloud yet. If the Environment or Instance filter empties panels, leave it on All. Frontend Observability has its own web dashboards; **Penny clients** is built for the self-hosted pipeline.
 
 **Alerts.** `grafana/provisioning/alerting/penny.yaml` is a file Grafana reads at startup and refers to local data source ids, so it does not load into Cloud. Recreate the rules in Alerting → Alert rules using the queries from that file.
 
-## Web app telemetry
+## Client telemetry
 
-MAZ-129. The web app can send its errors, web vitals, page and request timings, and traces of its `/api/` calls to a [Grafana Faro](https://grafana.com/oss/faro/) collector. It is **off** unless the server sets a collector, and it never sends anything in the demo.
+MAZ-129. The web app (and, next, the iOS app) can report errors, crashes and performance, and the web app can record Session Replay. Everything is **opt-in twice**: off on the server until you configure it, and then off in each browser until the person agrees.
 
-**Turn it on with Grafana Cloud:**
+Clients are untrusted, so they never talk to your collector. They post to the Penny API with their session (`POST /api/telemetry/faro` for the web app's Grafana Faro reports, `POST /api/telemetry/otlp/v1/traces` and `/v1/logs` for the iOS app's OTLP/HTTP JSON). The API:
 
-1. In Grafana Cloud, open **Frontend Observability** and create an app named `penny-web`. Allow your Penny origin (for example `https://penny.example.com`) as a CORS origin.
-2. Copy the collector URL it shows, of the form `https://faro-collector-prod-<region>.grafana.net/collect/<key>`. The key identifies the app; it is not a secret, and every browser sees it.
-3. Set it in `deploy/.env` and recreate `web`:
+- requires the person's session cookie or bearer token (401 without one), and answers 404 while client telemetry is off;
+- limits each session to `ClientTelemetry__RateLimitPermits` requests a minute (429 with `Retry-After`, which Faro and the OpenTelemetry exporters honour) and each request to `ClientTelemetry__MaxPayloadBytes` (413), and accepts uncompressed JSON only (415);
+- checks the shape (400 otherwise): a Faro body with `meta.app.name` `penny-web` and only Faro's own sections, or OTLP whose every resource has `service.name` `penny-ios`, so nothing a client sends can look like the API's own telemetry;
+- scrubs again, whatever the client did: URLs keep their origin and the shape of their path (ids become `:id`, query strings and fragments go), and error and log messages lose emails, quoted text and numbers. Faro's `meta.user`, `meta.geo` and free-form error context are dropped;
+- re-masks Session Replay (below), or drops replay events when the server doesn't offer replay;
+- drops a request whose `Idempotency-Key` the same person sent in the last ten minutes (Faro retries with the same key), still answering 202;
+- forwards from a bounded background queue, so a slow or unreachable collector never slows the app; reports that can't be delivered are dropped. Outgoing calls aren't traced, so the collector URL never appears in spans.
 
-   ```dotenv
-   PENNY_WEB_TELEMETRY_URL=https://faro-collector-prod-<region>.grafana.net/collect/<key>
-   ```
+The collector stays private: your Alloy on the `penny` network, or Grafana Cloud with a key only the server holds. Nothing reaches Alloy from outside the API.
 
-   `docker compose up -d web`. On NixOS, set `services.penny.webTelemetryUrl`.
-4. Open Penny, then Frontend Observability in Grafana: sessions, errors and web vitals appear within a minute. To follow a browser request into the API, the API must send its traces to the same Cloud stack ([Grafana Cloud](#grafana-cloud)).
+### Turn it on
 
-**Self-hosted:** set `PENNY_WEB_TELEMETRY_URL` to your Alloy's Faro endpoint behind TLS (`https://telemetry.penny.example.com/collect`, see [Client ingest](#client-ingest)), with the Penny origin in `PENNY_TELEMETRY_ORIGINS`.
+In `deploy/api.env` (or `services.penny.settings.ClientTelemetry` on NixOS), then restart the API:
 
-How it works:
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `ClientTelemetry__FaroUrl` | unset (web off) | Where web reports go: your Alloy's Faro receiver (`http://alloy:12347/collect` with this stack) or a Grafana Cloud Frontend Observability collector URL |
+| `ClientTelemetry__OtlpEndpoint` | unset (iOS off) | OTLP/HTTP base URL for the iOS app's traces and logs (`/v1/traces` and `/v1/logs` are appended): `http://alloy:4319` with this stack, or Grafana Cloud's OTLP gateway |
+| `ClientTelemetry__OtlpHeaders` | none | `key=value` pairs sent with OTLP, for example `Authorization=Basic%20<base64 of instanceID:token>` for Grafana Cloud. A secret: keep `api.env` `chmod 600` |
+| `ClientTelemetry__SessionReplay` | `false` | Let the web app offer Session Replay. Needs `FaroUrl` and a Grafana Cloud stack with Session Replay enabled |
+| `ClientTelemetry__RateLimitPermits` | `120` | Requests per session per minute (1 to 10000) |
+| `ClientTelemetry__MaxPayloadBytes` | `1048576` | Largest accepted request body (16 KiB to 8 MiB). Keep it at or below your collector's limit (Alloy's Faro receiver: 1 MiB) |
 
-- The web container serves the URL as `/telemetry.json` and adds exactly that URL to the page's `connect-src`; it is the only cross-origin request the app makes. `web` refuses to start if the value is not a plain `https://` URL (no query, quotes, spaces or semicolons). Nothing is compiled into the app: the same image serves servers with and without telemetry.
-- The Faro SDK is a separate download, fetched only when telemetry is on.
-- Before anything is sent (`apps/web/src/telemetry/scrub.ts`), URLs lose their query strings and fragments (search text, the OIDC code) and every path segment that is not a plain word becomes `:id`. Error and log messages lose emails, quoted text and numbers: `Save failed for <email> amount <n> note <text>`. Console output is not captured, no user is attached, and geolocation is off. The session id is random per tab.
-- Requests to `/api/` carry `traceparent`, and the API continues that trace, so one trace shows the browser request, the API handler and its SQL.
-- An unreachable collector never affects the app: Faro drops what it cannot send and logs nothing itself (the browser's developer tools still show the failed requests).
+The API refuses to start with a malformed URL (not http or https, with credentials, a query or a fragment), with replay but no Faro URL, or with headers but no OTLP endpoint. `GET /api/info` then reports `telemetry: { web, sessionReplay, native }`, which is how the apps know whether to ask.
 
-To try it before deploying: `PENNY_WEB_TELEMETRY_URL=<collector> npm run dev` in `apps/web`, with `http://localhost:4173` allowed in the Frontend Observability app.
+**With Grafana Cloud:** in **Frontend Observability**, create an app named `penny-web` and copy its collector URL (`https://faro-collector-prod-<region>.grafana.net/collect/<key>`) into `ClientTelemetry__FaroUrl`. No CORS origin is needed: the server posts, not the browser. Sessions, errors and web vitals appear within a minute of someone agreeing to share. To follow a browser request into the API, send the API's own traces to the same stack ([Grafana Cloud](#grafana-cloud)).
+
+**Self-hosted:** with this stack, `ClientTelemetry__FaroUrl=http://alloy:12347/collect` and `ClientTelemetry__OtlpEndpoint=http://alloy:4319`. Web reports become Loki lines labelled `service_name="penny-web"` and Faro traces join Tempo; the **Penny clients** dashboard reads both. Alloy's Faro receiver also limits everyone together to 50 requests a second (burst 100).
+
+### What people see
+
+When the server offers reports, the web app asks once per browser, after sign-in: **Help fix problems faster?** with **Share reports** (errors and performance) and **Don't share**. **Settings › Privacy** then has a switch for each kind: error reports, performance data and, when the server offers it, **Record sessions**. Choices are saved in the browser, not the account. Nothing is sent before sign-in, in the demo, or for a kind that is switched off; errors before sign-in are not reported.
+
+What the web app sends when allowed (`apps/web/src/telemetry/`):
+
+- **Errors:** unhandled errors and rejections, with the browser and app version. Console output is never captured.
+- **Performance:** web vitals, page loads and navigation, request timings, and traces of its `/api/` calls. Those calls carry `traceparent`, so a slow page links to the API's spans. The API continues the trace but samples by its own rule (`OTEL_TRACES_SAMPLER`): a client's `sampled` flag never decides.
+- **Session Replay:** a recording of clicks, scrolling and page changes. Every text and every field is masked by the recorder (`maskTextSelector: "*"`, `maskAllInputs`), images, video and canvases are blocked, and both the browser and the API mask every attribute that can carry content (`aria-label`, `title`, `alt`, `placeholder`, ids, data attributes) and inline images. What remains is the page's layout and styles. Grafana Cloud keeps replays for 30 days. Self-hosted Alloy has no replay viewer, so leave replay off there.
+- No user id, email or name, no geolocation, and a random session id per tab.
+
+### What the apps send
+
+The contract the **Penny clients** dashboard and the crash alert read (the web app follows it through Faro; the iOS app follows it in its own phase):
+
+- `service.name` is `penny-web` or `penny-ios`; `service.version` is the app version.
+- An **error** is a log record with severity ERROR (17–20) and `exception.type`. Faro exceptions (`kind=exception`) count too.
+- A **crash** is a log record with severity FATAL (21 or more), sent on the next launch.
+- Client spans for API calls send `traceparent`, so the API continues the same trace.
+- Telemetry is opt-in per server and per person, and off in demo mode. It carries no credentials, emails, search text, ledger contents or amounts.
 
 ## What runs
 
 ```text
 API ──OTLP gRPC :4317──▶ ┌───────┐ ──traces──▶ Tempo ─┐
          (penny network) │ Alloy │ ──logs────▶ Loki  ─┼──▶ Grafana :3000 (loopback)
-web/iOS ──▶ your proxy ─▶│       │ ──metrics─▶ Prometheus
-      OTLP/HTTP :4319    └───────┘
-      Faro      :12347   (loopback)
+web/iOS ──▶ API ──────▶│       │ ──metrics─▶ Prometheus
+  /api/telemetry ──▶ Faro :12347, OTLP/HTTP :4319 (penny network only)
+                         └───────┘
 ```
 
 | Service | Image (pinned by digest) | Role | Default memory limit |
 | --- | --- | --- | --- |
-| `alloy` | `grafana/alloy` v1.21.1 | One collector for every signal: internal OTLP for the API, client ingest for the apps | 512 MiB |
+| `alloy` | `grafana/alloy` v1.21.1 | One collector for every signal: OTLP from the API, and client telemetry the API forwards | 512 MiB |
 | `loki` | `grafana/loki` 3.6.19, single binary | Logs, filesystem storage | 1 GiB |
 | `tempo` | `grafana/tempo` 2.10.10, single binary | Traces, local storage | 1 GiB |
 | `prometheus` | `prom/prometheus` v3.15.1 | Metrics through its native OTLP receiver (nothing is scraped) | 768 MiB |
@@ -99,11 +125,11 @@ You need a checkout, or a copy of `apps/backend/development/observability/`, on 
 ```sh
 cd apps/backend/development/observability
 cp .env.example .env && chmod 600 .env
-# set GRAFANA_ADMIN_PASSWORD (openssl rand -base64 24) and PENNY_TELEMETRY_ORIGINS
+# set GRAFANA_ADMIN_PASSWORD (openssl rand -base64 24)
 docker compose up -d --wait
 ```
 
-Open `http://127.0.0.1:3000` (through an SSH tunnel, or [behind your proxy](#securing-grafana-and-the-ingest-endpoint)) and sign in as `admin`. The **Penny** folder holds the dashboards and the alert rules.
+Open `http://127.0.0.1:3000` (through an SSH tunnel, or [behind your proxy](#securing-grafana)) and sign in as `admin`. The **Penny** folder holds the dashboards and the alert rules.
 
 If Penny's Compose project is not called `penny`, set `PENNY_NETWORK` to its network (`<project>_penny`; `docker network ls` lists it).
 
@@ -120,58 +146,6 @@ OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=home
 
 The NixOS module runs no containers; point `OTEL_EXPORTER_OTLP_ENDPOINT` at an Alloy or OpenTelemetry Collector you run (the `config.alloy` here works as a starting point).
 
-## Client ingest
-
-The web and iOS apps send telemetry from users' devices, so they need an endpoint on the internet. Alloy has a separate receiver for them that is safe to publish behind your reverse proxy:
-
-| Endpoint | Port (loopback) | For |
-| --- | --- | --- |
-| `POST /v1/traces`, `/v1/logs`, `/v1/metrics` (OTLP/HTTP, protobuf or JSON) | `PENNY_OTLP_CLIENT_PORT`, default 4319 | iOS (OpenTelemetry Swift) and web OpenTelemetry |
-| `POST /collect` (Grafana Faro) | `PENNY_FARO_PORT`, default 12347 | Web, if it uses the Faro Web SDK |
-
-What the receiver enforces:
-
-- **Origins.** Browsers may post only from `PENNY_TELEMETRY_ORIGINS` (your Penny origin). Native apps send no `Origin` and are not affected.
-- **Service names.** Records must claim `service.name` `penny-web` or `penny-ios` (`PENNY_CLIENT_SERVICES`); anything else is dropped. Nobody can write records that look like the API's into its dashboards or alerts through this endpoint.
-- **Size.** Request bodies over 1 MiB are refused. Faro is also rate-limited (50 requests/s, burst 100).
-- The API's own OTLP ports (4317, 4318) are never published.
-
-Publish both on one hostname in your proxy, with only those paths and methods. nginx example (TLS terminated here; add your certificate lines):
-
-```nginx
-limit_req_zone $binary_remote_addr zone=telemetry:10m rate=5r/s;
-
-server {
-    listen 443 ssl;
-    server_name telemetry.penny.example.com;
-    client_max_body_size 1m;
-
-    location ~ ^/v1/(traces|logs|metrics)$ {
-        limit_except POST OPTIONS { deny all; }
-        limit_req zone=telemetry burst=20 nodelay;
-        proxy_pass http://127.0.0.1:4319;
-    }
-    location = /collect {
-        limit_except POST OPTIONS { deny all; }
-        limit_req zone=telemetry burst=20 nodelay;
-        proxy_pass http://127.0.0.1:12347;
-    }
-    location / { return 404; }
-}
-```
-
-The endpoint takes no credentials, because any credential shipped in an app is public. The limits above are what keep it cheap to run. Leave client ingest unpublished until you turn client telemetry on.
-
-### Client telemetry
-
-The contract the apps follow (MAZ-129; the web app follows it through Faro, and iOS is still to come), and that the **Penny clients** dashboard and the crash alert read:
-
-- `service.name` is `penny-web` or `penny-ios`; `service.version` is the app version.
-- An **error** is a log record with severity ERROR (17–20) and `exception.type`. Faro exceptions (`kind=exception`) count too.
-- A **crash** is a log record with severity FATAL (21 or more), sent on the next launch.
-- Client spans for API calls send `traceparent`, so the API continues the same trace.
-- Telemetry is opt-in per server and off in demo mode. It carries no credentials, emails, search text, ledger contents or amounts.
-
 ## Configuration
 
 `apps/backend/development/observability/.env`:
@@ -183,9 +157,7 @@ The contract the apps follow (MAZ-129; the web app follows it through Faro, and 
 | `GRAFANA_BIND`, `GRAFANA_PORT` | `127.0.0.1`, `3000` | Where Grafana is published |
 | `GRAFANA_ROOT_URL` | `http://localhost:3000/` | The public address when a proxy serves Grafana; links in alerts use it |
 | `GRAFANA_SECURE_COOKIES` | `false` | `true` when Grafana is served over HTTPS |
-| `PENNY_TELEMETRY_ORIGINS` | local Vite origins | Comma-separated browser origins allowed to send client telemetry |
 | `PENNY_CLIENT_SERVICES` | `penny-web\|penny-ios` | Regular expression of accepted client `service.name` values |
-| `PENNY_INGEST_BIND`, `PENNY_OTLP_CLIENT_PORT`, `PENNY_FARO_PORT` | `127.0.0.1`, `4319`, `12347` | Where client ingest is published |
 | `PENNY_LOGS_RETENTION` | `168h` | Loki deletes logs older than this |
 | `PENNY_TRACES_RETENTION` | `72h` | Tempo deletes traces older than this |
 | `PENNY_METRICS_RETENTION`, `PENNY_METRICS_MAX_SIZE` | `15d`, `5GB` | Prometheus deletes the oldest metrics past either limit |
@@ -203,12 +175,12 @@ Data lives in five named volumes (`penny-observability_loki`, `_tempo`, `_promet
 
 Deleting a volume (`docker compose down -v`) deletes that history and, for `_grafana`, any dashboards or contact points you made in the UI.
 
-## Securing Grafana and the ingest endpoint
+## Securing Grafana
 
 - Grafana is published on loopback only, requires sign-in, and has anonymous access and sign-up turned off. Reach it through an SSH tunnel (`ssh -L 3000:127.0.0.1:3000 server`) or a TLS proxy (then set `GRAFANA_ROOT_URL` and `GRAFANA_SECURE_COOKIES=true`). Grafana is an administration tool: don't publish it to the internet without single sign-on or a VPN in front.
 - Loki, Tempo and Prometheus are not published at all. Query them through Grafana.
 - Telemetry contains no user content ([privacy guarantees](operations.md#privacy-guarantees)): ids, routes, status codes, exception types and parameterized SQL. It still shows when and how Penny is used, so give Grafana access to operators only.
-- Client ingest is covered in [Client ingest](#client-ingest). Publish only its paths, with a body limit and a rate limit.
+- Alloy publishes no port. The API reaches it on the `penny` network, and clients send telemetry to the API ([Client telemetry](#client-telemetry)).
 - Every container drops all capabilities and runs with `no-new-privileges`.
 
 ## Dashboards
@@ -264,19 +236,19 @@ Images are pinned by tag and digest in `compose.yaml` and in `apps/backend/src/P
 ## Troubleshooting
 
 - **No API data.** Check `OTEL_EXPORTER_OTLP_ENDPOINT` in `deploy/api.env` and that the API was restarted after setting it, that Alloy is on Penny's network (`docker network inspect penny_penny` lists `alloy`), and `docker compose logs alloy` for export errors.
-- **Client telemetry refused.** A browser shows a CORS error when its origin is not in `PENNY_TELEMETRY_ORIGINS`. Records with another `service.name` are dropped without an error.
+- **No client telemetry.** Check `GET /api/info` reports `telemetry.web` (or `native`) true, that the person agreed in the prompt or **Settings › Privacy**, and the API's log for "The telemetry collector refused" or "could not be reached" warnings. The `penny.client_telemetry.reports` metric counts reports by outcome (accepted, duplicate, invalid, dropped, forwarded, refused, failed).
 - **Alloy restarts with "permission denied".** It must run as the `alloy` user (`user: alloy` in `compose.yaml`); its data directory belongs to that user.
 - **A dashboard change does not show.** Grafana reads provisioned files at startup: `docker compose restart grafana`.
 - **Panels say "No data".** Panels for things that have not happened (no 5xx, no job failures, no clients) stay empty; check the time range first.
 
 ## Local development
 
-The Aspire AppHost (`apps/backend/README.md`) starts the same Alloy, Loki, Tempo, Prometheus and Grafana from these files, with the dashboards and alert rules, anonymous admin access and 3-day retention. Client ingest is fixed at `http://localhost:4319` (OTLP/HTTP) and `http://localhost:12347/collect` (Faro) and allows the Vite origin `http://localhost:4173`.
+The Aspire AppHost (`apps/backend/README.md`) starts the same Alloy, Loki, Tempo, Prometheus and Grafana from these files, with the dashboards and alert rules, anonymous admin access and 3-day retention. The API runs with `ClientTelemetry__FaroUrl` and `ClientTelemetry__OtlpEndpoint` pointing at that Alloy, so the web app asks for consent and, once you agree, its reports reach the **Penny clients** dashboard.
 
 ## Tests
 
-- `npm test` runs `scripts/tests/observability.test.ts`: dashboards match their generator, panels use data source variables and the standard filters, alert rules use provisioned data sources, only client ingest and Grafana are published, and images match the AppHost pins.
-- `scripts/observability-smoke.mjs` (CI, after the deploy smoke test) starts Penny with telemetry on and this stack beside it. It then checks that API metrics, logs and traces (including SQL spans) for a request id reach Prometheus, Loki and Tempo through Grafana. It also checks that client errors and crashes arrive, and that foreign origins, oversized bodies and records impersonating the API are refused. Finally it checks that Grafana provisioned every data source, dashboard and alert rule, that every rule evaluates, and that the crash alert fires.
+- `npm test` runs `scripts/tests/observability.test.ts`: dashboards match their generator, panels use data source variables and the standard filters, alert rules use provisioned data sources, only Grafana is published and Alloy allows no browser origin, and images match the AppHost pins.
+- `scripts/observability-smoke.mjs` (CI, after the deploy smoke test) starts Penny with telemetry on and this stack beside it. It then checks that API metrics, logs and traces (including SQL spans) for a request id reach Prometheus, Loki and Tempo through Grafana. It also checks that client errors and crashes sent to the API's telemetry endpoint arrive, and that the endpoint refuses callers without a session, oversized bodies and records impersonating the API. Finally it checks that Grafana provisioned every data source, dashboard and alert rule, that every rule evaluates, and that the crash alert fires.
 
 ```sh
 PENNY_SMOKE_API_IMAGE=localhost/penny-api:dev PENNY_SMOKE_WEB_IMAGE=localhost/penny-web:dev \
