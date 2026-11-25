@@ -141,7 +141,9 @@ extension Penny {
     }
 
     func openDetails() throws {
-        try tap(AccessibilityID.Receipt.moreDetails)
+        let details = try wait(for: AccessibilityID.Receipt.moreDetails)
+        revealAboveKeypad(details)
+        details.tap()
         try wait(for: AccessibilityID.Screen.entryExtras)
     }
 
