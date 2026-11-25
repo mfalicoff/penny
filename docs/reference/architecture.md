@@ -36,3 +36,23 @@ The iOS-native redesign ([docs/design/penny-ios](../design/penny-ios/README.md),
 MAZ-132 re-baselined the contract on these cards. The contract records card and source hashes, every card and control owner and acceptance scenario. MAZ-122 added the light and dark baselines and the per-card verdicts for the iOS and web apps (`contracts/visual-comparisons.json`, [visual acceptance](../design/visual-acceptance.md)). MAZ-69/85 own controls; MAZ-82/96 own visual/functional release gates.
 
 See the [API reference](api-reference.md) and the [PostgreSQL contract](postgresql.md).
+
+## ADR 005: change-based personal ledger sync (deferred)
+
+**Status:** proposed, deferred by the owner on 2026-11-25 (MAZ-186).
+
+**Context.** Personal sync is whole-document (ADR 002, [ledger](ledger.md)): every pass starts with a full `GET /api/ledger`, and every save sends and receives the whole ledger, which the server re-parses, re-validates and diffs. The [baseline](ledger-sync-baseline.md) measured about 180 bytes per entry raw: 352 KiB and 142 ms of server time per one-entry save at 2,000 entries, and 8.5 MiB and 3.1 s at 50,000. The same baseline found a quadratic step in the web merge, which was fixed, and added compression to the ledger responses.
+
+**Decision, when it is built:**
+- **Pull:** `GET /api/ledger/changes?since=<revision>` returns the records changed after that revision, the ids deleted after it, and the current revision.
+- **Push:** `POST /api/ledger/changes` takes `{baseRevision, upserts {accounts, categories, trips, recurring, entries}, deletes {…ids}, currency?}`. The answer is the new revision and the stored form of the changed rows (receipts with their served name, MIME type and URI).
+- **Storage:** each of the five ledger tables gets a `changed_revision` column. Deletes become tombstones in `ledger_tombstones(user_id, kind, id, revision)`, kept for 180 days. A `since` older than the oldest kept tombstone gets 410, and the client does one full `GET`.
+- **Conflicts stay ledger-level:** any change since `baseRevision` gives 409. The client then pulls, merges and pushes again. The client-side three-way merge doesn't change, and neither do its golden fixtures. New golden fixtures cover applying a change set.
+- **Validation is unchanged:** the push runs in the existing locked READ COMMITTED transaction. The batch is applied to the current rows in memory, and today's validation runs on the result.
+- **Clients:** the changes to push are the difference between `base` and `local`, so there's no new queue. Pulled changes are applied to `base`, then the existing merge runs.
+- **Compatibility:** `GET` and `PUT /api/ledger` stay, deprecated, for older app builds, and are removed in a later major version (ADR 003). Whole-document writes also stamp `changed_revision` and write tombstones.
+- **Rollout in two phases:** first the API, contract and web on Linux, then iOS on the Mac, with the baseline measured again before and after.
+
+**Why deferred.** At about 2,000 entries, today's sync costs 0.2–0.5 s and about 55 KiB compressed per response. Linear merging and compressed responses cover today's cost, without a new contract version or a schema change.
+
+**Revisit when** typical ledgers approach tens of thousands of entries, or saves take longer than about 1 s.
