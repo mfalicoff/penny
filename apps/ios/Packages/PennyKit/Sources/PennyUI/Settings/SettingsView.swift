@@ -53,6 +53,10 @@ struct SettingsView: View {
                 if shell.account != nil, let push {
                     NotificationSettingsRow(push: push).cardSettingsRow()
                 }
+                // MAZ-129: crash and performance reports, while the account's server takes them.
+                if shell.account != nil, shell.auth?.server?.nativeTelemetry == true {
+                    row(.privacy, symbol: "hand.raised", value: nil)
+                }
             } header: {
                 Text("Preferences").cardSectionHeader()
             } footer: {
@@ -304,6 +308,7 @@ struct SettingsPage: View {
         case .receiptEmail: ReceiptEmailSettingsView()
         case .receiptInbox: ReceiptInboxView()
         case .profile: ProfileView()
+        case .privacy: PrivacySettingsView()
         }
     }
 }

@@ -609,7 +609,8 @@ public final class AuthController {
         let config = try? await client.oidcConfiguration()
         return ServerCheck(
             server: server, version: info.version, providers: config.map(SignInProvider.list(from:)),
-            privacyPolicy: info.privacyPolicy, emailEnabled: info.sendsEmail)
+            privacyPolicy: info.privacyPolicy, emailEnabled: info.sendsEmail,
+            nativeTelemetry: info.takesNativeTelemetry)
     }
 
     /// Makes a checked server the one sign-in uses. Only while signed out: a signed-in
@@ -620,7 +621,7 @@ public final class AuthController {
         }
         let saved = SavedServer(
             server: check.server, version: check.version, privacyPolicy: check.privacyPolicy,
-            emailEnabled: check.emailEnabled)
+            emailEnabled: check.emailEnabled, nativeTelemetry: check.nativeTelemetry)
         do { try preferences.setSavedServer(saved) } catch {
             throw AuthFailure(.storage, "Could not save the server on this device. Your previous server is unchanged.")
         }
@@ -636,15 +637,19 @@ public final class AuthController {
     /// Reads `/api/info` again for the privacy policy link (MAZ-169), so a server that starts or
     /// stops publishing one, or a default server that was never checked, shows the right link.
     /// Kept with the saved server, so Settings still links it offline. Also reads whether the
-    /// server sends email (MAZ-124), for Forgot password and Invite by email. A failure changes
-    /// nothing.
+    /// server sends email (MAZ-124), for Forgot password and Invite by email, and whether it takes
+    /// the app's crash and performance reports (MAZ-129). A failure changes nothing.
     public func refreshServerInfo() async {
         guard let current = server else { return }
         guard let info = try? await anonymousClient(current.server, timeout: Self.probeTimeout).info() else { return }
         guard var saved = server, saved.server == current.server else { return }
-        guard saved.privacyPolicy != info.privacyPolicy || saved.emailEnabled != info.sendsEmail else { return }
+        guard
+            saved.privacyPolicy != info.privacyPolicy || saved.emailEnabled != info.sendsEmail
+                || saved.nativeTelemetry != info.takesNativeTelemetry
+        else { return }
         saved.privacyPolicy = info.privacyPolicy
         saved.emailEnabled = info.sendsEmail
+        saved.nativeTelemetry = info.takesNativeTelemetry
         try? preferences.setSavedServer(saved)
         server = saved
     }

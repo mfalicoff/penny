@@ -318,7 +318,7 @@ export function oidcEnvironment(oidc, extra = []) {
  * Starts an isolated environment and returns its state. On any failure everything
  * created so far is removed before the error is rethrown.
  * @param {{ runId?: string, host?: string, port?: number, webPort?: number, origins?: string[],
- *   build?: boolean, worker?: boolean, email?: boolean, http?: boolean,
+ *   build?: boolean, worker?: boolean, email?: boolean, http?: boolean, telemetry?: boolean,
  *   tls?: { pem: string, certificate: string, keyPath: string, trustBundle: string },
  *   oidc?: { issuer: string, clientId: string, redirectUris: string[],
  *   certificate: string, allowRegistration?: boolean },
@@ -417,6 +417,10 @@ export async function up(options = {}) {
         ...(email ? apiEmailEnvironment(email, state.email.rendererUrl) : { InboundMail__Worker: "false" }),
         // Outgoing email (MAZ-124) only with --smtp: without it the server sends no email, as by default.
         ...(options.smtp ? apiSmtpEnvironment(options.smtp, state.origins) : {}),
+        // MAZ-129: only with --telemetry does `/api/info` offer the iOS app crash and performance
+        // reports (the consent sheet and Settings › Privacy). The API forwards what it accepts to the
+        // discard port on loopback, where nothing listens, so every report is dropped.
+        ...(options.telemetry ? { ClientTelemetry__OtlpEndpoint: "http://127.0.0.1:9" } : {}),
         ...(options.oidc || options.oidcProviders?.length ? {
           ...oidcEnvironment(options.oidc, options.oidcProviders),
           // Every local provider shares the run's certificate.

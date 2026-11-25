@@ -2463,10 +2463,13 @@
       "id": "iphone-monitoring-prompt",
       "view": "Home with the crash report consent sheet",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-129",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no crash or performance reporting.",
-        "followUp": "MAZ-129"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2490,10 +2493,13 @@
       "id": "iphone-privacy",
       "view": "Settings › Privacy with the report switches and the privacy policy link",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-129",
-        "note": "Draft card (MAZ-267) for the owner's review. The app has no Privacy page.",
-        "followUp": "MAZ-129"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
