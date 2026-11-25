@@ -219,7 +219,12 @@ final class AccessibilityAuditTests: PennyUITestCase {
                 if node.label.trimmingCharacters(in: .whitespaces).isEmpty
                     && (node.placeholderValue ?? "").isEmpty
                 {
-                    unlabeled.append("\(screen): \(node.elementType.rawValue) [\(node.identifier)]")
+                    // The frame and what the element holds say which control it is when it has no
+                    // identifier either.
+                    let inside = node.children.map { "\($0.elementType.rawValue) '\($0.identifier)' '\($0.label)'" }
+                    unlabeled.append(
+                        "\(screen): \(node.elementType.rawValue) [\(node.identifier)] at \(node.frame) holding \(inside)"
+                    )
                 }
             }
         }
