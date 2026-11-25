@@ -15,7 +15,8 @@ namespace Penny.Backend.Api.Controllers;
 public sealed class OperationsController(
     IEnumerable<IStorageReadiness> probes,
     LegalOptions legal,
-    MailPolicy mail
+    MailPolicy mail,
+    ClientTelemetryOptions telemetry
 ) : ControllerBase
 {
     [HttpGet("health", Name = "getApiHealth")]
@@ -24,7 +25,17 @@ public sealed class OperationsController(
     [HttpGet("info", Name = "getApiInfo")]
     public ActionResult<ServerInfo> Info() =>
         Ok(
-            new ServerInfo("penny", ServerInfo.CurrentVersion, legal.PrivacyPolicyUrl, mail.Enabled)
+            new ServerInfo(
+                "penny",
+                ServerInfo.CurrentVersion,
+                legal.PrivacyPolicyUrl,
+                mail.Enabled,
+                new ClientTelemetryInfo(
+                    telemetry.WebEnabled,
+                    telemetry.SessionReplay,
+                    telemetry.NativeEnabled
+                )
+            )
         );
 
     [HttpGet("ready", Name = "getApiReady")]

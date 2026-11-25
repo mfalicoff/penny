@@ -113,6 +113,12 @@ public static class BackendTelemetry
         advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
     );
 
+    private static readonly Counter<long> ClientTelemetryReports = Meter.CreateCounter<long>(
+        "penny.client_telemetry.reports",
+        "{report}",
+        "Client telemetry reports (MAZ-129) by kind (faro, traces, logs) and outcome: accepted, duplicate, invalid, dropped, forwarded, refused, failed."
+    );
+
     private static readonly Counter<long> InboundMailRequests = Meter.CreateCounter<long>(
         "penny.inbound_mail.ingress",
         "{request}",
@@ -164,6 +170,14 @@ public static class BackendTelemetry
         InboundMailResults.Add(1, tag);
         InboundMailDuration.Record(Math.Max(0, duration.TotalSeconds), tag);
     }
+
+    // One client telemetry report; `kind` and `outcome` are fixed vocabularies.
+    public static void ClientTelemetry(string kind, string outcome) =>
+        ClientTelemetryReports.Add(
+            1,
+            new KeyValuePair<string, object?>("penny.telemetry.kind", kind),
+            new KeyValuePair<string, object?>(OutcomeAttribute, outcome)
+        );
 
     // One ingress request; `outcome` is a fixed vocabulary, never an address or content.
     public static void InboundMail(string outcome) =>

@@ -202,6 +202,7 @@ in
     (lib.mkRenamedOptionModule [ "services" "penny" "database" "migrationPasswordFile" ] [ "services" "penny" "database" "passwordFile" ])
     (lib.mkRemovedOptionModule [ "services" "penny" "database" "runtimeUser" ] "The API now uses services.penny.database.user only.")
     (lib.mkRemovedOptionModule [ "services" "penny" "database" "runtimePasswordFile" ] "The API now uses services.penny.database.passwordFile only.")
+    (lib.mkRemovedOptionModule [ "services" "penny" "webTelemetryUrl" ] "Browser telemetry now goes through the API (MAZ-129): set services.penny.settings.ClientTelemetry.FaroUrl to your collector instead. See docs/self-hosting/observability.md#client-telemetry.")
   ];
 
   options.services.penny = {
@@ -219,18 +220,6 @@ in
       default = pennyPackages.penny-web;
       defaultText = lib.literalExpression "penny.packages.\${system}.penny-web";
       description = "Static v2 web app (apps/web) served by nginx.";
-    };
-
-    webTelemetryUrl = mkOption {
-      type = types.nullOr (types.strMatching "https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/-]*)?");
-      default = null;
-      example = "https://faro-collector-prod-us-east-0.grafana.net/collect/0123456789abcdef";
-      description = ''
-        Opt-in browser telemetry (MAZ-129): the Faro collector the web app sends errors,
-        performance and traces to, such as Grafana Cloud Frontend Observability's URL. Published
-        as /telemetry.json and allowed in the page's connect-src. null keeps it off.
-        See docs/self-hosting/observability.md.
-      '';
     };
 
     searchModel = mkOption {
@@ -790,15 +779,6 @@ in
               add_header X-Content-Type-Options nosniff always;
             '';
           };
-          # Browser telemetry settings (MAZ-129); an empty collectorUrl keeps telemetry off.
-          "= /telemetry.json" = {
-            extraConfig = ''
-              add_header Cache-Control "no-store" always;
-              add_header X-Content-Type-Options nosniff always;
-              default_type application/json;
-              return 200 '{"collectorUrl":"${toString cfg.webTelemetryUrl}"}\n';
-            '';
-          };
           # Single-page app: unknown paths render index.html, which is never cached.
           "/" = {
             tryFiles = "$uri /index.html";
@@ -808,7 +788,7 @@ in
               add_header X-Frame-Options DENY always;
               add_header Referrer-Policy same-origin always;
               # apps/web/scripts/security-headers.ts: same-origin scripts and the pdf.js worker.
-              add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'${lib.optionalString (cfg.webTelemetryUrl != null) " ${cfg.webTelemetryUrl}"}; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
+              add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
             '';
           };
         };

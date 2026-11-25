@@ -64,7 +64,7 @@ States: a damaged PDF ("This PDF can't be shown", Download kept), a photo the br
   default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
   ```
 
-  With [browser telemetry](../self-hosting/observability.md#web-app-telemetry) on, `connect-src` also lists the configured collector URL, and nothing else.
+  [Browser telemetry](../self-hosting/observability.md#client-telemetry) goes to the API on the same origin, so `connect-src` never lists a collector.
 
   `worker-src 'self'` allows the pdf.js worker and `img-src blob:` the photo preview. `style-src 'unsafe-inline'` is there for the design kit's inline SVG icon styles. The NixOS module's nginx sends exactly this header with the SPA (`nix/module.nix`; `tests/security-headers.test.ts` keeps them identical), and `vite preview` sends it too, so the whole Playwright suite runs under it. If you serve `apps/web/dist` from your own proxy, send the same header on `/` and keep `nosniff`. The receipt downloads themselves keep the API's `Content-Security-Policy: default-src 'none'; sandbox`.
 - **Body size.** A 10 MiB file is a 10 MiB request body; proxies must accept 20 MB request bodies on `/api/receipts` ([receipts](../reference/receipts.md#proxies-and-timeouts)).

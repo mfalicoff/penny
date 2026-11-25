@@ -86,11 +86,10 @@ var alloy = ObservabilityImages
     .WithHttpEndpoint(targetPort: 12345, name: "http")
     .WithEndpoint(targetPort: 4317, scheme: "http", name: "otlp-grpc")
     .WithHttpEndpoint(targetPort: 4318, name: "otlp-http")
-    // Client ingest (MAZ-128), fixed so the web app (MAZ-129) has stable addresses:
-    // OTLP/HTTP for client services and the Grafana Faro receiver, both allowing the
-    // local Vite origin by default (config.alloy).
-    .WithHttpEndpoint(port: 4319, targetPort: 4319, name: "otlp-clients")
-    .WithHttpEndpoint(port: 12347, targetPort: 12347, name: "faro")
+    // Client telemetry (MAZ-129): the API forwards the web and iOS apps' reports here
+    // (ClientTelemetry__*, below); clients never post to Alloy themselves.
+    .WithHttpEndpoint(targetPort: 4319, name: "otlp-clients")
+    .WithHttpEndpoint(targetPort: 12347, name: "faro")
     .WithHttpHealthCheck("/-/ready", endpointName: "http")
     .WaitFor(loki)
     .WaitFor(tempo)
@@ -226,6 +225,12 @@ var api = builder
     .WithEnvironment("OTEL_METRIC_EXPORT_INTERVAL", "5000")
     .WithEnvironment("OTEL_BSP_SCHEDULE_DELAY", "1000")
     .WithEnvironment("OTEL_BLRP_SCHEDULE_DELAY", "1000")
+    // Opt-in client telemetry through the API (MAZ-129). The web app still asks first.
+    .WithEnvironment(
+        "ClientTelemetry__FaroUrl",
+        ReferenceExpression.Create($"{alloy.GetEndpoint("faro")}/collect")
+    )
+    .WithEnvironment("ClientTelemetry__OtlpEndpoint", alloy.GetEndpoint("otlp-clients"))
     .WithUrlForEndpoint("http", url => url.DisplayText = "API")
     .WithUrl("/scalar/v1", "Scalar")
     .WithHttpHealthCheck("/api/ready", endpointName: "http")
