@@ -74,6 +74,38 @@ async function exportPane(p: Page, download: boolean) {
   await expect(p.getByText(/^penny-export-.*· ready$/)).toBeVisible();
 }
 
+/**
+ * MAZ-129: the cards' server collects reports (`ClientTelemetry__FaroUrl`), the test stack doesn't,
+ * so `/api/info` says it does here and reports are answered without reaching the API. `choices` is
+ * what this browser already chose; without it the person hasn't been asked yet.
+ */
+async function offerTelemetry(p: Page, { sessionReplay = true, choices }: { sessionReplay?: boolean; choices?: { errors: boolean; performance: boolean; replay: boolean } } = {}) {
+  await p.route("**/api/info", async (route) => {
+    const response = await route.fetch();
+    const json = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({ response, json: { ...json, telemetry: { web: true, sessionReplay, native: false } } });
+  });
+  await p.route("**/api/telemetry/**", (route) => route.fulfill({ status: 202, json: { ok: true } }));
+  if (choices) {
+    await p.addInitScript((saved) => {
+      localStorage.setItem("penny.telemetry", saved);
+    }, JSON.stringify({ ...choices, decided: true }));
+  }
+}
+
+// MAZ-129: Settings › Privacy with error reports on (the cards' switches).
+async function privacyPane(p: Page, sessionReplay: boolean) {
+  await offerTelemetry(p, { sessionReplay, choices: { errors: true, performance: false, replay: false } });
+  await p.goto("/settings/privacy");
+  await expect(p.getByRole("switch", { name: "Share error reports" })).toBeChecked();
+}
+
+// MAZ-129: Home with "Help fix problems faster?", asked once the server collects reports.
+async function monitoringPrompt(p: Page) {
+  await offerTelemetry(p);
+  await home(p);
+  await expect(p.getByRole("dialog", { name: "Help fix problems faster?" })).toBeVisible();
+}
 
 async function home(page: Page, path = "/") {
   await page.goto(path);
@@ -1063,14 +1095,22 @@ const cards: Record<string, Card> = {
     open: ({ page: p }) => exportPane(p, true),
     note: "The web saves the file with the browser's own download; the native Save or share sheet doesn't apply.",
   },
-  "iphone-monitoring-prompt": { skip: { status: "not-built", note: "The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt." } },
-  "iphone-privacy": { skip: { status: "not-built", note: "The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person." } },
+  "iphone-monitoring-prompt": {
+    open: ({ page: p }) => monitoringPrompt(p),
+    note: "The browser's wording: errors and loading times with the browser and app version, not crashes with the device model.",
+  },
+  "iphone-privacy": {
+    open: ({ page: p }) => privacyPane(p, false),
+    note: "The browser's wording: error reports and pages, not crash reports and screens; the policy opens in a new tab, not Safari.",
+  },
   "ipad-profile": {
     open: ({ page: p }) => profilePane(p),
   },
   "web-profile": {
-    open: ({ page: p }) => profilePane(p),
-    note: "The section list has no Privacy: that pane isn't built yet.",
+    open: async ({ page: p }) => {
+      await offerTelemetry(p, { choices: { errors: false, performance: false, replay: false } });
+      await profilePane(p);
+    },
   },
   "web-sign-in-providers": { open: ({ page: p }) => providersSignIn(p), note: `${PROVIDERS_STUBBED} ${EMAIL_STUBBED}` },
   "web-create-account": { open: ({ page: p }) => providersCreateAccount(p), note: PROVIDERS_STUBBED },
@@ -1151,16 +1191,20 @@ const cards: Record<string, Card> = {
     },
   },
   "web-delete-account": {
-    open: ({ page: p }) => deleteAccountDialog(p),
-    note: "The section list has no Privacy: that pane isn't built yet.",
+    open: async ({ page: p }) => {
+      await offerTelemetry(p, { choices: { errors: false, performance: false, replay: false } });
+      await deleteAccountDialog(p);
+    },
   },
   "web-export-all": {
     fresh: true,
-    open: ({ page: p }) => exportPane(p, true),
-    note: "The section list has no Privacy: that pane isn't built yet.",
+    open: async ({ page: p }) => {
+      await offerTelemetry(p, { choices: { errors: false, performance: false, replay: false } });
+      await exportPane(p, true);
+    },
   },
-  "web-privacy": { skip: { status: "not-built", note: "The web has no Privacy pane: telemetry is on or off for the whole server, with no switches for the person." } },
-  "web-monitoring-prompt": { skip: { status: "not-built", note: "The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt." } },
+  "web-privacy": { open: ({ page: p }) => privacyPane(p, true) },
+  "web-monitoring-prompt": { open: ({ page: p }) => monitoringPrompt(p) },
 };
 
 /**

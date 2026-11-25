@@ -69,9 +69,12 @@ export function MonitoringPrompt({ waiting = false }: { waiting?: boolean }) {
   }
 
   return (
+    <>
+    <div className="consent__scrim" aria-hidden="true" />
     <div
       className="consent consent--sheet"
       role="dialog"
+      aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={bodyId}
     >
@@ -113,5 +116,6 @@ export function MonitoringPrompt({ waiting = false }: { waiting?: boolean }) {
         <PrivacyPolicyLink className="privacy-link--tint" />
       </p>
     </div>
+    </>
   );
 }
