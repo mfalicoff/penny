@@ -26,6 +26,8 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var failure: String?
+    /// The provider whose sign-in sheet is open (MAZ-170).
+    @State private var waitingFor: SignInProvider.ID?
     @State private var notice: String?
     @FocusState private var focus: Field?
 
@@ -53,7 +55,15 @@ struct SignInView: View {
                     .padding(.top, mode == .signIn ? 0 : 14)
                 header
                 notices
-                fields.padding(.top, 28)
+                if providersLead {
+                    // `iphone-sign-in-providers`, `iphone-create-account-providers`: every provider
+                    // first, then the email form under "or use your email".
+                    providerButtons.padding(.top, mode == .signIn ? 22 : 18)
+                    OrDivider(text: "or use your email").padding(.vertical, 14)
+                    fields
+                } else {
+                    fields.padding(.top, 28)
+                }
                 if mode == .createAccount { PasswordStrengthView(password: password) }
                 if let failure { AuthMessage(text: failure).padding(.top, 14) }
                 if let notice { AuthMessage(text: notice, tone: .notice).padding(.top, 14) }
@@ -64,8 +74,10 @@ struct SignInView: View {
                 )
                 .disabled(busy || auth.server == nil)
                 .accessibilityIdentifier(mode == .signIn ? "auth.signIn" : "auth.createAccount")
-                .padding(.top, mode == .signIn ? 18 : 26)
-                if mode == .signIn { singleSignOn }
+                .padding(.top, providersLead ? 16 : (mode == .signIn ? 18 : 26))
+                // A lone single sign-on follows Sign in only: create account (`iphone-create-account`)
+                // has none, and signing in with it creates the account anyway.
+                if !providersLead, mode == .signIn { trailingProviders }
                 // MAZ-169: the agreement under Create account (`iphone-create-account`).
                 if mode == .createAccount, let policy = auth.server?.privacyPolicy {
                     Text(PrivacyPolicyText.agreement(policy))
@@ -96,6 +108,7 @@ struct SignInView: View {
         .signedOutBackground()
         .hiddenNavigationBar()
         .task(id: auth.server?.server) {
+            // Create account keeps the list sign-in just read, so its layout doesn't jump.
             if mode == .signIn { await auth.refreshSingleSignOn() }
             await auth.refreshServerInfo()
         }
@@ -105,31 +118,36 @@ struct SignInView: View {
     }
 
     /// Sign-in leads with the leaf and a centered "Welcome back."; create account has no leaf and
-    /// a left-aligned two-line headline, as on the cards.
+    /// a left-aligned two-line headline, as on the cards. With Apple or Google leading
+    /// (`iphone-sign-in-providers`, `iphone-create-account-providers`) the header is tighter: a
+    /// smaller leaf and no lede on sign-in, a one-line headline on create account.
     @ViewBuilder
     private var header: some View {
         if mode == .signIn {
-            BrandHeader().padding(.top, 44)
+            BrandHeader(size: providersLead ? 56 : 64).padding(.top, providersLead ? 6 : 44)
             Text("Welcome back.")
                 .font(PennyFont.style(.largeTitle))
                 .foregroundStyle(PennyColor.label)
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
-                .padding(.top, 18)
-            Text("Sign in to see your month.")
-                .font(.callout)
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .multilineTextAlignment(.center)
-                .padding(.top, 6)
+                .padding(.top, providersLead ? 14 : 18)
+            if !providersLead {
+                Text("Sign in to see your month.")
+                    .font(.callout)
+                    .foregroundStyle(PennyColor.secondaryLabel)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 6)
+            }
         } else {
-            Text("Make yourself\nat home.")
-                .font(PennyFont.style(.largeTitle))
+            Text(providersLead ? "Make yourself at home." : "Make yourself\nat home.")
+                .font(providersLead ? .title.weight(.bold) : PennyFont.style(.largeTitle))
                 .foregroundStyle(PennyColor.label)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityLabel("Make yourself at home.")
                 .accessibilityAddTraits(.isHeader)
-                .padding(.top, 28)
+                .padding(.top, providersLead ? 20 : 28)
             Text("Your account lives on this server. Penny never connects to your bank.")
-                .font(.callout)
+                .font(providersLead ? .subheadline : .callout)
                 .foregroundStyle(PennyColor.secondaryLabel)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 6)
@@ -230,35 +248,30 @@ struct SignInView: View {
         .disabled(busy)
     }
 
-    /// The cards' neutral glass capsule with a key: "Continue with SSO". VoiceOver also hears
-    /// the provider the server names.
+    /// The server's providers, in its order (MAZ-170). Empty while unknown or when it lists none.
+    private var providers: [SignInProvider] {
+        if case .available(let providers) = auth.singleSignOn { return providers }
+        return []
+    }
+
+    /// Apple or Google present: every provider leads, above the email form.
+    private var providersLead: Bool { ProviderText.leads(providers) }
+
+    private var providerButtons: some View {
+        ProviderButtons(
+            providers: providers, creating: mode == .createAccount,
+            waiting: auth.state == .signingIn(.singleSignOn) ? waitingFor : nil, disabled: busy, start: start)
+    }
+
+    /// A lone single sign-on follows the form under "or" (`iphone-sign-in`), with the check's
+    /// progress and retry in the same place.
     @ViewBuilder
-    private var singleSignOn: some View {
+    private var trailingProviders: some View {
         switch auth.singleSignOn {
-        case .available(let label):
+        case .available:
             VStack(spacing: 18) {
                 OrDivider()
-                Button(action: startSingleSignOn) {
-                    HStack(spacing: 8) {
-                        if auth.state == .signingIn(.singleSignOn) {
-                            ProgressView()
-                        } else {
-                            Image(systemName: "key").accessibilityHidden(true)
-                        }
-                        Text(auth.state == .signingIn(.singleSignOn) ? "Waiting for \(label)…" : "Continue with SSO")
-                    }
-                    .font(PennyFont.style(.headline))
-                    .foregroundStyle(PennyColor.label)
-                    .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget + 8)
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .pennyGlass(in: Capsule())
-                .disabled(busy)
-                .accessibilityLabel(
-                    auth.state == .signingIn(.singleSignOn) ? "Waiting for \(label)" : "Continue with SSO, \(label)"
-                )
-                .accessibilityIdentifier("auth.singleSignOn")
+                providerButtons
             }
             .padding(.top, 18)
         case .failed:
@@ -311,19 +324,35 @@ struct SignInView: View {
         }
     }
 
-    private func startSingleSignOn() {
+    /// Signs in with `provider`: Apple's own sheet for a native provider when this build may use
+    /// it (`AppleSignInAuthenticator.isEnabled`), otherwise the provider's page in the system
+    /// browser sheet.
+    private func start(_ provider: SignInProvider) {
         guard !busy else { return }
         failure = nil
         notice = nil
-        let authenticator = SystemWebAuthenticator(session: webAuthenticationSession)
+        focus = nil
+        waitingFor = provider.id
+        let web = SystemWebAuthenticator(session: webAuthenticationSession)
         Task {
+            defer { waitingFor = nil }
             do throws(AuthFailure) {
-                if try await auth.signInWithSingleSignOn(using: authenticator) == .cancelled {
-                    notice = "Single sign-on was cancelled. You can try again or use your password."
+                let outcome: SignInOutcome
+                if provider.native, AppleSignInAuthenticator.isEnabled {
+                    outcome = try await auth.signInNatively(with: provider, using: AppleSignInAuthenticator())
+                } else {
+                    outcome = try await auth.signInWithSingleSignOn(provider: provider, using: web)
                 }
+                if outcome == .cancelled { notice = Self.cancelledNotice(provider) }
             } catch {
                 failure = error.message
             }
         }
+    }
+
+    static func cancelledNotice(_ provider: SignInProvider) -> String {
+        provider.isBrand
+            ? "Sign-in with \(provider.label) was cancelled. You can try again or use your email."
+            : "Single sign-on was cancelled. You can try again or use your password."
     }
 }

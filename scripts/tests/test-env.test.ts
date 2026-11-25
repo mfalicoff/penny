@@ -8,7 +8,7 @@ import { createServer } from "node:https";
 import { connect, type AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { databaseName, nativePostgresBin, newRunId, postgresImage, postgresMode, runnerEnvironment, validRunId, webOrigins } from "../../scripts/test-env/environment.mjs";
+import { databaseName, nativePostgresBin, newRunId, oidcEnvironment, postgresImage, postgresMode, runnerEnvironment, validRunId, webOrigins } from "../../scripts/test-env/environment.mjs";
 import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
 import { redirectUrisFor, selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
 import { integer, trustCertificate, writeCertificate } from "../../scripts/test-env/tls.mjs";
@@ -203,4 +203,33 @@ test("the SMTP sink accepts a message over plain SMTP and points the API at loop
   assert.equal(settings.Email__Smtp__Host, "127.0.0.1");
   assert.equal(settings.Email__Smtp__Security, "none");
   assert.equal(settings.Email__AppUrl, "https://127.0.0.1:5173");
+});
+
+test("--oidc-providers lists Apple and Google before the server's own single sign-on (MAZ-170)", () => {
+  const sso = { issuer: "https://127.0.0.1:4001", clientId: "penny", redirectUris: ["penny://auth/callback"] };
+  assert.deepEqual(oidcEnvironment(sso), {
+    Oidc__Issuer: sso.issuer,
+    Oidc__ClientId: "penny",
+    Oidc__RedirectUris: "penny://auth/callback",
+    Oidc__AllowRegistration: "true",
+  });
+  const google = { issuer: "https://127.0.0.1:4003", clientId: "penny", redirectUris: ["penny://auth/callback", "https://localhost:5173/auth/callback"] };
+  const environment = oidcEnvironment(sso, [
+    { id: "apple", label: "Apple", icon: "apple", order: 1, settings: { ...google, issuer: "https://127.0.0.1:4002" } },
+    { id: "google", label: "Google", icon: "google", order: 2, settings: google },
+  ]);
+  assert.equal(environment.Oidc__Order, "3");
+  assert.equal(environment.Oidc__Providers__apple__Issuer, "https://127.0.0.1:4002");
+  assert.equal(environment.Oidc__Providers__google__Issuer, google.issuer);
+  assert.equal(environment.Oidc__Providers__google__RedirectUris, "penny://auth/callback,https://localhost:5173/auth/callback");
+  assert.equal(environment.Oidc__Providers__google__Label, "Google");
+  assert.equal(environment.Oidc__Providers__google__Icon, "google");
+  assert.equal(environment.Oidc__Providers__apple__Order, "1");
+  // --oidc-brands-only: Apple and Google alone, without the single-provider settings.
+  const brands = oidcEnvironment(undefined, [{ id: "google", label: "Google", icon: "google", order: 2, settings: google }]);
+  assert.equal(brands.Oidc__Issuer, undefined);
+  assert.equal(brands.Oidc__Order, undefined);
+  assert.equal(brands.Oidc__Providers__google__Issuer, google.issuer);
+  assert.throws(() => oidcEnvironment(sso, [{ id: "sso", label: "SSO", icon: "sso", order: 1, settings: google }]));
+  assert.throws(() => oidcEnvironment(sso, [{ id: "Bad Id", label: "X", icon: "sso", order: 1, settings: google }]));
 });

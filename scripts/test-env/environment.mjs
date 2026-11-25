@@ -276,13 +276,54 @@ export function buildApi() {
 }
 
 /**
+ * MAZ-170: API settings for the run's OIDC providers. The first is the single-provider
+ * `Oidc__*` setup (the provider `sso`, as self-hosters configure it); `--oidc-providers` adds
+ * more under `Oidc__Providers__<id>__*`, each a local provider with its own issuer, listed with
+ * the label and icon of the provider it stands in for (Apple, Google). Apple's own client secret,
+ * form_post and native sign-in need Apple's issuer, so these sign in like any other provider.
+ * @param {{ issuer: string, clientId: string, redirectUris: string[], allowRegistration?: boolean } | undefined} oidc
+ *   The single-provider setup; undefined lists only the extra providers.
+ * @param {{ id: string, label: string, icon: string, order: number,
+ *   settings: { issuer: string, clientId: string, redirectUris: string[] } }[]} [extra]
+ * @returns {Record<string, string>}
+ */
+export function oidcEnvironment(oidc, extra = []) {
+  /** @type {Record<string, string>} */
+  const environment = oidc ? {
+    Oidc__Issuer: oidc.issuer,
+    Oidc__ClientId: oidc.clientId,
+    Oidc__RedirectUris: oidc.redirectUris.join(","),
+    Oidc__AllowRegistration: oidc.allowRegistration === false ? "false" : "true",
+  } : {};
+  // With more providers the single sign-on comes last, as on the provider cards.
+  if (oidc && extra.length > 0) environment.Oidc__Order = String(Math.max(...extra.map((provider) => provider.order)) + 1);
+  for (const provider of extra) {
+    if (!/^[a-z0-9][a-z0-9_-]{0,31}$/.test(provider.id) || provider.id === "sso")
+      throw new Error(`An extra OIDC provider needs its own id, not ${provider.id}.`);
+    const prefix = `Oidc__Providers__${provider.id}__`;
+    Object.assign(environment, {
+      [`${prefix}Issuer`]: provider.settings.issuer,
+      [`${prefix}ClientId`]: provider.settings.clientId,
+      [`${prefix}RedirectUris`]: provider.settings.redirectUris.join(","),
+      [`${prefix}Label`]: provider.label,
+      [`${prefix}Icon`]: provider.icon,
+      [`${prefix}Order`]: String(provider.order),
+      [`${prefix}AllowRegistration`]: "true",
+    });
+  }
+  return environment;
+}
+
+/**
  * Starts an isolated environment and returns its state. On any failure everything
  * created so far is removed before the error is rethrown.
  * @param {{ runId?: string, host?: string, port?: number, webPort?: number, origins?: string[],
  *   build?: boolean, worker?: boolean, email?: boolean, http?: boolean,
  *   tls?: { pem: string, certificate: string, keyPath: string, trustBundle: string },
  *   oidc?: { issuer: string, clientId: string, redirectUris: string[],
- *   certificate: string, allowRegistration?: boolean } }} options
+ *   certificate: string, allowRegistration?: boolean },
+ *   oidcProviders?: { id: string, label: string, icon: string, order: number,
+ *     settings: { issuer: string, clientId: string, redirectUris: string[], certificate?: string } }[] }} options
  */
 export async function up(options = {}) {
   const runId = options.runId ?? newRunId();
@@ -333,6 +374,7 @@ export async function up(options = {}) {
     state.webPort = options.webPort ?? await freePort();
     state.origins = options.origins ?? webOrigins([state.webPort]);
     if (options.oidc) state.oidc = { issuer: options.oidc.issuer, clientId: options.oidc.clientId, certificate: options.oidc.certificate };
+    if (options.oidcProviders?.length) state.oidcProviders = options.oidcProviders.map((provider) => ({ id: provider.id, issuer: provider.settings.issuer }));
     // Emailed receipts (MAZ-184): penny-render now, the Email Worker once the API is ready.
     const email = options.email ? emailSettings() : undefined;
     if (email) {
@@ -375,12 +417,10 @@ export async function up(options = {}) {
         ...(email ? apiEmailEnvironment(email, state.email.rendererUrl) : { InboundMail__Worker: "false" }),
         // Outgoing email (MAZ-124) only with --smtp: without it the server sends no email, as by default.
         ...(options.smtp ? apiSmtpEnvironment(options.smtp, state.origins) : {}),
-        ...(options.oidc ? {
-          Oidc__Issuer: options.oidc.issuer,
-          Oidc__ClientId: options.oidc.clientId,
-          Oidc__RedirectUris: options.oidc.redirectUris.join(","),
-          Oidc__AllowRegistration: options.oidc.allowRegistration === false ? "false" : "true",
-          TestControls__OidcCertificate: options.oidc.certificate,
+        ...(options.oidc || options.oidcProviders?.length ? {
+          ...oidcEnvironment(options.oidc, options.oidcProviders),
+          // Every local provider shares the run's certificate.
+          TestControls__OidcCertificate: (options.oidc ?? options.oidcProviders?.[0]?.settings)?.certificate,
         } : {}),
       },
     });

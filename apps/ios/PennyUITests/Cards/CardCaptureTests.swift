@@ -736,26 +736,85 @@ final class CardCaptureTests: CardTestCase {
 
     @MainActor
     func test_whenSignedOut_IphoneSignIn_ShouldBeCaptured() async throws {
+        // The card has the server's single sign-on only; with Apple and Google listed the
+        // providers lead instead (iphone-sign-in-providers).
+        if try await stack().listsAppleAndGoogle() {
+            return try blocked("iphone-sign-in", note: Self.needsSingleSignOnOnly)
+        }
         try await card("iphone-sign-in") { card in
-            let solo = try card.seeded().user(card.state.alias ?? "solo")
-            try card.penny.type(solo.email, into: AccessibilityID.Auth.email)
-            card.penny.hideKeyboard()
-            // The sign-in form has no tap-to-dismiss and its keyboard sits lower than the generic
-            // drag reaches: drag the form down into the keyboard (interactive dismiss), so the card
-            // shows Sign in with the demo link below it, as on the card.
-            if card.app.keyboards.firstMatch.exists {
-                card.app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
-                    .press(
-                        forDuration: 0.05,
-                        thenDragTo: card.app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
-                _ = card.app.keyboards.firstMatch.waitForNonExistence(timeout: 3)
-            }
-            try card.penny.wait(for: AccessibilityID.Auth.tryDemo)
+            try await typeSignInEmail(card)
+        }
+    }
+
+    /// Types the seeded email on sign-in and puts the keyboard away, as the sign-in cards show it.
+    @MainActor
+    private func typeSignInEmail(_ card: CardContext) async throws {
+        let solo = try card.seeded().user(card.state.alias ?? "solo")
+        try card.penny.type(solo.email, into: AccessibilityID.Auth.email)
+        dragKeyboardAway(card)
+        try card.penny.wait(for: AccessibilityID.Auth.tryDemo)
+    }
+
+    /// The signed-out forms have no tap-to-dismiss, and a tap could land on a provider button
+    /// (MAZ-170): drag the form down into the keyboard (interactive dismiss) instead.
+    @MainActor
+    private func dragKeyboardAway(_ card: CardContext) {
+        if card.app.keyboards.firstMatch.exists {
+            card.app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
+                .press(
+                    forDuration: 0.05,
+                    thenDragTo: card.app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+            _ = card.app.keyboards.firstMatch.waitForNonExistence(timeout: 3)
+        }
+    }
+
+    // MARK: iPhone sign-in providers (MAZ-170)
+
+    @MainActor
+    func test_whenTheServerListsAppleAndGoogle_IphoneSignInProviders_ShouldBeCaptured() async throws {
+        // The card's server lists Apple, Google and its own SSO.
+        guard try await stack().signInProviders() == ["apple", "google", "sso"] else {
+            return try blocked("iphone-sign-in-providers", note: Self.needsProviders)
+        }
+        try await card("iphone-sign-in-providers") { card in
+            try card.penny.wait(for: AccessibilityID.Auth.provider("apple"), timeout: 30)
+            try await typeSignInEmail(card)
         }
     }
 
     @MainActor
+    func test_whenTheServerListsAppleAndGoogle_IphoneCreateAccountProviders_ShouldBeCaptured() async throws {
+        // The card's server lists Apple and Google only.
+        guard try await stack().signInProviders() == ["apple", "google"] else {
+            return try blocked("iphone-create-account-providers", note: Self.needsBrandsOnly)
+        }
+        try await card(
+            "iphone-create-account-providers",
+            note: "Screenshots leave out a secure field's bullets, so the typed password doesn't show"
+        ) { card in
+            try card.penny.tap(AccessibilityID.Auth.switchMode)
+            try card.penny.wait(for: AccessibilityID.Auth.provider("google"), timeout: 30)
+            try card.penny.type("Max Falicoff", into: AccessibilityID.Profile.signUpName)
+            try card.penny.type("max@example.test", into: AccessibilityID.Auth.email)
+            try card.penny.type("penny-card-pass", into: AccessibilityID.Auth.password)
+            dragKeyboardAway(card)
+        }
+    }
+
+    private static let needsBrandsOnly =
+        "Needs a stack that lists Apple and Google only: PENNY_STACK_OIDC_PROVIDERS=brands scripts/ios.sh "
+        + "ui-test cards (penny-env --oidc-providers --oidc-brands-only)"
+    private static let needsProviders =
+        "Needs a stack that lists Apple and Google: PENNY_STACK_OIDC_PROVIDERS=1 scripts/ios.sh ui-test cards "
+        + "(penny-env --oidc-providers)"
+    private static let needsSingleSignOnOnly =
+        "The card shows the server's single sign-on alone; run without PENNY_STACK_OIDC_PROVIDERS"
+
+    @MainActor
     func test_whenSignedOut_IphoneCreateAccount_ShouldBeCaptured() async throws {
+        if try await stack().listsAppleAndGoogle() {
+            return try blocked("iphone-create-account", note: Self.needsSingleSignOnOnly)
+        }
         try await card(
             "iphone-create-account",
             note: "Screenshots leave out a secure field's bullets, so the typed password doesn't show"
