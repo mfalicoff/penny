@@ -1,4 +1,4 @@
-// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.0.0).
+// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.1.0).
 //
 // These types mirror the JSON exactly and carry no presentation state. Money is integer
 // minor units (cents, Int64), calendar dates stay "YYYY-MM-DD" strings (never Date, so a
@@ -285,6 +285,8 @@ struct WireOk: Decodable, Sendable {
 
 struct WireErrorBody: Decodable, Sendable {
     var error: String
+    /// The stable failure name (contract 2.1.0). Absent from a server before 2.1.0.
+    var code: String?
 }
 
 /// Who paid a shared expense, as the household members see them (MAZ-275).

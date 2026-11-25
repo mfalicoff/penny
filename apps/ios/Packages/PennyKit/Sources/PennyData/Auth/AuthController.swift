@@ -680,7 +680,7 @@ public final class AuthController {
             return nil
         } catch let error as APIError {
             switch error {
-            case .notFound:
+            case .notFound where Self.meansEmailOff(error):
                 setEmailEnabled(false, for: account.server)
                 return "This server doesn't send email."
             case .rateLimited: return "Too many attempts. Wait a few minutes and try again."
@@ -708,11 +708,12 @@ public final class AuthController {
             profile = try await client.changeEmail(WireEmailChange(email: trimmed, password: password))
         } catch let error as APIError {
             switch error {
-            case .conflict(let message): return .invalidEmail(message ?? "Another account already uses this email.")
-            case .badRequest(let message):
+            case .conflict(let message, _): return .invalidEmail(message ?? "Another account already uses this email.")
+            case .badRequest(let message, _):
                 let text = message ?? "Enter a valid email address."
-                return text.localizedCaseInsensitiveContains("email") ? .invalidEmail(text) : .wrongPassword(text)
-            case .forbidden(let message):
+                return error.matches(.passwordResetInvalidEmail, legacyText: "email")
+                    ? .invalidEmail(text) : .wrongPassword(text)
+            case .forbidden(let message, _):
                 return .failed(message ?? "Your sign-in provider manages your email. Change it with your provider.")
             case .rateLimited: return .failed("Too many attempts. Wait a few minutes and try again.")
             default:
@@ -730,6 +731,12 @@ public final class AuthController {
         await migration.value
         if emailMigration == migration { emailMigration = nil }
         return .changed(profile)
+    }
+
+    /// A 404 that says the server stopped sending email: `mail.disabled`, or any 404 from a server
+    /// before contract 2.1.0, which sends no code. Another code (`route.not_found`) is not that.
+    private static func meansEmailOff(_ error: APIError) -> Bool {
+        error.matches(.mailDisabled) { _ in true }
     }
 
     private static func verificationMessage(_ error: APIError, fallback: String) -> String {
@@ -754,7 +761,7 @@ public final class AuthController {
         do {
             try await anonymousClient(current.server).requestPasswordReset(email: trimmed)
             return .sent
-        } catch APIError.notFound {
+        } catch let error as APIError where error.status == 404 && Self.meansEmailOff(error) {
             setEmailEnabled(false, for: current.server)
             return .emailOff
         } catch {
@@ -777,9 +784,14 @@ public final class AuthController {
         }
         do {
             try await anonymousClient(current.server).resetPassword(token: token, password: password)
-        } catch APIError.badRequest(let message) {
-            let text = message ?? "This reset code is invalid or has expired."
-            if text.localizedCaseInsensitiveContains("invalid or has expired") {
+        } catch let error as APIError where error.status == 400 {
+            let text = error.message ?? "This reset code is invalid or has expired."
+            if error.matches(
+                .passwordResetInvalidToken,
+                legacy: { _ in
+                    text.localizedCaseInsensitiveContains("invalid or has expired")
+                })
+            {
                 throw AuthFailure(.invalidCode, text)
             }
             throw AuthFailure(.invalidInput, text)
@@ -802,9 +814,9 @@ public final class AuthController {
         switch error as? APIError {
         case .rateLimited:
             return AuthFailure(.rateLimited, "Too many attempts. Wait a few minutes and try again.")
-        case .badRequest(let message):
+        case .badRequest(let message, _):
             return AuthFailure(.invalidInput, message ?? "Enter a valid email address.")
-        case .forbidden(let message):
+        case .forbidden(let message, _):
             return AuthFailure(.server, message ?? "This server refused the request. Try again from the Penny app.")
         case .notFound:
             return AuthFailure(
@@ -906,11 +918,11 @@ public final class AuthController {
             return AuthFailure(.offline, "You're offline. Connect to the internet and try again.")
         case .timeout, .unreachable:
             return AuthFailure(.unreachable, "Can't reach \(host). Check your connection and try again.")
-        case .rateLimited(let after):
+        case .rateLimited(let after, _):
             let minutes = after.map { max(1, Int(($0 / 60).rounded(.up))) } ?? 15
             return AuthFailure(
                 .rateLimited, "Too many attempts. Please try again in \(minutes) minute\(minutes == 1 ? "" : "s").")
-        case .unauthorized(let message):
+        case .unauthorized(let message, _):
             switch method {
             case .singleSignOn:
                 return AuthFailure(
@@ -918,19 +930,20 @@ public final class AuthController {
             default:
                 return AuthFailure(.invalidCredentials, message ?? "Email or password is incorrect.")
             }
-        case .badRequest(let message):
+        case .badRequest(let message, _):
             if method == .singleSignOn {
                 return AuthFailure(
                     .singleSignOnUnavailable, message ?? "Single sign-on is unavailable. Please try again.")
             }
             return AuthFailure(.invalidInput, message ?? "Enter a valid email and a password of 10–256 characters.")
-        case .forbidden(let message):
+        case .forbidden(let message, let code):
+            let closed = code == .authRegistrationDisabled || code == .authOidcRegistrationDisabled
             return AuthFailure(
-                method == .singleSignOn ? .singleSignOnRejected : .registrationDisabled,
+                closed || method != .singleSignOn ? .registrationDisabled : .singleSignOnRejected,
                 message ?? "This server doesn't allow new accounts.")
-        case .conflict(let message):
+        case .conflict(let message, _):
             return AuthFailure(.accountExists, message ?? "An account already uses this email.")
-        case .notFound(let message):
+        case .notFound(let message, _):
             if method == .singleSignOn {
                 return AuthFailure(
                     .singleSignOnUnavailable, message ?? "Single sign-on is not configured on this server.")

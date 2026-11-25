@@ -151,6 +151,34 @@ struct EmailVerificationTests {
         #expect(controller.server?.emailEnabled == false)
     }
 
+    @Test("whenTheResendRouteIsMissingButEmailIsOn_AuthController_ShouldKeepEmailAndSayItDidntSend")
+    func resendRouteMissing() async throws {
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport([
+                "POST /api/auth/login": Routes.json(Routes.session(email)),
+                "POST /api/auth/email-verification/resend": Routes.json(
+                    404, #"{"error":"Not found.","code":"route.not_found"}"#),
+            ]), preferences: EphemeralAuthPreferences(server: emailOn))
+        await controller.restore()
+        try await controller.signIn(email: email, password: "long enough pass")
+        #expect(await controller.resendVerificationEmail() == "The link didn't send. Try again.")
+        #expect(controller.server?.emailEnabled == true, "only mail.disabled means the server stopped sending email")
+    }
+
+    @Test("whenTheServerSaysMailDisabled_AuthController_ShouldForgetEmailWhateverTheMessage")
+    func resendMailDisabled() async throws {
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport([
+                "POST /api/auth/login": Routes.json(Routes.session(email)),
+                "POST /api/auth/email-verification/resend": Routes.json(
+                    404, #"{"error":"Email is off.","code":"mail.disabled"}"#),
+            ]), preferences: EphemeralAuthPreferences(server: emailOn))
+        await controller.restore()
+        try await controller.signIn(email: email, password: "long enough pass")
+        #expect(await controller.resendVerificationEmail() == "This server doesn't send email.")
+        #expect(controller.server?.emailEnabled == false)
+    }
+
     @Test("whenResendingTooOften_AuthController_ShouldSayToWait")
     func resendLimited() async throws {
         let controller = AuthFixtures.controller(
@@ -215,6 +243,9 @@ struct EmailVerificationTests {
             (400, #"{"error":"Enter a valid email address."}"#, "email"),
             (400, #"{"error":"Your current password is incorrect."}"#, "password"),
             (403, #"{"error":"Your sign-in provider manages your email. Change it with your provider."}"#, "failed"),
+            // Contract 2.1.0: the code names the field, whatever the message says (MAZ-187).
+            (400, #"{"error":"That address won't work.","code":"password_reset.invalid_email"}"#, "email"),
+            (400, #"{"error":"Wrong password for this email.","code":"auth.wrong_current_password"}"#, "password"),
         ])
     func changeRefused(status: Int, body: String, field: String) async throws {
         let log = CallLog()
