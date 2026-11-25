@@ -13,7 +13,7 @@
 // PENNY_SMOKE_KEEP=1 leaves both stacks running after a failure.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,7 +30,10 @@ const observabilityProject = `penny-otel-smoke-${id}-grafana`;
 const directory = path.join(root, ".cache", "observability-smoke", id);
 const observabilityCompose = path.join(root, "apps/backend/development/observability/compose.yaml");
 
-const ALERT_RULES = 8;
+// Every rule in the provisioning file (no YAML parser at run time: one `- uid:` per rule).
+const ALERT_RULES = (
+  readFileSync(path.join(root, "apps/backend/development/observability/grafana/provisioning/alerting/penny.yaml"), "utf8").match(/^\s+- uid: /gm) ?? []
+).length;
 let failures = 0;
 
 function check(condition, description, detail = "") {
@@ -130,7 +133,7 @@ async function main() {
   try {
     console.log(`# ${appProject} on ${origin}, Grafana on ${grafana} (api ${apiImage})`);
     // Penny first: it creates the network Alloy joins.
-    app(["up", "-d", "--wait", "--no-build", "--pull", "never"]);
+    app(["up", "-d", "--wait", "--no-build", "--pull", "missing"]);
     check(true, "Penny stack started");
     observability(["up", "-d", "--wait"]);
     check(true, "observability stack started; Grafana and Prometheus healthy");

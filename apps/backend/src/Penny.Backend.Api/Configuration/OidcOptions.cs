@@ -1,89 +1,57 @@
+using System.Text.RegularExpressions;
+
 namespace Penny.Backend.Api.Configuration;
 
-// OpenID Connect settings (`Oidc__*`). OIDC is off unless an issuer or client ID is
-// set; empty values count as unset.
-public sealed record OidcOptions(
-    string Issuer,
-    string ClientId,
-    string? ClientSecret,
-    IReadOnlyList<string> RedirectUris,
-    string Label,
-    bool AllowRegistration
-)
+// OpenID Connect sign-in providers (MAZ-170), configured as a dictionary keyed by provider id
+// (`Oidc__Providers__<id>__*`). The single-provider settings from before (`Oidc__Issuer`,
+// `Oidc__ClientId`, ...) still work: they are read as the provider `sso`. OIDC is off when no
+// provider is configured; empty values count as unset.
+public sealed partial record OidcOptions(IReadOnlyList<OidcProviderOptions> Providers)
 {
-    public const string DefaultLabel = "Single sign-on";
-    public const string NativeRedirectUri = "penny://auth/callback";
-    private const int MaxUriLength = 2048;
+    public const string LegacyProviderId = "sso";
+    private const string ProvidersSection = "Oidc:Providers";
 
-    public override string ToString() => "OIDC options (client secret redacted)";
+    public override string ToString() =>
+        $"OIDC options ({Providers.Count} providers, client secrets redacted)";
 
     public static OidcOptions? Read(IConfiguration configuration)
     {
-        var issuer = Value(configuration, "Oidc:Issuer");
-        var clientId = Value(configuration, "Oidc:ClientId");
-        if (issuer is null && clientId is null)
-            return null;
-        var redirectUris = Value(configuration, "Oidc:RedirectUris");
-        if (issuer is null || clientId is null || redirectUris is null)
-            throw new InvalidOperationException(
-                "Oidc:Issuer, Oidc:ClientId and Oidc:RedirectUris are required when OIDC is configured."
-            );
-        if (!IsIssuer(issuer))
-            throw new InvalidOperationException(
-                "Oidc:Issuer must be an HTTPS issuer URL without credentials, query or fragment."
-            );
-        List<string> redirects =
-        [
-            .. redirectUris.Split(
-                ',',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
-            ),
-        ];
-        if (redirects.Count == 0 || !redirects.All(IsRedirectUri))
-            throw new InvalidOperationException(
-                "Oidc:RedirectUris must use HTTPS, localhost HTTP, or penny://auth/callback, without query strings or fragments."
-            );
-        return new(
-            issuer,
-            clientId,
-            Value(configuration, "Oidc:ClientSecret"),
-            redirects,
-            Value(configuration, "Oidc:Label") ?? DefaultLabel,
-            ReadAllowRegistration(configuration)
-        );
+        var providers = new List<OidcProviderOptions>();
+        if (
+            OidcProviderOptions.Read(configuration.GetSection("Oidc"), "Oidc", LegacyProviderId) is
+            { } legacy
+        )
+            providers.Add(legacy);
+        foreach (var section in configuration.GetSection(ProvidersSection).GetChildren())
+        {
+            var id = section.Key.ToLowerInvariant();
+            var prefix = $"{ProvidersSection}:{section.Key}";
+            if (!ProviderId().IsMatch(id))
+                throw new InvalidOperationException(
+                    $"{prefix}: a provider id is 1 to 32 lowercase letters, digits, '-' or '_', starting with a letter or digit."
+                );
+            if (OidcProviderOptions.Read(section, prefix, id) is not { } provider)
+                continue;
+            if (providers.Any(existing => existing.Id == id))
+                throw new InvalidOperationException(
+                    id == LegacyProviderId
+                        ? $"{prefix} and the single-provider Oidc:Issuer settings both configure the provider '{LegacyProviderId}'. Keep one of them."
+                        : $"{prefix} is configured twice."
+                );
+            providers.Add(provider);
+        }
+        return providers.Count == 0
+            ? null
+            : new([
+                .. providers
+                    .OrderBy(provider => provider.Order)
+                    .ThenBy(provider => provider.Id, StringComparer.Ordinal),
+            ]);
     }
 
-    private static string? Value(IConfiguration configuration, string key) =>
-        configuration[key] is { Length: > 0 } value ? value : null;
+    public OidcProviderOptions? Find(string id) =>
+        Providers.FirstOrDefault(provider => provider.Id == id);
 
-    // A misspelled value fails startup instead of silently disabling registration.
-    private static bool ReadAllowRegistration(IConfiguration configuration)
-    {
-        var value = Value(configuration, "Oidc:AllowRegistration");
-        if (value is null)
-            return false;
-        return bool.TryParse(value, out var parsed)
-            ? parsed
-            : throw new InvalidOperationException("Oidc:AllowRegistration must be true or false.");
-    }
-
-    private static bool IsIssuer(string issuer) =>
-        issuer.Length <= MaxUriLength
-        && IsPlainAbsolute(issuer, out var uri)
-        && uri.Scheme == Uri.UriSchemeHttps;
-
-    private static bool IsRedirectUri(string redirectUri) =>
-        redirectUri.Length <= MaxUriLength
-        && IsPlainAbsolute(redirectUri, out var uri)
-        && (
-            uri.Scheme == Uri.UriSchemeHttps
-            || redirectUri == NativeRedirectUri
-            || (uri.Scheme == Uri.UriSchemeHttp && uri.Host is "localhost" or "127.0.0.1")
-        );
-
-    private static bool IsPlainAbsolute(string value, out Uri uri) =>
-        Uri.TryCreate(value, UriKind.Absolute, out uri!)
-        && !value.Contains('?', StringComparison.Ordinal)
-        && !value.Contains('#', StringComparison.Ordinal)
-        && uri.UserInfo.Length == 0;
+    [GeneratedRegex("^[a-z0-9][a-z0-9_-]{0,31}$")]
+    internal static partial Regex ProviderId();
 }
