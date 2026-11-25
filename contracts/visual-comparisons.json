@@ -198,11 +198,6 @@
             "summary": "The search field sits above the tab bar, which stays; the card's search replaces the tab bar with a Back button",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Shared rows read Shared · household and your share, not who paid (Jo paid, you paid $2,900)",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
           }
         ]
       }
@@ -2924,11 +2919,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          },
           {
             "summary": "At 1440px with the detail panel open, the summary and its export button wrap below the chips; the card's wider window keeps them on one row",
             "kind": "follow-up",

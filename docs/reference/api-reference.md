@@ -18,7 +18,7 @@ IDs are opaque strings, not necessarily UUIDs. Calendar dates are real `YYYY-MM-
 
 Shared expense/rule edits and deletes carry the entity revision; creation begins at zero. Envelopes are lowercase `{household}`, `{expense}`, `{reimbursement}`, `{rule}`. `POST /households/{id}/expenses/{expenseId}/payments` accepts `{fromUserId,revision}` and returns 201 `{expense}` with `payments` and `paymentsClosed`. Optional `targetHouseholdId` moves expenses without changing identity.
 
-`GET /households/projection?month=YYYY-MM` or `year=YYYY` returns `{transactions,scheduled}`. Recorded entries use totalCents/shareCents and carry `recurringId` when a shared rule recorded them (MAZ-139); month-only previews carry scheduled/recurringId and never count as recorded spending. Shared rows stay separate from private ledger entries. Payer account references are omitted for other viewers; reimbursements record existing payments and never create spending. Former-member history follows server eligibility.
+`GET /households/projection?month=YYYY-MM` or `year=YYYY` returns `{transactions,scheduled}`. Recorded entries use totalCents/shareCents and carry `recurringId` when a shared rule recorded them (MAZ-139); month-only previews carry scheduled/recurringId and never count as recorded spending. Shared rows stay separate from private ledger entries. Each row names its payer (`payer`: email, display name when set, `deleted` for a deleted account) and says whether the viewer paid (`paidByYou`, MAZ-275). Payer account references are omitted for other viewers; reimbursements record existing payments and never create spending. Former-member history follows server eligibility.
 
 ## Operations by area
 

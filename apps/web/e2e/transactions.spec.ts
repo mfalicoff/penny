@@ -34,6 +34,8 @@ const hydro = {
   totalCents: 9000,
   shareCents: 3000,
   payerUserId: "u2",
+  payer: { email: "bea@example.test" },
+  paidByYou: false,
   category: { name: "Groceries", icon: "basket-outline", color: "#6C9C79" },
   note: "",
 };

@@ -8,7 +8,8 @@ namespace Penny.Backend.Application.Households;
 // A projected expense: the viewer's share of a recorded shared expense, or of a
 // scheduled occurrence (`Scheduled`; month projections only). `RecurringId` names the
 // shared rule on previews and on recorded occurrences the rule recorded (MAZ-139), so
-// clients drop a cached preview of the same household, rule and date. Shares stay
+// clients drop a cached preview of the same household, rule and date. `Payer` is who
+// paid, and `PaidByYou` whether that is the viewer (MAZ-275). Shares stay
 // separate from the personal ledger. `AccountId` reaches only the payer.
 public sealed record ProjectedExpenseView(
     string Id,
@@ -20,6 +21,8 @@ public sealed record ProjectedExpenseView(
     long TotalCents,
     long ShareCents,
     string PayerUserId,
+    ExpensePayerView Payer,
+    bool PaidByYou,
     ExpenseCategory Category,
     string Note,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -48,6 +51,8 @@ public sealed record ProjectedExpenseView(
             expense.TotalCents,
             shareCents,
             expense.PayerId,
+            ExpensePayerView.From(row.Payer),
+            string.Equals(viewerId, expense.PayerId, StringComparison.Ordinal),
             expense.Category,
             expense.Note,
             expense.Receipt is { } receipt

@@ -169,6 +169,10 @@ export function createDemoServer(today = new Date()): Transport {
     const inPeriod = (date: string) => (params.get("month") ? date.startsWith(`${params.get("month") ?? ""}-`) : params.get("year") ? date.startsWith(`${params.get("year") ?? ""}-`) : true);
     if (route === "/api/households") return json({ households: [home.household] });
     if (route === "/api/households/projection") {
+      const payerOf = (userId: string) => {
+        const { email, displayName } = home.members.find((member) => member.userId === userId) ?? { email: "", displayName: undefined };
+        return displayName ? { email, displayName } : { email };
+      };
       const transactions = home.expenses
         .filter((item) => inPeriod(item.date))
         .map((item) => ({
@@ -181,6 +185,8 @@ export function createDemoServer(today = new Date()): Transport {
           totalCents: item.totalCents,
           shareCents: item.totalCents / 2,
           payerUserId: item.payerUserId,
+          payer: payerOf(item.payerUserId),
+          paidByYou: item.payerUserId === DEMO_ME,
           category: item.category,
           note: item.note,
         }));

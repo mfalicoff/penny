@@ -324,7 +324,7 @@ describe("the attach sheet", () => {
                 key: "shared:s1",
                 source: "shared",
                 match: null,
-                entry: { id: "s1", householdId: "h1", householdName: "Maison", householdCurrency: "CAD", title: "Groceries run", date: "2026-11-11", totalCents: 4000, shareCents: 2000, payerUserId: "u1", category: { name: "Groceries", icon: "basket-outline", color: "#6C9C79" }, note: "" },
+                entry: { id: "s1", householdId: "h1", householdName: "Maison", householdCurrency: "CAD", title: "Groceries run", date: "2026-11-11", totalCents: 4000, shareCents: 2000, payerUserId: "u1", payer: { email: "bea@example.test" }, paidByYou: false, category: { name: "Groceries", icon: "basket-outline", color: "#6C9C79" }, note: "" },
               },
             ]
           : [],
