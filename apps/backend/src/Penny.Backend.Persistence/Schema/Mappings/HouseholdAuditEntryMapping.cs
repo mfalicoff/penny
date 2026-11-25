@@ -8,7 +8,20 @@ internal sealed class HouseholdAuditEntryMapping : IEntityTypeConfiguration<Hous
 {
     public void Configure(EntityTypeBuilder<HouseholdAuditEntry> builder)
     {
-        builder.ToTable("household_audit");
+        // Snapshots never hold the payer's private account or the receipt's filename
+        // (encrypted at rest). Migration RedactAuditSnapshots removed them from older
+        // rows; these checks make a writer that adds them back fail instead of leaking.
+        builder.ToTable("household_audit", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_household_audit_before_private",
+                PrivateFieldsAbsent("before_json")
+            );
+            table.HasCheckConstraint(
+                "ck_household_audit_after_private",
+                PrivateFieldsAbsent("after_json")
+            );
+        });
         // sort_order is an identity; it breaks created_at ties in insertion order.
         builder.HasKey(entry => entry.SortOrder);
         builder.Property(entry => entry.SortOrder).UseIdentityByDefaultColumn();
@@ -39,4 +52,10 @@ internal sealed class HouseholdAuditEntryMapping : IEntityTypeConfiguration<Hous
             .IsDescending(false, false, true, true)
             .HasDatabaseName("ix_household_audit_expense_history");
     }
+
+    // A top-level `accountId` or a `receipt.name` in an object snapshot. NULL, arrays and
+    // scalars pass, the same objects the migration's UPDATE redacts.
+    private static string PrivateFieldsAbsent(string column) =>
+        $"NOT (jsonb_typeof({column}) = 'object' AND {column} ? 'accountId') "
+        + $"AND NOT (jsonb_typeof({column} -> 'receipt') = 'object' AND ({column} -> 'receipt') ? 'name')";
 }
