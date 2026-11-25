@@ -72,11 +72,12 @@ public struct SignedInAccount: Equatable, Sendable {
     public var server: ServerURL { session.server }
 }
 
-/// Server single sign-on availability on the sign-in screen.
+/// The server's sign-in providers on the sign-in screens (MAZ-170).
 public enum SingleSignOnStatus: Equatable, Sendable {
     case unknown
     case checking
-    case available(label: String)
+    /// At least one provider, in the server's order.
+    case available([SignInProvider])
     case unavailable
     /// The check failed (offline, server error). Offer a retry.
     case failed
@@ -86,9 +87,8 @@ public enum SingleSignOnStatus: Equatable, Sendable {
 public struct ServerCheck: Equatable, Sendable {
     public let server: ServerURL
     public let version: String
-    /// Nil when reading `GET /api/auth/oidc` failed.
-    public let singleSignOn: Bool?
-    public let singleSignOnLabel: String?
+    /// The server's sign-in providers (MAZ-170). Nil when reading `GET /api/auth/oidc` failed.
+    public let providers: [SignInProvider]?
 
     /// MAZ-169: the server's privacy policy, when it publishes one.
     public let privacyPolicy: URL?
@@ -96,16 +96,18 @@ public struct ServerCheck: Equatable, Sendable {
     public let emailEnabled: Bool
 
     public init(
-        server: ServerURL, version: String, singleSignOn: Bool?, singleSignOnLabel: String?,
+        server: ServerURL, version: String, providers: [SignInProvider]?,
         privacyPolicy: URL? = nil, emailEnabled: Bool = false
     ) {
         self.emailEnabled = emailEnabled
         self.server = server
         self.version = version
-        self.singleSignOn = singleSignOn
-        self.singleSignOnLabel = singleSignOnLabel
+        self.providers = providers
         self.privacyPolicy = privacyPolicy
     }
+
+    /// Whether the server offers single sign-on; nil when that couldn't be read.
+    public var singleSignOn: Bool? { providers.map { !$0.isEmpty } }
 
     public var isEncrypted: Bool { server.url.scheme == "https" }
 }

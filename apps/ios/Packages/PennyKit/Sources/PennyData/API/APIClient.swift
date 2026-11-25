@@ -97,7 +97,7 @@ public struct APIClient: Sendable {
         try makeSession(try await json(.post, "/api/auth/login", body: credentials, authenticated: false))
     }
 
-    /// `GET /api/auth/oidc`. Needs no session; `enabled: false` means no single sign-on.
+    /// `GET /api/auth/oidc`. Needs no session; no providers means no single sign-on.
     public func oidcConfiguration() async throws -> WireOidcConfig {
         try await json(.get, "/api/auth/oidc", authenticated: false)
     }
@@ -106,10 +106,12 @@ public struct APIClient: Sendable {
     /// The transaction must be 64 lowercase hex characters and the authorization URL HTTPS
     /// (plain HTTP only for a loopback provider), or the answer is `malformedResponse`.
     /// `serverDate` carries the response's `Date` header, so the attempt's lifetime can be
-    /// measured without trusting the device clock.
-    public func startOidc(redirectUri: String) async throws -> WireOidcChallenge {
+    /// measured without trusting the device clock. `provider` is the provider's id (MAZ-170);
+    /// nil leaves it out, so a server from before MAZ-170 uses its only provider.
+    public func startOidc(redirectUri: String, provider: String? = nil) async throws -> WireOidcChallenge {
         let result = try await perform(
-            .post, "/api/auth/oidc/start", body: try JSONEncoder().encode(WireOidcStart(redirectUri: redirectUri)),
+            .post, "/api/auth/oidc/start",
+            body: try JSONEncoder().encode(WireOidcStart(redirectUri: redirectUri, provider: provider)),
             authenticated: false)
         var challenge: WireOidcChallenge = try decode(result.body)
         guard Self.isLowercaseHex64(challenge.transaction), challenge.authorizationURL != nil else {
@@ -140,6 +142,48 @@ public struct APIClient: Sendable {
             try await json(
                 .post, "/api/auth/oidc/complete",
                 body: WireOidcComplete(transaction: transaction, callbackUrl: callback), authenticated: false))
+    }
+
+    /// `POST /api/auth/oidc/native/start` (MAZ-170) for a provider whose `native` is true. The
+    /// transaction and the nonce must be 64 lowercase hex characters, or the answer is
+    /// `malformedResponse`.
+    public func startNativeOidc(provider: String) async throws -> WireOidcNativeChallenge {
+        let result = try await perform(
+            .post, "/api/auth/oidc/native/start",
+            body: try JSONEncoder().encode(WireOidcNativeStart(provider: provider)), authenticated: false)
+        var challenge: WireOidcNativeChallenge = try decode(result.body)
+        guard Self.isLowercaseHex64(challenge.transaction), Self.isLowercaseHex64(challenge.nonce) else {
+            throw APIError.malformedResponse
+        }
+        challenge.serverDate = Self.httpDate(result.headers["date"])
+        return challenge
+    }
+
+    /// `POST /api/auth/oidc/native/complete` (MAZ-170) with the platform's ID token and, the first
+    /// time only, the name it gave the app. A name part longer than the API allows is left out
+    /// rather than cut. The server consumes the attempt first, so a second call always fails.
+    public func completeNativeOidc(
+        transaction: String, idToken: String, givenName: String? = nil, familyName: String? = nil
+    ) async throws -> ServerSession {
+        guard Self.isLowercaseHex64(transaction) else { throw APIError.invalidRequest(.invalidField("transaction")) }
+        guard !idToken.isEmpty, idToken.utf16.count <= 8192 else {
+            throw APIError.invalidRequest(.invalidField("idToken"))
+        }
+        return try makeSession(
+            try await json(
+                .post, "/api/auth/oidc/native/complete",
+                body: WireOidcNativeComplete(
+                    transaction: transaction, idToken: idToken, givenName: Self.namePart(givenName),
+                    familyName: Self.namePart(familyName)),
+                authenticated: false))
+    }
+
+    /// A trimmed name part the API accepts (at most 200 UTF-16 units), else nil.
+    static func namePart(_ text: String?) -> String? {
+        guard let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty,
+            trimmed.utf16.count <= 200
+        else { return nil }
+        return trimmed
     }
 
     private struct PasswordResetRequestBody: Encodable { var email: String }

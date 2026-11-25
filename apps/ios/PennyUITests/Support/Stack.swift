@@ -146,6 +146,20 @@ struct Stack {
         _ = try await send("PUT", issuer.appending(path: "control"), body: settings, control: true)
     }
 
+    /// MAZ-170: the ids of the sign-in providers the server lists, in its order. The stack lists
+    /// `sso` with `--oidc`, and Apple and Google before it with `--oidc-providers`
+    /// (`PENNY_STACK_OIDC_PROVIDERS=1 scripts/ios.sh ui-test …`).
+    func signInProviders() async throws -> [String] {
+        let config = try await send("GET", configuration.apiURL.appending(path: "api/auth/oidc"))
+        return (config["providers"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+    }
+
+    /// True when Apple and Google are listed, so the provider cards and journeys can run.
+    func listsAppleAndGoogle() async throws -> Bool {
+        let providers = try await signInProviders()
+        return providers.contains("apple") && providers.contains("google")
+    }
+
     // MARK: Product API (what a second device would do)
 
     func signIn(email: String, password: String) async throws -> String {

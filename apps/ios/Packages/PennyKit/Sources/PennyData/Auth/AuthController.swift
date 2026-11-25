@@ -230,28 +230,35 @@ public final class AuthController {
 
     // MARK: Single sign-on
 
-    /// Reads `GET /api/auth/oidc` for the current server, for the sign-in screen.
+    /// Reads `GET /api/auth/oidc` for the current server, for the sign-in screens: one button per
+    /// provider it lists (MAZ-170).
     public func refreshSingleSignOn() async {
         guard let server else {
             singleSignOn = .unknown
             return
         }
-        singleSignOn = .checking
+        // Providers already shown stay while they are read again, so the screen doesn't jump.
+        if case .available = singleSignOn {} else { singleSignOn = .checking }
         let status: SingleSignOnStatus
         do {
             let config = try await anonymousClient(server.server).oidcConfiguration()
-            status = config.enabled ? .available(label: Self.label(config.label)) : .unavailable
+            status = Self.status(SignInProvider.list(from: config))
         } catch {
             status = .failed
         }
         if self.server == server { singleSignOn = status }
     }
 
-    /// Single sign-on with the system authentication session: start an attempt, open the
-    /// provider, then redeem the callback once. Closing the sheet returns `.cancelled`.
-    public func signInWithSingleSignOn(using authenticator: any WebAuthenticator) async throws(AuthFailure)
-        -> SignInOutcome
-    {
+    private static func status(_ providers: [SignInProvider]) -> SingleSignOnStatus {
+        providers.isEmpty ? .unavailable : .available(providers)
+    }
+
+    /// Single sign-on with the system authentication session: start an attempt for `provider`,
+    /// open it, then redeem the callback once. Closing the sheet returns `.cancelled`. Without a
+    /// provider the server uses its first one.
+    public func signInWithSingleSignOn(
+        provider: SignInProvider? = nil, using authenticator: any WebAuthenticator
+    ) async throws(AuthFailure) -> SignInOutcome {
         let (server, previous) = try beginSignIn()
         guard pendingSingleSignOn == nil else { throw AuthFailure(.busy, "Single sign-on is already open.") }
         state = .signingIn(.singleSignOn)
@@ -264,7 +271,8 @@ public final class AuthController {
         let requestedAt = now()
         let challenge: WireOidcChallenge
         do {
-            challenge = try await client.startOidc(redirectUri: SingleSignOnRedirect.uri)
+            challenge = try await client.startOidc(
+                redirectUri: SingleSignOnRedirect.uri, provider: provider.flatMap { $0.sendsID ? $0.id : nil })
         } catch {
             reset()
             throw Self.failure(error, during: .singleSignOn, server: server.server)
@@ -313,6 +321,69 @@ public final class AuthController {
             if SingleSignOnRedirect.isDeclined(callback), (error as? APIError)?.requiresSignIn == true {
                 return .cancelled
             }
+            throw Self.failure(error, during: .singleSignOn, server: server.server)
+        }
+        try await install(session, previous: previous)
+        return .signedIn
+    }
+
+    /// Sign-in with the platform's own sign-in (Sign in with Apple) for a provider whose `native`
+    /// is true (MAZ-170): start a native attempt, ask the platform for an ID token carrying its
+    /// nonce, then redeem it once with the name the platform gave (only the first time). Closing
+    /// the sheet returns `.cancelled`.
+    public func signInNatively(
+        with provider: SignInProvider, using authenticator: any NativeSignInAuthenticator
+    ) async throws(AuthFailure) -> SignInOutcome {
+        let (server, previous) = try beginSignIn()
+        guard provider.native, provider.sendsID else {
+            throw AuthFailure(.singleSignOnUnavailable, "\(provider.label) can't sign in from the app here.")
+        }
+        guard pendingSingleSignOn == nil else { throw AuthFailure(.busy, "Single sign-on is already open.") }
+        state = .signingIn(.singleSignOn)
+        let attempt = bump()
+        let client = anonymousClient(server.server)
+        func reset() { if attempt == generation { state = .signedOut(previous) } }
+
+        let requestedAt = now()
+        let challenge: WireOidcNativeChallenge
+        do {
+            challenge = try await client.startNativeOidc(provider: provider.id)
+        } catch {
+            reset()
+            throw Self.failure(error, during: .singleSignOn, server: server.server)
+        }
+        guard attempt == generation else { throw Self.superseded }
+        let deadline = challenge.lifetime.map { requestedAt.addingTimeInterval($0) }
+        guard deadline.map({ $0 > now() }) ?? true else {
+            reset()
+            throw AuthFailure(.singleSignOnExpired, "Sign-in expired. Please try again.")
+        }
+        let pending = PendingSingleSignOn(
+            id: attempt, server: server.server, transaction: challenge.transaction, deadline: deadline)
+        pendingSingleSignOn = pending
+
+        let credential: NativeSignInCredential
+        do {
+            credential = try await authenticator.authorize(nonce: challenge.nonce)
+        } catch {
+            if pendingSingleSignOn == pending { pendingSingleSignOn = nil }
+            reset()
+            if error is CancellationError { return .cancelled }
+            throw AuthFailure(.singleSignOnRejected, "\(provider.label) couldn't sign you in. Please try again.")
+        }
+        guard pendingSingleSignOn == pending, attempt == generation else { throw Self.superseded }
+        pendingSingleSignOn = nil
+        guard pending.deadline.map({ $0 > now() }) ?? true else {
+            reset()
+            throw AuthFailure(.singleSignOnExpired, "Sign-in expired. Please try again.")
+        }
+        let session: ServerSession
+        do {
+            session = try await client.completeNativeOidc(
+                transaction: pending.transaction, idToken: credential.idToken, givenName: credential.givenName,
+                familyName: credential.familyName)
+        } catch {
+            reset()
             throw Self.failure(error, during: .singleSignOn, server: server.server)
         }
         try await install(session, previous: previous)
@@ -537,8 +608,7 @@ public final class AuthController {
         }
         let config = try? await client.oidcConfiguration()
         return ServerCheck(
-            server: server, version: info.version, singleSignOn: config?.enabled,
-            singleSignOnLabel: config?.enabled == true ? Self.label(config?.label) : nil,
+            server: server, version: info.version, providers: config.map(SignInProvider.list(from:)),
             privacyPolicy: info.privacyPolicy, emailEnabled: info.sendsEmail)
     }
 
@@ -560,12 +630,7 @@ public final class AuthController {
             state = .signedOut(nil)
         }
         server = saved
-        singleSignOn =
-            switch (check.singleSignOn, check.singleSignOnLabel) {
-            case (true, let label?): .available(label: label)
-            case (false, _): .unavailable
-            default: .unknown
-            }
+        singleSignOn = check.providers.map(Self.status) ?? .unknown
     }
 
     /// Reads `/api/info` again for the privacy policy link (MAZ-169), so a server that starts or
@@ -821,11 +886,6 @@ public final class AuthController {
 
     private func anonymousClient(_ server: ServerURL, timeout: TimeInterval = 30) -> APIClient {
         APIClient.anonymous(APIConfiguration(server: server, requestTimeout: timeout), transport: transport)
-    }
-
-    private static func label(_ label: String?) -> String {
-        let trimmed = label?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? "single sign-on" : trimmed
     }
 
     static let superseded = AuthFailure(.superseded, "The server changed. Please sign in again.")
