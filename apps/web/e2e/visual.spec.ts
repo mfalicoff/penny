@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "./test";
+import { expect, motionOff, test } from "./test";
 import { enterDemo, horizontalOverflow, navigate, startDemo } from "./demo";
 
 // MAZ-96 responsive and theme visual regression over the demo (fixed clock, in-memory sample
@@ -15,6 +15,11 @@ import { enterDemo, horizontalOverflow, navigate, startDemo } from "./demo";
 // cards.real.spec.ts (MAZ-122, docs/design/visual-acceptance.md).
 test.skip(process.env.PENNY_VISUAL !== "1", "visual baselines are compared with PENNY_VISUAL=1");
 test.skip(({ browserName, isMobile }) => browserName !== "chromium" || isMobile, "baselines are recorded on chromium-desktop");
+
+// Captures run with motion off, so nothing is caught mid-animation (docs/design/motion.md).
+test.beforeEach(async ({ page }) => {
+  await motionOff(page);
+});
 
 const WIDTHS = [320, 768, 1440] as const;
 const PAGES = ["Home", "Activity", "Trips", "Settings"] as const;

@@ -335,8 +335,9 @@ export function SyncLine() {
   const { icon, text, tone } = serverDown ? { icon: "cloud-offline" as const, text: "Can't reach server", tone: "error" as const } : status;
   return (
     <p className={cx("sync-line", tone && "sync-line--error")}>
-      <Icon name={icon} size={13} />
-      <span>{text}</span>
+      {/* Keyed by state, so a change crossfades (docs/design/motion.md, Feedback). */}
+      <Icon key={icon} name={icon} size={13} />
+      <span key={text}>{text}</span>
     </p>
   );
 }

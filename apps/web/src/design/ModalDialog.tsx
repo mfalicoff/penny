@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
+import { duration } from "./motion";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -34,6 +35,7 @@ export function ModalDialog({ labelledBy, describedBy, onClose, initialFocus, pa
     for (const child of background) child.setAttribute("inert", "");
     return () => {
       for (const child of background) child.removeAttribute("inert");
+      leaveBehind(node);
       node.remove();
       if (opener?.isConnected) opener.focus();
     };
@@ -87,6 +89,37 @@ export function ModalDialog({ labelledBy, describedBy, onClose, initialFocus, pa
     </div>,
     host,
   );
+}
+
+/**
+ * Closing (docs/design/motion.md, Sheets): the dialog is gone at once, so focus returns and the
+ * page works straight away, while an inert copy of it fades out over `quick` and is removed.
+ */
+function leaveBehind(host: HTMLElement) {
+  const dialog = host.firstElementChild;
+  const ms = duration("quick");
+  if (!(dialog instanceof HTMLElement) || ms === 0) return;
+  const ghost = dialog.cloneNode(true) as HTMLElement;
+  // What the person typed is a property, not an attribute: copy it so the fading copy matches.
+  const fields = dialog.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input, textarea, select");
+  ghost.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input, textarea, select").forEach((field, index) => {
+    const source = fields[index];
+    if (!source) return;
+    if (field instanceof HTMLInputElement && source instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) field.checked = source.checked;
+    else field.value = source.value;
+  });
+  for (const element of [ghost, ...ghost.querySelectorAll("[id]")]) element.removeAttribute("id");
+  ghost.removeAttribute("role");
+  ghost.removeAttribute("aria-modal");
+  ghost.removeAttribute("aria-labelledby");
+  ghost.removeAttribute("aria-describedby");
+  ghost.setAttribute("aria-hidden", "true");
+  ghost.inert = true;
+  ghost.classList.add("dialog--leaving");
+  document.body.append(ghost);
+  window.setTimeout(() => {
+    ghost.remove();
+  }, ms + 50);
 }
 
 interface DialogProps {

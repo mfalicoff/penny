@@ -25,6 +25,7 @@ import { ActivityResults, type TableSelection } from "./ActivityResults";
 import type { BulkAction } from "./bulkActions";
 import { SelectionBar } from "./SelectionBar";
 import { periodTotals, rowFilters, useActivityLedger, useSharedRows, type SharedState } from "./data";
+import { usePeriodSlide } from "../../design/motion";
 import { activeDay, KIND_FILTERS, periodLabel, periodOf, periodRange, projectionPeriod, shiftPeriod, shortPeriodLabel, withPeriod, without, type ActivitySearch, type Period } from "./filters";
 
 type Navigate = (update: (previous: ActivitySearch) => ActivitySearch) => void;
@@ -35,6 +36,8 @@ interface Open {
   action: EntryAction;
   /** Changes on every open, so opening the same entry again (another row action) starts afresh. */
   nonce: number;
+  /** Another entry was open: its panel crossfades instead of sliding in again (docs/design/motion.md, Navigation). */
+  switching?: boolean;
 }
 
 const NONE: ReadonlySet<string> = new Set<string>();
@@ -69,6 +72,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   };
   const online = useOnline();
   const period = periodOf(search);
+  const main = useRef<HTMLDivElement>(null);
+  usePeriodSlide(main, period.type === "month" ? period.month : period.type === "year" ? period.year : "all", ".activity-results");
   const { ledger } = useActivityLedger();
   const writer = useLedgerWriter();
   const shared = useSharedRows(period, online);
@@ -163,7 +168,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       return;
     }
     nonce.current += 1;
-    setOpen({ entry: pick.entry, opener: pick.row, action: "detail", nonce: nonce.current });
+    const next = nonce.current;
+    setOpen((previous) => ({ entry: pick.entry, opener: pick.row, action: "detail", nonce: next, switching: previous !== null }));
   }, []);
 
   function close() {
@@ -202,6 +208,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   // A bulk delete took the open entry: its panel closes (`web-activity-bulk-done`).
   const openGone = Boolean(open && touched.has(open.entry.id) && writer.ledger && !writer.ledger.transactions.some((entry) => entry.id === open.entry.id));
   const selectedKey = open && !openGone ? `personal:${open.entry.id}` : undefined;
+  // docs/design/motion.md, Month and period changes: the results slide in from the side the period comes from.
   const results = (
     <ActivityResults
       key={JSON.stringify(search)}
@@ -218,7 +225,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       }}
       onOpen={(entry, opener, action) => {
         nonce.current += 1;
-        setOpen({ entry, opener, action, nonce: nonce.current });
+        const next = nonce.current;
+        setOpen((previous) => ({ entry, opener, action, nonce: next, switching: previous !== null }));
       }}
     />
   );
@@ -228,7 +236,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       {desktop ? <PeriodStepper search={search} navigate={navigate} slot /> : null}
       {/* While searching, the phone's top row is empty (`iphone-search-empty`): the active filters are the chips. */}
       {tablet || search.q ? null : <PhoneFiltersButton search={search} onClick={() => { setFiltering(true); }} />}
-      <div className="activity__main">
+      <div className="activity__main" ref={main}>
         {tablet && !desktop ? searchField : null}
         <div className="activity-toolbar">
           {selectionLedger && pickedEntries.length > 0 ? (
@@ -255,7 +263,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       </div>
       {!tablet ? searchField : null}
 
-      {open && beside && !openGone ? <EntryDetailPanel key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} touch={touch} onClose={close} onEditing={setEditing} /> : null}
+      {open && beside && !openGone ? <EntryDetailPanel key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} touch={touch} switching={open.switching} onClose={close} onEditing={setEditing} /> : null}
       {open && !beside ? <EntryDetailDialog key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} onClose={close} /> : null}
       {filtering ? (
         <FiltersDialog

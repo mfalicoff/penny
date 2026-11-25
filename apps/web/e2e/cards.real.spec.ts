@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { motionOff } from "./test";
 import { syntheticPng } from "./fixtures/receipts";
 import { outputDirectory, redesign, resolveRefs, specimens, viewportFor, writeReport, type CardState, type ReportEntry, type Seed, type Status } from "./cards";
 import { clearFaults, control, pinClock, realStack, seedScenario, skipReason } from "./stack";
@@ -1295,6 +1296,8 @@ async function openContext(browser: Browser, baseURL: string | undefined, id: st
   });
   context.setDefaultTimeout(15_000);
   const p = await context.newPage();
+  // Motion off as well as reduced, so no capture lands mid-animation (docs/design/motion.md).
+  await motionOff(p);
   await p.clock.setFixedTime(AT);
   if (seed) {
     const user = state.as ? seed.users[state.as] : undefined;

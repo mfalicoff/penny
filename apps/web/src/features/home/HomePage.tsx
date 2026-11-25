@@ -1,6 +1,6 @@
 import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { usePreferences } from "../../app/preferences";
 import { TABLET, TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
@@ -9,6 +9,7 @@ import { Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
 import { formatCents, formatWhole, HeroMoney, Money } from "../../design/Money";
+import { usePeriodSlide } from "../../design/motion";
 import { Banner, LoadingState } from "../../design/states";
 import type { SharedState } from "../activity/data";
 import { AddEntryDialog } from "../entries/AddEntryDialog";
@@ -59,8 +60,12 @@ export function HomePage({ search }: { search: HomeSearch }) {
     setOpen({ entry, opener });
   };
 
+  // docs/design/motion.md, Month and period changes: the month's content slides in from the side it comes from.
+  const content = useRef<HTMLDivElement>(null);
+  usePeriodSlide(content, month);
+
   return (
-    <div className="page home">
+    <div ref={content} className="page home">
       <div className="glow" aria-hidden="true" />
       <MonthBar
         month={month}
@@ -125,7 +130,7 @@ export function HomePage({ search }: { search: HomeSearch }) {
                 }
               >
                 {report.recordedEntries.length ? (
-                  <EntryRows recent entries={report.recordedEntries.slice(0, RECENT)} ledger={view} currency={ledger.currency} onOpen={onOpen} />
+                  <EntryRows recent context={month} entries={report.recordedEntries.slice(0, RECENT)} ledger={view} currency={ledger.currency} onOpen={onOpen} />
                 ) : (
                   <p className="muted">Nothing recorded in {monthLabel(month)} yet.</p>
                 )}
@@ -312,7 +317,7 @@ function Hero({ report, currency, wide, tablet }: { report: MonthReport; currenc
               Income
             </dt>
             <dd>
-              <Money cents={report.recorded.income} currency={currency} />
+              <Money count cents={report.recorded.income} currency={currency} />
             </dd>
           </div>
           <div>
@@ -321,7 +326,7 @@ function Hero({ report, currency, wide, tablet }: { report: MonthReport; currenc
               Spent · your share
             </dt>
             <dd>
-              <Money cents={report.recorded.expense} currency={currency} />
+              <Money count cents={report.recorded.expense} currency={currency} />
             </dd>
           </div>
           <div>
@@ -330,7 +335,7 @@ function Hero({ report, currency, wide, tablet }: { report: MonthReport; currenc
               Invested
             </dt>
             <dd>
-              <Money cents={report.recorded.investment} currency={currency} />
+              <Money count cents={report.recorded.investment} currency={currency} />
             </dd>
           </div>
         </dl>
@@ -342,7 +347,7 @@ function Hero({ report, currency, wide, tablet }: { report: MonthReport; currenc
               Came in
             </dt>
             <dd>
-              <Money cents={report.recorded.income} currency={currency} />
+              <Money count cents={report.recorded.income} currency={currency} />
             </dd>
           </div>
           <div className="tile">
@@ -351,7 +356,7 @@ function Hero({ report, currency, wide, tablet }: { report: MonthReport; currenc
               Spent · your share
             </dt>
             <dd>
-              <Money cents={report.recorded.expense} currency={currency} />
+              <Money count cents={report.recorded.expense} currency={currency} />
             </dd>
           </div>
           <div className="tile">
@@ -360,7 +365,7 @@ function Hero({ report, currency, wide, tablet }: { report: MonthReport; currenc
               Invested
             </dt>
             <dd>
-              <Money cents={report.recorded.investment} currency={currency} />
+              <Money count cents={report.recorded.investment} currency={currency} />
             </dd>
           </div>
         </dl>

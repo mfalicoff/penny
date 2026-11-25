@@ -39,6 +39,17 @@
   --pk-r-row: 14px;
   --pk-r-field: 12px;
   --pk-gutter: 16px;
+  --pk-dur-quick: 150ms;
+  --pk-dur-standard: 250ms;
+  --pk-dur-emphasized: 400ms;
+  --pk-dur-linger: 1000ms;
+  --pk-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --pk-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --pk-nudge: 8px;
+  --pk-shift: 24px;
+  --pk-shake: 6px;
+  --pk-press: 0.97;
+  --pk-motion: 1;
 }
 
 :root[data-theme="light"] {

@@ -36,6 +36,7 @@ import {
 import { addLabel, AmountHero, CategoryChips, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, KindControl, repeatText, useEntryLayout } from "./EntryParts";
 import { CategoryPickerDialog, NewAccountDialog } from "./pickers";
 import { HouseholdField, HouseholdRowList, type EntrySeed, type HouseholdScope, type ScopeChoice } from "./scope";
+import { shake } from "../../design/motion";
 import { useLedgerWriter, type LedgerWriter } from "./writer";
 
 /** `tripId` starts a new expense on that trip (MAZ-93: Trip expense), apart from any kept draft. */
@@ -199,6 +200,8 @@ function EntryForm({
       const element = document.getElementById(ids[field]);
       if (element instanceof HTMLFieldSetElement) element.querySelector<HTMLInputElement>("input:checked, input")?.focus();
       else element?.focus();
+      // docs/design/motion.md, Feedback: the refused field shakes (not under reduced motion); its error text says why.
+      shake(element?.closest(".field, fieldset, .entry-amount") ?? element);
     }, 0);
   }
 

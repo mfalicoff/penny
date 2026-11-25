@@ -38,6 +38,10 @@
   --pk-glow-green: radial-gradient(40% 45% at 30% 45%, rgba(47,163,107,.45), transparent 70%), radial-gradient(35% 40% at 75% 35%, rgba(120,200,160,.35), transparent 70%), radial-gradient(35% 35% at 60% 75%, rgba(80,140,230,.22), transparent 70%);
   /* shape + spacing */
   --pk-r-card: 26px; --pk-r-row: 14px; --pk-r-field: 12px; --pk-gutter: 16px;
+  /* motion (docs/design/motion.md): durations, easings, distances; --pk-motion multiplies every distance and is 0 under reduced motion */
+  --pk-dur-quick: 150ms; --pk-dur-standard: 250ms; --pk-dur-emphasized: 400ms; --pk-dur-linger: 1000ms;
+  --pk-ease-standard: cubic-bezier(0.2, 0, 0, 1); --pk-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --pk-nudge: 8px; --pk-shift: 24px; --pk-shake: 6px; --pk-press: 0.97; --pk-motion: 1;
 }
 
 .pk-dark {
