@@ -444,3 +444,13 @@ public struct StaleShareChange: Equatable, Sendable {
         self.rows = rows
     }
 }
+
+extension WireExpensePayer {
+    /// Their display name, else their email (MAZ-171), or "Former member" once they deleted their
+    /// account (MAZ-152), the same rule as `WireHouseholdMember.shownName`.
+    public var shownName: String {
+        if deleted == true { return HouseholdPeople.formerMember }
+        let name = displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? email : name
+    }
+}
