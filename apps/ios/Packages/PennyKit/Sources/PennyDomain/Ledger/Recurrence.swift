@@ -70,11 +70,12 @@ public enum Recurrence {
     }
 
     /// The entry a rule records on `date`. Rules carry no trip or receipt, so neither does
-    /// the occurrence; a missing account stays missing.
+    /// the occurrence; a missing account stays missing. The participant count is copied.
     public static func occurrence(of rule: RecurringRule, on date: CalendarDate) -> LedgerEntry {
         LedgerEntry(
             id: occurrenceID(ruleID: rule.id, date: date), title: rule.title, kind: rule.kind, total: rule.total,
-            share: rule.share, categoryId: rule.categoryId, accountId: rule.accountId, date: date, note: rule.note,
+            share: rule.share, participants: rule.participants, categoryId: rule.categoryId, accountId: rule.accountId,
+            date: date, note: rule.note,
             recurringId: rule.id)
     }
 }

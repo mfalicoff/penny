@@ -163,4 +163,29 @@ struct WireModelTests {
             _ = try await client.search(request)
         }
     }
+
+    @Test("whenEntriesHaveOrLackParticipants_WireLedger_ShouldRoundTripAndOmitNil")
+    func participantsRoundTrip() throws {
+        let categories = [LedgerCategory(id: "c", name: "Food", icon: "i", color: "#E47850", kind: .expense)]
+        let split = LedgerEntry(
+            id: "s", title: "Dinner", kind: .expense, total: 1000, share: 500, participants: 2, categoryId: "c",
+            date: CalendarDate(year: 2026, month: 10, day: 1)!)
+        var whole = split
+        whole.id = "w"
+        whole.share = 1000
+        whole.participants = nil
+        let rule = RecurringRule(
+            id: "r", title: "Rent", kind: .expense, total: 9000, share: 3000, participants: 3, categoryId: "c",
+            date: CalendarDate(year: 2026, month: 10, day: 1)!, frequency: .monthly,
+            nextDate: CalendarDate(year: 2026, month: 11, day: 1)!, anchorDay: 1)
+        let ledger = PennyDomain.Ledger(categories: categories, transactions: [split, whole], recurring: [rule])
+        let data = try JSONEncoder().encode(WireLedger(ledger))
+        let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let entries = try #require(json["transactions"] as? [[String: Any]])
+        #expect(entries[0]["participants"] as? Int == 2)
+        #expect(!entries[1].keys.contains("participants"))
+        #expect((json["recurring"] as? [[String: Any]])?.first?["participants"] as? Int == 3)
+        let again = try PennyDomain.Ledger(wire: JSONDecoder().decode(WireLedger.self, from: data))
+        #expect(again == ledger)
+    }
 }

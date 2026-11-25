@@ -201,16 +201,20 @@ public struct EntrySaveAttempt: Sendable {
 }
 
 extension EntryDraft {
-    /// The form for a recorded entry. A split entry opens as "your share is this amount",
-    /// because a personal entry stores only the two amounts, not how they
-    /// were split. The repeat choice is not offered when editing an entry.
+    /// The form for a recorded entry. An entry recorded as an equal split (its `participants`
+    /// still produce its share) opens as that equal split; any other split entry opens as
+    /// "your share is this amount", because a personal entry stores only the two amounts, not
+    /// how they were split. The repeat choice is not offered when editing an entry.
     public init(editing entry: LedgerEntry) {
+        let people = Money.equalSplitPeople(
+            kind: entry.kind, total: entry.total, share: entry.share, participants: entry.participants)
         let split = entry.share != entry.total
+        let mode: Money.SplitMode = people != nil ? .equal : split ? .amount : .full
+        let shareInput = people.map(String.init) ?? (split ? AmountInput.text(cents: entry.share) : "")
         self.init(
             kind: entry.kind, title: entry.title, amount: AmountInput.text(cents: entry.total),
             date: entry.date.description, categoryId: entry.categoryId, accountId: entry.accountId,
-            tripId: entry.tripId, note: entry.note, split: split ? .amount : .full,
-            shareInput: split ? AmountInput.text(cents: entry.share) : "", receipt: entry.receipt)
+            tripId: entry.tripId, note: entry.note, split: mode, shareInput: shareInput, receipt: entry.receipt)
     }
 
     /// The share the draft would record now, or nil while the amount or split is incomplete.

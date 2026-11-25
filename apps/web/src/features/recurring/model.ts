@@ -1,5 +1,5 @@
 import type { LedgerChange } from "@domain/commands.ts";
-import { cents, dateKey, nextOccurrence, parseDate, personalShare, uid, validDate, type Category, type Frequency, type Kind, type Ledger, type PaymentAccount, type Recurring } from "@domain/ledger.ts";
+import { cents, dateKey, nextOccurrence, parseDate, personalShare, recordedSplit, splitParticipants, uid, validDate, type Category, type Frequency, type Kind, type Ledger, type PaymentAccount, type Recurring } from "@domain/ledger.ts";
 import type { CSSProperties } from "react";
 import { tileStyle } from "../../design/categoryTint";
 import type { IconName } from "../../design/Icon";
@@ -153,14 +153,21 @@ export function draftFromRule(rule: Recurring): ScheduleDraft {
     categoryId: rule.categoryId,
     accountId: rule.accountId ?? "",
     note: rule.note,
-    split: rule.kind === "expense" && rule.share !== rule.total ? "amount" : "full",
-    shareInput: rule.kind === "expense" && rule.share !== rule.total ? toInput(rule.share) : "",
+    ...splitDraft(rule),
   };
+}
+
+/** The split fields that reopen a rule's share (the shared `recordedSplit`). */
+function splitDraft(rule: Recurring): Pick<ScheduleDraft, "split" | "shareInput"> {
+  const split = recordedSplit(rule);
+  return { split, shareInput: split === "equal" ? String(rule.participants) : split === "amount" ? toInput(rule.share) : "" };
 }
 
 interface Built {
   total: number;
   share: number;
+  /** The people of an equal split (contract 2.2.0), else undefined. */
+  participants: number | undefined;
   title: string;
   note: string;
 }
@@ -190,7 +197,8 @@ export function checkDraft(draft: ScheduleDraft, ledger: Ledger, today = dateKey
   const note = draft.note.trim();
   if (note.length > MAX_NOTE) errors.note = `Use up to ${String(MAX_NOTE)} characters for the note.`;
   let share = total ?? 0;
-  if (total && !errors.amount && draft.kind === "expense" && draft.split !== "full") {
+  const split = draft.kind === "expense" ? draft.split : "full";
+  if (total && !errors.amount && split !== "full") {
     try {
       share = personalShare(total, draft.split, draft.shareInput);
     } catch (error) {
@@ -199,7 +207,7 @@ export function checkDraft(draft: ScheduleDraft, ledger: Ledger, today = dateKey
   }
   if (!editing && ledger.recurring.length >= MAX_SCHEDULES) errors.title = `You can have up to ${String(MAX_SCHEDULES)} schedules. Remove one first.`;
   if (Object.keys(errors).length || total === null) return { errors };
-  return { errors, built: { total, share, title, note } };
+  return { errors, built: { total, share, participants: splitParticipants(split, draft.shareInput), title, note } };
 }
 
 /** A new rule from a checked draft: anchored on the first date's day, starting on that date. */
@@ -210,6 +218,7 @@ export function newRule(draft: ScheduleDraft, built: Built, id = uid()): Recurri
     kind: draft.kind,
     total: built.total,
     share: built.share,
+    ...(built.participants !== undefined ? { participants: built.participants } : {}),
     categoryId: draft.categoryId,
     ...(draft.accountId ? { accountId: draft.accountId } : {}),
     date: draft.date,
@@ -229,12 +238,14 @@ export function newRule(draft: ScheduleDraft, built: Built, id = uid()): Recurri
 export function editedRule(original: Recurring, draft: ScheduleDraft, built: Built): Recurring {
   const rest: Recurring = { ...original };
   delete rest.accountId;
+  delete rest.participants;
   return {
     ...rest,
     title: built.title,
     kind: draft.kind,
     total: built.total,
     share: built.share,
+    ...(built.participants !== undefined ? { participants: built.participants } : {}),
     categoryId: draft.categoryId,
     ...(draft.accountId ? { accountId: draft.accountId } : {}),
     note: built.note,

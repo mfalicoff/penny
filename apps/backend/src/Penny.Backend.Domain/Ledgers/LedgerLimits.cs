@@ -13,6 +13,10 @@ public static class LedgerLimits
     public const int MaxCategories = 300;
     public const int MaxTransactions = 100_000;
     public const int MaxRecurring = 1000;
+
+    // How many people split an expense, the person included (contract 2.2.0).
+    public const int MinParticipants = 2;
+    public const int MaxParticipants = 100;
     public static readonly IReadOnlyList<string> Currencies = ["CAD", "USD", "EUR", "GBP"];
     public static readonly IReadOnlyList<string> Kinds = ["income", "expense", "investment"];
     public static readonly IReadOnlyList<string> AccountTypes = ["bank", "credit", "cash", "other"];

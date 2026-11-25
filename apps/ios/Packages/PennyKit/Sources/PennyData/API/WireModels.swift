@@ -79,6 +79,8 @@ public struct WireEntry: Codable, Equatable, Sendable {
     public var kind: WireEntryKind
     public var total: Int64
     public var share: Int64
+    /// Contract 2.2.0: how many people split an expense, the person included. Omitted when nil.
+    public var participants: Int?
     public var categoryId: String
     public var accountId: String?
     public var tripId: String?
@@ -88,7 +90,8 @@ public struct WireEntry: Codable, Equatable, Sendable {
     public var receipt: WireReceipt?
 
     public init(
-        id: String, title: String, kind: WireEntryKind, total: Int64, share: Int64, categoryId: String,
+        id: String, title: String, kind: WireEntryKind, total: Int64, share: Int64, participants: Int? = nil,
+        categoryId: String,
         accountId: String? = nil, tripId: String? = nil, recurringId: String? = nil, date: String,
         note: String, receipt: WireReceipt? = nil
     ) {
@@ -97,6 +100,7 @@ public struct WireEntry: Codable, Equatable, Sendable {
         self.kind = kind
         self.total = total
         self.share = share
+        self.participants = participants
         self.categoryId = categoryId
         self.accountId = accountId
         self.tripId = tripId
@@ -113,6 +117,8 @@ public struct WireRecurring: Codable, Equatable, Sendable {
     public var kind: WireEntryKind
     public var total: Int64
     public var share: Int64
+    /// Contract 2.2.0: how many people split an expense, the person included. Omitted when nil.
+    public var participants: Int?
     public var categoryId: String
     public var accountId: String?
     public var date: String
@@ -123,7 +129,8 @@ public struct WireRecurring: Codable, Equatable, Sendable {
     public var active: Bool
 
     public init(
-        id: String, title: String, kind: WireEntryKind, total: Int64, share: Int64, categoryId: String,
+        id: String, title: String, kind: WireEntryKind, total: Int64, share: Int64, participants: Int? = nil,
+        categoryId: String,
         accountId: String? = nil, date: String, note: String, frequency: String, nextDate: String,
         anchorDay: Int? = nil, active: Bool
     ) {
@@ -132,6 +139,7 @@ public struct WireRecurring: Codable, Equatable, Sendable {
         self.kind = kind
         self.total = total
         self.share = share
+        self.participants = participants
         self.categoryId = categoryId
         self.accountId = accountId
         self.date = date

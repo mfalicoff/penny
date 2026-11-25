@@ -6,7 +6,7 @@ The .NET API was first written to copy the Node server exactly, so the Expo apps
 
 | Client | Status |
 | --- | --- |
-| Native iOS app (`apps/ios`, TestFlight) | Supported. Speaks contract 2.0.0 from the release that ships MAZ-131; contract 2.1.0 only adds the error `code`, which it ignores until it adopts it |
+| Native iOS app (`apps/ios`, TestFlight) | Supported. Speaks contract 2.0.0 from the release that ships MAZ-131; contract 2.1.0 only adds the error `code`, which it ignores until it adopts it, and 2.2.0 only adds the optional `participants` of a split expense ([participant count](api-reference.md#participant-count)) |
 | Browser app (`apps/web`, the `penny-web` image) | Supported. Deployed with the API |
 | Expo web and mobile, Android | Removed from the repository (#64). No build is supported |
 

@@ -43,7 +43,8 @@ public struct EntryDraft: Hashable, Sendable {
     /// Checks run in this order: amount, non-zero amount, date, title, category, then
     /// the split. A new repeating draft whose next date would fall after 2100-12-31 is then
     /// refused with `.scheduleAfterLedgerRange` (the server would refuse it at sync). Title and
-    /// note are trimmed. Only expenses keep a split, a trip and a receipt;
+    /// note are trimmed. Only expenses keep a split, a trip and a receipt, and an equal split records its head count
+    /// as `participants` (contract 2.2.0);
     /// income and investments are always the full amount. A new repeating draft also returns
     /// its rule: the entry is the first occurrence (it carries the rule's id as `recurringId`)
     /// and the rule's `nextDate` is the occurrence after it, anchored on the draft's day, so
@@ -61,8 +62,10 @@ public struct EntryDraft: Hashable, Sendable {
         guard !title.isEmpty else { throw .missingTitle }
         guard categories.contains(where: { $0.id == categoryId && $0.kind == kind }) else { throw .chooseCategory }
         let share = try Money.personalShare(total: total, mode: kind == .expense ? split : .full, input: shareInput)
+        let participants = try kind == .expense ? Money.splitParticipants(mode: split, input: shareInput) : nil
         var result = LedgerEntry(
-            id: entry?.id ?? makeID(), title: title, kind: kind, total: total, share: share, categoryId: categoryId,
+            id: entry?.id ?? makeID(), title: title, kind: kind, total: total, share: share, participants: participants,
+            categoryId: categoryId,
             accountId: accountId, tripId: kind == .expense ? tripId : nil, date: date,
             note: JavaScriptText.trim(note), receipt: kind == .expense ? receipt : nil, recurringId: entry?.recurringId)
         guard entry == nil, let frequency else { return (result, nil) }
@@ -70,7 +73,8 @@ public struct EntryDraft: Hashable, Sendable {
         // The server stores dates through 2100-12-31 only; a rule past that could never sync.
         guard nextDate.isWithinLedgerRange else { throw .scheduleAfterLedgerRange }
         let rule = RecurringRule(
-            id: makeID(), title: result.title, kind: kind, total: total, share: share, categoryId: categoryId,
+            id: makeID(), title: result.title, kind: kind, total: total, share: share, participants: participants,
+            categoryId: categoryId,
             accountId: accountId, date: date, note: result.note, frequency: frequency, nextDate: nextDate,
             anchorDay: date.day)
         result.recurringId = rule.id
@@ -87,6 +91,7 @@ public struct EntryDraft: Hashable, Sendable {
         guard let frequency else { throw .chooseRepeat }
         let asEntry = LedgerEntry(
             id: original.id, title: original.title, kind: original.kind, total: original.total, share: original.share,
+            participants: original.participants,
             categoryId: original.categoryId, accountId: original.accountId, date: original.nextDate,
             note: original.note)
         let (details, _) = try build(categories: categories, editing: asEntry, makeID: { original.id })
@@ -95,6 +100,7 @@ public struct EntryDraft: Hashable, Sendable {
         rule.kind = details.kind
         rule.total = details.total
         rule.share = details.share
+        rule.participants = details.participants
         rule.categoryId = details.categoryId
         rule.accountId = details.accountId
         rule.note = details.note

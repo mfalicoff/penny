@@ -12,7 +12,7 @@ import { Icon } from "../../design/Icon";
 import { categoryTint, tileStyle } from "../../design/categoryTint";
 import { Money } from "../../design/Money";
 import { useToastEntry } from "../../design/states";
-import { categoryIcon } from "../entries/model";
+import { categoryIcon, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
 import { currentMonth, dayLabel, monthLabel, shiftMonth } from "../households/model";
 import { groupSmall, isSharedEntry, percentOf } from "./model";
@@ -145,7 +145,9 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
  * (amber, MAZ-136) and still opens: it is a ledger entry that counts toward Projected only.
  *
  * `recent` rows (Home's Recent, cards `iphone-home`, `iphone-offline`, MAZ-223) read "date ·
- * account" ("Today · Main chequing", or the household of a shared expense), and an entry this
+ * account" ("Today · Main chequing", or the household of a shared expense), then "split N ways"
+ * for a personal expense split equally (MAZ-272: the ledger's `participants`, else read from the
+ * amounts), and an entry this
  * browser hasn't synced reads "Waiting to sync" with an amber clock instead. `day` rows (the
  * calendar sheet's selected day, `iphone-calendar`) sit under the day's heading, so they leave
  * the date out: "Main chequing · monthly".
@@ -173,7 +175,11 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
           account,
         ].filter(Boolean);
         const pending = recent && !entry.scheduled && !shared && waiting.has(entry.id);
-        const recentMeta = [shared ? (shared.householdName ?? "Shared") : account].filter(Boolean);
+        // The recorded count, else read from the amounts for entries saved before it (as the native app and Entry detail).
+        const people = shared ? undefined : (entry.participants ?? splitSummary(entry)?.people ?? undefined);
+        const splitWays = people !== undefined ? `split ${String(people)} ways` : undefined;
+        const recentMeta = [shared ? (shared.householdName ?? "Shared") : account, splitWays].filter(Boolean);
+        const recentRow = recent && !entry.scheduled && !expected && !pending;
         const frequency = entry.recurringId ? rules.get(entry.recurringId) : undefined;
         const dayMeta = [shared ? (shared.householdName ?? "Shared") : account, frequency].filter(Boolean);
         const subtitle = pending ? (
@@ -213,7 +219,8 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
               ) : (
                 <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={TONE[entry.kind]} />
               )}
-              {shared || entry.share !== entry.total ? <span className="results__sub">your share</span> : null}
+              {/* iphone-home: a Recent row that says "split N ways" needs no "your share" under its amount. */}
+              {shared || (entry.share !== entry.total && !(recentRow && splitWays)) ? <span className="results__sub">your share</span> : null}
             </span>
           </>
         );

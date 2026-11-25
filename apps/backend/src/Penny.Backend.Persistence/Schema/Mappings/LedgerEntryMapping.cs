@@ -19,6 +19,14 @@ internal sealed class LedgerEntryMapping : IEntityTypeConfiguration<LedgerEntry>
                 "share_cents BETWEEN 0 AND total_cents"
             );
             table.HasCheckConstraint("ck_ledger_entries_note", Checks.Length("note", 0, 1000));
+            table.HasCheckConstraint(
+                "ck_ledger_entries_participants",
+                Checks.Participants("participants")
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_entries_participants_kind",
+                Checks.ParticipantsExpenseOnly("participants")
+            );
         });
         builder.HasKey(entry => new { entry.UserId, entry.Id });
         builder.HasOne<Ledger>().WithMany().HasForeignKey(entry => entry.UserId);

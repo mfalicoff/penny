@@ -168,4 +168,16 @@ struct RecurrenceTests {
         #expect(next.recurring[0].nextDate == .day("2101-01-30"))
         #expect(next.violations == [.dateOutOfRange("gym")])
     }
+
+    @Test("whenRuleHasParticipants_Materialize_ShouldCopyThemToEachOccurrence")
+    func materializeCopiesParticipants() {
+        var rule = Sample.rule("rent", start: "2026-01-01", next: "2026-01-01", share: 4000)
+        rule.total = 12000
+        rule.participants = 3
+        let result = Recurrence.materialize(Sample.ledger(recurring: [rule]), today: .day("2026-02-15"))
+        #expect(result.transactions.map(\.participants) == [3, 3])
+        #expect(Recurrence.occurrence(of: rule, on: .day("2026-03-01")).participants == 3)
+        rule.participants = nil
+        #expect(Recurrence.occurrence(of: rule, on: .day("2026-03-01")).participants == nil)
+    }
 }

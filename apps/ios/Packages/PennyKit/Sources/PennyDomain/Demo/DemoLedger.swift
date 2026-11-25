@@ -13,11 +13,13 @@ public enum DemoLedger {
         var count = 0
         func entry(
             _ title: String, _ cents: Int64, _ category: String, daysAgo: Int, share: Int64? = nil,
-            kind: EntryKind = .expense, account: String? = "demo-chequing", trip: String? = nil
+            kind: EntryKind = .expense, account: String? = "demo-chequing", trip: String? = nil,
+            participants: Int? = nil
         ) -> LedgerEntry {
             count += 1
             return LedgerEntry(
                 id: "\(idPrefix)entry-\(count)", title: title, kind: kind, total: cents, share: share ?? cents,
+                participants: participants,
                 categoryId: category, accountId: account, tripId: trip, date: day(daysAgo))
         }
         let nextMonth = month.shifted(by: 1)?.first ?? month.last
@@ -36,8 +38,10 @@ public enum DemoLedger {
                 entry("Monthly salary", 480_000, "salary", daysAgo: 20, kind: .income),
                 entry("Rent", 145_000, "home", daysAgo: 20),
                 entry("Weekly groceries", 8_642, "groceries", daysAgo: 0),
-                entry("Coffee with a friend", 1_240, "food", daysAgo: 0, share: 620, account: "demo-visa"),
-                entry("Dinner out", 14_880, "food", daysAgo: 1, share: 7_440, account: "demo-visa"),
+                entry(
+                    "Coffee with a friend", 1_240, "food", daysAgo: 0, share: 620, account: "demo-visa", participants: 2
+                ),
+                entry("Dinner out", 14_880, "food", daysAgo: 1, share: 7_440, account: "demo-visa", participants: 2),
                 entry("Monthly transit pass", 15_600, "transport", daysAgo: 5),
                 entry("A new book", 2_499, "shopping", daysAgo: 2, account: "demo-visa", trip: "demo-trip"),
                 entry("Weekend groceries", 7_235, "groceries", daysAgo: 6),

@@ -118,6 +118,8 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     public var date: CalendarDate
     public var total: Int64
     public var share: Int64
+    /// A personal expense's participant count (`LedgerEntry.participants`); nil for a shared row.
+    public var participants: Int?
     public var categoryId: String
     public var accountId: String?
     public var tripId: String?
@@ -138,6 +140,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         date = entry.date
         total = entry.total
         share = entry.share
+        participants = entry.participants
         categoryId = entry.categoryId
         accountId = entry.accountId
         tripId = entry.tripId
@@ -158,6 +161,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         date = item.date
         total = item.total
         share = item.share
+        participants = nil
         categoryId = SharedExpenseShare.categoryID(item.category)
         accountId = item.accountId
         tripId = nil

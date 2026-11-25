@@ -50,7 +50,7 @@
     },
     {
       "file": "money.json",
-      "sha256": "e2d53b34ebb35a58998d9862b2de1266bf24aa1d4d922190746bbe8ce956a42a",
+      "sha256": "b38a46fd79c38bca07c5cdef69ee3b019bd4dffcd976ff633a8e5497760722b2",
       "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [

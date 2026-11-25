@@ -111,6 +111,14 @@ public sealed class LedgerReaderTests
     [InlineData("long-receipt-name")]
     [InlineData("long-id")]
     [InlineData("missing-recurring")]
+    [InlineData("null-participants")]
+    [InlineData("null-recurring-participants")]
+    [InlineData("one-participant")]
+    [InlineData("participants-above-100")]
+    [InlineData("fractional-participants")]
+    [InlineData("string-participants")]
+    [InlineData("income-participants")]
+    [InlineData("investment-recurring-participants")]
     public void whenLedgerBreaksRule_Read_ShouldReject(string mutation)
     {
         Read(Mutate(mutation)).ShouldBeNull(mutation);
@@ -146,6 +154,20 @@ public sealed class LedgerReaderTests
             StringComparison.Ordinal
         );
         Read(JsonNode.Parse(text)!)!.Ledger.Recurring.Single().Total.ShouldBe(cents);
+    }
+
+    [Fact]
+    public void whenParticipantsSent_Read_ShouldKeepThemOnExpensesOnly()
+    {
+        var body = JsonNode.Parse(Valid)!;
+        body["ledger"]!["transactions"]![0]!["participants"] = 3.0;
+        body["ledger"]!["recurring"]![0]!["participants"] = 100;
+        var write = Read(body)!;
+        write.Ledger.Transactions.Single().Participants.ShouldBe(3);
+        write.Ledger.Recurring.Single().Participants.ShouldBe(100);
+        var absent = Read(JsonNode.Parse(Valid)!)!;
+        absent.Ledger.Transactions.Single().Participants.ShouldBeNull();
+        absent.Ledger.Recurring.Single().Participants.ShouldBeNull();
     }
 
     [Fact]
@@ -381,6 +403,36 @@ public sealed class LedgerReaderTests
                 break;
             case "missing-recurring":
                 ledger.Remove("recurring");
+                break;
+            case "null-participants":
+                entry["participants"] = null;
+                break;
+            case "null-recurring-participants":
+                rule["participants"] = null;
+                break;
+            case "one-participant":
+                entry["participants"] = 1;
+                break;
+            case "participants-above-100":
+                rule["participants"] = 101;
+                break;
+            case "fractional-participants":
+                entry["participants"] = 2.5;
+                break;
+            case "string-participants":
+                entry["participants"] = "3";
+                break;
+            case "income-participants":
+                entry["kind"] = "income";
+                entry["categoryId"] = "salary";
+                entry["share"] = 12000;
+                entry.Remove("tripId");
+                entry["participants"] = 2;
+                break;
+            case "investment-recurring-participants":
+                rule["kind"] = "investment";
+                rule["categoryId"] = "investments";
+                rule["participants"] = 2;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(mutation));

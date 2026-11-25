@@ -99,6 +99,10 @@ public struct LedgerEntry: Hashable, Sendable {
     public var kind: EntryKind
     public var total: Int64
     public var share: Int64
+    /// How many people split an expense, the person included (2...100, expenses only). An equal
+    /// split records it, so Home can say "split N ways"; nil when the entry isn't split or was
+    /// split by amount or percent (contract 2.2.0).
+    public var participants: Int?
     public var categoryId: String
     public var accountId: String?
     public var tripId: String?
@@ -110,8 +114,8 @@ public struct LedgerEntry: Hashable, Sendable {
     public var recurringId: String?
 
     public init(
-        id: String, title: String, kind: EntryKind, total: Int64, share: Int64, categoryId: String,
-        accountId: String? = nil, tripId: String? = nil, date: CalendarDate, note: String = "",
+        id: String, title: String, kind: EntryKind, total: Int64, share: Int64, participants: Int? = nil,
+        categoryId: String, accountId: String? = nil, tripId: String? = nil, date: CalendarDate, note: String = "",
         receipt: ReceiptReference? = nil, recurringId: String? = nil
     ) {
         self.id = id
@@ -119,6 +123,7 @@ public struct LedgerEntry: Hashable, Sendable {
         self.kind = kind
         self.total = total
         self.share = share
+        self.participants = participants
         self.categoryId = categoryId
         self.accountId = accountId
         self.tripId = tripId
@@ -138,6 +143,8 @@ public struct RecurringRule: Hashable, Sendable {
     public var kind: EntryKind
     public var total: Int64
     public var share: Int64
+    /// The participant count each occurrence copies (`LedgerEntry.participants`).
+    public var participants: Int?
     public var categoryId: String
     public var accountId: String?
     public var date: CalendarDate
@@ -149,8 +156,8 @@ public struct RecurringRule: Hashable, Sendable {
     public var active: Bool
 
     public init(
-        id: String, title: String, kind: EntryKind, total: Int64, share: Int64, categoryId: String,
-        accountId: String? = nil, date: CalendarDate, note: String = "",
+        id: String, title: String, kind: EntryKind, total: Int64, share: Int64, participants: Int? = nil,
+        categoryId: String, accountId: String? = nil, date: CalendarDate, note: String = "",
         frequency: RecurrenceFrequency, nextDate: CalendarDate, anchorDay: Int, active: Bool = true
     ) {
         self.id = id
@@ -158,6 +165,7 @@ public struct RecurringRule: Hashable, Sendable {
         self.kind = kind
         self.total = total
         self.share = share
+        self.participants = participants
         self.categoryId = categoryId
         self.accountId = accountId
         self.date = date

@@ -5,6 +5,8 @@ import {
   nextOccurrence,
   parseDate,
   personalShare,
+  recordedSplit,
+  splitParticipants,
   uid,
   validDate,
   type Category,
@@ -128,7 +130,7 @@ export function newDraft(ledger: Pick<Ledger, "categories" | "transactions">, ki
 }
 
 export function draftFromEntry(entry: Transaction): EntryDraft {
-  const split: ShareMode = entry.kind === "expense" && entry.share !== entry.total ? "amount" : "full";
+  const split: ShareMode = recordedSplit(entry);
   return {
     id: entry.id,
     ruleId: uid(),
@@ -141,7 +143,7 @@ export function draftFromEntry(entry: Transaction): EntryDraft {
     tripId: entry.tripId ?? "",
     note: entry.note,
     split,
-    shareInput: split === "amount" ? centsToInput(entry.share) : "",
+    shareInput: split === "equal" ? String(entry.participants) : split === "amount" ? centsToInput(entry.share) : "",
     repeat: "none",
     receipt: entry.receipt ?? null,
   };
@@ -186,9 +188,11 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
   if (tripId && !ledger.trips.some((trip) => trip.id === tripId)) errors.trip = "This trip isn't available any more. Choose another trip.";
   if (draft.note.trim().length > 1000) errors.note = "Keep the note to 1000 characters.";
   let share = total;
+  const split = draft.kind === "expense" ? draft.split : "full";
+  const participants = splitParticipants(split, draft.shareInput);
   if (!errors.amount) {
     try {
-      share = personalShare(total, draft.kind === "expense" ? draft.split : "full", draft.shareInput);
+      share = personalShare(total, split, draft.shareInput);
     } catch (error) {
       errors.share = message(error, "Check your share.");
     }
@@ -202,6 +206,7 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
     kind: draft.kind,
     total,
     share,
+    ...(participants !== undefined ? { participants } : {}),
     categoryId: draft.categoryId,
     ...(draft.accountId ? { accountId: draft.accountId } : {}),
     ...(tripId ? { tripId } : {}),
@@ -218,6 +223,7 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
     kind: draft.kind,
     total,
     share,
+    ...(participants !== undefined ? { participants } : {}),
     categoryId: draft.categoryId,
     ...(draft.accountId ? { accountId: draft.accountId } : {}),
     date: draft.date,
@@ -281,9 +287,10 @@ export function shareSummary(entry: Pick<Transaction, "kind" | "share" | "total"
  * equal split is recognised from them (`personalShare` rounds the total over the people); any other
  * share is a custom one. `null` when the entry isn't split.
  */
-export function splitSummary(entry: Pick<Transaction, "kind" | "share" | "total">): { method: string; people: number | null } | null {
+export function splitSummary(entry: Pick<Transaction, "kind" | "share" | "total" | "participants">): { method: string; people: number | null } | null {
   if (entry.kind !== "expense" || entry.share === entry.total || entry.share <= 0) return null;
-  const people = Math.round(entry.total / entry.share);
+  // The recorded count (MAZ-272) when it still gives the share; else read from the amounts, for entries saved before it.
+  const people = recordedSplit(entry) === "equal" && entry.participants !== undefined ? entry.participants : Math.round(entry.total / entry.share);
   if (people >= 2 && people <= 100 && Math.round(entry.total / people) === entry.share) return { method: `Equally · ${String(people)} people`, people };
   return { method: "Custom share", people: null };
 }
