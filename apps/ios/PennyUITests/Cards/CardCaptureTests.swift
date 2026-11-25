@@ -959,6 +959,37 @@ final class CardCaptureTests: CardTestCase {
         }
     }
 
+    // MARK: Crash and performance reports (MAZ-129)
+
+    private static let needsTelemetry =
+        "Needs a stack that offers crash reports: PENNY_STACK_TELEMETRY=1 scripts/ios.sh ui-test cards "
+        + "(penny-env --telemetry)"
+
+    @MainActor
+    func test_whenTheServerOffersReports_IphoneMonitoringPrompt_ShouldBeCaptured() async throws {
+        guard try await stack().takesNativeTelemetry() else {
+            return try blocked("iphone-monitoring-prompt", note: Self.needsTelemetry)
+        }
+        try await card("iphone-monitoring-prompt") { card in
+            // A fresh install hasn't answered, so Home asks once after sign-in.
+            try card.penny.wait(for: AccessibilityID.Monitoring.promptScreen, timeout: 30)
+            try card.penny.wait(for: AccessibilityID.Monitoring.share)
+        }
+    }
+
+    @MainActor
+    func test_whenTheServerOffersReports_IphonePrivacy_ShouldBeCaptured() async throws {
+        guard try await stack().takesNativeTelemetry() else {
+            return try blocked("iphone-privacy", note: Self.needsTelemetry)
+        }
+        // The card's choices: crash reports on, performance data off (answered, so no prompt).
+        let choices = Data(#"{"crashes":true,"performance":false,"decided":true}"#.utf8)
+        try await card("iphone-privacy", defaults: ["penny.telemetry": choices]) { card in
+            try card.penny.openSettingsPage("privacy", screen: AccessibilityID.Monitoring.privacyScreen)
+            try card.penny.wait(for: AccessibilityID.Monitoring.policy)
+        }
+    }
+
     // MARK: Emailed receipts (MAZ-184): recorded as blocked until the seeds have an inbox
 
     @MainActor

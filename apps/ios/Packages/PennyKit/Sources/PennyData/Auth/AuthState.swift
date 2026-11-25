@@ -94,11 +94,14 @@ public struct ServerCheck: Equatable, Sendable {
     public let privacyPolicy: URL?
     /// MAZ-124: whether the server sends email.
     public let emailEnabled: Bool
+    /// MAZ-129: whether the server takes the app's crash and performance reports.
+    public let nativeTelemetry: Bool
 
     public init(
         server: ServerURL, version: String, providers: [SignInProvider]?,
-        privacyPolicy: URL? = nil, emailEnabled: Bool = false
+        privacyPolicy: URL? = nil, emailEnabled: Bool = false, nativeTelemetry: Bool = false
     ) {
+        self.nativeTelemetry = nativeTelemetry
         self.emailEnabled = emailEnabled
         self.server = server
         self.version = version

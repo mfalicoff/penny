@@ -127,10 +127,11 @@ class CardTestCase: PennyUITestCase {
     /// System (the device's appearance still picks light or dark), for cards that show the
     /// setting; `standInFaceID` answers Face ID with the Debug stand-in, so the lock can be on.
     /// `portrait` captures an iPad card upright, for the cards drawn in portrait (`ipad-home-portrait`).
+    /// `defaults` adds preferences to the launch, such as the crash report choices (MAZ-129).
     @MainActor
     func card(
         _ id: String, freshSeedPerAppearance: Bool = false, followsSystem: Bool = false,
-        standInFaceID: Bool = false, portrait: Bool = false, note: String? = nil,
+        standInFaceID: Bool = false, portrait: Bool = false, note: String? = nil, defaults: [String: Any] = [:],
         open: (CardContext) async throws -> Void
     ) async throws {
         let state = try CardState.load(id)
@@ -152,7 +153,8 @@ class CardTestCase: PennyUITestCase {
             // except the few drawn in portrait.
             if state.platform == "iPad" { XCUIDevice.shared.orientation = portrait ? .portrait : .landscapeLeft }
             var options = LaunchOptions()
-            options.seed = ContainerSeed(standardDefaults: ["penny.appearance": followsSystem ? "system" : appearance])
+            options.seed = ContainerSeed(
+                standardDefaults: defaults.merging(["penny.appearance": followsSystem ? "system" : appearance]) { $1 })
             options.standInFaceID = standInFaceID
             // A card that shows System selected is drawn in each appearance: System shows it.
             if followsSystem { options.systemAppearance = appearance }

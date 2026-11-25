@@ -229,15 +229,37 @@ public struct WireServerInfo: Codable, Equatable, Sendable {
     /// MAZ-124: whether the server sends email (password reset links and invitations by email).
     /// Absent on older servers; read it through `sendsEmail`, which treats absent as false.
     public var emailEnabled: Bool?
+    /// MAZ-129: which opt-in client telemetry the server takes. Absent on older servers; read it
+    /// through `takesNativeTelemetry`.
+    public var telemetry: WireClientTelemetryInfo?
 
-    public init(name: String, version: String, privacyPolicyUrl: String? = nil, emailEnabled: Bool? = nil) {
+    public init(
+        name: String, version: String, privacyPolicyUrl: String? = nil, emailEnabled: Bool? = nil,
+        telemetry: WireClientTelemetryInfo? = nil
+    ) {
         self.name = name
         self.version = version
         self.privacyPolicyUrl = privacyPolicyUrl
         self.emailEnabled = emailEnabled
+        self.telemetry = telemetry
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, version, privacyPolicyUrl, emailEnabled, telemetry }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        version = try container.decode(String.self, forKey: .version)
+        privacyPolicyUrl = try container.decodeIfPresent(String.self, forKey: .privacyPolicyUrl)
+        emailEnabled = try container.decodeIfPresent(Bool.self, forKey: .emailEnabled)
+        // A malformed telemetry object reads as absent: the app then never asks or sends.
+        telemetry = try? container.decodeIfPresent(WireClientTelemetryInfo.self, forKey: .telemetry)
     }
 
     public var sendsEmail: Bool { emailEnabled == true }
+
+    /// Whether the iOS app may offer crash and performance reports (`telemetry.native`).
+    public var takesNativeTelemetry: Bool { telemetry?.native == true }
 
     public var privacyPolicy: URL? { PrivacyPolicy.url(privacyPolicyUrl) }
 }
@@ -431,4 +453,18 @@ struct WireOidcNativeComplete: Encodable, Sendable {
 struct WireOidcComplete: Encodable, Sendable {
     var transaction: String
     var callbackUrl: String
+}
+
+/// `ClientTelemetryInfo` (MAZ-129): which opt-in client telemetry the server accepts.
+public struct WireClientTelemetryInfo: Codable, Equatable, Sendable {
+    public var web: Bool
+    public var sessionReplay: Bool
+    /// The iOS app may offer crash and performance reports.
+    public var native: Bool
+
+    public init(web: Bool = false, sessionReplay: Bool = false, native: Bool) {
+        self.web = web
+        self.sessionReplay = sessionReplay
+        self.native = native
+    }
 }

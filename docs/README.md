@@ -60,6 +60,7 @@ Each folder holds one kind of document:
 - [Native personal and shared trips](ios/trips.md): personal and shared trips, the merged list, sharing a personal trip with its private earlier expenses, joining, travel dates that never filter, assignment and deletion, totals that never count twice, monthly settlement, identifiers and acceptance scenarios.
 - [Native receipts](ios/receipts.md): the iPhone and iPad photo and file pickers, supported files, upload progress, cancel and retry, the draft, the authenticated photo and PDF viewer, sharing, temporary-file cleanup, permissions and privacy, and simulator and device verification.
 - [Native household notifications](ios/notifications.md): APNs entitlement and Apple Developer setup, sandbox versus production, contextual permission, the registration lifecycle (refresh, denial, sign-out, account changes), payload validation and navigation, auth/app-lock and cross-account privacy, simulator injection versus physical-device verification.
+- [Native crash and performance reports](ios/monitoring.md): the opt-in sheet and Settings › Privacy, what the app sends and never sends, MetricKit crashes and hangs, buffering before sign-in, the server's answers, why no third-party SDK, dSYM symbolication and tests.
 
 ## Web app
 

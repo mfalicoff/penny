@@ -178,8 +178,8 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-invite-email` | `CardCaptureTests` | Captured with `PENNY_STACK_SMTP=1`: an expired and a waiting invitation sent through the real API, then an address typed (MAZ-124) | Covered |
 | `iphone-delete-account` | `CardCaptureTests`, `AccountDataJourneyTests` | Settings › Profile › Delete account with the seeded household under Stays for others; the journey refuses a wrong password, then deletes a fresh account and lands on sign-in with the deleted notice, and the server no longer signs it in (MAZ-152) | Covered |
 | `iphone-export-all` | `CardCaptureTests`, `AccountDataJourneyTests` | Settings › Profile › Export all your data once the real API has prepared the ZIP (name · size · ready, Save or share) (MAZ-152) | Covered |
-| `iphone-monitoring-prompt` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |
-| `iphone-privacy` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |
+| `iphone-monitoring-prompt` | `CardCaptureTests` | Captured with `PENNY_STACK_TELEMETRY=1`: Home after a fresh sign-in on a server that offers reports asks once; PennyData's telemetry package tests cover the answer, opt-in, the demo and scrubbing (MAZ-129) | Covered |
+| `iphone-privacy` | `CardCaptureTests` | Captured with `PENNY_STACK_TELEMETRY=1`: Settings › Privacy with crash reports on and performance data off, and the server's privacy policy (MAZ-129) | Covered |
 | `ipad-profile` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
 | `web-profile` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-profile`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-sign-in-providers` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-sign-in-providers`; the browser journeys are MAZ-96 | Not applicable to native |

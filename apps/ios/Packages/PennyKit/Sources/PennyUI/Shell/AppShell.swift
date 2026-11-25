@@ -31,6 +31,8 @@ struct AppShell: View {
         .sheet(isPresented: namePrompt) {
             NamePromptSheet().environment(shell)
         }
+        // MAZ-129: crash and performance reports, and asking for them once.
+        .modifier(ClientMonitoring(shell: shell))
         .onChange(of: scenePhase) {
             if scenePhase == .active {
                 shell.refreshToday()
