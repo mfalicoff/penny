@@ -3,6 +3,7 @@ import { calendarMonth } from "@domain/calendar.ts";
 import { type Category, type Ledger, type Transaction } from "@domain/ledger.ts";
 import { buildMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
 import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.ts";
+import { sharedCategoryId } from "@domain/householdProjection.ts";
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import type { SharedRow } from "../../api/projection";
 import type { WeekStart } from "../../app/preferences";
@@ -58,9 +59,6 @@ export type SharedEntry = OverviewEntry & { householdId: string; householdExpens
 
 export const isSharedEntry = (entry: Transaction): entry is SharedEntry => "householdExpenseId" in entry;
 
-/** The category id a shared row gets in the view: shared categories travel by value. */
-export const sharedCategoryId = (category: SharedRow["category"]) => `household-category:${category.name}:${category.icon}:${category.color}`;
-
 /**
  * The person's ledger with their shares of shared expenses added: recorded shares (`rows`) and
  * the month's shared previews (`scheduled`, flagged `scheduled: true`). Rows in another
@@ -73,7 +71,9 @@ export function ledgerWithShared(ledger: Ledger, rows: readonly SharedRow[], sch
   const transactions: Transaction[] = [...ledger.transactions];
   const add = (row: SharedRow, preview: boolean) => {
     if (row.householdCurrency !== ledger.currency) return;
-    const categoryId = sharedCategoryId(row.category);
+    // Counted under the person's expense category of the same name, as the domain's
+    // `ledgerWithHouseholds` does; a shared category with no match keeps its own row.
+    const categoryId = sharedCategoryId(ledger.categories, row.category);
     if (!known.has(categoryId)) {
       known.add(categoryId);
       categories.push({ id: categoryId, kind: "expense", ...row.category });
