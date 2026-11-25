@@ -45,7 +45,7 @@ struct SharedProjectionTests {
     /// One projected row as both servers send it. Fixture values only.
     static func row(
         _ id: String, date: String, total: Int64, share: Int64, scheduled: Bool? = nil, recurringId: String? = nil,
-        currency: String? = "CAD"
+        currency: String? = "CAD", payer: String? = nil
     ) -> String {
         var fields = [
             #""id":"\#(id)""#, #""householdId":"maison""#, #""title":"Groceries""#, #""date":"\#(date)""#,
@@ -55,6 +55,7 @@ struct SharedProjectionTests {
         if let currency { fields.append(#""householdCurrency":"\#(currency)""#) }
         if let scheduled { fields.append(#""scheduled":\#(scheduled)"#) }
         if let recurringId { fields.append(#""recurringId":"\#(recurringId)""#) }
+        if let payer { fields.append(payer) }
         return "{" + fields.joined(separator: ",") + "}"
     }
 
@@ -99,6 +100,32 @@ struct SharedProjectionTests {
         let summary = report.month(Self.november)
         #expect(summary.recorded.expense == 3000, "the viewer's share, once")
         #expect(summary.projected.expense == 103_000)
+    }
+
+    @Test(
+        "whenTheServerSaysWhoPaid_SharedProjectionModel_ShouldNameThePayerOnTheShare",
+        arguments: [
+            (#""paidByYou":true,"payer":{"email":"alex@example.test"}"#, SharedPayer.you),
+            (#""paidByYou":false,"payer":{"email":"bea@example.test","displayName":"Béa"}"#, .member(name: "Béa")),
+            (
+                #""paidByYou":false,"payer":{"email":"bea@example.test","displayName":"  "}"#,
+                .member(name: "bea@example.test")
+            ),
+            (
+                #""paidByYou":false,"payer":{"email":"deleted-1@example.test","deleted":true}"#,
+                .member(name: "Former member")
+            ),
+            // A server from before MAZ-275 sends no payer.
+            (nil, nil),
+        ] as [(String?, SharedPayer?)])
+    func payer(fields: String?, expected: SharedPayer?) async throws {
+        let shared = Self.row("e1", date: "2026-11-03", total: 9000, share: 3000, payer: fields)
+        let service = QueuedProjection(["2026-11": [.success(try Self.answer(recorded: [shared]))]])
+        let model = SharedProjectionModel(service: service)
+        await model.refresh(Self.november)
+        let row = try #require(model.shares(currency: .cad).recorded.first)
+        #expect(row.payer == expected)
+        #expect(ReportEntry.shared(row).payer == expected)
     }
 
     @Test("whenARefreshFails_SharedProjectionModel_ShouldKeepTheLastAnswerAndSaySo")

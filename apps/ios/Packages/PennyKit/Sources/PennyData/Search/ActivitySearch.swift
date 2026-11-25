@@ -341,6 +341,12 @@ extension SharedExpenseShare {
             total: wire.totalCents, share: wire.shareCents,
             category: Category(name: wire.category.name, icon: wire.category.icon, color: wire.category.color),
             note: wire.note, householdName: wire.householdName ?? "", accountId: wire.accountId,
-            recurringId: wire.recurringId, scheduled: wire.scheduled ?? false)
+            recurringId: wire.recurringId, scheduled: wire.scheduled ?? false, payer: Self.payer(wire))
+    }
+
+    /// "you" when the viewer paid, else the payer's shown name; nil when the server sent neither.
+    static func payer(_ wire: WireProjectedExpense) -> SharedPayer? {
+        if wire.paidByYou == true { return .you }
+        return wire.payer.map { .member(name: $0.shownName) }
     }
 }

@@ -117,6 +117,20 @@ struct WireModelTests {
         }
         #expect(expense.shareCents == 600)
         #expect(item.match == nil)
+        #expect(expense.payer == nil && expense.paidByYou == nil, "servers before MAZ-275 send no payer")
+    }
+
+    @Test("whenTheServerSaysWhoPaid_ProjectedExpense_ShouldDecodeThePayer")
+    func projectedPayer() throws {
+        let json = """
+            {"id":"x1","householdId":"h","title":"Dinner","date":"2026-03-01","totalCents":1200,"shareCents":600,
+             "payerUserId":"u","payer":{"email":"bea@example.test","displayName":"Béa","deleted":true},
+             "paidByYou":false,"category":{"name":"Food","icon":"cafe-outline","color":"#E47850"},"note":""}
+            """
+        let expense = try JSONDecoder().decode(WireProjectedExpense.self, from: Data(json.utf8))
+        #expect(expense.payer == WireExpensePayer(email: "bea@example.test", displayName: "Béa", deleted: true))
+        #expect(expense.paidByYou == false)
+        #expect(expense.payer?.shownName == "Former member", "a deleted account never shows its email")
     }
 
     @Test(
