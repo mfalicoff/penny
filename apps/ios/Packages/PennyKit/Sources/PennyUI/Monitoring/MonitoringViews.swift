@@ -130,7 +130,7 @@ struct MonitoringPromptSheet: View {
     {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Image(systemName: symbol)
-                .font(.subheadline.weight(.semibold))
+                .font(.subheadline)
                 .foregroundStyle(style)
                 .frame(width: 18)
                 .accessibilityHidden(true)
