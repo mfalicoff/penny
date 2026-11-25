@@ -40,9 +40,10 @@ struct AuthViewTests {
     @Test("whenServerVerified_ServerConnectView_ShouldListItsSignInMethods")
     func methods() throws {
         let server = try #require(server)
-        let sso = ServerCheck(server: server, version: "2.0.0", singleSignOn: true, singleSignOnLabel: "Company ID")
+        let sso = ServerCheck(
+            server: server, version: "2.0.0", providers: [SignInProvider(id: "sso", label: "Company ID", icon: "sso")])
         #expect(ServerConnectView.methods(sso) == "Email · SSO")
-        let email = ServerCheck(server: server, version: "2.0.0", singleSignOn: false, singleSignOnLabel: nil)
+        let email = ServerCheck(server: server, version: "2.0.0", providers: [])
         #expect(ServerConnectView.methods(email) == "Email")
     }
 

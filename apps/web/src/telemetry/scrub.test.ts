@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scrubItem, scrubText, scrubUrl } from "./scrub";
+import { maskReplayEvent, scrubItem, scrubText, scrubUrl } from "./scrub";
 
 describe("scrubUrl", () => {
   it("keeps the origin and route shape and drops ids, queries and fragments", () => {
@@ -69,6 +69,81 @@ describe("scrubItem", () => {
     const span = { attributes: [{ key: "http.url", value: { stringValue: "https://penny.example.com/api/households/abc123?x=1" } }, { key: "http.status_code", value: { intValue: 200 } }] };
     expect(scrubItem(span)).toEqual({
       attributes: [{ key: "http.url", value: { stringValue: "https://penny.example.com/api/households/:id" } }, { key: "http.status_code", value: { intValue: 200 } }],
+    });
+  });
+
+  it("masks Session Replay text, typed values and content attributes, keeping structure", () => {
+    const snapshot = {
+      type: 2,
+      data: {
+        node: {
+          type: 2,
+          tagName: "button",
+          attributes: {
+            class: "row",
+            "aria-label": "Groceries $158.77",
+            title: "ana@example.com",
+            "data-id": "t-42",
+            href: "/households/9f2c?q=rent",
+            src: "data:image/png;base64,QUJD",
+            "aria-expanded": "false",
+          },
+          childNodes: [
+            { type: 3, textContent: "Rent paid" },
+            { type: 3, textContent: ".row{color:red}", isStyle: true },
+          ],
+        },
+      },
+      timestamp: 1,
+    };
+    expect(maskReplayEvent(snapshot)).toEqual({
+      type: 2,
+      data: {
+        node: {
+          type: 2,
+          tagName: "button",
+          attributes: {
+            class: "row",
+            "aria-label": "********* *******",
+            title: "***************",
+            "data-id": "****",
+            href: "/households/:id",
+            src: "data:,",
+            "aria-expanded": "false",
+          },
+          childNodes: [
+            { type: 3, textContent: "**** ****" },
+            { type: 3, textContent: ".row{color:red}", isStyle: true },
+          ],
+        },
+      },
+      timestamp: 1,
+    });
+    expect(
+      maskReplayEvent({
+        type: 3,
+        data: { source: 5, id: 7, text: "coffee", isChecked: false },
+      }),
+    ).toEqual({
+      type: 3,
+      data: { source: 5, id: 7, text: "******", isChecked: false },
+    });
+    expect(
+      maskReplayEvent({
+        type: 3,
+        data: {
+          source: 0,
+          texts: [{ id: 1, value: "Lisbon" }],
+          attributes: [{ id: 2, attributes: { placeholder: "Search" } }],
+        },
+      }),
+    ).toEqual({
+      type: 3,
+      data: {
+        source: 0,
+        texts: [{ id: 1, value: "******" }],
+        attributes: [{ id: 2, attributes: { placeholder: "******" } }],
+      },
     });
   });
 });

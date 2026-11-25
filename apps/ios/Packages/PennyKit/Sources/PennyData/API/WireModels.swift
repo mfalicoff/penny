@@ -305,14 +305,63 @@ public struct WireHouseholdProjection: Codable, Equatable, Sendable {
     }
 }
 
-/// `GET /api/auth/oidc`: whether single sign-on is configured on this server.
+/// `GET /api/auth/oidc`: the sign-in providers configured on this server (MAZ-170).
+/// `providers` is absent from servers before MAZ-170, which had at most one provider,
+/// described by `enabled` and `label`.
 public struct WireOidcConfig: Codable, Equatable, Sendable {
     public var enabled: Bool
+    /// Deprecated: the first provider's label, for clients from before MAZ-170.
     public var label: String?
+    public var providers: [WireOidcProvider]?
 
-    public init(enabled: Bool, label: String? = nil) {
+    public init(enabled: Bool, label: String? = nil, providers: [WireOidcProvider]? = nil) {
         self.enabled = enabled
         self.label = label
+        self.providers = providers
+    }
+}
+
+/// One configured sign-in provider in `GET /api/auth/oidc` (MAZ-170).
+public struct WireOidcProvider: Codable, Equatable, Sendable {
+    /// Sent as `provider` to start a sign-in.
+    public var id: String
+    public var label: String
+    /// `google`, `apple` or `sso`; any other name gets the generic sign-in mark.
+    public var icon: String
+    /// The platform's own sign-in may be used (Sign in with Apple), through `/api/auth/oidc/native/*`.
+    public var native: Bool
+
+    public init(id: String, label: String, icon: String, native: Bool = false) {
+        self.id = id
+        self.label = label
+        self.icon = icon
+        self.native = native
+    }
+}
+
+/// `POST /api/auth/oidc/native/start` (MAZ-170): one pending native sign-in. The nonce goes
+/// unchanged on the platform request, and the ID token must carry it.
+public struct WireOidcNativeChallenge: Decodable, Equatable, Sendable {
+    public var transaction: String
+    public var nonce: String
+    public var expiresAt: Int64
+    /// The response's `Date` header, as on `WireOidcChallenge`. Not part of the body.
+    public var serverDate: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case transaction, nonce, expiresAt
+    }
+
+    public init(transaction: String, nonce: String, expiresAt: Int64, serverDate: Date? = nil) {
+        self.transaction = transaction
+        self.nonce = nonce
+        self.expiresAt = expiresAt
+        self.serverDate = serverDate
+    }
+
+    /// How long the server keeps the attempt, on the server's clock alone. Nil without a `Date`.
+    public var lifetime: TimeInterval? {
+        serverDate.map { Date(timeIntervalSince1970: TimeInterval(expiresAt) / 1000).timeIntervalSince($0) }
     }
 }
 
@@ -364,6 +413,19 @@ public struct WireOidcChallenge: Decodable, Equatable, Sendable {
 
 struct WireOidcStart: Encodable, Sendable {
     var redirectUri: String
+    /// MAZ-170. Left out for a server from before MAZ-170, which then uses its only provider.
+    var provider: String?
+}
+
+struct WireOidcNativeStart: Encodable, Sendable {
+    var provider: String
+}
+
+struct WireOidcNativeComplete: Encodable, Sendable {
+    var transaction: String
+    var idToken: String
+    var givenName: String?
+    var familyName: String?
 }
 
 struct WireOidcComplete: Encodable, Sendable {

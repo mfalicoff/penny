@@ -6929,6 +6929,462 @@
           }
         }
       }
+    },
+    "/api/telemetry/faro": {
+      "post": {
+        "summary": "Send web error, performance and replay reports",
+        "operationId": "postApiTelemetryFaro",
+        "description": "MAZ-129. Opt-in client telemetry, forwarded to the operator collector on a private network after a schema check, server-side scrubbing (URLs keep only their path shape; emails, quoted text and numbers in messages are redacted) and duplicate filtering. Never carries ledger contents, titles, notes, amounts, emails or search text. Available when /api/info telemetry.web is true.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "8 to 64 letters, digits, - or _. A key the same user sent in the last ten minutes is accepted again (202) without forwarding.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "A Grafana Faro Web SDK request body. meta.app.name must be penny-web; meta.user and meta.geo are dropped. Session Replay events (faro.session_recording.*) are re-masked, or dropped when telemetry.sessionReplay is false.",
+                "required": [
+                  "meta"
+                ],
+                "properties": {
+                  "meta": {
+                    "type": "object"
+                  },
+                  "exceptions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "logs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "measurements": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "traces": {
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted and queued for the collector (or a repeat of an accepted report).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a valid report: wrong shape, another app or service name, or too many items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client telemetry is off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Report larger than ClientTelemetry__MaxPayloadBytes (1 MiB by default).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Not uncompressed application/json.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many reports from this session (ClientTelemetry__RateLimitPermits per minute).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telemetry/otlp/v1/traces": {
+      "post": {
+        "summary": "Send native app traces",
+        "operationId": "postApiTelemetryOtlpTraces",
+        "description": "MAZ-129. Opt-in client telemetry, forwarded to the operator collector on a private network after a schema check, server-side scrubbing (URLs keep only their path shape; emails, quoted text and numbers in messages are redacted) and duplicate filtering. Never carries ledger contents, titles, notes, amounts, emails or search text. Available when /api/info telemetry.native is true.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "8 to 64 letters, digits, - or _. A key the same user sent in the last ten minutes is accepted again (202) without forwarding.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "OTLP/HTTP JSON traces (protobuf is refused). Every resource must have service.name penny-ios."
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted and queued for the collector (or a repeat of an accepted report).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a valid report: wrong shape, another app or service name, or too many items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client telemetry is off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Report larger than ClientTelemetry__MaxPayloadBytes (1 MiB by default).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Not uncompressed application/json.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many reports from this session (ClientTelemetry__RateLimitPermits per minute).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telemetry/otlp/v1/logs": {
+      "post": {
+        "summary": "Send native app logs and crashes",
+        "operationId": "postApiTelemetryOtlpLogs",
+        "description": "MAZ-129. Opt-in client telemetry, forwarded to the operator collector on a private network after a schema check, server-side scrubbing (URLs keep only their path shape; emails, quoted text and numbers in messages are redacted) and duplicate filtering. Never carries ledger contents, titles, notes, amounts, emails or search text. Available when /api/info telemetry.native is true.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "8 to 64 letters, digits, - or _. A key the same user sent in the last ten minutes is accepted again (202) without forwarding.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "OTLP/HTTP JSON logs (protobuf is refused). Every resource must have service.name penny-ios."
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted and queued for the collector (or a repeat of an accepted report).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not a valid report: wrong shape, another app or service name, or too many items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client telemetry is off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Report larger than ClientTelemetry__MaxPayloadBytes (1 MiB by default).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Not uncompressed application/json.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many reports from this session (ClientTelemetry__RateLimitPermits per minute).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -9269,6 +9725,9 @@
           "emailEnabled": {
             "type": "boolean",
             "description": "MAZ-124. Whether the server sends email (Email__Smtp__Host is set). When true, clients offer password reset by email and invitations by email; when false, or absent on servers older than this field, they fall back to codes: an operator-issued reset code and shared invite codes."
+          },
+          "telemetry": {
+            "$ref": "#/components/schemas/ClientTelemetryInfo"
           }
         },
         "required": [
@@ -10025,6 +10484,29 @@
             "description": "The account's password. Required for password accounts (`signIn: password` on Profile); an account that signs in with a provider has none and sends `{}`."
           }
         }
+      },
+      "ClientTelemetryInfo": {
+        "type": "object",
+        "description": "MAZ-129. Which opt-in client telemetry the server accepts (ClientTelemetry__*). Absent on older servers: clients then treat every flag as false and never ask, collect or send.",
+        "properties": {
+          "web": {
+            "type": "boolean",
+            "description": "The web app may offer error and performance reports (ClientTelemetry__FaroUrl is set)."
+          },
+          "sessionReplay": {
+            "type": "boolean",
+            "description": "The web app may also offer Session Replay, with every text and field masked (ClientTelemetry__SessionReplay)."
+          },
+          "native": {
+            "type": "boolean",
+            "description": "The iOS app may offer crash and performance reports (ClientTelemetry__OtlpEndpoint is set)."
+          }
+        },
+        "required": [
+          "web",
+          "sessionReplay",
+          "native"
+        ]
       }
     }
   }

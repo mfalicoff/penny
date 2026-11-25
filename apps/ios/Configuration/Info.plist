@@ -20,5 +20,9 @@
 	<string>$(PENNY_DEFAULT_SERVER_URL)</string>
 	<key>PennyAppGroup</key>
 	<string>$(PENNY_APP_GROUP)</string>
+	<!-- MAZ-170: YES once the App ID has the Sign in with Apple capability and the app carries its
+	     entitlement (Penny.xcconfig). NO signs in to Apple in the browser sheet instead. -->
+	<key>PennySignInWithApple</key>
+	<string>$(PENNY_SIGN_IN_WITH_APPLE)</string>
 </dict>
 </plist>

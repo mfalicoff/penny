@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Penny.Backend.Api.Authentication;
+using Penny.Backend.Api.ClientTelemetry;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Exports;
@@ -57,6 +58,7 @@ public static class BackendServices
         );
         builder.Services.AddSingleton(options);
         builder.Services.AddSingleton(LegalOptions.Read(configuration));
+        AddClientTelemetryServices(builder.Services, ClientTelemetryOptions.Read(configuration));
         var controls = AddTestControls(builder);
         builder.Services.AddSingleton(_ => database.CreateDataSource());
         // First hosted service: migrate before workers and Kestrel start.
@@ -137,6 +139,31 @@ public static class BackendServices
             InboundMailWorkerOptions.Read(configuration),
             OcrOptions.Read(configuration)
         );
+    }
+
+    // MAZ-129: opt-in client telemetry. The options, the duplicate filter and the forwarder are
+    // always registered (the endpoint answers 404 while off); the forwarder idles without reports.
+    private static void AddClientTelemetryServices(
+        IServiceCollection services,
+        ClientTelemetryOptions options
+    )
+    {
+        services.AddSingleton(options);
+        services.AddSingleton<IdempotencyKeys>();
+        services.AddSingleton<ClientTelemetryForwarder>();
+        services.AddHostedService(provider =>
+            provider.GetRequiredService<ClientTelemetryForwarder>()
+        );
+        services
+            .AddHttpClient(ClientTelemetryForwarder.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.MaxResponseContentBufferSize = 64 * 1024;
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { AllowAutoRedirect = false }
+            )
+            .RemoveAllLoggers();
     }
 
     // On by default, like other self-hosted servers; off when an operator (or a test host)
@@ -548,6 +575,10 @@ public static class BackendServices
             InboundMailRateLimit.Configure(
                 limits,
                 InboundMailOptions.RecipientsRateLimitPermits(configuration)
+            );
+            ClientTelemetryRateLimit.Configure(
+                limits,
+                ClientTelemetryOptions.Read(configuration).RateLimitPermits
             );
         });
         services.Configure<ForwardedHeadersOptions>(forwarded =>

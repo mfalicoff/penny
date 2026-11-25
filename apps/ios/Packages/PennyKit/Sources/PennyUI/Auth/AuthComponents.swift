@@ -5,7 +5,12 @@ import SwiftUI
 
 /// The leaf mark at the top of sign-in (`sign-in` card): a copper tile with a soft copper shadow.
 struct BrandHeader: View {
-    @ScaledMetric(relativeTo: .largeTitle) private var size = 64.0
+    @ScaledMetric private var size: Double
+
+    /// 64 pt on the sign-in cards, 56 pt when the providers lead (`iphone-sign-in-providers`).
+    init(size: Double = 64) {
+        _size = ScaledMetric(wrappedValue: size, relativeTo: .largeTitle)
+    }
 
     var body: some View {
         Image(systemName: "leaf")
@@ -197,10 +202,16 @@ nonisolated enum PasswordStrength {
 
 /// The "or" between Sign in and single sign-on, with a hairline on each side (`.or`).
 struct OrDivider: View {
+    /// "or" between the form and a lone single sign-on; "or use your email" when the providers
+    /// lead (MAZ-170, `iphone-sign-in-providers`), in the secondary label color the card gives it.
+    var text = "or"
+
     var body: some View {
         HStack(spacing: 12) {
             line
-            Text("or").font(.footnote).foregroundStyle(PennyColor.tertiaryLabel)
+            Text(text).font(.footnote)
+                .foregroundStyle(text == "or" ? PennyColor.tertiaryLabel : PennyColor.secondaryLabel)
+                .fixedSize()
             line
         }
         .accessibilityHidden(true)

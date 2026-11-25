@@ -52,6 +52,9 @@ public static class AuthRateLimit
                         InviteRateLimit.Policy => InviteRateLimit.Message,
                         SearchRateLimit.Policy => SearchRateLimit.Message,
                         InboundMailRateLimit.Policy => InboundMailRateLimit.Message,
+                        ClientTelemetry.ClientTelemetryRateLimit.Policy => ClientTelemetry
+                            .ClientTelemetryRateLimit
+                            .Message,
                         _ => Message,
                     },
                     cancellationToken
