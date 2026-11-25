@@ -148,6 +148,20 @@ async function entryDetail(p: Page, month: string, row: RegExp, title: string) {
 
 const partyDetail = (p: Page) => entryDetail(p, "2026-09", /^🎉 Party supplies/, "🎉 Party supplies");
 
+/**
+ * MAZ-276 (`web-activity-selected`): the party's detail open beside the table and alex's three
+ * September expenses ticked, as the card ticks its three; the pointer rests off the rows.
+ */
+async function threeSelected(p: Page) {
+  await partyDetail(p);
+  const table = p.getByRole("region", { name: "Search results" });
+  for (const title of ["東京 ramen", "🎉 Party supplies", "Façade repair"]) await table.getByRole("checkbox", { name: `Select ${title}` }).click();
+  const bar = p.getByRole("toolbar", { name: "3 entries selected" });
+  await expect(bar).toContainText("3 selected");
+  await p.mouse.move(1300, 880);
+  return bar;
+}
+
 function household(run: Run, ref: string) {
   const id = run.seed?.households[ref];
   if (!id) throw new Error(`No seeded household ${ref}`);
@@ -978,6 +992,35 @@ const cards: Record<string, Card> = {
   "web-edit-entry": { open: ({ page: p }) => editEntry(p) },
   "web-join-code": { open: ({ page: p }) => joinWithCode(p) },
   "web-activity-searching": { faults: true, open: (run) => searching(run) },
+  "web-activity-selected": { open: ({ page: p }) => threeSelected(p) },
+  "web-activity-bulk-category": {
+    open: async ({ page: p }) => {
+      await (await threeSelected(p)).getByRole("button", { name: "Change category" }).click();
+      await expect(p.getByRole("dialog", { name: "Category for 3 expenses" })).toBeVisible();
+    },
+  },
+  "web-activity-bulk-account": {
+    open: async ({ page: p }) => {
+      await (await threeSelected(p)).getByRole("button", { name: "Change account" }).click();
+      await expect(p.getByRole("dialog", { name: "Account for 3 entries" })).toBeVisible();
+    },
+  },
+  "web-activity-bulk-delete": {
+    open: async ({ page: p }) => {
+      await (await threeSelected(p)).getByRole("button", { name: "Delete" }).click();
+      await expect(p.getByRole("dialog", { name: "Delete 3 entries?" }).getByRole("button", { name: "Cancel" })).toBeFocused();
+    },
+  },
+  "web-activity-bulk-done": {
+    // Deletes alex's three September expenses, so it needs its own seed.
+    fresh: true,
+    open: async ({ page: p }) => {
+      await (await threeSelected(p)).getByRole("button", { name: "Delete" }).click();
+      await p.getByRole("dialog", { name: "Delete 3 entries?" }).getByRole("button", { name: "Delete 3 entries" }).click();
+      await expect(p.getByText("3 entries deleted")).toBeVisible();
+      await expect(p.getByRole("toolbar")).toHaveCount(0);
+    },
+  },
   "web-server-unreachable": {
     faults: true,
     open: async (run) => {

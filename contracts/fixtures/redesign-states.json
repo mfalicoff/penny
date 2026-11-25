@@ -1529,6 +1529,61 @@
       }
     },
     {
+      "specimen": "web-activity-selected",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity with three expenses selected: the selection bar replaces the chips"
+    },
+    {
+      "specimen": "web-activity-bulk-category",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity with three expenses selected and the category picker open"
+    },
+    {
+      "specimen": "web-activity-bulk-account",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity with three entries selected and the account picker open"
+    },
+    {
+      "specimen": "web-activity-bulk-delete",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity asking to confirm deleting three selected entries"
+    },
+    {
+      "specimen": "web-activity-bulk-done",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity after deleting three selected entries, with the saved toast and Undo"
+    },
+    {
       "specimen": "web-server-unreachable",
       "platform": "Web",
       "appearances": [

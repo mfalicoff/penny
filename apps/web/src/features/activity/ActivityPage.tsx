@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ACCOUNT_MESSAGES, download, entriesPath } from "../../api/account";
 import { ApiError } from "../../api/client";
-import { useCallback, useId, useRef, useState, type ReactNode, type RefObject, type SyntheticEvent } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTopbarSlot } from "../../app/shell/pageTitle";
 import { SEARCH_SHORTCUT } from "../../app/shell/AppShell";
@@ -21,7 +21,9 @@ import { categoryIcon, frequentCategories, inlineCategories, mostUsedCategories 
 import { CategoryPickerDialog } from "../entries/pickers";
 import { useLedgerWriter } from "../entries/writer";
 import { dayLabel } from "../households/model";
-import { ActivityResults } from "./ActivityResults";
+import { ActivityResults, type TableSelection } from "./ActivityResults";
+import type { BulkAction } from "./bulkActions";
+import { SelectionBar } from "./SelectionBar";
 import { periodTotals, rowFilters, useActivityLedger, useSharedRows, type SharedState } from "./data";
 import { activeDay, KIND_FILTERS, periodLabel, periodOf, periodRange, projectionPeriod, shiftPeriod, shortPeriodLabel, withPeriod, without, type ActivitySearch, type Period } from "./filters";
 
@@ -33,6 +35,14 @@ interface Open {
   action: EntryAction;
   /** Changes on every open, so opening the same entry again (another row action) starts afresh. */
   nonce: number;
+}
+
+const NONE: ReadonlySet<string> = new Set<string>();
+
+/** The ticked entries (MAZ-276), for one period: changing the month starts with none. */
+interface Picked {
+  period: string;
+  ids: ReadonlySet<string>;
 }
 
 /**
@@ -67,12 +77,80 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   const [filtering, setFiltering] = useState(false);
   // A desktop's panel steps aside while its Edit form is open (`web-edit-entry`).
   const [editing, setEditing] = useState(false);
+  // MAZ-276: entries ticked in the desktop table, in the order the table lists them.
+  const periodKey = JSON.stringify(period);
+  const [pickedState, setPicked] = useState<Picked>({ period: periodKey, ids: NONE });
+  const [listedIds, setListedIds] = useState<string[]>([]);
+  const [confirmRequest, setConfirmRequest] = useState(0);
+  // Entries a bulk action changed: if the open one was deleted, its panel closes.
+  const [touched, setTouched] = useState<ReadonlySet<string>>(NONE);
   const searchRef = useRef<HTMLInputElement>(null);
   const tablet = useMediaQuery(TABLET);
   const wide = useMediaQuery(WIDE);
   const touch = useMediaQuery(TOUCH_TABLET);
   const nonce = useRef(0);
   const desktop = tablet && !touch;
+  const picked = desktop && pickedState.period === periodKey ? pickedState.ids : NONE;
+  const selectionLedger = writer.ledger ?? ledger;
+  const pickedEntries = useMemo(() => {
+    if (!selectionLedger || picked.size === 0) return [];
+    const byId = new Map(selectionLedger.transactions.map((entry) => [entry.id, entry]));
+    const order = [...listedIds.filter((id) => picked.has(id)), ...[...picked].filter((id) => !listedIds.includes(id))];
+    return order.flatMap((id) => byId.get(id) ?? []);
+  }, [selectionLedger, picked, listedIds]);
+  const clearPicked = useCallback(() => {
+    setPicked((previous) => (previous.ids.size ? { period: previous.period, ids: NONE } : previous));
+  }, []);
+  const tableSelection = useMemo<TableSelection>(() => ({
+    ids: picked,
+    toggle: (entry) => {
+      setPicked((previous) => {
+        const ids = new Set(previous.period === periodKey ? previous.ids : NONE);
+        if (ids.has(entry.id)) ids.delete(entry.id);
+        else ids.add(entry.id);
+        return { period: periodKey, ids };
+      });
+    },
+    setMany: (entries, on) => {
+      setPicked((previous) => {
+        const ids = new Set(previous.period === periodKey ? previous.ids : NONE);
+        for (const entry of entries) {
+          if (on) ids.add(entry.id);
+          else ids.delete(entry.id);
+        }
+        return { period: periodKey, ids };
+      });
+    },
+    clear: clearPicked,
+    deleteSelected: () => {
+      setConfirmRequest((value) => value + 1);
+    },
+    listed: (ids) => {
+      setListedIds((previous) => (previous.join(" ") === ids.join(" ") ? previous : ids));
+      // A filter or search that hides a ticked entry drops it from the selection.
+      setPicked((previous) => {
+        const kept = [...previous.ids].filter((id) => ids.includes(id));
+        return kept.length === previous.ids.size ? previous : { period: previous.period, ids: new Set(kept) };
+      });
+    },
+  }), [picked, periodKey, clearPicked]);
+  // Esc clears the selection from anywhere on the page, unless a dialog or menu has it.
+  const selecting = picked.size > 0;
+  useEffect(() => {
+    if (!selecting) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector("[aria-modal='true']")) return;
+      clearPicked();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [selecting, clearPicked]);
+  const onBulkDone = useCallback((_action: BulkAction, before: { id: string }[]) => {
+    setTouched(new Set(before.map((entry) => entry.id)));
+    clearPicked();
+  }, [clearPicked]);
   // From 1100px the open entry sits beside the list; below it, it is a dialog (MAZ-227).
   const beside = wide;
   // `ipad-activity`: on a touch tablet the pane always shows an entry, so the first listed one is
@@ -121,7 +199,9 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       )}
     </div>
   );
-  const selectedKey = open ? `personal:${open.entry.id}` : undefined;
+  // A bulk delete took the open entry: its panel closes (`web-activity-bulk-done`).
+  const openGone = Boolean(open && touched.has(open.entry.id) && writer.ledger && !writer.ledger.transactions.some((entry) => entry.id === open.entry.id));
+  const selectedKey = open && !openGone ? `personal:${open.entry.id}` : undefined;
   const results = (
     <ActivityResults
       key={JSON.stringify(search)}
@@ -132,6 +212,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       layout={desktop ? "table" : "list"}
       selectedKey={besideShown ? selectedKey : undefined}
       autoSelect={pane ? autoSelect : undefined}
+      selection={desktop && !pane ? tableSelection : undefined}
       onClear={(...keys) => {
         navigate((previous) => without(previous, ...keys));
       }}
@@ -143,15 +224,18 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   );
 
   return (
-    <div className={cx("page activity", !tablet && "activity--phone", besideShown && open && "activity--beside")}>
+    <div className={cx("page activity", !tablet && "activity--phone", besideShown && open && !openGone && "activity--beside")}>
       {desktop ? <PeriodStepper search={search} navigate={navigate} slot /> : null}
       {/* While searching, the phone's top row is empty (`iphone-search-empty`): the active filters are the chips. */}
       {tablet || search.q ? null : <PhoneFiltersButton search={search} onClick={() => { setFiltering(true); }} />}
       <div className="activity__main">
         {tablet && !desktop ? searchField : null}
         <div className="activity-toolbar">
-          {chips}
-          {desktop ? (
+          {selectionLedger && pickedEntries.length > 0 ? (
+            <SelectionBar selection={{ ledger: selectionLedger, entries: pickedEntries }} onClear={clearPicked} onDone={onBulkDone} confirmRequest={confirmRequest} />
+          ) : null}
+          {pickedEntries.length > 0 ? null : chips}
+          {desktop && pickedEntries.length === 0 ? (
             <div className="activity-toolbar__end">
               {ledger ? <Summary period={period} ledger={ledger} shared={shared} /> : null}
               <ExportButton period={period} />
@@ -171,7 +255,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       </div>
       {!tablet ? searchField : null}
 
-      {open && beside ? <EntryDetailPanel key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} touch={touch} onClose={close} onEditing={setEditing} /> : null}
+      {open && beside && !openGone ? <EntryDetailPanel key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} touch={touch} onClose={close} onEditing={setEditing} /> : null}
       {open && !beside ? <EntryDetailDialog key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} onClose={close} /> : null}
       {filtering ? (
         <FiltersDialog

@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "8fd348e07a4deac554873cce281a5b1486a5b6a4c6546514336920f350759bbf"
+      "sha256": "5cefdc0a05da15e5d3189db0b100c51a57f914a44ee6bbc6179eefc6dfad9310"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "bc4b464bf1b43543070f37d1a9bfff322ec4d47de60b3888fc523d53c5d8dc22"
+      "sha256": "d081fda8fc40893fb1a21a494b3f831f482fe4bc83f140b3d32455bd8eb24499"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "f7ea7cabb1e23af277a4031db4552f9eb7651d6e92aaa8ba5e68e87e5a202178"
+      "sha256": "c9db766fc791bf44a189fa2e2a8d65499efb0f93b400af54550593c66cf044bf"
     }
   ],
   "tokens": {
@@ -2818,7 +2818,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/activity.html",
-      "sha256": "cae71657abf0c3e88a22c538d3fbe05ad5228ec20087bafc0e14c9a6f5f8d5a0",
+      "sha256": "4cee9bd195148aae754f82f33420e7133ac067c34a936ea2c4e1e834e396c158",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
@@ -3215,6 +3215,121 @@
       "sha256": "50bd7682479dfd38c5f24038dd66b399ff0a8bc2c9c2672bdc027610cea3da95",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-selected",
+      "name": "Several entries selected",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-selected.html",
+      "sha256": "c34a79184f5a5505fac72b698f9308295b35aed6ec1d6dc7fe9dd43e5ea6e114",
+      "nativeIssue": "MAZ-276",
+      "webIssue": "MAZ-276",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-bulk-category",
+      "name": "Change category of selected",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-bulk-category.html",
+      "sha256": "91e0b43c75dd7465ed51fe0dbba1fe889380693201c1b88b94f1460109a30599",
+      "nativeIssue": "MAZ-276",
+      "webIssue": "MAZ-276",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-bulk-account",
+      "name": "Change account of selected",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-bulk-account.html",
+      "sha256": "df136fd06140f6b8bd8b3e9ac95deff29e6b578e9aae62bcc998b400d2530f46",
+      "nativeIssue": "MAZ-276",
+      "webIssue": "MAZ-276",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-bulk-delete",
+      "name": "Delete selected entries",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-bulk-delete.html",
+      "sha256": "d0d39da49a0318e19d057a0c54cdeeb62c0fcb4c1ea233a1c49adc2c8a819e30",
+      "nativeIssue": "MAZ-276",
+      "webIssue": "MAZ-276",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-bulk-done",
+      "name": "Selected entries deleted",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-bulk-done.html",
+      "sha256": "99d096fc1016b3a0058bf37b1b4690d5624b282e5896616c54c409d29848f897",
+      "nativeIssue": "MAZ-276",
+      "webIssue": "MAZ-276",
       "route": "/transactions",
       "acceptance": {
         "native": "MAZ-82",

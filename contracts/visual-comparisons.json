@@ -1224,9 +1224,9 @@
         ],
         "deviations": [
           {
-            "summary": "No Try with sample data card",
-            "kind": "follow-up",
-            "ref": "MAZ-204"
+            "summary": "No Try with sample data card: the web demo starts only from sign-in",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -2895,11 +2895,6 @@
         ],
         "deviations": [
           {
-            "summary": "No row checkboxes or X to select entries",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          },
-          {
             "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
             "kind": "follow-up",
             "ref": "MAZ-225"
@@ -3262,6 +3257,129 @@
             "kind": "follow-up",
             "ref": "MAZ-225"
           }
+        ]
+      }
+    },
+    {
+      "id": "web-activity-selected",
+      "view": "web activity with three expenses selected: the selection bar replaces the chips",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-276",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-276",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-activity-bulk-category",
+      "view": "web activity with three expenses selected and the category picker open",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-276",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-276",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          },
+          {
+            "summary": "The search field has focus when the menu opens; the card draws it unfocused with Food & drinks hovered",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-activity-bulk-account",
+      "view": "web activity with three entries selected and the account picker open",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-276",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-276",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-activity-bulk-delete",
+      "view": "web activity asking to confirm deleting three selected entries",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-276",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-276",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 1440x900 with the detail panel open, the selection's total is cut short (\"spent $184...\"); the card's wider table column shows it in full",
+            "kind": "follow-up",
+            "ref": "MAZ-276"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-activity-bulk-done",
+      "view": "web activity after deleting three selected entries, with the saved toast and Undo",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-276",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "matches",
+        "owner": "MAZ-276",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
         ]
       }
     },
