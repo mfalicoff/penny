@@ -8,11 +8,16 @@ namespace Penny.Backend.Api.Contracts;
 /// Whether the server sends email (MAZ-124, `Email__Smtp__Host`). Clients show "check your
 /// email" flows when true and fall back to codes when false or absent.
 /// </param>
+/// <param name="Telemetry">
+/// Which opt-in client telemetry the server accepts (MAZ-129, `ClientTelemetry__*`).
+/// Absent on older servers, which clients read as all off.
+/// </param>
 public sealed record ServerInfo(
     string Name,
     string Version,
     string? PrivacyPolicyUrl,
-    bool EmailEnabled
+    bool EmailEnabled,
+    ClientTelemetryInfo Telemetry
 )
 {
     /// <summary>

@@ -1,18 +1,9 @@
 #!/bin/sh
-# MAZ-129: PENNY_WEB_TELEMETRY_URL is written into /telemetry.json and the page's
-# Content-Security-Policy (default.conf.template). Refuse to start with anything but a plain
-# https URL, so a typo cannot break either or widen the policy. Runs before the template is
-# rendered (20-envsubst-on-templates.sh).
+# MAZ-129: browser telemetry no longer goes from the browser to a collector. The web app posts
+# reports to the API, which forwards them (ClientTelemetry__FaroUrl on the api service). An old
+# PENNY_WEB_TELEMETRY_URL is ignored; say so at start rather than silently dropping it.
 set -eu
 
-url="${PENNY_WEB_TELEMETRY_URL:-}"
-if [ -z "$url" ]; then
-  exit 0
+if [ -n "${PENNY_WEB_TELEMETRY_URL:-}" ]; then
+  echo "$0: PENNY_WEB_TELEMETRY_URL is no longer used and is ignored. Set ClientTelemetry__FaroUrl on the API instead (docs/self-hosting/observability.md#client-telemetry)." >&2
 fi
-
-if ! printf '%s' "$url" | grep -Eq '^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/-]*)?$'; then
-  echo "$0: PENNY_WEB_TELEMETRY_URL must be an https:// URL with no query, quotes, spaces or semicolons (for example https://faro-collector-prod-us-east-0.grafana.net/collect/<key>)" >&2
-  exit 1
-fi
-
-echo "$0: browser telemetry on, sending to $(printf '%s' "$url" | cut -d/ -f1-3)"

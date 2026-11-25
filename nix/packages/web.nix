@@ -28,7 +28,7 @@ buildNpmPackage {
   };
   sourceRoot = "source/apps/web";
 
-  npmDepsHash = "sha256-yMqA/YMdO1HPtYdx3SaAQO5Ferz3DUUjp1fdaccSx3k=";
+  npmDepsHash = "sha256-u+/sPbPgQ6EZCng7XfTLUs9ey73EOaJ/ESE6GEvMJSY=";
   npmDepsFetcherVersion = 2;
   makeCacheWritable = true;
   nodejs = nodejs_24;

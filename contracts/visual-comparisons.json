@@ -2474,10 +2474,21 @@
         "followUp": "MAZ-129"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-129",
-        "note": "Draft card (MAZ-267) for the owner's review. The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt.",
-        "followUp": "MAZ-129"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The web asks with the iPhone card's sheet at phone widths.",
+        "deviations": [
+          {
+            "summary": "The browser's wording: errors, pages and a new tab where the native card says crashes, screens and Safari",
+            "kind": "follow-up",
+            "ref": "MAZ-129"
+          }
+        ]
       }
     },
     {
@@ -2490,10 +2501,21 @@
         "followUp": "MAZ-129"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-129",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person.",
-        "followUp": "MAZ-129"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Settings › Privacy at phone widths, with the server offering reports but not Session Replay (the card's two switches).",
+        "deviations": [
+          {
+            "summary": "The browser's wording: errors, pages and a new tab where the native card says crashes, screens and Safari",
+            "kind": "follow-up",
+            "ref": "MAZ-129"
+          }
+        ]
       }
     },
     {
@@ -3596,21 +3618,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-171",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "The seeded account has no picture, so initials show and the button reads Add picture. The footer with the server and the Privacy Policy link is built (MAZ-169).",
-        "deviations": [
-          {
-            "summary": "The section list has no Privacy: that pane isn't built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-129"
-          }
-        ]
+        "note": "The seeded account has no picture, so initials show and the button reads Add picture. The footer with the server and the Privacy Policy link is built (MAZ-169)."
       }
     },
     {
@@ -3768,21 +3783,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-152",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "Captured over Profile with the seeded account (Maison and the Lisbon trip stay for others). The dialog is centred in the window, as every web dialog is.",
-        "deviations": [
-          {
-            "summary": "The section list has no Privacy: that pane isn't built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-129"
-          }
-        ]
+        "note": "Captured over Profile with the seeded account (Maison and the Lisbon trip stay for others). The dialog is centred in the window, as every web dialog is."
       }
     },
     {
@@ -3794,21 +3802,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-152",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
         ],
-        "note": "Captured after Download ZIP, so the ready line shows the real file name and size.",
-        "deviations": [
-          {
-            "summary": "The section list has no Privacy: that pane isn't built yet",
-            "kind": "follow-up",
-            "ref": "MAZ-129"
-          }
-        ]
+        "note": "Captured after Download ZIP, so the ready line shows the real file name and size."
       }
     },
     {
@@ -3820,10 +3821,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-129",
-        "note": "Draft card (MAZ-267) for the owner's review. The web has no Privacy pane: telemetry is on or off for the whole server, with no switches for the person.",
-        "followUp": "MAZ-129"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the server offering reports (the test stack has no collector, so /api/info is routed). The server name is the test stack's."
       }
     },
     {
@@ -3835,10 +3840,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-129",
-        "note": "Draft card (MAZ-267) for the owner's review. The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt.",
-        "followUp": "MAZ-129"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the server offering reports (the test stack has no collector, so /api/info is routed). The server name is the test stack's."
       }
     }
   ]

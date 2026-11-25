@@ -84,12 +84,14 @@ test("the operator guide's alert table lists every provisioned rule", () => {
   assert.deepEqual(documented, titles);
 });
 
-test("only client ingest is exposed and every image is pinned by digest", () => {
+test("only Grafana is exposed and every image is pinned by digest", () => {
   const compose = read("compose.yaml");
   for (const [, image] of compose.matchAll(/^\s+image: (\S+)$/gm)) assert.match(image, /:[^@]+@sha256:[0-9a-f]{64}$/, image);
   const ports = [...compose.matchAll(/^\s+- "\$\{[A-Z_]+:-127\.0\.0\.1\}:\$\{[A-Z_]+:-\d+\}:(\d+)"$/gm)].map((match) => match[1]).sort();
-  assert.deepEqual(ports, ["12347", "3000", "4319"]);
-  assert.doesNotMatch(compose, /:4317"|:4318"/, "the API's OTLP ports stay internal");
+  assert.deepEqual(ports, ["3000"]);
+  // MAZ-129: clients post telemetry to the API, which forwards it; Alloy publishes nothing.
+  assert.doesNotMatch(compose, /:4317"|:4318"|:4319"|:12347"/, "Alloy's receivers stay internal");
+  assert.doesNotMatch(read("config.alloy"), /cors/, "no browser ever talks to Alloy");
 });
 
 test("the operator stack pins the same images as the local AppHost", () => {

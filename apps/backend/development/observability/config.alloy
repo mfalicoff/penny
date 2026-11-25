@@ -2,18 +2,17 @@
 // reference stack (MAZ-128, compose.yaml next to this file). Alloy batches each signal and
 // forwards it to its store: traces to Tempo, logs to Loki, metrics to Prometheus.
 //
-// Two ways in:
+// Everything arrives on the container network from the Penny API. Nothing here is published:
 //
-// * Internal OTLP (gRPC 4317, HTTP 4318) for the API. Reachable only on the container
-//   network; never publish these ports.
-// * Client ingest for the web and iOS apps (MAZ-129): OTLP/HTTP on 4319 and the Grafana
-//   Faro receiver on 12347. These are the only ports a reverse proxy may publish. They
-//   accept small payloads from the configured origins only, and only for the client
-//   service names, so a stranger cannot write API-looking telemetry through them.
+// * Internal OTLP (gRPC 4317, HTTP 4318): the API's own traces, metrics and logs.
+// * Client telemetry (MAZ-129): the web and iOS apps post to the API's authenticated
+//   /api/telemetry endpoint, which checks, scrubs and forwards it here: Faro to 12347
+//   (ClientTelemetry__FaroUrl=http://alloy:12347/collect) and OTLP/HTTP to 4319
+//   (ClientTelemetry__OtlpEndpoint=http://alloy:4319). Browsers never reach Alloy, so there
+//   is no CORS; the client receivers still accept only the client service names, so nothing
+//   forwarded for a client can look like the API.
 //
-// Settings (environment, all optional):
-//   PENNY_TELEMETRY_ORIGINS   comma-separated browser origins allowed to post client
-//                             telemetry (default: the local Vite origins)
+// Settings (environment, optional):
 //   PENNY_CLIENT_SERVICES     regular expression of accepted client service.name values
 //                             (default: penny-web|penny-ios)
 
@@ -35,19 +34,13 @@ otelcol.receiver.otlp "internal" {
   }
 }
 
-// --- Client ingest (web and iOS) -----------------------------------------------------------
+// --- Client telemetry, forwarded by the API (web and iOS) -----------------------------------
 
 otelcol.receiver.otlp "clients" {
   http {
     endpoint              = "0.0.0.0:4319"
     max_request_body_size = "1MiB"
     include_metadata      = false
-
-    cors {
-      allowed_origins = string.split(coalesce(sys.env("PENNY_TELEMETRY_ORIGINS"), "http://localhost:4173,http://127.0.0.1:4173"), ",")
-      allowed_headers = ["Content-Type", "traceparent", "tracestate"]
-      max_age         = 600
-    }
   }
 
   output {
@@ -57,8 +50,8 @@ otelcol.receiver.otlp "clients" {
   }
 }
 
-// Drops anything that does not claim a client service name, so the public endpoint cannot
-// impersonate the API (penny-backend) in dashboards and alerts.
+// Drops anything that does not claim a client service name, so client telemetry can never
+// impersonate the API (penny-backend) in dashboards and alerts. The API checks this too.
 otelcol.processor.filter "clients" {
   error_mode = "ignore"
 
@@ -81,13 +74,12 @@ otelcol.processor.filter "clients" {
   }
 }
 
-// Grafana Faro Web SDK endpoint (POST /collect). Errors, logs, events and web vitals become
+// Grafana Faro Web SDK reports, forwarded by the API (POST /collect). Errors, logs, events and web vitals become
 // Loki lines labelled service_name="penny-web"; Faro traces join the OTLP pipeline.
 faro.receiver "web" {
   server {
     listen_address           = "0.0.0.0"
     listen_port              = 12347
-    cors_allowed_origins     = string.split(coalesce(sys.env("PENNY_TELEMETRY_ORIGINS"), "http://localhost:4173,http://127.0.0.1:4173"), ",")
     max_allowed_payload_size = "1MiB"
 
     rate_limiting {

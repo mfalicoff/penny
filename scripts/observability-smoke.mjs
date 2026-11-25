@@ -2,8 +2,9 @@
 // Reference Grafana stack smoke test (MAZ-128). Starts deploy/compose.yaml with telemetry on
 // and apps/backend/development/observability/compose.yaml next to it, both under throwaway
 // project names, then checks that API traces, metrics and logs and client telemetry reach
-// Tempo, Prometheus and Loki through Alloy; that the client endpoint refuses foreign origins,
-// oversized payloads and API impersonation; and that Grafana provisioned every data source,
+// Tempo, Prometheus and Loki through Alloy; that client telemetry (MAZ-129) goes through the
+// API's authenticated endpoint, which refuses anonymous callers, oversized payloads and API
+// impersonation, while Alloy publishes nothing; and that Grafana provisioned every data source,
 // dashboard and alert rule. Everything is synthetic and removed afterwards.
 //
 //   PENNY_SMOKE_API_IMAGE=localhost/penny-api:dev PENNY_SMOKE_WEB_IMAGE=localhost/penny-web:dev \
@@ -25,6 +26,8 @@ const apiImage = process.env.PENNY_SMOKE_API_IMAGE ?? "localhost/penny-api:dev";
 const webImage = process.env.PENNY_SMOKE_WEB_IMAGE ?? "localhost/penny-web:dev";
 const composeCommand = (process.env.PENNY_COMPOSE ?? "docker compose").split(" ");
 const id = randomBytes(4).toString("hex");
+// Letters only, so the API's scrubbing (numbers become <n>) leaves the marker readable.
+const marker = `smoke${[...randomBytes(8)].map((byte) => String.fromCharCode(97 + (byte % 26))).join("")}`;
 const appProject = `penny-otel-smoke-${id}`;
 const observabilityProject = `penny-otel-smoke-${id}-grafana`;
 const directory = path.join(root, ".cache", "observability-smoke", id);
@@ -80,7 +83,7 @@ async function waitFor(description, probe, timeoutMs = 120_000) {
 
 async function main() {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
-  const [webPort, grafanaPort, otlpPort, faroPort] = await Promise.all([freePort(), freePort(), freePort(), freePort()]);
+  const [webPort, grafanaPort] = await Promise.all([freePort(), freePort()]);
   const origin = `http://localhost:${webPort}`;
   const grafana = `http://127.0.0.1:${grafanaPort}`;
   const grafanaPassword = randomBytes(18).toString("hex");
@@ -101,6 +104,9 @@ async function main() {
       '      OTEL_METRIC_EXPORT_INTERVAL: "5000"',
       '      OTEL_BSP_SCHEDULE_DELAY: "1000"',
       '      OTEL_BLRP_SCHEDULE_DELAY: "1000"',
+      // Client telemetry goes to the API, which forwards it to Alloy on the penny network.
+      "      ClientTelemetry__FaroUrl: http://alloy:12347/collect",
+      "      ClientTelemetry__OtlpEndpoint: http://alloy:4319",
       "",
     ].join("\n"),
   );
@@ -112,9 +118,6 @@ async function main() {
     Object.entries({
       GRAFANA_ADMIN_PASSWORD: grafanaPassword,
       GRAFANA_PORT: grafanaPort,
-      PENNY_OTLP_CLIENT_PORT: otlpPort,
-      PENNY_FARO_PORT: faroPort,
-      PENNY_TELEMETRY_ORIGINS: origin,
       PENNY_NETWORK: `${appProject}_penny`,
     })
       .map(([key, value]) => `${key}=${value}\n`)
@@ -161,12 +164,7 @@ async function main() {
       "all five observability containers are running",
       states.join(" "),
     );
-    const alloyPorts = published("alloy")
-      .map((publisher) => publisher.TargetPort)
-      .sort((a, b) => a - b);
-    check(JSON.stringify(alloyPorts) === "[4319,12347]", "Alloy publishes only the client ingest ports", JSON.stringify(alloyPorts));
-    check(published("alloy").every((publisher) => publisher.URL === "127.0.0.1"), "client ingest is published on loopback only");
-    check(["loki", "tempo", "prometheus"].every((service) => published(service).length === 0), "Loki, Tempo and Prometheus are not published");
+    check(["alloy", "loki", "tempo", "prometheus"].every((service) => published(service).length === 0), "Alloy, Loki, Tempo and Prometheus are not published");
 
     const auth = `Basic ${Buffer.from(`admin:${grafanaPassword}`).toString("base64")}`;
     const grafanaApi = async (pathname) => {
@@ -194,10 +192,9 @@ async function main() {
     }
     check(/^[0-9a-f]{32}$/.test(ledgerRequestId), "API returned the request id");
 
-    // Client telemetry through the public ingest endpoint. Alloy has no health check (its
-    // image has no HTTP client), so wait for the receiver itself.
-    const ingest = `http://127.0.0.1:${otlpPort}`;
-    await waitFor("Alloy client ingest is listening", async () => (await fetch(`${ingest}/v1/logs`, { method: "OPTIONS" })).status < 500, 60_000);
+    // Client telemetry (MAZ-129) through the API's authenticated endpoint, as the apps send it.
+    const info = await (await fetch(`${origin}/api/info`)).json();
+    check(info.telemetry?.web === true && info.telemetry?.native === true, "API offers web and native client telemetry", JSON.stringify(info.telemetry));
     const now = `${Date.now()}000000`;
     const traceId = randomBytes(16).toString("hex");
     const clientLog = (service, message, severity = 17) =>
@@ -223,20 +220,23 @@ async function main() {
           },
         ],
       });
-    const post = (body, headers = {}) => fetch(`${ingest}/v1/logs`, { method: "POST", headers: { "content-type": "application/json", ...headers }, body });
-    const accepted = await post(clientLog("penny-web", `client error ${id}`), { origin });
-    check(accepted.status === 200, "client ingest accepts a penny-web error", String(accepted.status));
-    await post(clientLog("penny-ios", `client crash ${id}`, 21));
-    await post(clientLog("penny-backend", `impersonation ${id}`));
-    const preflight = (from) => fetch(`${ingest}/v1/logs`, { method: "OPTIONS", headers: { origin: from, "access-control-request-method": "POST" } });
-    check((await preflight(origin)).headers.get("access-control-allow-origin") === origin, "client ingest allows the Penny origin");
-    check((await preflight("https://attacker.example")).headers.get("access-control-allow-origin") === null, "client ingest refuses a foreign origin");
-    // Alloy may answer 400 or close the connection before reading the whole body.
-    const oversized = await post("x".repeat(2 * 1024 * 1024)).then(
-      (response) => response.status,
-      (error) => error.cause?.code ?? error.message,
-    );
-    check(oversized === 400 || oversized === 413 || oversized === "ECONNRESET" || oversized === "EPIPE", "client ingest refuses payloads over 1 MiB", String(oversized));
+    const faroReport = (message) =>
+      JSON.stringify({
+        meta: { app: { name: "penny-web", version: "0.0.0-smoke" }, session: { id: "smokesession" }, page: { url: `${origin}/settings` } },
+        logs: [{ message, level: "error", timestamp: new Date().toISOString() }],
+      });
+    const post = (pathname, body, headers = {}) =>
+      fetch(`${origin}${pathname}`, { method: "POST", headers: { "content-type": "application/json", origin, authorization: `Bearer ${token}`, ...headers }, body });
+    const web = await post("/api/telemetry/faro", faroReport(`client error ${marker}`), { "idempotency-key": `smoke-${id}-web` });
+    check(web.status === 202, "API accepts a penny-web report", String(web.status));
+    const ios = await post("/api/telemetry/otlp/v1/logs", clientLog("penny-ios", `client crash ${marker}`, 21));
+    check(ios.status === 202, "API accepts a penny-ios crash", String(ios.status));
+    const impersonation = await post("/api/telemetry/otlp/v1/logs", clientLog("penny-backend", `impersonation ${marker}`));
+    check(impersonation.status === 400, "API refuses a client report claiming to be penny-backend", String(impersonation.status));
+    const unauthenticated = await fetch(`${origin}/api/telemetry/faro`, { method: "POST", headers: { "content-type": "application/json", origin }, body: faroReport("anonymous") });
+    check(unauthenticated.status === 401, "API refuses client telemetry without a session", String(unauthenticated.status));
+    const oversized = await post("/api/telemetry/faro", faroReport("x".repeat(2 * 1024 * 1024)));
+    check(oversized.status === 413, "API refuses client reports over 1 MiB", String(oversized.status));
 
     // Everything is read back through Grafana's data source proxy, as an operator would.
     const prometheus = (query) => grafanaApi(`/api/datasources/proxy/uid/prometheus/api/v1/query?${new URLSearchParams({ query })}`).then((r) => r.data.result);
@@ -252,8 +252,8 @@ async function main() {
     await waitFor("Loki has API logs for the request id", async () => (await loki(`{service_name="penny-backend"} | RequestId = "${ledgerRequestId}"`)).length > 0);
     await waitFor("Tempo has the API trace for the request id", async () => (await tempo(`{ span.penny.request_id = "${ledgerRequestId}" }`)).length > 0);
     await waitFor("Tempo has the request's PostgreSQL spans", async () => (await tempo(`{ span.penny.request_id = "${ledgerRequestId}" } >> { span.db.system.name = "postgresql" }`)).length > 0);
-    await waitFor("Loki has the client error and crash", async () => (await loki(`{service_name=~"penny-web|penny-ios"} |~ "client (error|crash) ${id}"`)).length === 2);
-    check((await loki(`{service_name="penny-backend"} |= "impersonation ${id}"`)).length === 0, "client ingest dropped the record claiming to be penny-backend");
+    await waitFor("Loki has the client error and crash", async () => (await loki(`{service_name=~"penny-web|penny-ios"} |~ "client (error|crash) ${marker}"`)).length === 2);
+    check((await loki(`{service_name="penny-backend"} |= "impersonation ${marker}"`)).length === 0, "nothing claiming to be penny-backend reached Loki");
 
     // Provisioning: data sources, every generated dashboard and the alert rules.
     const datasources = (await grafanaApi("/api/datasources")).map((source) => source.uid).sort();
@@ -276,8 +276,13 @@ async function main() {
       },
       420_000,
     );
-    const crashes = (await grafanaApi("/api/prometheus/grafana/api/v1/rules")).data.groups.flatMap((group) => group.rules).find((rule) => rule.name === "Penny app crashes");
-    check(crashes?.state === "firing", "the app crash alert fires for the synthetic crash", crashes?.state);
+    // The crash reaches Loki through the API's queue and Alloy's batch, so it may land after the
+    // rule's first evaluation; the rule runs every minute.
+    await waitFor(
+      "the app crash alert fires for the synthetic crash",
+      async () => (await grafanaApi("/api/prometheus/grafana/api/v1/rules")).data.groups.flatMap((group) => group.rules).find((rule) => rule.name === "Penny app crashes")?.state === "firing",
+      180_000,
+    );
 
     passed = failures === 0;
   } finally {

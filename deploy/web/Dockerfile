@@ -36,7 +36,6 @@ LABEL org.opencontainers.image.title="penny-web" \
 ENV PENNY_API_UPSTREAM=api:8080 \
     PENNY_MAX_BODY=21m \
     PENNY_REAL_IP_FROM=127.0.0.1/32 \
-    PENNY_WEB_TELEMETRY_URL= \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
     NGINX_ENVSUBST_FILTER=^(PENNY_|NGINX_LOCAL_RESOLVERS)
 COPY deploy/web/default.conf.template /etc/nginx/templates/default.conf.template
