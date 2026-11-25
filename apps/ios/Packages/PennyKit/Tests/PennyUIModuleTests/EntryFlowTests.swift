@@ -163,8 +163,13 @@ struct EntryFlowTests {
     @Test(
         "whenTheServerSaysWhoPaid_EntryRowMeta_ShouldNameThePayerAfterTheHousehold",
         arguments: [
-            (SharedPayer?.some(.you), 290_000, "Apartment · you paid $2,900"),
-            (.you, 9_630, "Apartment · you paid $96.30"),
+            // Whole units when the total is whole, as the card writes "you paid $2,900". The
+            // symbol follows the locale ("CA$" in en_US), so the amount comes from MoneyFormat.
+            (
+                SharedPayer?.some(.you), 290_000,
+                "Apartment · you paid \(MoneyFormat.whole(290_000, currency: "CAD"))"
+            ),
+            (.you, 9_630, "Apartment · you paid \(MoneyFormat.amount(9_630, currency: "CAD"))"),
             (.member(name: "Jo"), 290_000, "Apartment · Jo paid"),
             (.member(name: "Former member"), 290_000, "Apartment · Former member paid"),
             (nil, 290_000, "Apartment"),
