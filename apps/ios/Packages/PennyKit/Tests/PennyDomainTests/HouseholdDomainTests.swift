@@ -230,6 +230,19 @@ struct HouseholdSplitTests {
         #expect(SettlementCalendar.monthlyPaymentsOpen(leap, todayUTC: try #require(CalendarDate("2028-02-29"))))
     }
 
+    @Test("whenTheInstantIsNearTheUTCMonthEnd_SettlementCalendar_ShouldReadTheUTCDayNotTheDevicesDay")
+    func monthEndAtInstant() throws {
+        let october = try #require(MonthKey(year: 2026, month: 10))
+        let pinnedTestClock = try Date("2026-10-15T12:00:00Z", strategy: .iso8601)
+        #expect(!SettlementCalendar.monthlyPaymentsOpen(october, at: pinnedTestClock))
+        // 8 p.m. on October 30 in Toronto is already October 31 in UTC: open.
+        #expect(
+            SettlementCalendar.monthlyPaymentsOpen(october, at: try Date("2026-10-31T00:30:00Z", strategy: .iso8601)))
+        // One second before the UTC last day: still closed, wherever the device is.
+        #expect(
+            !SettlementCalendar.monthlyPaymentsOpen(october, at: try Date("2026-10-30T23:59:59Z", strategy: .iso8601)))
+    }
+
     @Test("whenConvertingAnOffset_SettlementCalendar_ShouldUseTheJavaScriptSignAndClamp")
     func offsets() {
         #expect(SettlementCalendar.timezoneOffsetMinutes(secondsFromGMT: -5 * 3600) == 300)

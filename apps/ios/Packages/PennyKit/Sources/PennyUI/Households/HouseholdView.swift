@@ -928,13 +928,7 @@ struct HouseholdPage: View {
     }
 
     private var isOpen: Bool {
-        SettlementCalendar.monthlyPaymentsOpen(model.month, todayUTC: CalendarDate(shell.now(), in: Self.utc))
-    }
-
-    static var utc: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
-        return calendar
+        SettlementCalendar.monthlyPaymentsOpen(model.month, at: shell.now())
     }
 
     private func canRecord(_ transfer: WireTransfer) -> Bool {
