@@ -489,7 +489,7 @@ struct Penny {
         AccessibilityID.Auth.notice: .staticText,
         AccessibilityID.Auth.server: .other,
         AccessibilityID.Auth.signOut: .button,
-        AccessibilityID.Auth.singleSignOn: .button,
+        AccessibilityID.Auth.provider("sso"): .button,
         AccessibilityID.Auth.switchMode: .button,
         AccessibilityID.Overview.calendarClose: .button,
         AccessibilityID.Overview.calendarDayEntries: .staticText,

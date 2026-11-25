@@ -1,8 +1,14 @@
 import Foundation
-import PennyData
 import PennyDomain
 import Security
 import Testing
+
+@testable import PennyData
+
+/// The one provider of a server from before MAZ-170, which starts without a provider id.
+private func legacy(_ label: String) -> SignInProvider {
+    SignInProvider(id: "sso", label: label, mark: .other, native: false, sendsID: false)
+}
 
 @Suite("Auth state machine")
 @MainActor
@@ -764,8 +770,7 @@ struct AuthControllerTests {
         let check = try await controller.checkServer("https://penny.example.test/")
         #expect(
             check
-                == ServerCheck(
-                    server: AuthFixtures.server, version: "2.0.0", singleSignOn: true, singleSignOnLabel: "Company ID"))
+                == ServerCheck(server: AuthFixtures.server, version: "2.0.0", providers: [legacy("Company ID")]))
         #expect(check.isEncrypted)
         for request in transport.sent.dropFirst() {
             #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
@@ -821,11 +826,12 @@ struct AuthControllerTests {
         await controller.restore()
         #expect(controller.state == .signedOut(.sessionExpired(email: email)))
         let check = ServerCheck(
-            server: APIFixtures.otherServer, version: "2.0.0", singleSignOn: true, singleSignOnLabel: "Company ID")
+            server: APIFixtures.otherServer, version: "2.0.0",
+            providers: [SignInProvider(id: "google", label: "Google", icon: "google")])
         try controller.useServer(check)
         #expect(controller.state == .signedOut(nil))
         #expect(preferences.savedServer() == SavedServer(server: APIFixtures.otherServer, version: "2.0.0"))
-        #expect(controller.singleSignOn == .available(label: "Company ID"))
+        #expect(controller.singleSignOn == .available([SignInProvider(id: "google", label: "Google", icon: "google")]))
     }
 
     @Test("whenLoadingSingleSignOn_AuthController_ShouldReportAvailabilityAndFailures")
@@ -834,7 +840,7 @@ struct AuthControllerTests {
             transport: Routes.transport(["GET /api/auth/oidc": Routes.json(#"{"enabled":true}"#)]))
         await available.restore()
         await available.refreshSingleSignOn()
-        #expect(available.singleSignOn == .available(label: "single sign-on"))
+        #expect(available.singleSignOn == .available([legacy("single sign-on")]))
 
         let off = AuthFixtures.controller(
             transport: Routes.transport(["GET /api/auth/oidc": Routes.json(#"{"enabled":false}"#)]))

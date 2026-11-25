@@ -24,6 +24,11 @@ public struct WireProfile: Codable, Equatable, Sendable {
     /// Unix milliseconds when a password account last changed its password; absent before the
     /// first change and for `oidc` accounts ("Changed Oct 3").
     public var passwordChangedAt: Int64?
+    /// MAZ-170: for an `oidc` account, the `id` and `icon` of its configured provider in
+    /// `GET /api/auth/oidc` (`google`, `apple`, `sso`, or another name that gets the generic mark).
+    /// Absent when the provider is no longer configured.
+    public var providerId: String?
+    public var providerIcon: String?
     /// MAZ-172: whether the current email is proven (an emailed link was opened, the provider says
     /// so, an operator marked it, or the account is older than verification). Nothing waits for
     /// it; show the unverified state only while the server sends email. True from servers before
@@ -44,7 +49,9 @@ public struct WireProfile: Codable, Equatable, Sendable {
         provider: String? = nil,
         passwordChangedAt: Int64? = nil,
         emailVerified: Bool = true,
-        emailVerifiedAt: Int64? = nil
+        emailVerifiedAt: Int64? = nil,
+        providerId: String? = nil,
+        providerIcon: String? = nil
     ) {
         self.userId = userId
         self.email = email
@@ -58,11 +65,13 @@ public struct WireProfile: Codable, Equatable, Sendable {
         self.passwordChangedAt = passwordChangedAt
         self.emailVerified = emailVerified
         self.emailVerifiedAt = emailVerifiedAt
+        self.providerId = providerId
+        self.providerIcon = providerIcon
     }
 
     private enum CodingKeys: String, CodingKey {
         case userId, email, displayName, avatarUrl, nameEditable, avatarEditable, needsName, signIn, provider
-        case passwordChangedAt, emailVerified, emailVerifiedAt
+        case passwordChangedAt, emailVerified, emailVerifiedAt, providerId, providerIcon
     }
 
     public init(from decoder: any Decoder) throws {
@@ -79,6 +88,8 @@ public struct WireProfile: Codable, Equatable, Sendable {
         passwordChangedAt = try container.decodeIfPresent(Int64.self, forKey: .passwordChangedAt)
         emailVerified = try container.decodeIfPresent(Bool.self, forKey: .emailVerified) ?? true
         emailVerifiedAt = try container.decodeIfPresent(Int64.self, forKey: .emailVerifiedAt)
+        providerId = try container.decodeIfPresent(String.self, forKey: .providerId)
+        providerIcon = try container.decodeIfPresent(String.self, forKey: .providerIcon)
     }
 }
 

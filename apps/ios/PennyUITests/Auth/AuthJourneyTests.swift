@@ -53,10 +53,37 @@ final class AuthJourneyTests: PennyUITestCase {
         try await stack.setSingleSignOnProvider(["fail": NSNull(), "emailVerified": true])
         let penny = try await launch()
 
-        try penny.tap(AccessibilityID.Auth.singleSignOn)
+        try penny.tap(AccessibilityID.Auth.provider("sso"))
         // The provider approves at once and returns through penny://auth/callback.
         try penny.waitForShell(timeout: 45)
         screenshot("single-sign-on")
+    }
+
+    /// MAZ-170: with several providers listed, each button signs in with its own provider. The
+    /// stack's Google is a local provider with its own issuer, so the account it creates belongs to
+    /// Google and Settings › Profile says so.
+    @MainActor
+    func test_whenSigningInWithGoogle_SignIn_ShouldOpenTheShellAndProfileShouldNameGoogle() async throws {
+        let stack = try await stack()
+        guard try await stack.listsAppleAndGoogle() else {
+            throw XCTSkip("The stack runs without --oidc-providers (PENNY_STACK_OIDC_PROVIDERS=1).")
+        }
+        try await stack.unpinClock()
+        let penny = try await launch()
+
+        // Apple and Google lead, above the email form; the server's own SSO follows them.
+        try penny.wait(for: AccessibilityID.Auth.provider("apple"), timeout: 30)
+        _ = try penny.wait(for: AccessibilityID.Auth.provider("sso"))
+        screenshot("sign-in-providers")
+        try penny.tap(AccessibilityID.Auth.provider("google"))
+        try penny.waitForShell(timeout: 45)
+
+        try penny.openSettings()
+        try penny.tap(AccessibilityID.Settings.account, opening: AccessibilityID.Profile.screen)
+        let row = try penny.wait(for: AccessibilityID.Profile.signIn)
+        XCTAssertTrue(
+            row.waitForLabel(containing: "Google", timeout: 20), "The Sign-in row doesn't name Google: \(row.label)")
+        screenshot("profile-google")
     }
 
     @MainActor
@@ -69,7 +96,7 @@ final class AuthJourneyTests: PennyUITestCase {
         addTeardownBlock { @MainActor in try? await stack.setSingleSignOnProvider(["fail": NSNull()]) }
         let penny = try await launch()
 
-        try penny.tap(AccessibilityID.Auth.singleSignOn)
+        try penny.tap(AccessibilityID.Auth.provider("sso"))
         // The authentication sheet is a system view; its Cancel shows in the app's tree or
         // SpringBoard's depending on the OS.
         let deadline = Date().addingTimeInterval(30)

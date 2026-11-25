@@ -98,7 +98,6 @@ public enum AccessibilityID {
         public static let signIn = "auth.signIn"
         public static let createAccount = "auth.createAccount"
         public static let switchMode = "auth.switchMode"
-        public static let singleSignOn = "auth.singleSignOn"
         public static let singleSignOnRetry = "auth.singleSignOnRetry"
         public static let error = "auth.error"
         public static let notice = "auth.notice"
@@ -119,10 +118,15 @@ public enum AccessibilityID {
 
         static let all = [
             restoring, keychainUnavailable, tryDemo, server, changeServer, email, password, signIn, createAccount,
-            switchMode, singleSignOn, singleSignOnRetry, error, notice, removeLeftoverData, signOut, back,
+            switchMode, singleSignOnRetry, error, notice, removeLeftoverData, signOut, back,
             passwordStrength, passwordRule, forgotPassword, sendResetLink, resetSent, resend, enterResetCode, resetCode,
             newPassword, setPassword,
         ]
+
+        /// MAZ-170: one sign-in button per provider the server lists, by its id (`sso` for the
+        /// single provider of the full-stack environment and of servers from before MAZ-170).
+        public static func provider(_ id: String) -> String { "auth.provider.\(id)" }
+        static let prefixes = ["auth.provider."]
     }
 
     /// Server connect.
@@ -463,4 +467,5 @@ public enum AccessibilityID {
         + Households.prefixes
         + ReceiptInbox.prefixes
         + Trips.prefixes
+        + Auth.prefixes
 }

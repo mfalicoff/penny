@@ -34,6 +34,7 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix) |
 | `PENNY_IPHONE`, `PENNY_IPAD` | Device types, as for `ios.sh test` |
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
+| `PENNY_STACK_OIDC_PROVIDERS=1` or `brands` | `1`: the server lists Apple and Google before its own single sign-on (`penny-env --oidc-providers`, MAZ-170): two more local OIDC providers, each with its own issuer, shown with Apple's and Google's names and icons. `brands`: Apple and Google only (`--oidc-brands-only`). The `iphone-sign-in-providers` card needs `1` and `iphone-create-account-providers` needs `brands`, each recorded as blocked otherwise; the Google sign-in journey runs with either and skips without; `iphone-sign-in` and `iphone-create-account` are blocked with it, since they show the single sign-on alone |
 | `PENNY_STACK_SMTP=1` | The server sends email to an SMTP sink (`penny-env --smtp`, MAZ-124). The `iphone-forgot-password` and `iphone-invite-email` cards need it and are recorded as blocked without it; leave it off for the rest, since `iphone-sign-in` has no Forgot password |
 | `PENNY_UPGRADE_FROM_APP` | A previous `Penny.app`: installed and launched first, so the plan upgrades it in place |
 | `PENNY_UI_STALL_SECONDS` | Seconds without xcodebuild output before a device's run counts as hung, is stopped and runs once more (default 720) |

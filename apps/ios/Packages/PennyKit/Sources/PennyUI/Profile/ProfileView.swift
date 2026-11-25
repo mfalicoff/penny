@@ -191,10 +191,19 @@ private struct ProfileForm: View {
             ? "Name and picture"
             : !profile.nameEditable
                 ? "Name" : "Picture"
-        return Label("\(what) from \(ProfileText.provider(profile))", systemImage: "person.badge.key")
-            .font(.subheadline)
-            .foregroundStyle(PennyColor.secondaryLabel)
-            .accessibilityIdentifier("profile.managed")
+        return Label {
+            Text("\(what) from \(ProfileText.provider(profile))")
+        } icon: {
+            // MAZ-170: the provider's own logo, as `iphone-profile-provider` draws Google's.
+            if let mark = ProfileText.brandMark(profile) {
+                ProviderMark(mark: mark, size: 17)
+            } else {
+                Image(systemName: "person.badge.key")
+            }
+        }
+        .font(.subheadline)
+        .foregroundStyle(PennyColor.secondaryLabel)
+        .accessibilityIdentifier("profile.managed")
     }
 
     @ViewBuilder
@@ -381,8 +390,12 @@ private struct ProfileForm: View {
         Section {
             let oidc = profile.signIn == "oidc"
             HStack(spacing: 12) {
-                Image(systemName: oidc ? "person.badge.key" : "envelope")
-                    .settingsIconTile()
+                if oidc, let mark = ProfileText.brandMark(profile) {
+                    ProviderMark(mark: mark, size: 18).settingsIconTile()
+                } else {
+                    Image(systemName: oidc ? "person.badge.key" : "envelope")
+                        .settingsIconTile()
+                }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(oidc ? ProfileText.providerName(profile) : profile.email)
                         .foregroundStyle(PennyColor.label)
@@ -455,6 +468,14 @@ enum ProfileText {
     static func provider(_ profile: WireProfile) -> String {
         let name = profile.provider?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return name.isEmpty ? "your sign-in provider" : name
+    }
+
+    /// MAZ-170: Apple's or Google's logo for an account that signs in with them
+    /// (`Profile.providerIcon`); nil for the server's own single sign-on and for password accounts.
+    static func brandMark(_ profile: WireProfile) -> SignInProvider.Mark? {
+        guard profile.signIn == "oidc" else { return nil }
+        let mark = SignInProvider.mark(profile.providerIcon)
+        return mark == .other ? nil : mark
     }
 
     /// The Sign-in row's title for a provider account.

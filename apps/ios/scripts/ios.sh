@@ -27,7 +27,9 @@
 # Pro and iPad Pro 11-inch the selected Xcode offers). PENNY_RUNTIME pins a runtime identifier.
 # ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_STACK_BUILD=0 (reuse the API build),
 # PENNY_STACK_SMTP=1 (the server sends email to an SMTP sink: the iphone-forgot-password and
-# iphone-invite-email cards),
+# iphone-invite-email cards), PENNY_STACK_OIDC_PROVIDERS=1 (Apple and Google listed before the SSO:
+# the iphone-sign-in-providers card, MAZ-170) or =brands (Apple and Google only:
+# iphone-create-account-providers),
 # PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from), PENNY_UI_STALL_SECONDS (silence that
 # counts as a hang, default 720).
 # archive/export/upload: PENNY_TEAM_ID, PENNY_BUILD_NUMBER, PENNY_ASC_KEY_PATH, PENNY_ASC_KEY_ID,
@@ -595,6 +597,12 @@ cmd_ui_test() {
   [[ "${PENNY_STACK_BUILD:-1}" == 0 ]] && args+=(--no-build)
   # MAZ-124: the server sends email to an SMTP sink, for the email cards and journeys.
   [[ "${PENNY_STACK_SMTP:-0}" == 1 ]] && args+=(--smtp)
+  # MAZ-170: Apple and Google listed before the SSO (local providers), for the provider cards.
+  # =brands lists Apple and Google without the SSO (iphone-create-account-providers).
+  case "${PENNY_STACK_OIDC_PROVIDERS:-0}" in
+    1) args+=(--oidc-providers) ;;
+    brands) args+=(--oidc-providers --oidc-brands-only) ;;
+  esac
   node "$ROOT/scripts/test-env/penny-env.mjs" "${args[@]}" -- "$IOS_DIR/scripts/ios.sh" ui-test "$plan" || status=$?
   if [[ -d "$ROOT/test-results/fullstack/$run_id" ]]; then
     mkdir -p "$out"
