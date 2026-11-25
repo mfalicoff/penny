@@ -18,12 +18,13 @@ public abstract class OidcTestBase : IntegrationTestBase, IClassFixture<FakeOidc
 
     protected static async Task<JsonElement> StartAsync(
         HttpClient client,
-        string redirectUri = FakeOidcProvider.WebRedirect
+        string redirectUri = FakeOidcProvider.WebRedirect,
+        string? provider = null
     )
     {
         using var response = await client.PostAsJsonAsync(
             "/api/auth/oidc/start",
-            new { redirectUri },
+            provider is null ? new { redirectUri } : (object)new { redirectUri, provider },
             Ct
         );
         response.EnsureSuccessStatusCode();
@@ -40,10 +41,11 @@ public abstract class OidcTestBase : IntegrationTestBase, IClassFixture<FakeOidc
     protected async Task<(string Transaction, string CallbackUrl)> BeginAsync(
         HttpClient client,
         FakeOidcGrant? grant = null,
-        string redirectUri = FakeOidcProvider.WebRedirect
+        string redirectUri = FakeOidcProvider.WebRedirect,
+        string? provider = null
     )
     {
-        var challenge = await StartAsync(client, redirectUri);
+        var challenge = await StartAsync(client, redirectUri, provider);
         return (
             challenge.GetProperty("transaction").GetString()!,
             Provider.Authorize(challenge.GetProperty("authorizationUrl").GetString()!, grant)
@@ -53,10 +55,11 @@ public abstract class OidcTestBase : IntegrationTestBase, IClassFixture<FakeOidc
     protected async Task<HttpResponseMessage> SignInAsync(
         HttpClient client,
         FakeOidcGrant? grant = null,
-        string redirectUri = FakeOidcProvider.WebRedirect
+        string redirectUri = FakeOidcProvider.WebRedirect,
+        string? provider = null
     )
     {
-        var (transaction, callbackUrl) = await BeginAsync(client, grant, redirectUri);
+        var (transaction, callbackUrl) = await BeginAsync(client, grant, redirectUri, provider);
         return await CompleteAsync(client, transaction, callbackUrl);
     }
 

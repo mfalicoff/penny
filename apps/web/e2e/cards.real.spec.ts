@@ -346,6 +346,42 @@ async function unverified(p: Page) {
   await p.route("**/api/auth/email-verification/resend", (route) => route.fulfill({ status: 202, json: { ok: true } }));
 }
 
+const PROVIDERS_STUBBED =
+  "The test environment's API has one local OIDC provider, so the capture lists the card's providers from a stubbed /api/auth/oidc (MAZ-170); sign-in itself is covered by the backend and web tests.";
+
+/** The card's sign-in providers (MAZ-170) in place of the test environment's single local one. */
+async function withProviders(p: Page, ids: readonly ("apple" | "google" | "sso")[]) {
+  const all = {
+    apple: { id: "apple", label: "Apple", icon: "apple", native: true },
+    google: { id: "google", label: "Google", icon: "google", native: false },
+    sso: { id: "sso", label: "Single sign-on", icon: "sso", native: false },
+  };
+  const providers = ids.map((id) => all[id]);
+  await p.route("**/api/auth/oidc", (route) => route.fulfill({ json: { enabled: true, label: providers[0]?.label, providers } }));
+}
+
+/** Sign-in with the card's providers and, while the server sends email, Forgot password. */
+async function providersSignIn(p: Page) {
+  await withEmail(p);
+  await withProviders(p, ["apple", "google", "sso"]);
+  await signInScreen(p);
+  await expect(p.getByRole("button", { name: "Sign in with Apple" })).toBeVisible();
+  await p.getByLabel("Email").fill("max@example.com");
+  await p.getByLabel("Email").blur();
+}
+
+/** Create account with Apple and Google and the card's draft. */
+async function providersCreateAccount(p: Page) {
+  await withProviders(p, ["apple", "google"]);
+  await signInScreen(p);
+  await p.getByRole("button", { name: "Create an account" }).click();
+  await expect(p.getByRole("button", { name: "Sign up with Apple" })).toBeVisible();
+  await p.getByLabel("Name").fill("Max Falicoff");
+  await p.getByLabel("Email").fill("max@example.com");
+  await p.getByLabel("Password", { exact: true }).fill("penny-sample1");
+  await p.getByLabel("Password", { exact: true }).blur();
+}
+
 async function joinWithCode(p: Page) {
   await page(p, "/households", "Shared");
   await p.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /Join with a code/ }).click();
@@ -1012,8 +1048,8 @@ const cards: Record<string, Card> = {
       await prompt.getByLabel("Name").fill("Max");
     },
   },
-  "iphone-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
-  "iphone-create-account-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
+  "iphone-sign-in-providers": { open: ({ page: p }) => providersSignIn(p), note: `${PROVIDERS_STUBBED} ${EMAIL_STUBBED}` },
+  "iphone-create-account-providers": { open: ({ page: p }) => providersCreateAccount(p), note: PROVIDERS_STUBBED },
   "iphone-verify-email": { skip: { status: "not-built", note: "The native app's screen. On a phone the web shows web-verify-email's page." } },
   "iphone-unverified": { skip: { status: "not-built", note: "The native app's Shared tab reminder (MAZ-172 phase 2). The web shows the unverified state and Resend link in Settings › Profile." } },
   "iphone-forgot-password": { skip: { status: "not-built", note: "The web has no password reset by email (the server sends no email)." } },
@@ -1036,8 +1072,8 @@ const cards: Record<string, Card> = {
     open: ({ page: p }) => profilePane(p),
     note: "The section list has no Privacy: that pane isn't built yet.",
   },
-  "web-sign-in-providers": { skip: { status: "not-built", note: "The web has no Apple or Google sign-in, Forgot password or privacy policy link." } },
-  "web-create-account": { skip: { status: "not-built", note: "The web has no Apple or Google sign-up or privacy policy line (it has the Name field)." } },
+  "web-sign-in-providers": { open: ({ page: p }) => providersSignIn(p), note: `${PROVIDERS_STUBBED} ${EMAIL_STUBBED}` },
+  "web-create-account": { open: ({ page: p }) => providersCreateAccount(p), note: PROVIDERS_STUBBED },
   "web-verify-email": {
     note: `${EMAIL_STUBBED} The capture also reports the seeded account as unverified, since every seeded account is verified.`,
     open: async ({ page: p }) => {

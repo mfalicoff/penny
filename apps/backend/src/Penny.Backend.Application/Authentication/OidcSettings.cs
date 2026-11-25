@@ -1,9 +1,17 @@
 namespace Penny.Backend.Application.Authentication;
 
-// Provider-independent OIDC policy. Client credentials stay with the provider adapter.
-public sealed record OidcSettings(
-    string Issuer,
-    string Label,
-    IReadOnlyList<string> RedirectUris,
-    bool AllowRegistration
-);
+// The configured sign-in providers, in display order (MAZ-170). Client credentials stay with
+// the provider adapters.
+public sealed record OidcSettings(IReadOnlyList<OidcProviderSettings> Providers)
+{
+    public OidcProviderSettings? Find(string id) =>
+        Providers.FirstOrDefault(provider =>
+            string.Equals(provider.Id, id, StringComparison.Ordinal)
+        );
+
+    // The provider an account signs in with, found by its stored issuer.
+    public OidcProviderSettings? ForIssuer(string issuer) =>
+        Providers.FirstOrDefault(provider =>
+            string.Equals(provider.Issuer, issuer, StringComparison.Ordinal)
+        );
+}

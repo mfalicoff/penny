@@ -12,7 +12,7 @@ export async function startDemo(page: Page, options: { colorScheme?: "light" | "
   if (options.colorScheme) await page.emulateMedia({ colorScheme: options.colorScheme });
   await page.route("/api/info", (route) => route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } }));
   await page.route("/api/auth/me", (route) => route.fulfill({ status: 401, json: { error: "Please sign in to continue." } }));
-  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
 }

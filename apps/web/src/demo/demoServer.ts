@@ -245,7 +245,7 @@ export function createDemoServer(today = new Date()): Transport {
       case "GET /api/auth/me":
         return json({ email: DEMO_EMAIL });
       case "GET /api/auth/oidc":
-        return json({ enabled: false });
+        return json({ enabled: false, providers: [] });
       case "POST /api/auth/logout":
         return json({ ok: true });
       case "GET /api/ledger":

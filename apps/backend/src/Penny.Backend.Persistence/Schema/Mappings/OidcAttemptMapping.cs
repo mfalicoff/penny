@@ -15,6 +15,10 @@ internal sealed class OidcAttemptMapping : IEntityTypeConfiguration<OidcAttempt>
                 "transaction_hash ~ '^[0-9a-f]{64}$'"
             );
             table.HasCheckConstraint(
+                "CK_oidc_attempts_provider_id",
+                "provider_id ~ '^[a-z0-9][a-z0-9_-]{0,31}$'"
+            );
+            table.HasCheckConstraint(
                 "CK_oidc_attempts_redirect_uri",
                 Checks.Length("redirect_uri", 1, 2048)
             );
@@ -27,5 +31,7 @@ internal sealed class OidcAttemptMapping : IEntityTypeConfiguration<OidcAttempt>
         });
         builder.HasKey(attempt => attempt.TransactionHash);
         builder.HasIndex(attempt => attempt.ExpiresAt);
+        // The callback relay finds a pending attempt by its state (MAZ-170).
+        builder.HasIndex(attempt => attempt.State);
     }
 }

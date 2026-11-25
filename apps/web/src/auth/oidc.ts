@@ -52,6 +52,8 @@ function isOwnCallback(url: string): boolean {
 }
 
 export interface PopupOptions {
+  /** The provider's `id` from `GET /api/auth/oidc` (MAZ-170). */
+  provider: string;
   signal?: AbortSignal;
   /**
    * Called (once) when the popup reports itself closed. That is only a hint: providers that
@@ -74,8 +76,8 @@ const expiredError = () => new OidcError("expired", "Sign-in took too long and e
  * Once the callback has arrived the sign-in is completed and can no longer be cancelled, so the
  * UI never reports a failure for a session the server already created.
  */
-export async function signInWithPopup(options: PopupOptions = {}): Promise<{ email: string } | null> {
-  const { signal, onPopupClosed } = options;
+export async function signInWithPopup(options: PopupOptions): Promise<{ email: string } | null> {
+  const { provider, signal, onPopupClosed } = options;
   // Must run synchronously inside the click handler or browsers block the window.
   const popup = window.open("about:blank", POPUP_NAME, "popup=yes,width=520,height=720");
   if (!popup) throw new OidcError("blocked", "Your browser blocked the sign-in window.");
@@ -118,7 +120,7 @@ export async function signInWithPopup(options: PopupOptions = {}): Promise<{ ema
   try {
     // Race the start request against cancellation, so Cancel works even if the request is slow.
     const started = await Promise.race([
-      startOidc(oidcRedirectUri(), signal).catch((error: unknown) => {
+      startOidc(provider, oidcRedirectUri(), signal).catch((error: unknown) => {
         if (signal?.aborted) return { kind: "cancelled" } as const;
         throw error;
       }),
@@ -151,8 +153,8 @@ export async function signInWithPopup(options: PopupOptions = {}): Promise<{ ema
 }
 
 /** Starts the attempt in the current tab, for browsers that block popups. */
-export async function signInWithRedirect(signal?: AbortSignal): Promise<void> {
-  const challenge = await startOidc(oidcRedirectUri(), signal);
+export async function signInWithRedirect(provider: string, signal?: AbortSignal): Promise<void> {
+  const challenge = await startOidc(provider, oidcRedirectUri(), signal);
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ transaction: challenge.transaction, expiresAt: challenge.expiresAt }));
   window.location.assign(challenge.authorizationUrl);
 }
