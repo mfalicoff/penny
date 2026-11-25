@@ -79,7 +79,7 @@ struct EntryRow: View {
                 MoneyText(
                     entry.share, meaning: Self.meaning(entry, today: shell.today), currency: currency,
                     style: .callout.weight(.semibold))
-                if let note = Self.amountNote(entry, currency: currency) {
+                if let note = Self.amountNote(entry, currency: currency, showsDate: showsDate) {
                     Text(note).font(.caption.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
                         .lineLimit(1)
                 }
@@ -153,10 +153,12 @@ struct EntryRow: View {
     }
 
     /// The line under the amount: "your share" for a shared expense, "of $12.80" for a personal
-    /// split, nil when the amount is the whole entry.
-    static func amountNote(_ entry: ReportEntry, currency: String) -> String? {
+    /// split, nil when the amount is the whole entry. A dated row (Home's Recent, `iphone-home`)
+    /// that already says "split N ways" needs no note; Activity's rows keep it (`iphone-activity`).
+    static func amountNote(_ entry: ReportEntry, currency: String, showsDate: Bool = false) -> String? {
         if entry.householdName != nil { return "your share" }
         guard entry.share != entry.total else { return nil }
+        if showsDate, equalSplit(entry) != nil { return nil }
         return "of \(MoneyFormat.amount(entry.total, currency: currency))"
     }
 

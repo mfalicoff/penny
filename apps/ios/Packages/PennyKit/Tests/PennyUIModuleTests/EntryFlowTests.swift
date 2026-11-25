@@ -365,6 +365,10 @@ struct EntryFlowTests {
         #expect(EntryRow.equalSplit(try row("x")) == nil, "a share that isn't an equal split")
         #expect(EntryRow.amountNote(try row("x"), currency: "CAD")?.hasPrefix("of ") == true)
         #expect(EntryRow.amountNote(try row("t"), currency: "CAD") == nil)
+        // iphone-home: Recent's "split 2 ways" row has nothing under its amount; Activity keeps "of $…".
+        #expect(EntryRow.amountNote(try row("c"), currency: "CAD")?.hasPrefix("of ") == true)
+        #expect(EntryRow.amountNote(try row("c"), currency: "CAD", showsDate: true) == nil)
+        #expect(EntryRow.amountNote(try row("x"), currency: "CAD", showsDate: true)?.hasPrefix("of ") == true)
         // The cards' day headers: "Friday, Nov 6" and, in narrower lists, "Fri, Nov 6".
         let friday = CalendarDate(year: 2026, month: 11, day: 6) ?? .earliest
         let later = CalendarDate(year: 2026, month: 11, day: 20) ?? .earliest

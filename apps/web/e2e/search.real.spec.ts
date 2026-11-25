@@ -255,7 +255,7 @@ test("offline create, edit and delete search locally, then sync once on reconnec
   await search.press("Enter");
   await expect(results(page).getByRole("status")).toHaveText(/on this device/);
   const personalCoffee = results(page).locator("[data-row-key] .results__title, [data-row-key] .activity-table__title");
-  await expect(personalCoffee).toHaveText(["Coffee to go", "Coffee"]);
+  await expect(personalCoffee).toHaveText(["Coffee with Mira", "Coffee to go", "Coffee"]);
   await search.fill("espresso");
   await search.press("Enter");
   await expect(personalCoffee).toHaveText(["Espresso"]);
