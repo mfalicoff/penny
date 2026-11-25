@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penny motion demo (MAZ-287)</title>
+<!-- A standalone demo of the moments in ../motion.md. It isn't app code and isn't a card:
+     open it straight from the checkout. Colors and the font come from the design kit. -->
+<link rel="stylesheet" href="../../../design-kit/src/styles.css">
+<style>
+  /* The kit's font path is relative to its build; use the cards' copy of Inter. */
+  @font-face { font-family: "Inter"; src: url("../penny-ios/assets/Inter.ttf") format("truetype"); font-weight: 100 900; font-style: normal; }
+  /* ---- The proposed motion tokens (../motion.md#css) ---- */
+  :root {
+    --pk-dur-quick: 150ms;
+    --pk-dur-standard: 250ms;
+    --pk-dur-emphasized: 400ms;
+    --pk-dur-linger: 1000ms;
+    --pk-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --pk-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    --pk-nudge: 8px;
+    --pk-shift: 24px;
+    --pk-shake: 6px;
+    --pk-press: 0.97;
+    --pk-motion: 1;
+    /* Demo only: slows everything down to inspect it. */
+    --slow: 1;
+    --q: calc(var(--pk-dur-quick) * var(--slow));
+    --s: calc(var(--pk-dur-standard) * var(--slow));
+    --e: calc(var(--pk-dur-emphasized) * var(--slow));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root { --pk-motion: 0; --pk-dur-standard: 150ms; --pk-dur-emphasized: 150ms; --pk-press: 1; }
+  }
+  /* The demo's "Reduced motion" switch simulates the media query. */
+  :root[data-motion="reduced"] { --pk-motion: 0; --pk-dur-standard: 150ms; --pk-dur-emphasized: 150ms; --pk-press: 1; }
+
+  /* ---- Demo layout ---- */
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--pk-font); background: var(--pk-bg); color: var(--pk-label); font-size: 15px; }
+  header.bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 12px 24px; background: var(--pk-surface); border-bottom: 1px solid var(--pk-separator); }
+  header.bar h1 { font-size: 17px; margin: 0 auto 0 0; }
+  header.bar label { display: inline-flex; gap: 6px; align-items: center; color: var(--pk-label-2); font-size: 14px; }
+  main { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; padding: 24px; max-width: 1400px; margin: 0 auto; }
+  section.m { background: var(--pk-surface); border-radius: var(--pk-r-card); padding: 18px; display: flex; flex-direction: column; gap: 12px; min-height: 340px; position: relative; overflow: hidden; }
+  section.m h2 { margin: 0; font-size: 17px; }
+  section.m .what { margin: 0; color: var(--pk-label-2); font-size: 13px; line-height: 1.4; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { font: inherit; font-weight: 600; font-size: 14px; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--pk-tint); color: #fff; cursor: pointer;
+         transition: transform var(--q) var(--pk-ease-standard), opacity var(--q) linear; }
+  .btn--plain { background: var(--pk-fill); color: var(--pk-label); }
+  .btn--danger { background: var(--pk-danger); }
+  .btn:active { transform: scale(var(--pk-press)); }
+  :root[data-motion="reduced"] .btn:active { opacity: 0.7; }
+  @media (prefers-reduced-motion: reduce) { .btn:active { opacity: 0.7; } }
+  .eyebrow { font-size: 12px; color: var(--pk-label-2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .num { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .hero { font-size: 40px; letter-spacing: -0.02em; }
+
+  /* rows: the wrapper animates height with grid rows, the row fades and nudges */
+  .list { display: flex; flex-direction: column; background: var(--pk-surface-2); border-radius: var(--pk-r-row); overflow: hidden; }
+  .rw { display: grid; grid-template-rows: 1fr; transition: grid-template-rows calc(var(--s) * var(--pk-motion)) var(--pk-ease-standard); }
+  .rw > .row { min-height: 0; overflow: hidden; }
+  .rw.collapsed { grid-template-rows: 0fr; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--pk-separator); background: transparent; }
+  .rw:first-child .row { border-top: 0; }
+  .row .dot { width: 28px; height: 28px; border-radius: 8px; flex: none; }
+  .row .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .amt { white-space: nowrap; }
+  .row .amt { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .row.lit { background: var(--pk-tint-soft); }
+  .row.unlit { transition: background-color calc(var(--pk-dur-linger) * var(--slow)) linear; }
+  .row input { accent-color: var(--pk-tint); width: 18px; height: 18px; }
+
+  /* flow bar */
+  .flowbar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--pk-fill); }
+  .flowbar > span { transition: flex-basis calc(var(--e) * var(--pk-motion)) var(--pk-ease-standard); }
+
+  /* toast */
+  .toast { position: absolute; left: 50%; bottom: 14px; translate: -50% 0; display: flex; gap: 10px; align-items: center; padding: 8px 8px 8px 14px; border-radius: 22px; background: var(--pk-label); color: var(--pk-surface); font-size: 14px; white-space: nowrap; }
+  .toast[hidden] { display: none; }
+  .toast .btn { padding: 5px 12px; background: transparent; color: var(--pk-tint); }
+  section.m:has(.toast) { padding-bottom: 64px; }
+
+  /* month */
+  .monthctl { display: flex; align-items: center; gap: 8px; align-self: flex-start; background: var(--pk-fill); border-radius: 999px; padding: 4px; }
+  .monthctl button { border: 0; background: transparent; font: inherit; font-size: 18px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--pk-label); }
+  .monthctl .label { min-width: 120px; text-align: center; font-weight: 600; }
+  .bars { display: flex; flex-direction: column; gap: 8px; }
+  .bar { display: grid; grid-template-columns: 110px 1fr 70px; gap: 8px; align-items: center; font-size: 13px; }
+  .bar .track { height: 8px; background: var(--pk-fill); border-radius: 4px; overflow: hidden; }
+  .bar .fill { display: block; height: 100%; border-radius: 4px; transition: width calc(var(--e) * var(--pk-motion)) var(--pk-ease-standard); }
+  .bar .v { text-align: right; font-variant-numeric: tabular-nums; }
+  .daily { display: flex; align-items: flex-end; gap: 3px; height: 60px; }
+  .daily span { flex: 1; background: var(--pk-label-3); border-radius: 2px 2px 0 0; transition: height calc(var(--e) * var(--pk-motion)) var(--pk-ease-standard); }
+
+  /* disclosure */
+  .disc summary { list-style: none; cursor: pointer; color: var(--pk-tint-text); font-weight: 600; display: inline-flex; gap: 4px; align-items: center; }
+  .disc summary::-webkit-details-marker { display: none; }
+  .chev { display: inline-block; transition: transform calc(var(--q) * var(--pk-motion)) var(--pk-ease-standard); }
+  .disc.open .chev { transform: rotate(180deg); }
+  .disc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows calc(var(--s) * var(--pk-motion)) var(--pk-ease-standard), opacity var(--q) linear; opacity: 0; }
+  .disc.open .disc-body { grid-template-rows: 1fr; opacity: 1; }
+  .disc-body > div { min-height: 0; overflow: hidden; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 6px; }
+  td { padding: 4px 0; border-top: 1px solid var(--pk-separator); } td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* menu */
+  .menuwrap { position: relative; display: inline-block; }
+  .menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 3; min-width: 180px; background: var(--pk-surface); border-radius: 14px; box-shadow: var(--pk-glass-shadow); padding: 6px; transform-origin: top left; }
+  .menu[hidden] { display: none; }
+  .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; font: inherit; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--pk-label); }
+  .menu button:hover { background: var(--pk-fill); }
+
+  /* dialog and drawer */
+  dialog { border: 0; padding: 0; background: transparent; color: var(--pk-label); }
+  dialog::backdrop { background: var(--pk-dim); }
+  dialog .panel { background: var(--pk-surface); border-radius: var(--pk-r-card); padding: 20px; width: min(420px, 90vw); box-shadow: var(--pk-glass-shadow); }
+  dialog.drawer { margin: 0 0 0 auto; height: 100vh; max-height: none; }
+  dialog.drawer .panel { height: 100%; border-radius: var(--pk-r-card) 0 0 var(--pk-r-card); width: min(420px, 90vw); }
+
+  /* fields */
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field input { font: inherit; font-size: 20px; padding: 10px 12px; border-radius: var(--pk-r-field); border: 1.5px solid var(--pk-separator); background: var(--pk-surface-2); color: var(--pk-label); }
+  .field.refused input { border-color: var(--pk-danger); }
+  .field .err { color: var(--pk-danger); font-size: 13px; min-height: 18px; }
+
+  /* sync */
+  .sync { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--pk-label-3); border-top-color: var(--pk-tint); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  .banner { background: var(--pk-pending-soft); color: var(--pk-pending); padding: 8px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+  .banner[hidden] { display: none; }
+
+  /* detail panel */
+  .split { display: grid; grid-template-columns: 1fr 0fr; gap: 0; transition: grid-template-columns calc(var(--e) * var(--pk-motion)) var(--pk-ease-standard); flex: 1; }
+  .split.open { grid-template-columns: 1fr 0.8fr; gap: 10px; }
+  .split .detail { min-width: 0; overflow: hidden; }
+  .split .detail .inner { background: var(--pk-surface-2); border-radius: var(--pk-r-row); padding: 14px; height: 100%; min-width: 180px; }
+  .note { font-size: 12px; color: var(--pk-label-3); }
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1>Penny motion demo · <span style="font-weight:500;color:var(--pk-label-2)">see docs/design/motion.md</span></h1>
+  <label><input type="checkbox" id="reduced"> Reduced motion</label>
+  <label><input type="checkbox" id="slow"> Slow ×4</label>
+  <label><input type="checkbox" id="dark"> Dark</label>
+</header>
+
+<main>
+  <!-- 1. Saving -->
+  <section class="m" id="saving">
+    <h2>1 · Saving</h2>
+    <p class="what">The new row makes room and rises in, then its highlight fades (linger). The toast rises in. Left to spend counts down and the flow bar moves (emphasized).</p>
+    <div>
+      <div class="eyebrow">Left to spend</div>
+      <div class="num hero" id="left" data-value="1240.50">$1,240.50</div>
+    </div>
+    <div class="flowbar" aria-hidden="true">
+      <span id="fb-spent" style="flex-basis:52%;background:var(--pk-label)"></span>
+      <span id="fb-inv" style="flex-basis:12%;background:var(--pk-invest)"></span>
+      <span id="fb-left" style="flex-basis:36%;background:var(--pk-income)"></span>
+    </div>
+    <div class="eyebrow">Recent</div>
+    <div class="list" id="recent"></div>
+    <div class="actions"><button class="btn" id="save">Save an expense</button><button class="btn btn--plain" id="edit">Edit the top row</button></div>
+    <div class="toast" id="toast" hidden role="status"><span>✓ Saved</span><button class="btn btn--plain" id="undo-save">Undo</button></div>
+  </section>
+
+  <!-- 2. Month -->
+  <section class="m" id="month">
+    <h2>2 · Month and period changes</h2>
+    <p class="what">An earlier month slides in from the left, a later one from the right (shift, emphasized); the month label crossfades. Bars and daily spending move to their new values. Press quickly: it retargets, never queues.</p>
+    <div class="monthctl"><button id="prev" aria-label="Earlier month">‹</button><span class="label" id="mlabel">October 2026</span><button id="next" aria-label="Later month">›</button></div>
+    <div id="mcontent">
+      <div><span class="eyebrow">Spent</span> <span class="num" id="mspent">$2,310.00</span></div>
+      <div class="bars" id="mbars" style="margin-top:10px"></div>
+      <div class="daily" id="mdaily" style="margin-top:12px" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- 3. Lists -->
+  <section class="m" id="lists">
+    <h2>3 · Lists: delete, bulk delete and Undo</h2>
+    <p class="what">Deleted rows fade out, then the space closes (standard), all together with no stagger. Undo brings them back with the insert motion. The day total counts.</p>
+    <div style="display:flex;justify-content:space-between"><span class="eyebrow">Tue, Oct 13</span><span class="num" id="daytotal" data-value="-182.40">−$182.40</span></div>
+    <div class="list" id="activity"></div>
+    <div class="actions"><button class="btn btn--danger" id="del">Delete selected</button></div>
+    <div class="toast" id="toast2" hidden role="status"><span id="toast2-text">2 entries deleted</span><button class="btn btn--plain" id="undo-del">Undo</button></div>
+  </section>
+
+  <!-- 4. Sheets, menus, disclosures -->
+  <section class="m" id="sheets">
+    <h2>4 · Sheets, menus and disclosures</h2>
+    <p class="what">Dialog: scrim fades, panel rises nudge (standard in, quick out). Drawer: slides from the trailing edge (emphasized). Menu: fades and scales from 0.97 at its edge (quick). Disclosure: chevron quick, height standard.</p>
+    <div class="actions">
+      <button class="btn" id="open-dialog">Delete this entry…</button>
+      <button class="btn btn--plain" id="open-drawer">Add entry (drawer)</button>
+      <span class="menuwrap"><button class="btn btn--plain" id="open-menu" aria-haspopup="menu" aria-expanded="false">Groceries ▾</button>
+        <div class="menu" id="menu" hidden role="menu"><button role="menuitem">Groceries</button><button role="menuitem">Food</button><button role="menuitem">Transport</button><button role="menuitem">Home</button></div>
+      </span>
+    </div>
+    <div class="disc" id="disc">
+      <button class="btn btn--plain" id="disc-toggle" aria-expanded="false" style="background:none;padding:0;color:var(--pk-tint-text)">Show as a table <span class="chev">⌄</span></button>
+      <div class="disc-body"><div><table>
+        <tr><td>Groceries</td><td>$612.30</td></tr><tr><td>Home</td><td>$1,100.00</td></tr><tr><td>Transport</td><td>$214.70</td></tr><tr><td>Food</td><td>$383.00</td></tr>
+      </table></div></div>
+    </div>
+  </section>
+
+  <!-- 5. Feedback -->
+  <section class="m" id="feedback">
+    <h2>5 · Feedback</h2>
+    <p class="what">Press: scale 0.97 (quick); reduced, it dims instead. A refused save shakes the field (3 swings of 6px, 300 ms); the error text appears at once either way. Sync status crossfades; the banner drops in.</p>
+    <div class="field" id="amount-field"><label class="eyebrow" for="amount">Amount</label><input id="amount" inputmode="decimal" placeholder="$0.00"><span class="err" id="amount-err" aria-live="polite"></span></div>
+    <div class="actions"><button class="btn" id="refuse">Save</button><button class="btn btn--plain" id="sync-next">Next sync state</button></div>
+    <div class="sync" id="sync" role="status"><span class="spin" hidden></span><span id="sync-text">2 changes waiting</span></div>
+    <div class="banner" id="banner" hidden>You're offline. 2 changes will sync when you're back.</div>
+  </section>
+
+  <!-- 6. Navigation -->
+  <section class="m" id="nav">
+    <h2>6 · Navigation: the detail panel</h2>
+    <p class="what">Opening, the panel slides shift from the trailing edge and fades while the list narrows (emphasized). Choosing another entry only crossfades the content (quick). The iPad sidebar is the system's own.</p>
+    <div class="split" id="split">
+      <div class="list" id="navlist"></div>
+      <div class="detail"><div class="inner" id="detail"></div></div>
+    </div>
+    <div class="actions"><button class="btn btn--plain" id="close-detail">Close panel</button></div>
+  </section>
+</main>
+
+<dialog id="dialog"><div class="panel">
+  <h3 style="margin-top:0">Delete this entry?</h3><p style="color:var(--pk-label-2)">Groceries, $48.20 on Oct 13. This can't be undone.</p>
+  <div class="actions" style="justify-content:flex-end"><button class="btn btn--plain" data-close>Cancel</button><button class="btn btn--danger" data-close>Delete</button></div>
+</div></dialog>
+<dialog id="drawer" class="drawer"><div class="panel">
+  <h3 style="margin-top:0">Add entry</h3><p style="color:var(--pk-label-2)">The web drawer (<code>dialog__panel--drawer</code>).</p>
+  <button class="btn" data-close>Done</button>
+</div></dialog>
+
+<script>
+"use strict";
+const root = document.documentElement;
+const $ = (s) => document.querySelector(s);
+const media = matchMedia("(prefers-reduced-motion: reduce)");
+
+// Token readers: the demo's JS uses the same CSS tokens as its CSS.
+const css = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+const slow = () => Number(css("--slow")) || 1;
+const dur = (token) => parseFloat(css(`--pk-dur-${token}`)) * slow();
+const motion = () => Number(css("--pk-motion"));
+const reduced = () => motion() === 0;
+const px = (token) => parseFloat(css(`--pk-${token}`)) * motion();
+const EASE = "cubic-bezier(0.2, 0, 0, 1)", EXIT = "cubic-bezier(0.4, 0, 1, 1)";
+
+$("#reduced").checked = media.matches;
+$("#reduced").addEventListener("change", (e) => { root.dataset.motion = e.target.checked ? "reduced" : ""; });
+if (media.matches) root.dataset.motion = "reduced";
+$("#slow").addEventListener("change", (e) => root.style.setProperty("--slow", e.target.checked ? 4 : 1));
+$("#dark").addEventListener("change", (e) => document.body.classList.toggle("pk-dark", e.target.checked));
+if (matchMedia("(prefers-color-scheme: dark)").matches) { $("#dark").checked = true; document.body.classList.add("pk-dark"); }
+
+const money = (v) => (v < 0 ? "−" : "") + "$" + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// cubic-bezier(0.2, 0, 0, 1) for the count tween, solved numerically.
+function bezier(x1, y1, x2, y2) {
+  const c = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+  return (x) => { let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (c(x1, x2, m) < x) lo = m; else hi = m; } return c(y1, y2, (lo + hi) / 2); };
+}
+const easeStd = bezier(0.2, 0, 0, 1);
+
+// Counting totals: retargets from the shown value; reduced motion shows the final value at once.
+function countTo(el, to) {
+  const from = Number(el.dataset.shown ?? el.dataset.value);
+  el.dataset.value = to;
+  cancelAnimationFrame(el._raf);
+  el.setAttribute("aria-label", money(to)); // assistive tech hears the final value only
+  if (reduced()) { el.dataset.shown = to; el.textContent = money(to); return; }
+  const start = performance.now(), d = dur("emphasized");
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / d), v = from + (to - from) * easeStd(t);
+    el.dataset.shown = v; el.textContent = money(Math.round(v * 100) / 100);
+    if (t < 1) el._raf = requestAnimationFrame(step);
+  };
+  el._raf = requestAnimationFrame(step);
+}
+
+// Rows: insert (make room, fade, nudge up) and delete (fade, then close the space).
+function rowEl({ name, amt, color, check }) {
+  const rw = document.createElement("div"); rw.className = "rw";
+  rw.innerHTML = `<div class="row">${check ? '<input type="checkbox" aria-label="Select">' : ""}<span class="dot" style="background:${color}"></span><span class="name">${name}</span><span class="amt">${money(amt)}</span></div>`;
+  return rw;
+}
+function insertRow(list, data, { before = list.firstChild, highlight = false } = {}) {
+  const rw = rowEl(data); rw.classList.add("collapsed"); list.insertBefore(rw, before);
+  const row = rw.firstChild;
+  rw.getBoundingClientRect(); rw.classList.remove("collapsed");
+  row.animate([{ opacity: 0, transform: `translateY(${px("nudge")}px)` }, { opacity: 1, transform: "none" }],
+    { duration: reduced() ? dur("quick") : dur("standard"), easing: EASE });
+  if (highlight) { row.classList.add("lit"); setTimeout(() => { row.classList.add("unlit"); row.classList.remove("lit"); }, dur("standard")); }
+  return rw;
+}
+function removeRow(rw) {
+  const row = rw.firstChild;
+  const fade = row.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur("quick"), easing: EXIT, fill: "forwards" });
+  fade.finished.then(() => {
+    rw.classList.add("collapsed");
+    setTimeout(() => rw.remove(), dur("standard") * motion() + 20);
+  });
+}
+
+// Toasts: rise nudge and fade in (standard), drop and fade out (quick, exit).
+function showToast(t) {
+  clearTimeout(t._timer); const wasHidden = t.hidden; t.hidden = false;
+  if (wasHidden) t.animate([{ opacity: 0, transform: `translateY(${px("nudge")}px)` }, { opacity: 1, transform: "none" }], { duration: reduced() ? dur("quick") : dur("standard"), easing: EASE });
+  t._timer = setTimeout(() => hideToast(t), 4000);
+}
+function hideToast(t) {
+  if (t.hidden) return; clearTimeout(t._timer);
+  t.animate([{ opacity: 1 }, { opacity: 0, transform: `translateY(${px("nudge")}px)` }], { duration: dur("quick"), easing: EXIT }).finished.then(() => { t.hidden = true; });
+}
+
+/* ---------- 1. Saving ---------- */
+const recent = $("#recent");
+const seed = [
+  { name: "Groceries · Metro", amt: -48.2, color: "var(--pk-c-groceries)" },
+  { name: "Transport · STM", amt: -3.75, color: "var(--pk-c-transport)" },
+  { name: "Food · Café Olimpico", amt: -6.5, color: "var(--pk-c-food)" },
+];
+seed.forEach((r) => recent.append(rowEl(r)));
+const newOnes = [
+  { name: "Food · Lunch", amt: -14.25, color: "var(--pk-c-food)" },
+  { name: "Shopping · Hardware", amt: -32.1, color: "var(--pk-c-shopping)" },
+  { name: "Groceries · Market", amt: -21.4, color: "var(--pk-c-groceries)" },
+];
+let saved = 0, lastSaved = null;
+const left = $("#left");
+function setFlow(leftValue) {
+  const total = 3450;
+  const l = Math.max(0, leftValue / total * 100), inv = 12;
+  $("#fb-left").style.flexBasis = l + "%"; $("#fb-inv").style.flexBasis = inv + "%"; $("#fb-spent").style.flexBasis = (100 - l - inv) + "%";
+}
+$("#save").addEventListener("click", () => {
+  const r = newOnes[saved++ % newOnes.length];
+  lastSaved = { rw: insertRow(recent, r, { highlight: true }), amt: r.amt };
+  const v = Number(left.dataset.value) + r.amt; countTo(left, v); setFlow(v);
+  if (recent.children.length > 4) removeRow(recent.lastElementChild);
+  showToast($("#toast"));
+});
+$("#undo-save").addEventListener("click", () => {
+  hideToast($("#toast")); if (!lastSaved) return;
+  removeRow(lastSaved.rw); const v = Number(left.dataset.value) - lastSaved.amt; countTo(left, v); setFlow(v); lastSaved = null;
+});
+$("#edit").addEventListener("click", () => {
+  const rw = recent.firstElementChild; if (!rw) return;
+  const row = rw.firstChild, amt = row.querySelector(".amt");
+  const old = Number(amt.textContent.replace(/[^0-9.]/g, "")) * -1, next = old - 10;
+  amt.animate([{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }], { duration: dur("quick") * 2 });
+  setTimeout(() => { amt.textContent = money(next); }, dur("quick"));
+  row.classList.remove("unlit"); row.classList.add("lit"); setTimeout(() => { row.classList.add("unlit"); row.classList.remove("lit"); }, dur("standard"));
+  const v = Number(left.dataset.value) - 10; countTo(left, v); setFlow(v); showToast($("#toast"));
+});
+
+/* ---------- 2. Month ---------- */
+const months = ["July", "August", "September", "October", "November", "December"];
+let mi = 3;
+const cats = [["Home", "var(--pk-c-home)"], ["Groceries", "var(--pk-c-groceries)"], ["Food", "var(--pk-c-food)"], ["Transport", "var(--pk-c-transport)"]];
+const monthData = months.map((_, i) => cats.map((_, c) => 120 + ((i * 7 + c * 13) % 9) * 110 + (c === 0 ? 600 : 0)));
+const bars = $("#mbars");
+bars.innerHTML = cats.map(([n, col]) => `<div class="bar"><span>${n}</span><span class="track"><span class="fill" style="background:${col}"></span></span><span class="v"></span></div>`).join("");
+const daily = $("#mdaily"); daily.innerHTML = "<span></span>".repeat(30);
+const mspent = $("#mspent");
+function renderMonth() {
+  const d = monthData[mi], max = 1800;
+  [...bars.children].forEach((b, c) => { b.querySelector(".fill").style.width = (d[c] / max * 100) + "%"; b.querySelector(".v").textContent = money(d[c]); });
+  [...daily.children].forEach((s, k) => { s.style.height = (10 + ((k * 31 + mi * 17) % 50)) + "px"; });
+  const total = d.reduce((a, b) => a + b, 0); mspent.dataset.value ??= total; countTo(mspent, total);
+}
+renderMonth();
+function changeMonth(step) {
+  const next = mi + step; if (next < 0 || next >= months.length) return;
+  mi = next;
+  const content = $("#mcontent"), label = $("#mlabel");
+  // earlier month enters from the leading edge (moves right); later from the trailing edge
+  const from = (step < 0 ? -1 : 1) * px("shift");
+  content.getAnimations().forEach((a) => a.cancel());
+  label.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: dur("quick") });
+  label.textContent = `${months[mi]} 2026`;
+  content.animate([{ opacity: 0, transform: `translateX(${from}px)` }, { opacity: 1, transform: "none" }],
+    { duration: reduced() ? dur("quick") : dur("emphasized"), easing: EASE });
+  renderMonth();
+}
+$("#prev").addEventListener("click", () => changeMonth(-1));
+$("#next").addEventListener("click", () => changeMonth(1));
+
+/* ---------- 3. Lists ---------- */
+const activity = $("#activity");
+const actRows = [
+  { name: "Groceries · Metro", amt: -48.2, color: "var(--pk-c-groceries)", check: true },
+  { name: "Home · Hydro", amt: -96.0, color: "var(--pk-c-home)", check: true },
+  { name: "Food · Lunch", amt: -14.25, color: "var(--pk-c-food)", check: true },
+  { name: "Transport · Bixi", amt: -23.95, color: "var(--pk-c-transport)", check: true },
+];
+actRows.forEach((r) => { const rw = rowEl(r); rw._data = r; activity.append(rw); });
+activity.children[0].querySelector("input").checked = true;
+activity.children[2].querySelector("input").checked = true;
+let deleted = [];
+$("#del").addEventListener("click", () => {
+  const chosen = [...activity.children].filter((rw) => rw.querySelector("input")?.checked && !rw.classList.contains("collapsed"));
+  if (!chosen.length) return;
+  deleted = chosen.map((rw) => ({ data: rw._data, next: rw.nextElementSibling, index: [...activity.children].indexOf(rw) }));
+  chosen.forEach(removeRow);
+  const dt = $("#daytotal"); countTo(dt, Number(dt.dataset.value) - chosen.reduce((a, rw) => a + rw._data.amt, 0));
+  $("#toast2-text").textContent = `${chosen.length} ${chosen.length === 1 ? "entry" : "entries"} deleted`;
+  showToast($("#toast2"));
+});
+$("#undo-del").addEventListener("click", () => {
+  hideToast($("#toast2"));
+  const sorted = deleted.sort((a, b) => a.index - b.index);
+  sorted.forEach(({ data, index }) => {
+    const live = [...activity.children].filter((c) => !c.classList.contains("collapsed"));
+    const rw = insertRow(activity, data, { before: live[index] ?? null }); rw._data = data; rw.querySelector("input").checked = true;
+  });
+  const dt = $("#daytotal"); countTo(dt, Number(dt.dataset.value) + sorted.reduce((a, d) => a + d.data.amt, 0));
+  deleted = [];
+});
+
+/* ---------- 4. Sheets, menus, disclosures ---------- */
+function openDialog(d, { drawer = false } = {}) {
+  d.showModal();
+  const panel = d.querySelector(".panel");
+  const enter = drawer ? `translateX(${100 * motion()}%)` : `translateY(${px("nudge")}px)`;
+  panel.animate([{ opacity: 0, transform: enter }, { opacity: 1, transform: "none" }], { duration: reduced() ? dur("quick") : dur(drawer ? "emphasized" : "standard"), easing: EASE });
+  // the scrim (::backdrop) fades with the panel
+  d.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur("quick"), pseudoElement: "::backdrop" });
+}
+function closeDialog(d, { drawer = false } = {}) {
+  const panel = d.querySelector(".panel");
+  const leave = drawer ? `translateX(${100 * motion()}%)` : `translateY(${px("nudge")}px)`;
+  d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur("quick"), pseudoElement: "::backdrop", fill: "forwards" });
+  panel.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: leave }], { duration: dur(drawer && !reduced() ? "standard" : "quick"), easing: EXIT }).finished.then(() => d.close());
+}
+$("#open-dialog").addEventListener("click", () => openDialog($("#dialog")));
+$("#open-drawer").addEventListener("click", () => openDialog($("#drawer"), { drawer: true }));
+document.querySelectorAll("dialog [data-close]").forEach((b) => b.addEventListener("click", (e) => { const d = e.target.closest("dialog"); closeDialog(d, { drawer: d.classList.contains("drawer") }); }));
+document.querySelectorAll("dialog").forEach((d) => {
+  d.addEventListener("cancel", (e) => { e.preventDefault(); closeDialog(d, { drawer: d.classList.contains("drawer") }); });
+  d.addEventListener("click", (e) => { if (e.target === d) closeDialog(d, { drawer: d.classList.contains("drawer") }); });
+});
+const menu = $("#menu"), menuBtn = $("#open-menu");
+function toggleMenu(open) {
+  menuBtn.setAttribute("aria-expanded", open);
+  if (open) {
+    menu.hidden = false;
+    const s = 1 - (1 - 0.97) * motion();
+    menu.animate([{ opacity: 0, transform: `scale(${s})` }, { opacity: 1, transform: "none" }], { duration: dur("quick"), easing: EASE });
+  } else if (!menu.hidden) {
+    menu.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur("quick"), easing: EXIT }).finished.then(() => { menu.hidden = true; });
+  }
+}
+menuBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleMenu(menu.hidden); });
+menu.addEventListener("click", (e) => { if (e.target.matches("button")) { menuBtn.firstChild.textContent = e.target.textContent + " "; toggleMenu(false); } });
+document.addEventListener("click", () => toggleMenu(false));
+$("#disc-toggle").addEventListener("click", (e) => { const open = $("#disc").classList.toggle("open"); e.currentTarget.setAttribute("aria-expanded", open); e.currentTarget.firstChild.textContent = open ? "Hide the table " : "Show as a table "; });
+
+/* ---------- 5. Feedback ---------- */
+$("#refuse").addEventListener("click", () => {
+  const field = $("#amount-field"), input = $("#amount");
+  if (input.value.trim()) { field.classList.remove("refused"); $("#amount-err").textContent = ""; input.value = ""; return; }
+  field.classList.add("refused"); $("#amount-err").textContent = "Enter an amount to save.";
+  if (reduced()) return; // no shake; the outline and text say it
+  const a = parseFloat(css("--pk-shake"));
+  input.animate([0, -a, a, -a, a, -a / 2, 0].map((x) => ({ transform: `translateX(${x}px)` })), { duration: dur("quick") * 2, easing: EASE });
+});
+$("#amount").addEventListener("input", () => { $("#amount-field").classList.remove("refused"); $("#amount-err").textContent = ""; });
+const syncStates = [
+  { text: "2 changes waiting", spin: false, color: "var(--pk-pending)", banner: false },
+  { text: "Syncing…", spin: true, color: "var(--pk-label-2)", banner: false },
+  { text: "Synced just now", spin: false, color: "var(--pk-income)", banner: false },
+  { text: "Offline · 2 changes waiting", spin: false, color: "var(--pk-pending)", banner: true },
+];
+let si = 0;
+function renderSync() {
+  const s = syncStates[si], el = $("#sync");
+  el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduced() ? dur("quick") : dur("standard"), easing: EASE });
+  el.querySelector(".spin").hidden = !s.spin; $("#sync-text").textContent = s.text; el.style.color = s.color;
+  const b = $("#banner");
+  if (s.banner && b.hidden) { b.hidden = false; b.animate([{ opacity: 0, transform: `translateY(${-px("nudge")}px)` }, { opacity: 1, transform: "none" }], { duration: reduced() ? dur("quick") : dur("standard"), easing: EASE }); }
+  else if (!s.banner && !b.hidden) { b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur("quick"), easing: EXIT }).finished.then(() => { b.hidden = true; }); }
+}
+renderSync();
+$("#sync-next").addEventListener("click", () => { si = (si + 1) % syncStates.length; renderSync(); });
+
+/* ---------- 6. Navigation ---------- */
+const navlist = $("#navlist"), split = $("#split"), detail = $("#detail");
+actRows.forEach((r) => { const rw = rowEl({ ...r, check: false }); rw.style.cursor = "pointer"; rw.addEventListener("click", () => openDetail(r)); navlist.append(rw); });
+function openDetail(r) {
+  const html = `<div class="eyebrow">${r.name.split(" · ")[0]}</div><div class="num" style="font-size:28px;margin:6px 0">${money(r.amt)}</div><div style="color:var(--pk-label-2)">${r.name.split(" · ")[1]} · Oct 13</div>`;
+  if (split.classList.contains("open")) {
+    detail.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur("quick") }); detail.innerHTML = html; return;
+  }
+  detail.innerHTML = html; split.classList.add("open");
+  detail.animate([{ opacity: 0, transform: `translateX(${px("shift")}px)` }, { opacity: 1, transform: "none" }], { duration: reduced() ? dur("quick") : dur("emphasized"), easing: EASE });
+}
+$("#close-detail").addEventListener("click", () => {
+  if (!split.classList.contains("open")) return;
+  detail.animate([{ opacity: 1 }, { opacity: 0, transform: `translateX(${px("shift")}px)` }], { duration: reduced() ? dur("quick") : dur("standard"), easing: EXIT, fill: "forwards" })
+    .finished.then((a) => { split.classList.remove("open"); setTimeout(() => a.cancel(), dur("emphasized") * motion()); });
+});
+</script>
+</body>
+</html>
