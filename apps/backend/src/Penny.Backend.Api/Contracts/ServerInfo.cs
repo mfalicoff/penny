@@ -24,5 +24,5 @@ public sealed record ServerInfo(
     /// The release version /api/info reports. It follows apps/ios/Configuration/Version.xcconfig:
     /// release-please updates both lines, and scripts/check-version.mjs checks they match.
     /// </summary>
-    public const string CurrentVersion = "3.0.0"; // x-release-please-version
+    public const string CurrentVersion = "3.1.0"; // x-release-please-version
 }
