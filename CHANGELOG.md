@@ -1,5 +1,34 @@
 # Changelog
 
+## [3.1.0](https://github.com/mfalicoff/penny/compare/v3.0.0...v3.1.0) (2026-11-25)
+
+
+### Features
+
+* **api:** add stable error codes to API errors ([#227](https://github.com/mfalicoff/penny/issues/227)) ([eaed6bf](https://github.com/mfalicoff/penny/commit/eaed6bf53555dcea01a1dfe602acc130060f66b3))
+* **auth:** sign in with Apple, Google and several OIDC providers, and make the image smoke tests gate CI ([#210](https://github.com/mfalicoff/penny/issues/210)) ([0dde82f](https://github.com/mfalicoff/penny/commit/0dde82f97848e5289371b484ca6896c73a6835c8))
+* **ios:** delete the account and export all data, with faster typed UI test lookups ([#211](https://github.com/mfalicoff/penny/issues/211)) ([ec5c8fc](https://github.com/mfalicoff/penny/commit/ec5c8fcbcb1c7b6ecdbb44fcc7c7dbc4072ea77b))
+* **ios:** opt-in crash and performance reports through the API ([d9d4da4](https://github.com/mfalicoff/penny/commit/d9d4da4c858487f51d47f56f274b60bed5a79e88))
+* **ios:** show who paid a shared expense in Activity's rows ([4d3d491](https://github.com/mfalicoff/penny/commit/4d3d491f7b115883c389754927336598d7c1de0d))
+* **ios:** sign in with Apple, Google and several OIDC providers ([ed491ca](https://github.com/mfalicoff/penny/commit/ed491cab0c5acbe7a489cd3bced9b02d3e10dfcc))
+* record how many people split an expense and say "split N ways" on Home ([956df68](https://github.com/mfalicoff/penny/commit/956df68e025cafe336a1a33b03dfca3fe183cf03))
+* show who paid a shared expense in Activity's rows ([9615390](https://github.com/mfalicoff/penny/commit/9615390720313757d9573065149bf67a8fec05d7))
+* **telemetry:** opt-in client monitoring through the API, with web Session Replay ([#218](https://github.com/mfalicoff/penny/issues/218)) ([2596e9e](https://github.com/mfalicoff/penny/commit/2596e9effd893a79d5bb768ae9ec4f6155214a22))
+* **web:** select several Activity entries to change or delete at once ([#214](https://github.com/mfalicoff/penny/issues/214)) ([6150f65](https://github.com/mfalicoff/penny/commit/6150f65a2459eb88908eb6a04f0dba1eaefb9bdc))
+
+
+### Bug Fixes
+
+* **backend:** redact stored audit snapshots once and drop read-time redaction ([#221](https://github.com/mfalicoff/penny/issues/221)) ([eeac640](https://github.com/mfalicoff/penny/commit/eeac640f4fbd3ca8ac90e725213bd63dd749f7cf))
+* count shared expenses under the matching personal category ([#215](https://github.com/mfalicoff/penny/issues/215)) ([90f59ce](https://github.com/mfalicoff/penny/commit/90f59cea094b8d09f45db6d4165375632dd614f9))
+* **ios:** lighter checklist icons on the report prompt, and record both report cards as matching ([9111cab](https://github.com/mfalicoff/penny/commit/9111caba3cbd2fae73392e6dda277f348fb88608))
+* **ios:** read a household month's payment window from the app's clock ([6ee3698](https://github.com/mfalicoff/penny/commit/6ee369865f3803ee08c83f0ce110b9c14af95882))
+
+
+### Performance Improvements
+
+* **ledger:** linear web merge and compressed ledger responses ([f86abe9](https://github.com/mfalicoff/penny/commit/f86abe951defda0a6d1c93fd67e8ec41a3f35204))
+
 ## [3.0.0](https://github.com/mfalicoff/penny/compare/v2.0.0...v3.0.0) (2026-11-24)
 
 
