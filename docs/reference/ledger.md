@@ -74,3 +74,7 @@ The typed schema has no position column (MAZ-52 decision). Reads return accounts
 ## Search seam (MAZ-121)
 
 MAZ-121 implements the seam: `TrySaveAsync` stages the personal `search_documents` rows (normalized title/document texts, embedding source) with the entry diff and saves them in the same transaction, then rewrites the payer's account text in their shared-expense documents, so search never diverges from the committed revision. Category and account renames rewrite every affected document; a rejected or conflicting save changes nothing. Embeddings follow through the outbox ([search](search.md#implementation-maz-121)).
+
+## Sync cost baseline (MAZ-186)
+
+What whole-document sync costs today (payload sizes, server time and the web client's sync pass for 2,000 and 50,000 entries), with the script to measure it again: [ledger sync baseline](ledger-sync-baseline.md).

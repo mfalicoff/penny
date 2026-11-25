@@ -12,7 +12,10 @@
     "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@domain/*": ["./src/domain/*"]
+    }
   },
   "include": ["vite.config.ts", "playwright.config.ts", "scripts", "e2e"],
   "exclude": ["scripts/fixtures"]
