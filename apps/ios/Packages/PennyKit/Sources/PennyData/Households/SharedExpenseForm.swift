@@ -430,6 +430,10 @@ public final class SharedExpenseFormModel {
 
     /// The server's refusal of a receipt the household can't use (`SharedExpenseService.ReceiptUnavailable`).
     public nonisolated static let receiptUnavailable = "Receipt is not available to this household."
+    /// The same refusal from a server before contract 2.1.0, which sends no `expense.receipt_unavailable`.
+    nonisolated static func isReceiptGone(_ error: APIError) -> Bool {
+        error.status == 400 && error.message == receiptUnavailable
+    }
     public nonisolated static let receiptGoneNotice =
         "The receipt was no longer on the server, so it was saved without it."
 
@@ -465,12 +469,12 @@ public final class SharedExpenseFormModel {
             let outcome: Outcome
             do {
                 outcome = try await send(valid)
-            } catch APIError.badRequest(let message) where message == Self.receiptUnavailable {
+            } catch let error as APIError where error.matches(.expenseReceiptUnavailable, legacy: Self.isReceiptGone) {
                 // A receipt kept in a draft longer than the server keeps unlinked uploads was
                 // cleaned up (MAZ-199): save without it and say so. Any other answer, or a check
                 // that fails, keeps the refusal.
                 guard let id = draft.receipt?.id, (try? await service.receiptExists(id: id)) == false else {
-                    throw APIError.badRequest(message: message)
+                    throw error
                 }
                 draft.receipt = nil
                 outcome = try await send(valid)
