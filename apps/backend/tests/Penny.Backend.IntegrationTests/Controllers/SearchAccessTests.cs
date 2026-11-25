@@ -54,6 +54,8 @@ public sealed class SearchAccessTests(ApiFixture fixture) : SearchTestBase(fixtu
         entry.GetProperty("householdName").GetString().ShouldBe("Home");
         entry.GetProperty("totalCents").GetInt64().ShouldBe(1000);
         entry.GetProperty("shareCents").GetInt64().ShouldBe(500);
+        entry.GetProperty("payer").GetProperty("email").GetString().ShouldBe("alex@example.test");
+        entry.GetProperty("paidByYou").GetBoolean().ShouldBeFalse();
         Item(beaPage, "shared:" + solo)
             .GetProperty("entry")
             .GetProperty("shareCents")

@@ -52,6 +52,8 @@ const shared = (id: string, extra: Partial<SharedRow> = {}): SharedRow => ({
   totalCents: 6000,
   shareCents: 3000,
   payerUserId: "u2",
+  payer: { email: "bea@example.test" },
+  paidByYou: false,
   category: { name: "Utilities", icon: "home-outline", color: "#3B82F6" },
   note: "",
   ...extra,

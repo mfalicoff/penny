@@ -9083,6 +9083,30 @@
           "createdAt"
         ]
       },
+      "ExpensePayer": {
+        "type": "object",
+        "description": "Who paid a shared expense, as the household members see them (MAZ-275).",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "The payer's display name (MAZ-171). Omitted when they have none: show the email."
+          },
+          "deleted": {
+            "type": "boolean",
+            "const": true,
+            "description": "MAZ-152. Present (true) when the person deleted their account: show \"Former member\" and never the email, which is a placeholder address. Their expenses, splits and payments stay, so balances don't change. Omitted otherwise."
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
       "ProjectedExpense": {
         "type": "object",
         "properties": {
@@ -9132,6 +9156,13 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "payer": {
+            "$ref": "#/components/schemas/ExpensePayer"
+          },
+          "paidByYou": {
+            "type": "boolean",
+            "description": "True when the viewer paid. Clients say \"You paid\" rather than the payer's name."
           },
           "category": {
             "type": "object",
@@ -9192,6 +9223,8 @@
           "totalCents",
           "shareCents",
           "payerUserId",
+          "payer",
+          "paidByYou",
           "category",
           "note"
         ]

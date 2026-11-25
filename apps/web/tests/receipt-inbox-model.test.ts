@@ -103,6 +103,8 @@ describe("Suggested", () => {
     totalCents: 2000,
     shareCents: 1000,
     payerUserId: "u1",
+    payer: { email: "bea@example.test" },
+    paidByYou: false,
     category: { name: "Groceries", icon: "basket-outline", color: "#6C9C79" },
     note: "",
     ...extra,

@@ -6,7 +6,7 @@ namespace Penny.Backend.Api.Contracts;
 // Contract schema `ProjectedExpense`. Recorded rows carry `receipt` when one is
 // linked; scheduled rows carry `scheduled: true`. `recurringId` is the shared rule
 // on previews and on recorded occurrences it recorded. `accountId` reaches only
-// the payer.
+// the payer. `payer` is who paid and `paidByYou` whether that is the viewer.
 public sealed record ProjectedExpenseResponse(
     string Id,
     string HouseholdId,
@@ -17,6 +17,8 @@ public sealed record ProjectedExpenseResponse(
     long TotalCents,
     long ShareCents,
     string PayerUserId,
+    ExpensePayerResponse Payer,
+    bool PaidByYou,
     ExpenseCategoryResponse Category,
     string Note,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -37,6 +39,8 @@ public sealed record ProjectedExpenseResponse(
             expense.TotalCents,
             expense.ShareCents,
             expense.PayerUserId,
+            ExpensePayerResponse.From(expense.Payer),
+            expense.PaidByYou,
             ExpenseCategoryResponse.From(expense.Category),
             expense.Note,
             ExpenseResponse.ReceiptFrom(expense.Receipt),

@@ -57,6 +57,8 @@ export const sharedRow = ({ id, title, date, shareCents, totalCents = shareCents
   totalCents,
   shareCents,
   payerUserId: "u2",
+  payer: { email: "bea@example.test", displayName: "Bea" } as { email: string; displayName?: string; deleted?: true },
+  paidByYou: false,
   category: { name: category, icon: "basket-outline", color: "#6C9C79" },
   note: "",
 });

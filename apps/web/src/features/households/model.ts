@@ -1,4 +1,4 @@
-import type { AuditEvent, Household, HouseholdDetail, HouseholdMember, SharedExpense } from "../../api/schemas";
+import type { AuditEvent, ExpensePayer, Household, HouseholdDetail, HouseholdMember, SharedExpense } from "../../api/schemas";
 
 /**
  * Display helpers for the shared screens. The server owns every shared rule (splits, balances,
@@ -167,6 +167,9 @@ export const FORMER_MEMBER = "Former member";
  * their account (MAZ-152) is "Former member": their name, picture and email are gone.
  */
 export const memberName = (member: HouseholdMember) => (member.deleted ? FORMER_MEMBER : (member.displayName ?? member.email));
+
+/** Who paid a shared expense in Activity (MAZ-275), by the same rule as `memberName`. */
+export const payerName = (payer: ExpensePayer) => (payer.deleted ? FORMER_MEMBER : (payer.displayName ?? payer.email));
 
 export interface People {
   meId: string | undefined;
