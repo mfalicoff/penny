@@ -22,7 +22,7 @@ Each section pairs real app screens in device frames with a live **3D Gaussian s
 
 `scripts/capture-screens.ts` re-captures the web screens; its header has the crop and WebP commands. Icons are the apps' own (Ionicons v7 outline, MIT, from `design-kit/src/icons.ts`), inlined into the HTML at build time; the typeface is the apps' Inter (OFL), subset to Latin as WOFF2.
 
-Short pre-rendered clips of the apps in use are proposed for some frames: see [docs/product-videos.md](docs/product-videos.md) for the license check, the storyboard and the pipeline outline (not built yet).
+Short pre-rendered clips of the apps in use are planned for four frames: see [docs/product-videos.md](docs/product-videos.md) for the license check, the approved storyboard and the pipeline outline.
 
 ## How the splats work
 
