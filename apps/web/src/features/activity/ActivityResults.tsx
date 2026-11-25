@@ -364,7 +364,8 @@ function RowList({ rows, motionContext, grouped, complete, ledger, currency, lay
   const inserts = animateInserts ? "" : undefined;
   if (layout === "table") return <RowTable groups={groups} context={context} totalOf={totalOf} dayTotalText={dayTotalText} leaving={leaving} animateInserts={animateInserts} />;
 
-  const row = (item: ActivityRow) => <Row key={item.key} row={item} context={context} leaving={leaving.has(item.key)} />;
+  // A leaving row has its own key, so an entry that comes back (Undo) is a fresh row, not the faded one.
+  const row = (item: ActivityRow) => <Row key={leaving.has(item.key) ? `leaving:${item.key}` : item.key} row={item} context={context} leaving={leaving.has(item.key)} />;
   if (!grouped)
     return (
       <ul className="results" data-animate-inserts={inserts}>
@@ -616,7 +617,7 @@ function RowTable({
               </tr>
             ) : null}
             {group.rows.map((row) => (
-              <TableRow key={row.key} row={row} context={context} leaving={leaving.has(row.key)} />
+              <TableRow key={leaving.has(row.key) ? `leaving:${row.key}` : row.key} row={row} context={context} leaving={leaving.has(row.key)} />
             ))}
           </tbody>
         ))}
