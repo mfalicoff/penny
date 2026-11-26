@@ -119,6 +119,20 @@ System components keep the system's motion and are never restyled: iOS sheets an
 | **Pushed screens on iOS** | The system's navigation push. | system | System. |
 | **Web routes** | No page transition. | — | — |
 
+### 7. Monthly recap and year in review (MAZ-292)
+
+The recap, its banner, the year in review and the share card ([cards](visual-acceptance.md#cards-monthly-recap-and-year-in-review-maz-292-2026-11-26)) use the tokens above and nothing of their own. The Haptic column repeats the [Haptics](#haptics-ios) table.
+
+| What | Motion | Token | Reduced | Haptic (iOS) |
+| --- | --- | --- | --- | --- |
+| **Recap banner arriving** (Home and Insights, the first 7 days of a month; the January year-in-review banner) | Shown with the screen when the recap is already known. When it's known only after the screen is up (the month's ledger finishes loading), the content below makes room (height grows from 0) and the banner fades in while sliding down `nudge`, as the offline banner does. | `standard`, `standard` easing | Room is made at once; the banner fades in (`quick`). | None: it arrives on its own. |
+| **Recap banner dismissed** (its close button) | The banner fades out, then the space closes and the content below moves up, as a deleted row. It doesn't come back that month. | fade `quick` + `exit`; space `standard` | Fades out (`quick`); the space closes at once. | `.impact(weight: .light)` |
+| **Opening the recap or the year in review** (the banner, the Recap button, the Insights card) | iOS: the system's navigation push for the recap, the system's full-screen cover for the year in review. Web: a route, with no transition. | system | System. | `.selection` |
+| **Totals counting up** (the recap's spent, came in, invested and left over; the year's total; the counts on the year's pages: days away, shared expenses, days without spending, expenses recorded) | The first time a recap or a page appears, each number counts from 0 to its value; changing the recap's month counts from the old value to the new one (as Totals in Saving). Tabular figures, so widths don't jitter. Assistive technology hears the final value only. | `emphasized`, `standard` easing | The final number at once. | None: it follows the action that showed it. |
+| **Category bars filling** (the recap's comparison bars, the flow bar, the year's category bars, Who paid bars and the busiest-month columns) | The first time they appear, every bar grows from zero to its length together, with no stagger, so a long list takes as long as one bar. Changing the month moves them to their new values (as the Insights bars). A "New" or "No September to compare with" label fades in with them. | `emphasized`, `standard` easing | Final lengths at once. | None. |
+| **Year-in-review paging** (iPhone: a tap on the trailing or leading side, or a swipe) | The current page fades out; the next fades in while sliding `shift` from the trailing edge (the previous page from the leading edge; right-to-left mirrors it). A swipe follows the finger, as the system's paging does. The progress segment for the new page fills. Pages never advance on their own. Each page's totals count and its bars fill as above. The web shows the year on one page, so it has no paging. | out `quick`; in `emphasized`; segment `standard` | Crossfade (`quick`); segments change at once. | `.selection` on each page change |
+| **Building the share card** (Share your year) | iOS: the system sheet; web: the dialog's motion. The image is made on the device as the sheet opens; until it's ready, a placeholder of the same size shows the system spinner, then the image crossfades in. Turning "Show amounts and names" on or off crossfades the image to the other version in place: same size, nothing moves. | sheet: system or `standard`; image `quick` | Sheet as reduced Sheets; the image swaps with a `quick` fade. | `.impact(weight: .light)` when the sheet opens; the switch plays the system's `.selection` |
+| **Sharing the card** (Share… on iOS; Copy image or Download on the web) | iOS: the system share sheet, with its own motion. Web: Copy image shows the saved toast "Image copied"; Download is the browser's own. | system; toast as Saving | System; toast as reduced Saving. | `.impact(weight: .light)` when the share sheet opens; `.success` when the share completes (not when it's cancelled) |
 ## Recurring suggestions and renewal reminders (MAZ-290)
 
 The [MAZ-290 cards](visual-acceptance.md#drafted-cards-recurring-suggestions-and-renewal-reminders-maz-290-2026-11-26) add four moments. Each one reuses a moment above, with the same tokens; nothing gets its own timing. A row never travels across the screen: when a suggestion becomes a schedule, it leaves Suggested and the schedule arrives in its group, so the movement stays short.
@@ -212,6 +226,11 @@ On iOS, **every action the person takes that animates also plays a haptic**, so 
 | Sync now / Retry finishes | `.success`, or `.error` if it failed |
 | **Navigation:** show or hide the iPad sidebar | `.impact(weight: .light)` |
 | Open an entry, a household or a trip (push, or the iPad detail column) | `.selection` |
+| **Recap and year in review:** dismiss the recap banner | `.impact(weight: .light)` |
+| Open the recap or the year in review (the banner, the Recap button, the Insights card) | `.selection` |
+| Page to the next or previous page of the year in review | `.selection` |
+| Open Share your year, or the system share sheet from it | `.impact(weight: .light)` |
+| The share completes (not when it's cancelled) | `.success` |
 
 Tabs switch with no animation, so they play no haptic either.
 

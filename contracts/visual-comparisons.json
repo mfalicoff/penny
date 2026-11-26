@@ -2616,6 +2616,227 @@
       }
     },
     {
+      "id": "iphone-recap",
+      "view": "October recap from Insights: spent compared with September and last October, money in and out, biggest category changes, shared and highlights",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-recap-empty",
+      "view": "recap of a month with no recorded entries",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-home-recap",
+      "view": "home in the first days of November with the October recap banner",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-insights-recap",
+      "view": "insights in the first days of November with the October recap banner and the recap button",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-recap-setting",
+      "view": "settings sheet with the monthly recap notification switch off",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "An iOS notification; the web shows the recap banner only."
+      }
+    },
+    {
+      "id": "iphone-recap-notification",
+      "view": "lock screen on November 1 with the generic recap notification",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "An iOS notification; the web shows the recap banner only."
+      }
+    },
+    {
+      "id": "iphone-year-review",
+      "view": "2026 in review, first page: top categories and the busiest month",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-year-review-trips",
+      "view": "2026 in review, trips page",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-year-review-shared",
+      "view": "2026 in review, shared expenses counted by who paid",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-year-review-facts",
+      "view": "2026 in review, fun facts page",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-year-review-share",
+      "view": "share your year sheet with amounts and names hidden",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-year-review-share-amounts",
+      "view": "share your year sheet with amounts and names shown",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "iphone-year-review-share-sheet",
+      "view": "the system share sheet with the year image",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "The system share sheet is iOS chrome; the web copies or downloads the image (web-year-review-share)."
+      }
+    },
+    {
+      "id": "iphone-insights-year-review",
+      "view": "insights on December 28 with the 2026 in review entry point",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
       "id": "iphone-entry-currency",
       "view": "add expense in euros: €85.00 cooking class, ≈ $124.20 CAD at the ECB rate for Nov 3",
       "native": {
@@ -4303,6 +4524,126 @@
           "dark"
         ],
         "note": "Captured with the server offering reports (the test stack has no collector, so /api/info is routed). The server name is the test stack's."
+      }
+    },
+    {
+      "id": "web-recap",
+      "view": "web October recap: spent compared with September and last October, money in and out, biggest category changes, shared and highlights",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-recap-empty",
+      "view": "web recap of a month with no recorded entries",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-home-recap",
+      "view": "web home in the first days of November with the October recap banner",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-insights-recap",
+      "view": "web insights in the first days of November with the October recap banner and the Recap button",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-year-review",
+      "view": "web 2026 in review: categories, busiest month, trips, who paid and fun facts",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-year-review-share",
+      "view": "web share your year dialog with amounts and names hidden",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-year-review-share-amounts",
+      "view": "web share your year dialog with amounts and names shown",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
+      }
+    },
+    {
+      "id": "web-insights-year-review",
+      "view": "web insights on December 28 with the 2026 in review entry point",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-292",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-292",
+        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
+        "followUp": "MAZ-292"
       }
     },
     {

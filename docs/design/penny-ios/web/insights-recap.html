@@ -1,0 +1,76 @@
+<!-- @dsCard group="Web" name="Insights: recap ready" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Insights: recap ready</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"sparkles":"<path d=\"M224 48c16 110 58 152 168 168-110 16-152 58-168 168-16-110-58-152-168-168 110-16 152-58 168-168zM400 336c6 40 24 58 64 64-40 6-58 24-64 64-6-40-24-58-64-64 40-6 58-24 64-64z\" fill=\"currentColor\"/>","share":"<path d=\"M336 192h40a40 40 0 0140 40v192a40 40 0 01-40 40H136a40 40 0 01-40-40V232a40 40 0 0140-40h40M336 128l-80-80-80 80M256 321V48\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","eye":"<path d=\"M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><circle cx=\"256\" cy=\"256\" r=\"80\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/>","eye-off":"<path d=\"M432 448L80 64M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","download":"<path d=\"M256 80v256M160 240l96 96 96-96M96 416h320\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .rbw { display: flex; align-items: center; gap: 14px; padding: 14px 14px 14px 16px; margin-bottom: 18px; }
+  .rbw .ri { width: 38px; height: 38px; border-radius: 11px; background: var(--tint-soft); color: var(--tint); display: grid; place-items: center; flex: none; }
+  .rbw .ri [data-i] { width: 20px; height: 20px; }
+  .rbw .t { flex: 1; } .rbw b { font-size: 15px; font-weight: 600; } .rbw span { display: block; font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .stats { display: flex; gap: 40px; margin-bottom: 18px; }
+  .stats div { font-size: 13px; color: var(--label-2); }
+  .stats b { display: block; font-size: 26px; font-weight: 700; color: var(--label); letter-spacing: -0.02em; margin-top: 2px; }
+  .low { display: grid; grid-template-columns: minmax(0,1fr) 400px; gap: 18px; margin-top: 18px; }
+  .months { display: flex; align-items: flex-end; gap: 18px; height: 150px; padding: 0 6px; }
+  .months .m { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--label-2); }
+  .months .bars { display: flex; gap: 4px; align-items: flex-end; height: 120px; }
+  .months .bars i { width: 14px; border-radius: 4px 4px 2px 2px; }
+  .delta { font-size: 13px; font-weight: 600; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="insights" data-url="penny.example.com/insights">
+  <main class="wmain">
+    <div class="wtop">
+      <h1>Insights</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="btn"><i data-i="sparkles" style="color:var(--tint)"></i>Recap</div>
+      <div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div class="panel rbw">
+        <div class="ri"><i data-i="sparkles"></i></div>
+        <div class="t"><b>Your October recap is ready</b><span>Where your money went last month, and what changed.</span></div>
+        <div class="btn">See recap</div>
+        <div class="btn icon" title="Dismiss"><i data-i="close"></i></div>
+      </div>
+            <div class="stats">
+        <div>Came in<b class="num">$3,200.00</b></div>
+        <div>Went out<b class="num">$2,083.35</b></div>
+        <div>Left over<b class="num">$1,116.65</b></div>
+        <div>vs October<b class="num" style="font-size:20px;margin-top:8px">$412 less spent</b></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h4>Follow your money</h4><span>Home selected · select a band or label to focus it, again to clear</span></div>
+        <div id="sankey" style="display:flex;justify-content:center"></div>
+          <div class="astable" style="margin-top:8px;font-size:13px;font-weight:600;color:var(--tint-text)">Show as a table</div>
+      </div>
+      <div class="low">
+        <div class="panel" style="padding:14px 8px">
+          <table class="tbl">
+            <thead><tr><th>Category</th><th class="r">November</th><th class="r">October</th><th class="r">Change</th><th class="r">Of spending</th></tr></thead>
+            <tbody>
+              <tr class="sel"><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Home</b></div></td><td class="r num"><b>$1,450.00</b></td><td class="r num muted">$1,450.00</td><td class="r num muted">—</td><td class="r num">77%</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Groceries</b></div></td><td class="r num"><b>$158.77</b></td><td class="r num muted">$302.40</td><td class="r num delta">↓ $143.63</td><td class="r num">8%</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><b>Transport</b></div></td><td class="r num"><b>$156.00</b></td><td class="r num muted">$124.00</td><td class="r num delta">↑ $32.00</td><td class="r num">8%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>Last 6 months</h4><span><i class="dot" style="background:var(--income)"></i> in &nbsp; <i class="dot" style="background:var(--label);opacity:.8"></i> spent</span></div>
+          <div class="months" id="months"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  drawSankey(document.getElementById("sankey"), { width: 1000, height: 330, band: 180, slot: 34, gap: 5, leftLabel: 140, rightLabel: 160, highlight: "home" });
+  const data = [["Jun",3200,2410],["Jul",3200,2650],["Aug",3650,2380],["Sep",3200,2210],["Oct",3200,2295],["Nov",3200,1883]];
+  document.getElementById("months").innerHTML = data.map(([m,i,s]) => '<div class="m"><div class="bars"><i style="height:'+(i/3700*120)+'px;background:var(--income)"></i><i style="height:'+(s/3700*120)+'px;background:var(--label);opacity:.8"></i></div>'+m+'</div>').join("");
+</script>
+</body></html>

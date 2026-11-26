@@ -192,6 +192,20 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-export-all` | `CardCaptureTests`, `AccountDataJourneyTests` | Settings › Profile › Export all your data once the real API has prepared the ZIP (name · size · ready, Save or share) (MAZ-152) | Covered |
 | `iphone-monitoring-prompt` | `CardCaptureTests` | Captured with `PENNY_STACK_TELEMETRY=1`: Home after a fresh sign-in on a server that offers reports asks once; PennyData's telemetry package tests cover the answer, opt-in, the demo and scrubbing (MAZ-129) | Covered |
 | `iphone-privacy` | `CardCaptureTests` | Captured with `PENNY_STACK_TELEMETRY=1`: Settings › Privacy with crash reports on and performance data off, and the server's privacy policy (MAZ-129) | Covered |
+| `iphone-recap` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-recap-empty` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-home-recap` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-insights-recap` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-recap-setting` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-recap-notification` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review-trips` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review-shared` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review-facts` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review-share` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review-share-amounts` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-year-review-share-sheet` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
+| `iphone-insights-year-review` | — | Draft card (MAZ-292), waiting for the owner's review; the feature isn't built yet (MAZ-292) | Gap: draft card, not built yet |
 | `ipad-profile` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
 | `ipad-recurring-suggested` | — | Card approved by the owner (MAZ-290, 2026-11-26); the feature isn't built yet | Gap: approved card, not built yet |
 | `web-profile` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-profile`; the browser journeys are MAZ-96 | Not applicable to native |
@@ -207,6 +221,14 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-export-all` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-export-all`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-privacy` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-privacy`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-monitoring-prompt` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-monitoring-prompt`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-recap` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-recap`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-recap-empty` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-recap-empty`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-home-recap` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-home-recap`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-insights-recap` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-insights-recap`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-year-review` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-year-review`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-year-review-share` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-year-review-share`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-year-review-share-amounts` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-year-review-share-amounts`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-insights-year-review` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-insights-year-review`; the browser journeys are MAZ-96 | Not applicable to native |
 | `iphone-entry-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
 | `iphone-currency-picker` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
 | `iphone-entry-rate-provisional` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |

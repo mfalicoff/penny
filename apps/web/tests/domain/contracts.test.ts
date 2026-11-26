@@ -153,9 +153,9 @@ test("design baseline traces every penny-ios card and design-kit control to feat
   // Cards: exactly the @dsCard files on disk, with their marker, viewport and hash.
   const cardFiles = ["iphone", "ipad", "web", "system"].flatMap((dir) =>
     readdirSync(new URL(`docs/design/penny-ios/${dir}/`, root)).filter((name) => name.endsWith(".html")).map((name) => `docs/design/penny-ios/${dir}/${name}`));
-  assert.equal(baseline.specimens.length, 191);
+  assert.equal(baseline.specimens.length, 213);
   assert.deepEqual(baseline.specimens.map((item: any) => item.sourcePath).sort(), cardFiles.sort());
-  assert.equal(new Set(baseline.specimens.map((item: any) => item.id)).size, 191);
+  assert.equal(new Set(baseline.specimens.map((item: any) => item.id)).size, 213);
   for (const item of baseline.specimens) {
     const [, dir, name] = item.sourcePath.match(/penny-ios\/(\w+)\/([\w-]+)\.html$/);
     assert.equal(item.id, `${dir}-${name}`, "stable id is <folder>-<file>");
@@ -167,7 +167,7 @@ test("design baseline traces every penny-ios card and design-kit control to feat
     if (item.platform === "Web") assert.match(item.webIssue, /^MAZ-\d+$/);
   }
   assert.deepEqual(Object.fromEntries(["iPhone", "iPad", "Web", "System"].map((platform) =>
-    [platform, baseline.specimens.filter((item: any) => item.platform === platform).length])), { iPhone: 106, iPad: 20, Web: 63, System: 2 });
+    [platform, baseline.specimens.filter((item: any) => item.platform === platform).length])), { iPhone: 120, iPad: 20, Web: 71, System: 2 });
 
   // Controls: exactly the documented design-kit components, at the source Claude Design syncs.
   const sync = JSON.parse(file(".design-sync/config.json").toString("utf8"));
