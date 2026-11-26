@@ -89,6 +89,12 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                     row.ReceiptId,
                     row.RecurringId
                 ))
+                .ToListAsync(cancellationToken),
+            await context
+                .LedgerDismissedSuggestions.AsNoTracking()
+                .Where(row => row.UserId == userId)
+                .OrderBy(row => row.Position)
+                .Select(row => row.Value)
                 .ToListAsync(cancellationToken)
         );
     }
@@ -188,6 +194,22 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                 Active = rule.Active,
             }),
             row => row.Id,
+            cancellationToken
+        );
+        // Dismissed suggestions (contract 2.3.0): keyed by value, a reorder updates positions.
+        await SyncAsync(
+            context.LedgerDismissedSuggestions,
+            userId,
+            ledger.DismissedSuggestions.Select(
+                (value, position) =>
+                    new LedgerDismissedSuggestion
+                    {
+                        UserId = userId,
+                        Value = value,
+                        Position = position,
+                    }
+            ),
+            row => row.Value,
             cancellationToken
         );
         // New entries and their search documents skip the change tracker and are copied

@@ -166,6 +166,82 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
+    public async Task whenDismissedSuggestionsSaved_LedgerFlow_ShouldReturnThemInOrderUntilOmitted()
+    {
+        var token = await RegisterAsync("owner@example.test");
+        var userId = await UserIdAsync("owner@example.test");
+        var snapshot = await GetAsync(token);
+        string[] first =
+        [
+            "expense|netflix|monthly|1699",
+            "expense|gym|monthly|4500",
+            "income|acme payroll|weekly|120000",
+        ];
+        snapshot["ledger"]!["dismissedSuggestions"] = new JsonArray([.. first.Select(Text)]);
+        using (var write = await PutAsync(token, snapshot))
+        {
+            write.StatusCode.ShouldBe(HttpStatusCode.OK);
+            Dismissed(await ReadNodeAsync(write)).ShouldBe(first);
+        }
+        using (var request = Authorized(HttpMethod.Get, "/api/ledger", bearer: token))
+        using (var response = await Client.SendAsync(request, Ct))
+        {
+            // The last ledger key, after `recurring`, in the order sent.
+            (await response.Content.ReadAsStringAsync(Ct)).ShouldEndWith(
+                "\"recurring\":[],\"dismissedSuggestions\":[\"expense|netflix|monthly|1699\",\"expense|gym|monthly|4500\",\"income|acme payroll|weekly|120000\"]}}"
+            );
+        }
+
+        // Reordered, one removed and one added: positions follow the new order.
+        var reordered = await GetAsync(token);
+        string[] second =
+        [
+            "income|acme payroll|weekly|120000",
+            "expense|netflix|monthly|1699",
+            "expense|spotify|monthly|1199",
+        ];
+        reordered["ledger"]!["dismissedSuggestions"] = new JsonArray([.. second.Select(Text)]);
+        (await PutAsync(token, reordered)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        Dismissed(await GetAsync(token)).ShouldBe(second);
+
+        // A duplicate is invalid and changes nothing.
+        var duplicate = await GetAsync(token);
+        duplicate["ledger"]!["dismissedSuggestions"]!.AsArray().Add("expense|netflix|monthly|1699");
+        await ShouldFailAsync(token, duplicate, Invalid);
+        Dismissed(await GetAsync(token)).ShouldBe(second);
+
+        // A ledger written without the field has none: it is omitted, and no rows remain.
+        var cleared = await GetAsync(token);
+        cleared["ledger"]!.AsObject().Remove("dismissedSuggestions");
+        using (var write = await PutAsync(token, cleared))
+        {
+            write.StatusCode.ShouldBe(HttpStatusCode.OK);
+            (await ReadNodeAsync(write))["ledger"]!
+                .AsObject()
+                .ContainsKey("dismissedSuggestions")
+                .ShouldBeFalse();
+        }
+        var reread = await GetAsync(token);
+        reread["revision"]!.GetValue<long>().ShouldBe(3);
+        reread["ledger"]!.AsObject().ContainsKey("dismissedSuggestions").ShouldBeFalse();
+        await using var context = PennyDbContext.Create(Fixture.Admin);
+        (
+            await context.LedgerDismissedSuggestions.CountAsync(
+                suggestion => suggestion.UserId == userId,
+                Ct
+            )
+        ).ShouldBe(0);
+
+        static JsonNode? Text(string value) => JsonValue.Create(value);
+        static List<string> Dismissed(JsonNode snapshot) =>
+            [
+                .. snapshot["ledger"]!["dismissedSuggestions"]!
+                    .AsArray()
+                    .Select(value => value!.GetValue<string>()),
+            ];
+    }
+
+    [Fact]
     public async Task whenSessionMissing_LedgerFlow_ShouldRequireSignIn()
     {
         using var read = await Client.GetAsync("/api/ledger", Ct);

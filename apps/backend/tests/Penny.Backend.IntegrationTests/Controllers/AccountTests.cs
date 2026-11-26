@@ -44,6 +44,8 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
                 ["uri"] = "/api/receipts/" + receiptId,
             };
         snapshot["ledger"]!["transactions"]!.AsArray().Add(entry);
+        // Ledger data outside the lists goes with the account too (contract 2.3.0).
+        snapshot["ledger"]!["dismissedSuggestions"] = new JsonArray("expense|lunch|monthly|1250");
         using var saved = await PutLedgerAsync(token, snapshot);
         saved.StatusCode.ShouldBe(HttpStatusCode.OK);
         return snapshot["ledger"]!["categories"]![0]!["name"]!.GetValue<string>();
@@ -157,6 +159,7 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
                 "ledger_entries",
                 "ledger_accounts",
                 "ledger_categories",
+                "ledger_dismissed_suggestions",
                 "receipts",
                 "sessions",
                 "search_documents",

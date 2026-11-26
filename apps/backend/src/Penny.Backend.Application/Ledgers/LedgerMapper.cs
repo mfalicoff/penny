@@ -70,7 +70,8 @@ internal static class LedgerMapper
                     entry.Receipt?.Id,
                     entry.RecurringId
                 )),
-            ]
+            ],
+            [.. ledger.DismissedSuggestions]
         );
 
     public static LedgerDocument ToDocument(
@@ -122,7 +123,8 @@ internal static class LedgerMapper
                     rule.AnchorDay,
                     rule.Active
                 )),
-            ]
+            ],
+            [.. ledger.DismissedSuggestions]
         );
 
     // A stored entry with its receipt's name and MIME (search results use it too).

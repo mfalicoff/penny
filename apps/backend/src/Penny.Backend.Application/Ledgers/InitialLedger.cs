@@ -24,5 +24,5 @@ public static class InitialLedger
         new("investments", "Investments", "trending-up-outline", "#678DB1", "investment"),
     ];
 
-    public static StoredLedger Create() => new(0, Currency, [], Categories, [], [], []);
+    public static StoredLedger Create() => new(0, Currency, [], Categories, [], [], [], []);
 }

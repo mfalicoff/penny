@@ -56,7 +56,8 @@ Since contract 2.3.0 a ledger may carry `dismissedSuggestions`: the recurring su
 - At most 500 items, each 1–200 characters, no duplicates, oldest first; the apps keep the newest 500. The server stores the list in order and doesn't read it.
 - Offline, the apps merge it as a set union: both sides' dismissals are kept, except one this device undid (golden cases `dismissals:` in `contracts/fixtures/merge-conflicts.json`).
 - It is optional, so ledgers written before contract 2.3.0 stay valid and read back unchanged. A server before 2.3.0 rejects a ledger that carries it (`400 Invalid ledger data.`), so deploy the API before the clients that send it. A client before 2.3.0 drops it when it saves, so its dismissed suggestions show again.
-- Storage: STORAGE_TBD.
+- An empty list and no list are stored the same way, so the response leaves the field out when there are none.
+- Storage: `ledger_dismissed_suggestions`, one row per item (`value`, keyed with the user, and its `position`), with the length and count limits as check constraints.
 
 ## Error codes
 

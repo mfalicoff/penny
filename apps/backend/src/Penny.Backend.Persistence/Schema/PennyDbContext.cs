@@ -28,6 +28,8 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<LedgerTrip> LedgerTrips => Set<LedgerTrip>();
     public DbSet<LedgerRecurring> LedgerRecurring => Set<LedgerRecurring>();
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    public DbSet<LedgerDismissedSuggestion> LedgerDismissedSuggestions =>
+        Set<LedgerDismissedSuggestion>();
     public DbSet<HouseholdRecurring> HouseholdRecurring => Set<HouseholdRecurring>();
     public DbSet<HouseholdRecurringAllocation> HouseholdRecurringAllocations =>
         Set<HouseholdRecurringAllocation>();
