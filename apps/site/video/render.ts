@@ -20,8 +20,6 @@ const here = import.meta.dirname;
 const out = join(here, "out");
 const assets = resolve(here, "../src/assets/clips");
 const ffmpeg = process.env.FFMPEG ?? "ffmpeg";
-/** Clips with a composition in src/Root.tsx. */
-const COMPOSED = new Set(["insights", "apps"]);
 
 function run(command: string, args: string[]) {
   // SVT_LOG=1: SVT-AV1 prints its configuration unless told to report errors only.
@@ -74,10 +72,6 @@ mkdirSync(assets, { recursive: true });
 const problems: string[] = [];
 for (const clip of CLIPS) {
   if (requested.length > 0 && !requested.includes(clip.id)) continue;
-  if (!COMPOSED.has(clip.id)) {
-    console.log(`${clip.id}: no composition yet (recorded on the Mac from the iOS simulator), skipped`);
-    continue;
-  }
   if (!existsSync(join(here, "captures", clip.id, "capture.json"))) {
     console.log(`${clip.id}: no capture, skipped (run \`npm run capture:${clip.source}\` first)`);
     continue;
