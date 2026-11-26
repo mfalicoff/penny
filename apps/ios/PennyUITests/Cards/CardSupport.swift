@@ -152,7 +152,8 @@ class CardTestCase: PennyUITestCase {
             // The iPad cards are drawn in landscape (1290×914 in contracts/design-baseline.json),
             // except the few drawn in portrait.
             if state.platform == "iPad" { XCUIDevice.shared.orientation = portrait ? .portrait : .landscapeLeft }
-            var options = LaunchOptions()
+            // Captures run with motion off, so nothing is captured mid-way (MAZ-287).
+            var options = LaunchOptions.capture
             options.seed = ContainerSeed(
                 standardDefaults: defaults.merging(["penny.appearance": followsSystem ? "system" : appearance]) { $1 })
             options.standInFaceID = standInFaceID

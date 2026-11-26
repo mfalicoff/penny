@@ -226,139 +226,143 @@ struct HouseholdPage: View {
 
     var body: some View {
         let trip = self.trip
-        columns(trip: trip)
-            .onGeometryChange(for: Double.self) {
-                $0.size.width
-            } action: {
-                width = $0
-            }
-            .overlay {
-                if model.household == nil {
-                    switch model.load {
-                    case .failed(let failure):
-                        PennyStateView(
-                            failure.kind == .offline ? .offline : .error,
-                            title: failure.kind == .membership
-                                ? (isTrip ? "Trip not available" : "Household not available")
-                                : "Couldn't open the \(noun)",
-                            message: failure.kind == .membership
-                                ? "You may have left it, been removed, or it doesn't exist on this server."
-                                : failure.message, actionTitle: failure.canRetry ? "Try again" : nil,
-                            action: { Task { await model.refresh() } })
-                    default:
-                        PennyStateView(.loading, title: "Opening the \(noun)…")
-                    }
+        // The month's content slides in from the side its month comes from (MAZ-287).
+        ZStack {
+            columns(trip: trip).pennyMonthContent(model.month, earlier: model.monthMovedEarlier)
+        }
+        .pennyHaptic(.stepPeriod, trigger: model.month)
+        .onGeometryChange(for: Double.self) {
+            $0.size.width
+        } action: {
+            width = $0
+        }
+        .overlay {
+            if model.household == nil {
+                switch model.load {
+                case .failed(let failure):
+                    PennyStateView(
+                        failure.kind == .offline ? .offline : .error,
+                        title: failure.kind == .membership
+                            ? (isTrip ? "Trip not available" : "Household not available")
+                            : "Couldn't open the \(noun)",
+                        message: failure.kind == .membership
+                            ? "You may have left it, been removed, or it doesn't exist on this server."
+                            : failure.message, actionTitle: failure.canRetry ? "Try again" : nil,
+                        action: { Task { await model.refresh() } })
+                default:
+                    PennyStateView(.loading, title: "Opening the \(noun)…")
                 }
             }
-            .refreshable {
-                await model.refresh()
+        }
+        .refreshable {
+            await model.refresh()
+            await refreshTrip()
+        }
+        .task {
+            model.followCurrentMonth(MonthKey(shell.today))
+            await model.refresh()
+            await refreshTrip()
+        }
+        .onChange(of: model.writeCount) {
+            Task {
+                await shell.refreshShared()
                 await refreshTrip()
             }
-            .task {
-                model.followCurrentMonth(MonthKey(shell.today))
-                await model.refresh()
-                await refreshTrip()
+        }
+        // A schedule opened from Recurring: its form, once the rules have been read.
+        .onChange(of: "\(model.requestedRuleID ?? "")|\(model.rules.count)", initial: true) { openRequestedRule() }
+        .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
+        .toolbar {
+            // The cards draw no inline title: the hero (or, on Balances and People, a row under the
+            // bar) names the household, and the month pill sits beside Back. Pushed pages still go
+            // back to the name.
+            if model.household != nil {
+                ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
             }
-            .onChange(of: model.writeCount) {
-                Task {
-                    await shell.refreshShared()
-                    await refreshTrip()
+        }
+        .sheet(isPresented: $editingTrip) {
+            if let household = model.household {
+                TripFormSheet(target: .shared(household), expenseCount: 0) { _ in }.environment(shell)
+            }
+        }
+        .toolbar {
+            // The month pill (MAZ-264): beside Back on iPhone (`iphone-shared`,
+            // `iphone-shared-balances`); between previous and next over both panes on iPad
+            // (`ipad-shared`).
+            if showsMonthPill {
+                if isTwoColumn {
+                    ToolbarItem(placement: .besideBack) { HouseholdMonthStep(model: model, offset: -1) }
+                    ToolbarSpacer(.fixed, placement: .besideBack)
+                    ToolbarItem(placement: .besideBack) { HouseholdMonthPicker(model: model, showsYear: true) }
+                    ToolbarSpacer(.fixed, placement: .besideBack)
+                    ToolbarItem(placement: .besideBack) { HouseholdMonthStep(model: model, offset: 1) }
+                } else {
+                    ToolbarItem(placement: .besideBack) { HouseholdMonthPicker(model: model) }
                 }
             }
-            // A schedule opened from Recurring: its form, once the rules have been read.
-            .onChange(of: "\(model.requestedRuleID ?? "")|\(model.rules.count)", initial: true) { openRequestedRule() }
-            .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
-            .toolbar {
-                // The cards draw no inline title: the hero (or, on Balances and People, a row under the
-                // bar) names the household, and the month pill sits beside Back. Pushed pages still go
-                // back to the name.
-                if model.household != nil {
-                    ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
-                }
-            }
-            .sheet(isPresented: $editingTrip) {
-                if let household = model.household {
-                    TripFormSheet(target: .shared(household), expenseCount: 0) { _ in }.environment(shell)
-                }
-            }
-            .toolbar {
-                // The month pill (MAZ-264): beside Back on iPhone (`iphone-shared`,
-                // `iphone-shared-balances`); between previous and next over both panes on iPad
-                // (`ipad-shared`).
-                if showsMonthPill {
-                    if isTwoColumn {
-                        ToolbarItem(placement: .besideBack) { HouseholdMonthStep(model: model, offset: -1) }
-                        ToolbarSpacer(.fixed, placement: .besideBack)
-                        ToolbarItem(placement: .besideBack) { HouseholdMonthPicker(model: model, showsYear: true) }
-                        ToolbarSpacer(.fixed, placement: .besideBack)
-                        ToolbarItem(placement: .besideBack) { HouseholdMonthStep(model: model, offset: 1) }
-                    } else {
-                        ToolbarItem(placement: .besideBack) { HouseholdMonthPicker(model: model) }
+            if showsHistoryButton {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
+                        Label("History", systemImage: "clock")
                     }
+                    .neutralToolbarGlyph()
+                    .accessibilityIdentifier("household.history")
                 }
-                if showsHistoryButton {
-                    ToolbarItem(placement: .primaryAction) {
-                        NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
-                            Label("History", systemImage: "clock")
-                        }
+            }
+            if showsInviteButton {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
                         .neutralToolbarGlyph()
-                        .accessibilityIdentifier("household.history")
-                    }
+                        .accessibilityIdentifier("household.invite")
                 }
-                if showsInviteButton {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
-                            .neutralToolbarGlyph()
-                            .accessibilityIdentifier("household.invite")
-                    }
-                }
-                if showsMoreMenu {
-                    ToolbarItem(placement: .primaryAction) { moreMenu }
-                }
-                // `ipad-shared`: + Expense is the copper action beside History and Invite;
-                // `ipad-trip`: Trip expense after Invite and the … menu.
-                if isTwoColumn, !model.isReadOnly, model.household != nil {
-                    ToolbarSpacer(.fixed, placement: .primaryAction)
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            addExpense()
-                        } label: {
-                            // Words beside the glyph, as on the card: a toolbar Label would show the glyph only.
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus")
-                                Text(trip == nil ? "Expense" : "Trip expense")
-                            }
-                            .fontWeight(.semibold)
+            }
+            if showsMoreMenu {
+                ToolbarItem(placement: .primaryAction) { moreMenu }
+            }
+            // `ipad-shared`: + Expense is the copper action beside History and Invite;
+            // `ipad-trip`: Trip expense after Invite and the … menu.
+            if isTwoColumn, !model.isReadOnly, model.household != nil {
+                ToolbarSpacer(.fixed, placement: .primaryAction)
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        addExpense()
+                    } label: {
+                        // Words beside the glyph, as on the card: a toolbar Label would show the glyph only.
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus")
+                            Text(trip == nil ? "Expense" : "Trip expense")
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(PennyColor.tint)
-                        .accessibilityIdentifier("household.addExpense")
+                        .fontWeight(.semibold)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(PennyColor.tint)
+                    .accessibilityIdentifier("household.addExpense")
                 }
             }
-            .sheet(item: $form) { request in
-                SharedExpenseFormSheet(request: request, model: model).environment(shell)
-            }
-            .sheet(item: $payment) { request in
-                PaymentSheet(request: request, model: model, now: shell.now)
-            }
-            .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
-                InviteEntrySheet(model: model).environment(shell)
-            }
-            .alert("Rename household", isPresented: $renaming) {
-                TextField("Name", text: $newName)
-                Button("Rename") { Task { _ = await model.rename(newName) } }
-                Button("Cancel", role: .cancel) {}
-            }
-            .confirmationDialog(
-                confirmTitle, isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
-                titleVisibility: .visible, presenting: confirm
-            ) { confirmation in
-                Button(confirmButton(confirmation), role: .destructive) { Task { await run(confirmation) } }
-                Button("Cancel", role: .cancel) {}
-            } message: { confirmation in
-                Text(confirmMessage(confirmation))
-            }
+        }
+        .sheet(item: $form) { request in
+            SharedExpenseFormSheet(request: request, model: model).environment(shell)
+        }
+        .sheet(item: $payment) { request in
+            PaymentSheet(request: request, model: model, now: shell.now)
+        }
+        .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
+            InviteEntrySheet(model: model).environment(shell)
+        }
+        .alert("Rename household", isPresented: $renaming) {
+            TextField("Name", text: $newName)
+            Button("Rename") { Task { _ = await model.rename(newName) } }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog(
+            confirmTitle, isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
+            titleVisibility: .visible, presenting: confirm
+        ) { confirmation in
+            Button(confirmButton(confirmation), role: .destructive) { Task { await run(confirmation) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { confirmation in
+            Text(confirmMessage(confirmation))
+        }
     }
 
     // MARK: Columns
@@ -599,6 +603,7 @@ struct HouseholdPage: View {
                 .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
             Text(MoneyFormat.amount(abs(balance), currency: model.currency))
                 .modifier(HeroAmountFont())
+                .pennyCounting(Double(balance))
                 .foregroundStyle(
                     balance > 0 ? PennyColor.income : balance < 0 ? PennyColor.label : PennyColor.secondaryLabel
                 )

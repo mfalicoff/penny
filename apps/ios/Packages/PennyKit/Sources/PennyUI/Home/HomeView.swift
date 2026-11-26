@@ -16,6 +16,8 @@ import SwiftUI
 /// Activity or spending. Shared household rows count once, at the viewer's share.
 struct HomeView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var width: Double = 0
@@ -37,19 +39,35 @@ struct HomeView: View {
                     DemoBanner()
                     SharedProjectionNotice()
                     ReceiptInboxHomeRow()
-                    if Self.isEmpty(ledger: ledger, report: report) {
-                        EmptyHomeContent(currency: currency)
-                    } else if dashboard {
-                        HomeDashboard(
-                            report: report, summary: summary, currency: currency, width: width, portrait: portrait)
-                    } else {
-                        HomeHero(summary: summary, currency: currency)
-                        ExpectedIncomeCard(summary: summary, currency: currency, today: shell.today)
-                        FlowSummaryCard(flow: MoneyFlow(summary, categories: report.categories), currency: currency)
-                        RecentSection(report: report, summary: summary)
-                        ExploreSection(report: report, summary: summary, currency: currency)
+                    // The month's content slides in from the side its month comes from (MAZ-287); the
+                    // month control in the bar doesn't move. The ZStack lets old and new overlap.
+                    ZStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 20) {
+                            if Self.isEmpty(ledger: ledger, report: report) {
+                                EmptyHomeContent(currency: currency)
+                            } else if dashboard {
+                                HomeDashboard(
+                                    report: report, summary: summary, currency: currency, width: width,
+                                    portrait: portrait)
+                            } else {
+                                HomeHero(summary: summary, currency: currency)
+                                ExpectedIncomeCard(summary: summary, currency: currency, today: shell.today)
+                                FlowSummaryCard(
+                                    flow: MoneyFlow(summary, categories: report.categories), currency: currency)
+                                RecentSection(report: report, summary: summary)
+                                ExploreSection(report: report, summary: summary, currency: currency)
+                            }
+                        }
+                        .id(shell.month)
+                        .transition(
+                            Motion.monthTransition(
+                                earlier: shell.monthMovedEarlier, layoutDirection: layoutDirection,
+                                reduceMotion: reduceMotion))
                     }
                 }
+                // The offline and couldn't-sync banners slide down `nudge` and fade in, and the page
+                // makes room for them.
+                .animation(Motion.animation(.standard, reduceMotion: reduceMotion), value: shell.workspace.sync)
                 // The tinted glow behind the hero (MAZ-180), dimmed on the empty Home as on its card.
                 .heroGlow(opacity: Self.isEmpty(ledger: ledger, report: report) ? 0.6 : 1)
                 .padding(.horizontal, Metrics.gutter)
@@ -332,14 +350,20 @@ struct FlowSummaryCard: View {
 
     @ViewBuilder
     private var legend: some View {
-        LegendItem(title: "Spent", amount: MoneyFormat.whole(flow.expense, currency: currency), dot: Self.spentColor)
         LegendItem(
-            title: "Invested", amount: MoneyFormat.whole(flow.investment, currency: currency), dot: PennyColor.invest)
+            title: "Spent", amount: MoneyFormat.whole(flow.expense, currency: currency), dot: Self.spentColor,
+            value: flow.expense)
+        LegendItem(
+            title: "Invested", amount: MoneyFormat.whole(flow.investment, currency: currency), dot: PennyColor.invest,
+            value: flow.investment)
         if flow.gap > 0 {
-            LegendItem(title: "Over", amount: MoneyFormat.whole(flow.gap, currency: currency), dot: Self.spentColor)
+            LegendItem(
+                title: "Over", amount: MoneyFormat.whole(flow.gap, currency: currency), dot: Self.spentColor,
+                value: flow.gap)
         } else {
             LegendItem(
-                title: "Left", amount: MoneyFormat.whole(flow.remaining, currency: currency), dot: PennyColor.income)
+                title: "Left", amount: MoneyFormat.whole(flow.remaining, currency: currency), dot: PennyColor.income,
+                value: flow.remaining)
         }
     }
 
@@ -385,12 +409,15 @@ struct LegendItem: View {
     let title: String
     let amount: String
     let dot: Color
+    /// The amount's value, so a total counts to its new value (MAZ-287).
+    var value: Int64 = 0
 
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(dot).frame(width: 8, height: 8).accessibilityHidden(true)
             Text(title).foregroundStyle(PennyColor.secondaryLabel)
             Text(amount).fontWeight(.semibold).monospacedDigit().foregroundStyle(PennyColor.label)
+                .pennyCounting(Double(value))
         }
         .fixedSize()
         .accessibilityElement(children: .combine)
@@ -399,6 +426,7 @@ struct LegendItem: View {
 
 /// A proportional bar; meaning is also given in text next to it, never by color alone.
 struct FlowBar: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let segments: [(Int64, Color)]
 
     var body: some View {
@@ -416,6 +444,8 @@ struct FlowBar: View {
         }
         .frame(height: 12)
         .clipShape(RoundedRectangle(cornerRadius: 6))
+        // The segments move to their new widths together (`emphasized`), at once under Reduce Motion.
+        .animation(Motion.movement(.emphasized, reduceMotion: reduceMotion), value: segments.map(\.0))
         .accessibilityHidden(true)
     }
 }
@@ -1012,6 +1042,8 @@ struct DailySpendingPanel: View {
                 }
             }
             .frame(minHeight: 140, idealHeight: 140, maxHeight: 480)
+            // Bars grow or shrink to their new heights.
+            .pennyChartMotion(calendar.days.map(\.spent))
         }
         // As tall as the panel beside it on the dashboard, the bars growing with it.
         .frame(maxHeight: .infinity, alignment: .top)
@@ -1109,6 +1141,8 @@ struct CategoryPanel: View {
                 Text(more).font(.footnote).monospacedDigit().foregroundStyle(PennyColor.secondaryLabel)
             }
         }
+        // Bars move to their new lengths and the list reorders.
+        .pennyChartMotion(breakdown.rows.map { [$0.category.id: $0.amount] })
         .frame(maxHeight: .infinity, alignment: .top)
         .pennyCard()
         .accessibilityElement(children: .contain)

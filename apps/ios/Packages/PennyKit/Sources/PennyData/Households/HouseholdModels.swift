@@ -175,6 +175,8 @@ public final class HouseholdModel {
     public private(set) var detail: WireHouseholdDetail?
     public private(set) var people: HouseholdPeople
     public private(set) var month: MonthKey
+    /// Whether the last month change went to an earlier month, for the slide of the page.
+    public private(set) var monthMovedEarlier = false
     public private(set) var recap: WireMonthRecap?
     public private(set) var rules: [WireSharedRule] = []
     /// Each past month still waiting for payments, other than the one on screen, with its own
@@ -340,6 +342,7 @@ public final class HouseholdModel {
     public func show(month next: MonthKey, current: MonthKey? = nil) async {
         guard next != month else { return }
         chosenDuring = current ?? chosenDuring ?? month
+        monthMovedEarlier = next < month
         month = next
         monthGeneration += 1
         let generation = monthGeneration

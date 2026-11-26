@@ -40,6 +40,7 @@ final class ScreenshotTests: PennyUITestCase {
             XCUIDevice.shared.appearance = appearance
             for variant in Self.variants {
                 var options = LaunchOptions()
+                options.disablesAnimations = true
                 options.usesStack = false
                 options.demo = true
                 options.contentSize = variant.contentSize
@@ -68,6 +69,7 @@ final class ScreenshotTests: PennyUITestCase {
             XCUIDevice.shared.appearance = appearance
             for variant in Self.variants where variant.name == "default" || variant.name == "large-text" {
                 var options = LaunchOptions()
+                options.disablesAnimations = true
                 options.usesStack = false
                 options.demo = true
                 options.contentSize = variant.contentSize
@@ -94,6 +96,7 @@ final class ScreenshotTests: PennyUITestCase {
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             XCUIDevice.shared.appearance = appearance
             var options = LaunchOptions()
+            options.disablesAnimations = true
             options.seed = Self.appearanceSeed(appearance)
             let penny = try await launch(options)
             try penny.wait(for: AccessibilityID.Auth.email)
