@@ -17,6 +17,9 @@ public sealed class CapturingCollector : HttpMessageHandler
 
     public HttpStatusCode Status { get; set; } = HttpStatusCode.Accepted;
 
+    // The answer's body, for refusals that explain themselves (Grafana Cloud's Faro collector).
+    public string ResponseBody { get; set; } = "";
+
     public int Count => received.Reader.Count;
 
     public async Task<Captured> NextAsync(CancellationToken cancellationToken)
@@ -48,6 +51,6 @@ public sealed class CapturingCollector : HttpMessageHandler
             new Captured(request.RequestUri!, headers, body),
             cancellationToken
         );
-        return new HttpResponseMessage(Status);
+        return new HttpResponseMessage(Status) { Content = new StringContent(ResponseBody) };
     }
 }
