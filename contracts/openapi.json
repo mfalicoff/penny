@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny API",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "description": "The HTTP API that the .NET backend serves and the iOS and web apps call. See docs/reference/.",
     "license": {
       "name": "MIT",
@@ -8198,6 +8198,17 @@
               "$ref": "#/components/schemas/Recurring"
             },
             "maxItems": 1000
+          },
+          "dismissedSuggestions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "maxItems": 500,
+            "uniqueItems": true,
+            "description": "Contract 2.3.0. Recurring suggestions the person dismissed on any device, oldest first, as `{kind}|{key}|{frequency}|{share}`. The apps detect suggestions on the device and merge this list offline as a set union; the server stores it in order and never reads it. Optional: absent means none, and ledgers written before 2.3.0 stay valid."
           }
         },
         "required": [
