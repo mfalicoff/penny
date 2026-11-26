@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "5cefdc0a05da15e5d3189db0b100c51a57f914a44ee6bbc6179eefc6dfad9310"
+      "sha256": "0f98200d78dfa2820295afadf175a7bcb21691f9dfc9f8fa90260716da4bfa2f"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "d081fda8fc40893fb1a21a494b3f831f482fe4bc83f140b3d32455bd8eb24499"
+      "sha256": "3a186cdb6d939c77a7ba8c5ae50889cf549315d987b125e486e8f2e25ef17f5e"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "9c3a127e0852d23ae619746542214c86982ccd035580f2e7558cefcaee57b45b"
+      "sha256": "128f17487511633652103a6261f2b265e6d9512e7c2e880db66ed237dc07498a"
     }
   ],
   "tokens": {
@@ -1881,6 +1881,190 @@
       "status": "planned"
     },
     {
+      "id": "iphone-recurring-suggested",
+      "name": "Recurring · Suggested",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recurring-suggested.html",
+      "sha256": "939f575cce5eedc9b076351f9033b165eb210e5b15d555f509aa08678fe1d24c",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-recurring-empty",
+      "name": "Recurring · Empty",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recurring-empty.html",
+      "sha256": "d1c6e73a6151cc4f957ee76012c9c2218c87b34c6e94f8d00ecd0b9e9b9f7e6a",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-schedule-suggested",
+      "name": "New schedule · From a suggestion",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/schedule-suggested.html",
+      "sha256": "f595b57dfea1a73ed039944945e9951a2fc141b857baad4b22781953db0b9d86",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-suggestion-dismiss",
+      "name": "Dismiss suggestion",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/suggestion-dismiss.html",
+      "sha256": "62e981a4b5a9929c3c01f5a1b1cc85eac679af2035177735169f36531b4f5289",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-suggestion-dismissed-toast",
+      "name": "Suggestion dismissed",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/suggestion-dismissed-toast.html",
+      "sha256": "a62797e068f8d030704a37fc2b3357df128af270cfe5bbcfe1ae2ee19c7f01a5",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-recurring-renews-soon",
+      "name": "Recurring · Renews soon",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recurring-renews-soon.html",
+      "sha256": "44992895b4eb37160cb4f936704d8b3dd3333498f2dd9c17fe92c04aaf3cfdba",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "yearly renewal reminder 3 days before, follows pause, remove and edit; private Lock Screen text unless opted in"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-schedule-reminder",
+      "name": "Schedule · Renewal reminder",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/schedule-reminder.html",
+      "sha256": "55198ec945559471eb0be66621866f00d2cfc58a1c06560aa704b8096ac7eb91",
+      "nativeIssue": "MAZ-290",
+      "webIssue": null,
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "yearly renewal reminder 3 days before, follows pause, remove and edit; private Lock Screen text unless opted in"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-renewal-notification",
+      "name": "Renewal reminder · Lock Screen",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/renewal-notification.html",
+      "sha256": "8a075e3699b4b89980be90c2f91ba2205e3e1c1dff14ccecb537c996661e184d",
+      "nativeIssue": "MAZ-290",
+      "webIssue": null,
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "yearly renewal reminder 3 days before, follows pause, remove and edit; private Lock Screen text unless opted in"
+      },
+      "status": "planned"
+    },
+    {
       "id": "iphone-currency",
       "name": "Currency",
       "group": "iPhone",
@@ -2804,6 +2988,29 @@
       "status": "planned"
     },
     {
+      "id": "ipad-recurring-suggested",
+      "name": "Recurring · Suggested",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/recurring-suggested.html",
+      "sha256": "1d763ba04232888b1a80ae41bb8f1e0a8bb6ff466a62ebd4da0efdf6d86c46ac",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
       "id": "web-home",
       "name": "Home dashboard",
       "group": "Web",
@@ -3171,6 +3378,144 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "cadence, next date, pause and remove, anchor-31 rules"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-recurring-suggested",
+      "name": "Recurring · Suggested",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/recurring-suggested.html",
+      "sha256": "cc3c7fc706109b7525027125492460c315d28462317467bfbbae7a8030c4ef7f",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-recurring-empty",
+      "name": "Recurring · Empty",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/recurring-empty.html",
+      "sha256": "f9ace10f0bacb725f3539b94b6ad8fd8f8e14973de393890b3882ed6a775ab81",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-schedule-suggested",
+      "name": "New schedule · From a suggestion",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/schedule-suggested.html",
+      "sha256": "69dc678b3486fb2b1d597372ef879ebc02d6422e9d92be55e242b6d82242e383",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-suggestion-dismiss",
+      "name": "Dismiss suggestion",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/suggestion-dismiss.html",
+      "sha256": "9697eee387c9c04fb824f317e653b957fda228b5f619a3508c229904fe5786b8",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-suggestion-dismissed-toast",
+      "name": "Suggestion dismissed",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/suggestion-dismissed-toast.html",
+      "sha256": "ba00b3060bb93743045f822d4def6ac6b3315e8cf37d92782a3e0c369d814ee4",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-recurring-renews-soon",
+      "name": "Recurring · Renews soon",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/recurring-renews-soon.html",
+      "sha256": "476493ceeccb7d70fa49966d7bed53f8de04b06bead95478717132363d2715e8",
+      "nativeIssue": "MAZ-290",
+      "webIssue": "MAZ-290",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "yearly renewal reminder 3 days before, follows pause, remove and edit; private Lock Screen text unless opted in"
       },
       "status": "planned"
     },

@@ -140,6 +140,14 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-trip-personal` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-trip-share` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-schedule-form` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-recurring-suggested` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-recurring-empty` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-schedule-suggested` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-suggestion-dismiss` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-suggestion-dismissed-toast` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-recurring-renews-soon` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-schedule-reminder` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
+| `iphone-renewal-notification` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
 | `iphone-currency` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-sync-failed` | `CardCaptureTests` | The amber "Couldn't sync · N changes waiting" banner with Retry while the ledger answers 503; the changes stay on the device | Partly: captured on its card; no journey test taps Retry while the server fails |
 | `iphone-shared-missing` | `CardCaptureTests` | The amber "Shared expenses may be missing" banner with Retry while the household projection answers 503 | Partly: captured on its card; no journey test taps Retry |
@@ -153,6 +161,12 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-categories` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-categories`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-currency` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-currency`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-schedule-form` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-schedule-form`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-recurring-suggested` | — | Web-only draft reference (MAZ-290): native behavior is traced through `iphone-recurring-suggested`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-recurring-empty` | — | Web-only draft reference (MAZ-290): native behavior is traced through `iphone-recurring-empty`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-schedule-suggested` | — | Web-only draft reference (MAZ-290): native behavior is traced through `iphone-schedule-suggested`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-suggestion-dismiss` | — | Web-only draft reference (MAZ-290): native behavior is traced through `iphone-suggestion-dismiss`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-suggestion-dismissed-toast` | — | Web-only draft reference (MAZ-290): native behavior is traced through `iphone-suggestion-dismissed-toast`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-recurring-renews-soon` | — | Web-only draft reference (MAZ-290): native behavior is traced through `iphone-recurring-renews-soon`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-edit-entry` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-edit-entry`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-join-code` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-join-code`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-activity-searching` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-activity-searching`; the browser journeys are MAZ-96 | Not applicable to native |
@@ -181,6 +195,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-monitoring-prompt` | `CardCaptureTests` | Captured with `PENNY_STACK_TELEMETRY=1`: Home after a fresh sign-in on a server that offers reports asks once; PennyData's telemetry package tests cover the answer, opt-in, the demo and scrubbing (MAZ-129) | Covered |
 | `iphone-privacy` | `CardCaptureTests` | Captured with `PENNY_STACK_TELEMETRY=1`: Settings › Privacy with crash reports on and performance data off, and the server's privacy policy (MAZ-129) | Covered |
 | `ipad-profile` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
+| `ipad-recurring-suggested` | — | Draft card (MAZ-290), waiting for the owner's review; the feature isn't built yet (MAZ-290) | Gap: draft card, not built yet |
 | `web-profile` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-profile`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-sign-in-providers` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-sign-in-providers`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-create-account` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-create-account-providers`; the browser journeys are MAZ-96 | Not applicable to native |
