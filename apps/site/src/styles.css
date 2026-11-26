@@ -1,34 +1,5 @@
 /* Penny product page. Dark appearance tokens from contracts/design-baseline.json. */
-@font-face {
-  /* Inter (OFL 1.1, design-kit/fonts), subset to Latin; licence at /licenses/Inter-OFL.txt. */
-  font-family: "Inter";
-  src: url("./assets/fonts/inter-latin.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-
-:root {
-  --font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  --bg: #000;
-  --surface: #1a1918;
-  --surface-2: #232220;
-  --label: #f6f4f1;
-  --label-2: #a39e97;
-  --label-3: #6d6863;
-  --separator: rgba(255, 250, 240, 0.12);
-  --tint: #ff6f3f;
-  --tint-text: #ff8a5e;
-  --tint-soft: rgba(255, 111, 63, 0.16);
-  --income: #3dd07a;
-  --invest: #8e8bff;
-  --glass: rgba(40, 38, 36, 0.55);
-  --glass-edge: rgba(255, 255, 255, 0.12);
-  --glow-1: rgba(255, 100, 50, 0.42);
-  --glow-2: rgba(255, 160, 80, 0.22);
-  --glow-3: rgba(200, 70, 120, 0.25);
-  --page: min(1240px, 100% - 48px);
-  color-scheme: dark;
-}
+@import "./tokens.css";
 
 * {
   box-sizing: border-box;

@@ -33,6 +33,18 @@ Short pre-rendered clips of the apps in use are planned for four frames: see [do
 - **Placement** (`src/choreography.ts`). Each section has a `data-stage` (its scene) and a `[data-splat]` box with a `data-fit` scale. Every frame the camera's distance and lens shift put the scene on that box, so the scene stays attached to the screenshots as the page scrolls, and travels from one box to the next during a morph.
 - **Fallbacks.** `prefers-reduced-motion` gets still scenes that switch without the flight. Without WebGL2 the coin boxes show the app icon. `?splats=N` overrides the splat count for profiling.
 
+## Documentation (`/docs`)
+
+The site also serves the public documentation: the self-hosting guides and the app guide from the repository's `docs/`, as static pages in the page's look. Nothing is copied: the build renders the Markdown at the commit being deployed, so the pages always match `docs/`.
+
+- `scripts/docs/pages.ts` lists the published documents, their URLs, sidebar labels and summaries. To publish another document, add it there. Development notes, plans, references and design cards stay on GitHub.
+- `scripts/docs/render.ts` renders them with [marked](https://marked.js.org) (build time only):
+  - Headings get GitHub's anchors, so links written for GitHub keep working.
+  - Links to published documents stay under `/docs/`, and links to anything else in the repository go to GitHub.
+  - The breadcrumb line under each title, written for GitHub readers, is dropped: the sidebar replaces it.
+- `scripts/docs/plugin.ts` serves the pages on the dev server (`/docs/`, reloading when a document changes) and writes them into `dist/docs/` at build time. The stylesheet is `src/docs/docs.css`, which shares `src/tokens.css` with the page, and the pages ship no JavaScript.
+- `npm test` checks that every link in the published documents leads somewhere: a published page and its heading, a heading on the same page, or a file that exists in the repository.
+
 ## Develop
 
 ```bash
