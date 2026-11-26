@@ -27,11 +27,11 @@ Three frames play a short loop of the app in use instead of their still: the sho
 | Clip | Frame | Source | Status |
 | --- | --- | --- | --- |
 | `insights` | Showcase, browser | web demo | rendered |
-| `overview` | Left to spend tile | iOS simulator | slot ready, recorded on the Mac |
-| `entries` | Split tile | iOS simulator | slot ready, recorded on the Mac |
+| `overview` | Left to spend tile | iOS simulator | rendered |
+| `entries` | Split tile | iOS simulator | rendered |
 | `apps` | none in the redesign | web demo | rendered, not placed |
 
-**On the page** (`src/clips.ts`, about 1.5 kB gzipped). A frame opts in with `data-clip="<id>"`; its captions are the `<ol data-clip-captions="<id>">` beside it, HTML rather than words in the video, with `data-at` seconds for the beat each one describes. When the section is about a screen away, the loader lays a `<video muted loop playsinline>` over the still (AV1 WebM, then H.264 MP4 for Safari; the 720-pixel variants below 701 CSS px) and fades it in once it plays. It plays only in view, pauses when the tab is hidden, and has a pause button (WCAG 2.2.2). Reduced motion, Save-Data (`navigator.connection.saveData` or `prefers-reduced-data`), no JavaScript, or no playable format keep the still; captions show for every clip that's rendered. A slot without files, like the iOS ones today, keeps its still and hides its captions.
+**On the page** (`src/clips.ts`, about 1.5 kB gzipped). A frame opts in with `data-clip="<id>"`; its captions are the `<ol data-clip-captions="<id>">` beside it, HTML rather than words in the video, with `data-at` seconds for the beat each one describes. When the section is about a screen away, the loader lays a `<video muted loop playsinline>` over the still (AV1 WebM, then H.264 MP4 for Safari; the 720-pixel variants below 701 CSS px) and fades it in once it plays. It plays only in view, pauses when the tab is hidden, and has a pause button (WCAG 2.2.2). Reduced motion, Save-Data (`navigator.connection.saveData` or `prefers-reduced-data`), no JavaScript, or no playable format keep the still; captions show for every clip that's rendered. A slot without files keeps its still and hides its captions. The tiles have no caption lists: their headings say what the clip shows.
 
 **The files** are committed in `src/assets/clips`: `<id>.webm`, `<id>.mp4`, `<id>-720.webm`, `<id>-720.mp4` (browser frames only) and `<id>-poster.webp`. `npm test` checks each against its budget in `video/src/clips.ts`.
 
@@ -50,7 +50,18 @@ npm run studio                                   # optional: preview and tune th
 - `render` needs ffmpeg with libsvtav1, libx264 and libwebp (`FFMPEG` overrides the one on `PATH`) and fails when a file is over budget. On NixOS, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` and `REMOTION_CHROME` to a system Chromium.
 - Re-capture and re-render after a visible change to Insights, Home, search or Activity, then refresh the stills with `scripts/capture-screens.ts` so the still and the clip match.
 
-**Adding the iOS clips** (on the Mac): record the simulator running the iOS demo into `video/captures/overview` and `video/captures/entries`, in the same format as the web capture (frames at the screen's scale, plus `capture.json` with points, see `video/src/capture.ts`), following the storyboard's beats. Then add a composition per clip in `video/src/clips/`, register it in `src/Root.tsx` and `COMPOSED` in `render.ts`, and run `npm run render overview entries`. The page picks the files up with no HTML change: the slots and captions are already there.
+**The iOS clips** (`overview`, `entries`) are recorded on the Mac from the iOS demo (synthetic sample data, no server), with Xcode as in `apps/ios/AGENTS.md`:
+
+```bash
+cd apps/site/video
+npm run capture:ios                              # captures/overview, captures/entries
+npm run render overview entries
+```
+
+- `capture/ios.ts` copies `capture/ios/ClipCaptureTests.swift` into `apps/ios/PennyUITests/Clips` for the run only (it's removed when the script ends, so the iOS project never carries it) and runs it with `apps/ios/scripts/ios.sh ui-test full` on that script's own throwaway iPhone simulator. Once the simulator boots, it sets the status bar to 9:41 and records the screen with `simctl io recordVideo`.
+- The tests wait for the recording, drive the demo in the dark appearance, and write each step's wall-clock time and the element's frame in points. The script cuts each clip's stretch out of the recording into 2× frames at 60 fps, plus `capture.json` in the web capture's format.
+- UI tests tap slower than a person, so the iOS compositions fit the recording to the storyboard's beats with `retime` (`src/capture.ts`). Screen recordings leave out the simulator's touch indicator, so `src/lib/Touch.tsx` draws one on each tap. A clip that ends in another state than it starts (a sheet open, an entry added) fades back to its first frame (`src/lib/LoopBack.tsx`).
+- Re-capture after a visible change to Home, Add entry or Split.
 
 ## How the splats work
 
