@@ -138,6 +138,23 @@ public static class BackendTelemetry
         advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
     );
 
+    public const string MailOutcomeAttribute = "penny.mail.outcome";
+    public const string MailKindAttribute = "penny.mail.kind";
+
+    private static readonly Counter<long> MailDeliveries = Meter.CreateCounter<long>(
+        "penny.mail.deliveries",
+        "{message}",
+        "Outbox emails (MAZ-124) recorded by a delivery pass, by kind and outcome: sent, deferred (retried later), failed (for good) or dropped (nothing to send any more)."
+    );
+
+    // One recorded outbox message; `kind` is a MailKinds value, `outcome` a fixed vocabulary.
+    public static void MailDelivered(string kind, string outcome) =>
+        MailDeliveries.Add(
+            1,
+            new KeyValuePair<string, object?>(MailKindAttribute, kind),
+            new KeyValuePair<string, object?>(MailOutcomeAttribute, outcome)
+        );
+
     // Backlog gauges (MAZ-184), set by the inbound mail worker pass: messages waiting to be
     // converted and unhandled inbox items across all users. Counts only.
     private static long inboundMailQueue;
