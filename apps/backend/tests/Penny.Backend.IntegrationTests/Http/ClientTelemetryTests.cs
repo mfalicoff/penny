@@ -580,6 +580,8 @@ public sealed class ClientTelemetryTests(ApiFixture fixture) : IntegrationTestBa
         const string key = "f00dfeedcafe4242";
         var settings = Settings();
         settings["ClientTelemetry:FaroUrl"] = $"{FaroUrl}/{key}";
+        // The test host turns logging off; this test reads the forwarder's warning.
+        settings["Logging:LogLevel:Default"] = "Warning";
         var collector = new CapturingCollector
         {
             Status = HttpStatusCode.BadRequest,

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "capture:web": "node capture/web.ts",
+    "capture:ios": "node capture/ios.ts",
     "studio": "remotion studio src/index.ts",
     "render": "node render.ts",
     "lint": "eslint --max-warnings=0 .",

@@ -3,15 +3,14 @@ import { Composition, staticFile, type CalculateMetadataFunction } from "remotio
 import type { Capture } from "./capture.ts";
 import { CLIPS, FPS } from "./clips.ts";
 import { Apps } from "./clips/Apps.tsx";
+import { Entries } from "./clips/Entries.tsx";
 import { Insights } from "./clips/Insights.tsx";
+import { Overview } from "./clips/Overview.tsx";
 
 type Props = { capture: Capture | null };
 
-/**
- * One composition per clip that has one. The iOS clips (overview, entries) get theirs with
- * their recordings from the Mac; until then the render script skips them.
- */
-const COMPONENTS: Record<string, ComponentType<{ capture: Capture }>> = { insights: Insights, apps: Apps };
+/** One composition per clip. */
+const COMPONENTS: Record<string, ComponentType<{ capture: Capture }>> = { insights: Insights, apps: Apps, overview: Overview, entries: Entries };
 
 /** Loads the clip's capture (captures/<clip>/capture.json) before rendering. */
 function loadCapture(id: string): CalculateMetadataFunction<Props> {
