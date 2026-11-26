@@ -105,7 +105,10 @@ The page's docs links go to **docs.pennyapp.dev**, not GitHub. That site doesn't
 
 Until it's live, the rebuilt page links to the same documents on GitHub, so no link breaks.
 
+## No public demo
+
+There's no public Penny instance, so the page has no *Try the demo* link (owner's decision, 2026-11-25). The clips and the cropped screens show the apps instead. The calls to action stay *Self-host Penny* and *View the source*.
+
 ## Open questions for the owner
 
 1. **Search tile:** a static mock (as drawn) or the Apps clip cropped to the search field?
-2. **A demo link:** the web demo runs on any Penny server. Is there a public instance to link as *Try the demo*? None is drawn.
