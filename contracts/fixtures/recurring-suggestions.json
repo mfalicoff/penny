@@ -1,0 +1,2364 @@
+{
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
+  "description": "Recurring suggestions: the normalised title key of each title, and for each ledger and day, the suggestions Penny offers (src/domain/suggestions.ts and RecurringSuggestions.swift give the same).",
+  "keys": [
+    {
+      "title": "Netflix",
+      "key": "netflix"
+    },
+    {
+      "title": "NETFLIX.COM",
+      "key": "netflix"
+    },
+    {
+      "title": "Netflix Inc.",
+      "key": "netflix"
+    },
+    {
+      "title": "Caf\u00e9 Ol\u00e9",
+      "key": "cafe ole"
+    },
+    {
+      "title": "Spotify Premium #12",
+      "key": "spotify premium"
+    },
+    {
+      "title": "Hydro-Qu\u00e9bec bill",
+      "key": "hydro quebec"
+    },
+    {
+      "title": "Monthly payment",
+      "key": ""
+    },
+    {
+      "title": "\u00c6sop Ltd",
+      "key": "\u00e6sop"
+    },
+    {
+      "title": "  ",
+      "key": ""
+    },
+    {
+      "title": "123",
+      "key": ""
+    }
+  ],
+  "cases": [
+    {
+      "name": "monthly expense after a price step that held: the newest amount, was the old one",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "netflix-1",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-2",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-3",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-4",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-03",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|netflix|monthly",
+          "kind": "expense",
+          "key": "netflix",
+          "frequency": "monthly",
+          "title": "Netflix",
+          "total": 1699,
+          "share": 1699,
+          "categoryId": "fun",
+          "accountId": "chq",
+          "previousShare": 1549,
+          "anchorDay": 3,
+          "nextDate": "2026-12-03",
+          "count": 4,
+          "firstDate": "2026-08-03",
+          "lastDate": "2026-11-03",
+          "entryIds": [
+            "netflix-4",
+            "netflix-3",
+            "netflix-2",
+            "netflix-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "weekly income",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "tutoring-1",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-10-07",
+            "note": ""
+          },
+          {
+            "id": "tutoring-2",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-10-14",
+            "note": ""
+          },
+          {
+            "id": "tutoring-3",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-10-21",
+            "note": ""
+          },
+          {
+            "id": "tutoring-4",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-10-28",
+            "note": ""
+          },
+          {
+            "id": "tutoring-5",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-11-04",
+            "note": ""
+          },
+          {
+            "id": "tutoring-6",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-11-11",
+            "note": ""
+          },
+          {
+            "id": "tutoring-7",
+            "title": "Tutoring",
+            "kind": "income",
+            "total": 6000,
+            "share": 6000,
+            "categoryId": "salary",
+            "date": "2026-11-18",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "income|tutoring|weekly",
+          "kind": "income",
+          "key": "tutoring",
+          "frequency": "weekly",
+          "title": "Tutoring",
+          "total": 6000,
+          "share": 6000,
+          "categoryId": "salary",
+          "anchorDay": 25,
+          "nextDate": "2026-11-25",
+          "count": 7,
+          "firstDate": "2026-10-07",
+          "lastDate": "2026-11-18",
+          "entryIds": [
+            "tutoring-7",
+            "tutoring-6",
+            "tutoring-5",
+            "tutoring-4",
+            "tutoring-3",
+            "tutoring-2",
+            "tutoring-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "monthly investment",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "tfsa-1",
+            "title": "TFSA contribution",
+            "kind": "investment",
+            "total": 20000,
+            "share": 20000,
+            "categoryId": "investments",
+            "accountId": "chq",
+            "date": "2026-08-01",
+            "note": ""
+          },
+          {
+            "id": "tfsa-2",
+            "title": "TFSA contribution",
+            "kind": "investment",
+            "total": 20000,
+            "share": 20000,
+            "categoryId": "investments",
+            "accountId": "chq",
+            "date": "2026-09-01",
+            "note": ""
+          },
+          {
+            "id": "tfsa-3",
+            "title": "TFSA contribution",
+            "kind": "investment",
+            "total": 20000,
+            "share": 20000,
+            "categoryId": "investments",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "tfsa-4",
+            "title": "TFSA contribution",
+            "kind": "investment",
+            "total": 20000,
+            "share": 20000,
+            "categoryId": "investments",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "investment|tfsa contribution|monthly",
+          "kind": "investment",
+          "key": "tfsa contribution",
+          "frequency": "monthly",
+          "title": "TFSA contribution",
+          "total": 20000,
+          "share": 20000,
+          "categoryId": "investments",
+          "accountId": "chq",
+          "anchorDay": 1,
+          "nextDate": "2026-12-01",
+          "count": 4,
+          "firstDate": "2026-08-01",
+          "lastDate": "2026-11-01",
+          "entryIds": [
+            "tfsa-4",
+            "tfsa-3",
+            "tfsa-2",
+            "tfsa-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anchor day 31 keeps the last day in shorter months",
+      "today": "2026-11-05",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "rent-1",
+            "title": "Rent",
+            "kind": "expense",
+            "total": 145000,
+            "share": 145000,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-07-31",
+            "note": ""
+          },
+          {
+            "id": "rent-2",
+            "title": "Rent",
+            "kind": "expense",
+            "total": 145000,
+            "share": 145000,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-08-31",
+            "note": ""
+          },
+          {
+            "id": "rent-3",
+            "title": "Rent",
+            "kind": "expense",
+            "total": 145000,
+            "share": 145000,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-09-30",
+            "note": ""
+          },
+          {
+            "id": "rent-4",
+            "title": "Rent",
+            "kind": "expense",
+            "total": 145000,
+            "share": 145000,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-31",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|rent|monthly",
+          "kind": "expense",
+          "key": "rent",
+          "frequency": "monthly",
+          "title": "Rent",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "food",
+          "accountId": "chq",
+          "anchorDay": 31,
+          "nextDate": "2026-11-30",
+          "count": 4,
+          "firstDate": "2026-07-31",
+          "lastDate": "2026-10-31",
+          "entryIds": [
+            "rent-4",
+            "rent-3",
+            "rent-2",
+            "rent-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "yearly on a leap day: two entries, the anchor stays the 29th",
+      "today": "2025-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "domain-1",
+            "title": "Domain name",
+            "kind": "expense",
+            "total": 2400,
+            "share": 2400,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2024-02-29",
+            "note": ""
+          },
+          {
+            "id": "domain-2",
+            "title": "Domain name",
+            "kind": "expense",
+            "total": 2400,
+            "share": 2400,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2025-02-28",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|domain name|yearly",
+          "kind": "expense",
+          "key": "domain name",
+          "frequency": "yearly",
+          "title": "Domain name",
+          "total": 2400,
+          "share": 2400,
+          "categoryId": "fun",
+          "accountId": "chq",
+          "anchorDay": 29,
+          "nextDate": "2026-02-28",
+          "count": 2,
+          "firstDate": "2024-02-29",
+          "lastDate": "2025-02-28",
+          "entryIds": [
+            "domain-2",
+            "domain-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a skipped month among six: 80% of the gaps still fit",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "gym-1",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-04-18",
+            "note": ""
+          },
+          {
+            "id": "gym-2",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-05-18",
+            "note": ""
+          },
+          {
+            "id": "gym-3",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-07-18",
+            "note": ""
+          },
+          {
+            "id": "gym-4",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-08-18",
+            "note": ""
+          },
+          {
+            "id": "gym-5",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-09-18",
+            "note": ""
+          },
+          {
+            "id": "gym-6",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-10-18",
+            "note": ""
+          },
+          {
+            "id": "gym-7",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-11-18",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|gym|monthly",
+          "kind": "expense",
+          "key": "gym",
+          "frequency": "monthly",
+          "title": "Gym",
+          "total": 4500,
+          "share": 4500,
+          "categoryId": "health",
+          "accountId": "chq",
+          "anchorDay": 18,
+          "nextDate": "2026-12-18",
+          "count": 7,
+          "firstDate": "2026-04-18",
+          "lastDate": "2026-11-18",
+          "entryIds": [
+            "gym-7",
+            "gym-6",
+            "gym-5",
+            "gym-4",
+            "gym-3",
+            "gym-2",
+            "gym-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a skipped month among four: too few gaps fit",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "gym-1",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-07-18",
+            "note": ""
+          },
+          {
+            "id": "gym-2",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-09-18",
+            "note": ""
+          },
+          {
+            "id": "gym-3",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-10-18",
+            "note": ""
+          },
+          {
+            "id": "gym-4",
+            "title": "Gym",
+            "kind": "expense",
+            "total": 4500,
+            "share": 4500,
+            "categoryId": "health",
+            "accountId": "chq",
+            "date": "2026-11-18",
+            "note": ""
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "near-duplicate titles group together; the most common category wins",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "spotify-1",
+            "title": "Spotify Premium Inc.",
+            "kind": "expense",
+            "total": 1299,
+            "share": 1299,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-12",
+            "note": ""
+          },
+          {
+            "id": "spotify-2",
+            "title": "SPOTIFY premium",
+            "kind": "expense",
+            "total": 1299,
+            "share": 1299,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-12",
+            "note": ""
+          },
+          {
+            "id": "spotify-3",
+            "title": "Spotify Pr\u00e9mium #12",
+            "kind": "expense",
+            "total": 1299,
+            "share": 1299,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-12",
+            "note": ""
+          },
+          {
+            "id": "spotify-food-1",
+            "title": "spotify premium subscription",
+            "kind": "expense",
+            "total": 1299,
+            "share": 1299,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-12",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|spotify premium|monthly",
+          "kind": "expense",
+          "key": "spotify premium",
+          "frequency": "monthly",
+          "title": "spotify premium subscription",
+          "total": 1299,
+          "share": 1299,
+          "categoryId": "fun",
+          "accountId": "chq",
+          "anchorDay": 12,
+          "nextDate": "2026-12-12",
+          "count": 4,
+          "firstDate": "2026-08-12",
+          "lastDate": "2026-11-12",
+          "entryIds": [
+            "spotify-food-1",
+            "spotify-3",
+            "spotify-2",
+            "spotify-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "entries a schedule recorded are left out",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass-1",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-01",
+            "note": "",
+            "recurringId": "pass-rule"
+          },
+          {
+            "id": "pass-2",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-01",
+            "note": "",
+            "recurringId": "pass-rule"
+          },
+          {
+            "id": "pass-3",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "recurringId": "pass-rule"
+          },
+          {
+            "id": "pass-4",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass-rule"
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "a group an existing schedule covers is left out",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "netflix-rule",
+            "title": "NETFLIX subscription",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-12-03",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-03",
+            "anchorDay": 3,
+            "active": false
+          }
+        ],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "netflix-1",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-2",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-3",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-4",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-03",
+            "note": ""
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "a dismissed suggestion stays hidden while its amount holds",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "netflix-1",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-2",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-3",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-4",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-03",
+            "note": ""
+          }
+        ],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699"
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "a dismissed suggestion comes back when its amount moves more than 25%",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "netflix-1",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-2",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1549,
+            "share": 1549,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-3",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-03",
+            "note": ""
+          },
+          {
+            "id": "netflix-4",
+            "title": "Netflix",
+            "kind": "expense",
+            "total": 1699,
+            "share": 1699,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-03",
+            "note": ""
+          }
+        ],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1299"
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|netflix|monthly",
+          "kind": "expense",
+          "key": "netflix",
+          "frequency": "monthly",
+          "title": "Netflix",
+          "total": 1699,
+          "share": 1699,
+          "categoryId": "fun",
+          "accountId": "chq",
+          "previousShare": 1549,
+          "anchorDay": 3,
+          "nextDate": "2026-12-03",
+          "count": 4,
+          "firstDate": "2026-08-03",
+          "lastDate": "2026-11-03",
+          "entryIds": [
+            "netflix-4",
+            "netflix-3",
+            "netflix-2",
+            "netflix-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "groceries with uneven amounts are not suggested",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "groceries-1",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 8642,
+            "share": 8642,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-02",
+            "note": ""
+          },
+          {
+            "id": "groceries-2",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 4210,
+            "share": 4210,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-09",
+            "note": ""
+          },
+          {
+            "id": "groceries-3",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 12750,
+            "share": 12750,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-16",
+            "note": ""
+          },
+          {
+            "id": "groceries-4",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 3999,
+            "share": 3999,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-23",
+            "note": ""
+          },
+          {
+            "id": "groceries-5",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 9120,
+            "share": 9120,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-30",
+            "note": ""
+          },
+          {
+            "id": "groceries-6",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 6400,
+            "share": 6400,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-06",
+            "note": ""
+          },
+          {
+            "id": "groceries-7",
+            "title": "Groceries",
+            "kind": "expense",
+            "total": 15030,
+            "share": 15030,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-13",
+            "note": ""
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "a price step that didn't hold yet is not suggested",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cloud-1",
+            "title": "Cloud storage",
+            "kind": "expense",
+            "total": 1000,
+            "share": 1000,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-05",
+            "note": ""
+          },
+          {
+            "id": "cloud-2",
+            "title": "Cloud storage",
+            "kind": "expense",
+            "total": 1000,
+            "share": 1000,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-05",
+            "note": ""
+          },
+          {
+            "id": "cloud-3",
+            "title": "Cloud storage",
+            "kind": "expense",
+            "total": 1000,
+            "share": 1000,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-05",
+            "note": ""
+          },
+          {
+            "id": "cloud-4",
+            "title": "Cloud storage",
+            "kind": "expense",
+            "total": 1500,
+            "share": 1500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-05",
+            "note": ""
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "stale: the latest entry is more than 1.5 intervals ago",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "magazine-1",
+            "title": "Magazine",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-06-01",
+            "note": ""
+          },
+          {
+            "id": "magazine-2",
+            "title": "Magazine",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-07-01",
+            "note": ""
+          },
+          {
+            "id": "magazine-3",
+            "title": "Magazine",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-01",
+            "note": ""
+          },
+          {
+            "id": "magazine-4",
+            "title": "Magazine",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-01",
+            "note": ""
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "two monthly entries are too few",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch-1",
+            "title": "Lunch club",
+            "kind": "expense",
+            "total": 2500,
+            "share": 2500,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-10",
+            "note": ""
+          },
+          {
+            "id": "lunch-2",
+            "title": "Lunch club",
+            "kind": "expense",
+            "total": 2500,
+            "share": 2500,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-10",
+            "note": ""
+          }
+        ]
+      },
+      "expected": []
+    },
+    {
+      "name": "entries after today are left out, and the next date follows today",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "phone-1",
+            "title": "Phone",
+            "kind": "expense",
+            "total": 5500,
+            "share": 5500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-08-20",
+            "note": ""
+          },
+          {
+            "id": "phone-2",
+            "title": "Phone",
+            "kind": "expense",
+            "total": 5500,
+            "share": 5500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-20",
+            "note": ""
+          },
+          {
+            "id": "phone-3",
+            "title": "Phone",
+            "kind": "expense",
+            "total": 5500,
+            "share": 5500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-20",
+            "note": ""
+          },
+          {
+            "id": "phone-4",
+            "title": "Phone",
+            "kind": "expense",
+            "total": 5500,
+            "share": 5500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-20",
+            "note": ""
+          },
+          {
+            "id": "phone-5",
+            "title": "Phone",
+            "kind": "expense",
+            "total": 5500,
+            "share": 5500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-12-20",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|phone|monthly",
+          "kind": "expense",
+          "key": "phone",
+          "frequency": "monthly",
+          "title": "Phone",
+          "total": 5500,
+          "share": 5500,
+          "categoryId": "fun",
+          "accountId": "chq",
+          "anchorDay": 20,
+          "nextDate": "2026-12-20",
+          "count": 4,
+          "firstDate": "2026-08-20",
+          "lastDate": "2026-11-20",
+          "entryIds": [
+            "phone-4",
+            "phone-3",
+            "phone-2",
+            "phone-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "small changes within $2 or 10% are steady: the newest amount, no was",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "hydro-1",
+            "title": "Hydro",
+            "kind": "expense",
+            "total": 9100,
+            "share": 9100,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-07-15",
+            "note": ""
+          },
+          {
+            "id": "hydro-2",
+            "title": "Hydro",
+            "kind": "expense",
+            "total": 9350,
+            "share": 9350,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-08-15",
+            "note": ""
+          },
+          {
+            "id": "hydro-3",
+            "title": "Hydro",
+            "kind": "expense",
+            "total": 8900,
+            "share": 8900,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-09-15",
+            "note": ""
+          },
+          {
+            "id": "hydro-4",
+            "title": "Hydro",
+            "kind": "expense",
+            "total": 9020,
+            "share": 9020,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-15",
+            "note": ""
+          },
+          {
+            "id": "hydro-5",
+            "title": "Hydro",
+            "kind": "expense",
+            "total": 9480,
+            "share": 9480,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-15",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "expense|hydro|monthly",
+          "kind": "expense",
+          "key": "hydro",
+          "frequency": "monthly",
+          "title": "Hydro",
+          "total": 9480,
+          "share": 9480,
+          "categoryId": "food",
+          "accountId": "chq",
+          "anchorDay": 15,
+          "nextDate": "2026-12-15",
+          "count": 5,
+          "firstDate": "2026-07-15",
+          "lastDate": "2026-11-15",
+          "entryIds": [
+            "hydro-5",
+            "hydro-4",
+            "hydro-3",
+            "hydro-2",
+            "hydro-1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the same title as an expense and as income are separate groups",
+      "today": "2026-11-20",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "fun",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#9D83BA",
+            "kind": "expense"
+          },
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          },
+          {
+            "id": "health",
+            "name": "Health",
+            "icon": "heart-outline",
+            "color": "#6C9C79",
+            "kind": "expense"
+          },
+          {
+            "id": "salary",
+            "name": "Salary",
+            "icon": "briefcase-outline",
+            "color": "#6C9C79",
+            "kind": "income"
+          },
+          {
+            "id": "investments",
+            "name": "Investments",
+            "icon": "trending-up-outline",
+            "color": "#678DB1",
+            "kind": "investment"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "club-out-1",
+            "title": "Book club",
+            "kind": "expense",
+            "total": 1500,
+            "share": 1500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-09-09",
+            "note": ""
+          },
+          {
+            "id": "club-out-2",
+            "title": "Book club",
+            "kind": "expense",
+            "total": 1500,
+            "share": 1500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-10-09",
+            "note": ""
+          },
+          {
+            "id": "club-out-3",
+            "title": "Book club",
+            "kind": "expense",
+            "total": 1500,
+            "share": 1500,
+            "categoryId": "fun",
+            "accountId": "chq",
+            "date": "2026-11-09",
+            "note": ""
+          },
+          {
+            "id": "club-in-1",
+            "title": "Book club",
+            "kind": "income",
+            "total": 3000,
+            "share": 3000,
+            "categoryId": "salary",
+            "accountId": "chq",
+            "date": "2026-09-10",
+            "note": ""
+          },
+          {
+            "id": "club-in-2",
+            "title": "Book club",
+            "kind": "income",
+            "total": 3000,
+            "share": 3000,
+            "categoryId": "salary",
+            "accountId": "chq",
+            "date": "2026-10-10",
+            "note": ""
+          },
+          {
+            "id": "club-in-3",
+            "title": "Book club",
+            "kind": "income",
+            "total": 3000,
+            "share": 3000,
+            "categoryId": "salary",
+            "accountId": "chq",
+            "date": "2026-11-10",
+            "note": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "income|book club|monthly",
+          "kind": "income",
+          "key": "book club",
+          "frequency": "monthly",
+          "title": "Book club",
+          "total": 3000,
+          "share": 3000,
+          "categoryId": "salary",
+          "accountId": "chq",
+          "anchorDay": 10,
+          "nextDate": "2026-12-10",
+          "count": 3,
+          "firstDate": "2026-09-10",
+          "lastDate": "2026-11-10",
+          "entryIds": [
+            "club-in-3",
+            "club-in-2",
+            "club-in-1"
+          ]
+        },
+        {
+          "id": "expense|book club|monthly",
+          "kind": "expense",
+          "key": "book club",
+          "frequency": "monthly",
+          "title": "Book club",
+          "total": 1500,
+          "share": 1500,
+          "categoryId": "fun",
+          "accountId": "chq",
+          "anchorDay": 9,
+          "nextDate": "2026-12-09",
+          "count": 3,
+          "firstDate": "2026-09-09",
+          "lastDate": "2026-11-09",
+          "entryIds": [
+            "club-out-3",
+            "club-out-2",
+            "club-out-1"
+          ]
+        }
+      ]
+    }
+  ]
+}

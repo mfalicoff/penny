@@ -8,6 +8,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { z } from "zod";
 import { cents, nextOccurrence, personalShare, type Ledger } from "../../src/domain/ledger.ts";
 import { mergeLedger } from "../../src/domain/merge.ts";
+import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
@@ -264,6 +265,32 @@ test("recurrence fixtures match next occurrence and keep the anchor", () => {
   for (const item of golden.sequences)
     for (let index = 1; index < item.dates.length; index++)
       assert.equal(nextOccurrence(item.dates[index - 1], item.frequency, item.anchorDay), item.dates[index]);
+});
+
+const Suggestion = z.strictObject({
+  id: z.string(), kind: entryKind, key: z.string().min(1), frequency, title: z.string().min(1),
+  total: z.number().int().positive(), share: z.number().int().nonnegative(), participants: z.number().int().min(2).max(100).optional(),
+  categoryId: z.string(), accountId: z.string().optional(), previousShare: z.number().int().nonnegative().optional(),
+  anchorDay: z.number().int().min(1).max(31), nextDate: date, count: z.number().int().min(2),
+  firstDate: date, lastDate: date, entryIds: z.array(z.string()).min(2),
+});
+const RecurringSuggestionsFixture = z.strictObject({
+  generator: z.string(),
+  description: z.string(),
+  keys: z.array(z.strictObject({ title: z.string(), key: z.string() })).min(5),
+  cases: z.array(z.strictObject({ name: z.string(), today: date, ledger: LedgerShape, expected: z.array(Suggestion) })).min(10),
+});
+
+test("recurring-suggestion fixtures match the title keys and the suggestions (MAZ-290)", () => {
+  const golden = parse(RecurringSuggestionsFixture, "recurring-suggestions.json");
+  for (const item of golden.keys) assert.equal(suggestionKey(item.title), item.key, item.title);
+  for (const item of golden.cases)
+    assert.deepEqual(JSON.parse(JSON.stringify(recurringSuggestions(item.ledger, item.today))), item.expected, item.name);
+  // Every case named in the issue is covered: a suggestion and a case with none.
+  assert.ok(golden.cases.some((item) => item.expected.length === 0));
+  assert.ok(golden.cases.some((item) => item.expected.some((s) => s.kind === "income")));
+  assert.ok(golden.cases.some((item) => item.expected.some((s) => s.kind === "investment")));
+  assert.ok(golden.cases.some((item) => item.expected.some((s) => s.previousShare !== undefined)));
 });
 
 test("merge-conflict fixtures match the offline three-way merge", () => {

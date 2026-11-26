@@ -15,6 +15,7 @@ import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
 import { ledgerWithHouseholds, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
 import { monthReview, reviewBannerMonth } from "../../src/domain/monthReview.ts";
+import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const directory = new URL("../../../../contracts/fixtures/", import.meta.url);
@@ -143,6 +144,7 @@ function merge() {
     { name: "remote currency change kept when local unchanged", base, local: base, remote: ledger([lunch, taxi], { currency: "EUR" }) },
     { name: "category rename merges with an entry edit", base, local: ledger([lunch, { ...taxi, note: "Airport" }]), remote: ledger([lunch, taxi], { categories: [{ id: "food", name: "Groceries & dining", icon: "cafe-outline", color: "#E47850", kind: "expense" }] }) },
     ...recurringMergeCases(),
+    ...dismissalMergeCases(),
   ];
   return {
     generator,
@@ -355,12 +357,80 @@ function monthReviews() {
   };
 }
 
+// Recurring suggestions (src/domain/suggestions.ts): each case is a ledger and a day, and the
+// suggestions it gives. The Swift rule (RecurringSuggestions.swift) must give the same.
+function recurringSuggestionCases() {
+  const categories: Ledger["categories"] = [
+    { id: "fun", name: "Entertainment", icon: "musical-notes-outline", color: "#9D83BA", kind: "expense" },
+    { id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" },
+    { id: "health", name: "Health", icon: "heart-outline", color: "#6C9C79", kind: "expense" },
+    { id: "salary", name: "Salary", icon: "briefcase-outline", color: "#6C9C79", kind: "income" },
+    { id: "investments", name: "Investments", icon: "trending-up-outline", color: "#678DB1", kind: "investment" },
+  ];
+  type Entry = Ledger["transactions"][number];
+  const series = (id: string, title: string | string[], dates: string[], shares: number | number[], extra: Partial<Entry> = {}): Entry[] =>
+    dates.map((date, index) => {
+      const share = Array.isArray(shares) ? shares[index] as number : shares;
+      return {
+        id: `${id}-${String(index + 1)}`, title: Array.isArray(title) ? title[index % title.length] as string : title, kind: "expense",
+        total: share, share, categoryId: "fun", accountId: "chq", date, note: "", ...extra,
+      };
+    });
+  const book = (transactions: Entry[], extra: Partial<Ledger> = {}): Ledger => ({ ...ledger(transactions, extra), categories });
+  const netflix = series("netflix", "Netflix", ["2026-08-03", "2026-09-03", "2026-10-03", "2026-11-03"], [1549, 1549, 1699, 1699]);
+  const cases: { name: string; today: string; ledger: Ledger }[] = [
+    { name: "monthly expense after a price step that held: the newest amount, was the old one", today: "2026-11-20", ledger: book(netflix) },
+    { name: "weekly income", today: "2026-11-20", ledger: book(series("tutoring", "Tutoring", ["2026-10-07", "2026-10-14", "2026-10-21", "2026-10-28", "2026-11-04", "2026-11-11", "2026-11-18"], 6000, { kind: "income", categoryId: "salary", accountId: undefined })) },
+    { name: "monthly investment", today: "2026-11-20", ledger: book(series("tfsa", "TFSA contribution", ["2026-08-01", "2026-09-01", "2026-10-01", "2026-11-01"], 20000, { kind: "investment", categoryId: "investments" })) },
+    { name: "anchor day 31 keeps the last day in shorter months", today: "2026-11-05", ledger: book(series("rent", "Rent", ["2026-07-31", "2026-08-31", "2026-09-30", "2026-10-31"], 145000, { categoryId: "food" })) },
+    { name: "yearly on a leap day: two entries, the anchor stays the 29th", today: "2025-11-20", ledger: book(series("domain", "Domain name", ["2024-02-29", "2025-02-28"], 2400)) },
+    { name: "a skipped month among six: 80% of the gaps still fit", today: "2026-11-20", ledger: book(series("gym", "Gym", ["2026-04-18", "2026-05-18", "2026-07-18", "2026-08-18", "2026-09-18", "2026-10-18", "2026-11-18"], 4500, { categoryId: "health" })) },
+    { name: "a skipped month among four: too few gaps fit", today: "2026-11-20", ledger: book(series("gym", "Gym", ["2026-07-18", "2026-09-18", "2026-10-18", "2026-11-18"], 4500, { categoryId: "health" })) },
+    { name: "near-duplicate titles group together; the most common category wins", today: "2026-11-20", ledger: book([
+      ...series("spotify", ["Spotify Premium Inc.", "SPOTIFY premium", "Spotify Prémium #12"], ["2026-08-12", "2026-09-12", "2026-10-12"], 1299),
+      ...series("spotify-food", "spotify premium subscription", ["2026-11-12"], 1299, { categoryId: "food" }),
+    ]) },
+    { name: "entries a schedule recorded are left out", today: "2026-11-20", ledger: book(series("pass", "Transit pass", ["2026-08-01", "2026-09-01", "2026-10-01", "2026-11-01"], 15600, { recurringId: "pass-rule" })) },
+    { name: "a group an existing schedule covers is left out", today: "2026-11-20", ledger: book(netflix, { recurring: [{ id: "netflix-rule", title: "NETFLIX subscription", kind: "expense", total: 1699, share: 1699, categoryId: "fun", accountId: "chq", date: "2026-12-03", note: "", frequency: "monthly", nextDate: "2026-12-03", anchorDay: 3, active: false }] }) },
+    { name: "a dismissed suggestion stays hidden while its amount holds", today: "2026-11-20", ledger: book(netflix, { dismissedSuggestions: ["expense|netflix|monthly|1699"] }) },
+    { name: "a dismissed suggestion comes back when its amount moves more than 25%", today: "2026-11-20", ledger: book(netflix, { dismissedSuggestions: ["expense|netflix|monthly|1299"] }) },
+    { name: "groceries with uneven amounts are not suggested", today: "2026-11-20", ledger: book(series("groceries", "Groceries", ["2026-10-02", "2026-10-09", "2026-10-16", "2026-10-23", "2026-10-30", "2026-11-06", "2026-11-13"], [8642, 4210, 12750, 3999, 9120, 6400, 15030], { categoryId: "food" })) },
+    { name: "a price step that didn't hold yet is not suggested", today: "2026-11-20", ledger: book(series("cloud", "Cloud storage", ["2026-08-05", "2026-09-05", "2026-10-05", "2026-11-05"], [1000, 1000, 1000, 1500])) },
+    { name: "stale: the latest entry is more than 1.5 intervals ago", today: "2026-11-20", ledger: book(series("magazine", "Magazine", ["2026-06-01", "2026-07-01", "2026-08-01", "2026-09-01"], 1200)) },
+    { name: "two monthly entries are too few", today: "2026-11-20", ledger: book(series("lunch", "Lunch club", ["2026-10-10", "2026-11-10"], 2500, { categoryId: "food" })) },
+    { name: "entries after today are left out, and the next date follows today", today: "2026-11-20", ledger: book(series("phone", "Phone", ["2026-08-20", "2026-09-20", "2026-10-20", "2026-11-20", "2026-12-20"], 5500)) },
+    { name: "small changes within $2 or 10% are steady: the newest amount, no was", today: "2026-11-20", ledger: book(series("hydro", "Hydro", ["2026-07-15", "2026-08-15", "2026-09-15", "2026-10-15", "2026-11-15"], [9100, 9350, 8900, 9020, 9480], { categoryId: "food" })) },
+    { name: "the same title as an expense and as income are separate groups", today: "2026-11-20", ledger: book([
+      ...series("club-out", "Book club", ["2026-09-09", "2026-10-09", "2026-11-09"], 1500),
+      ...series("club-in", "Book club", ["2026-09-10", "2026-10-10", "2026-11-10"], 3000, { kind: "income", categoryId: "salary" }),
+    ]) },
+  ];
+  const titles = ["Netflix", "NETFLIX.COM", "Netflix Inc.", "Café Olé", "Spotify Premium #12", "Hydro-Québec bill", "Monthly payment", "Æsop Ltd", "  ", "123"];
+  return {
+    generator,
+    description: "Recurring suggestions: the normalised title key of each title, and for each ledger and day, the suggestions Penny offers (src/domain/suggestions.ts and RecurringSuggestions.swift give the same).",
+    keys: titles.map((title) => ({ title, key: suggestionKey(title) })),
+    cases: cases.map((item) => ({ ...item, expected: JSON.parse(JSON.stringify(recurringSuggestions(item.ledger, item.today))) as unknown })),
+  };
+}
+
+// Dismissed recurring suggestions merge as a set union, less what this device undid (contract 2.3.0).
+function dismissalMergeCases() {
+  const base = ledger([], { dismissedSuggestions: ["expense|netflix|monthly|1699"] });
+  return [
+    { name: "dismissals: both sides' dismissals are kept, the server's first", base, local: ledger([], { dismissedSuggestions: ["expense|netflix|monthly|1699", "income|tutoring|weekly|6000"] }), remote: ledger([], { dismissedSuggestions: ["expense|netflix|monthly|1699", "expense|gym|monthly|4500"] }) },
+    { name: "dismissals: an Undo on this device stays undone", base, local: ledger([]), remote: ledger([], { dismissedSuggestions: ["expense|netflix|monthly|1699", "expense|gym|monthly|4500"] }) },
+    { name: "dismissals: the first dismissal on a ledger that had none", base: ledger([]), local: ledger([], { dismissedSuggestions: ["expense|gym|monthly|4500"] }), remote: ledger([{ id: "lunch", title: "Lunch", kind: "expense", total: 1200, share: 1200, categoryId: "food", date: "2026-10-01", note: "" }]) },
+  ];
+}
+
 // Which suites consume each fixture. A language with no implementation yet names the
 // issue that adds it; a fixture only meaningful to some layers says so.
 const consumers: Record<string, Record<string, string[] | string>> = {
   "money.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "recurrence.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "merge-conflicts.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"] },
+  "recurring-suggestions.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/RecurringSuggestionsTests.swift"] },
   "month-totals.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "month-review.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: client calculation; the recap is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/MonthReviewTests.swift"] },
   "shared-categories.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: shared expenses join the personal view on the client", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
@@ -390,6 +460,7 @@ export function generated(): Record<string, string> {
     "month-totals.json": serialize(monthTotals()),
     "shared-categories.json": serialize(sharedCategories()),
     "month-review.json": serialize(monthReviews()),
+    "recurring-suggestions.json": serialize(recurringSuggestionCases()),
   };
 }
 
