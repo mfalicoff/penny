@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.2.0](https://github.com/mfalicoff/penny/compare/v3.1.0...v3.2.0) (2026-11-26)
+
+
+### Features
+
+* **ios:** add motion tokens, moments and haptics ([#239](https://github.com/mfalicoff/penny/issues/239)) ([2df09e4](https://github.com/mfalicoff/penny/commit/2df09e4d87f194fa2b26d868a461529380026bdb))
+* **observability:** push the dashboards and alerts to Grafana Cloud and cover the 3.0 signals ([#241](https://github.com/mfalicoff/penny/issues/241)) ([061a2ab](https://github.com/mfalicoff/penny/commit/061a2aba200022250884fd27dec9fc24101b5e62))
+* **site:** play clips of the web app in use on the product page ([#234](https://github.com/mfalicoff/penny/issues/234)) ([9d76f58](https://github.com/mfalicoff/penny/commit/9d76f58552423ef323e3172454dc9d976a9eb0d9))
+* **site:** play the iPhone clips of adding an expense and splitting a dinner ([#242](https://github.com/mfalicoff/penny/issues/242)) ([07051ea](https://github.com/mfalicoff/penny/commit/07051ea299804f0104fdb49a1cdaa24e7db21508))
+* **site:** rebuild the product page to the approved redesign ([#240](https://github.com/mfalicoff/penny/issues/240)) ([ac7b834](https://github.com/mfalicoff/penny/commit/ac7b834489cb7fb8903a374c9796150cbc6517a5))
+* **site:** serve the self-hosting and app docs under /docs ([#237](https://github.com/mfalicoff/penny/issues/237)) ([86f860e](https://github.com/mfalicoff/penny/commit/86f860e93738d0892c0c4bb77c4f7c96cdef1d9e))
+* **web:** purposeful motion from the approved motion spec ([21fdb25](https://github.com/mfalicoff/penny/commit/21fdb25ba7f303f3cd5d068082bf2a555550935e))
+
+
+### Bug Fixes
+
+* **test:** turn warnings on where the telemetry refusal log is read ([#243](https://github.com/mfalicoff/penny/issues/243)) ([ce73171](https://github.com/mfalicoff/penny/commit/ce73171b06ecc0d707145553b553fad42e2a8ff1))
+
 ## [3.1.0](https://github.com/mfalicoff/penny/compare/v3.0.0...v3.1.0) (2026-11-25)
 
 
