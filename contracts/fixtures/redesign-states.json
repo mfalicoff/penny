@@ -1209,6 +1209,160 @@
       "view": "Settings \u203a Privacy with the report switches and the privacy policy link"
     },
     {
+      "specimen": "iphone-recap",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "October recap from Insights: spent compared with September and last October, money in and out, biggest category changes, shared and highlights"
+    },
+    {
+      "specimen": "iphone-recap-empty",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "recap of a month with no recorded entries"
+    },
+    {
+      "specimen": "iphone-home-recap",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home in the first days of November with the October recap banner"
+    },
+    {
+      "specimen": "iphone-insights-recap",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "insights in the first days of November with the October recap banner and the recap button"
+    },
+    {
+      "specimen": "iphone-recap-setting",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "settings sheet with the monthly recap notification switch off"
+    },
+    {
+      "specimen": "iphone-recap-notification",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "lock screen on November 1 with the generic recap notification"
+    },
+    {
+      "specimen": "iphone-year-review",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "2026 in review, first page: top categories and the busiest month"
+    },
+    {
+      "specimen": "iphone-year-review-trips",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "2026 in review, trips page"
+    },
+    {
+      "specimen": "iphone-year-review-shared",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "2026 in review, shared expenses counted by who paid"
+    },
+    {
+      "specimen": "iphone-year-review-facts",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "2026 in review, fun facts page"
+    },
+    {
+      "specimen": "iphone-year-review-share",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "share your year sheet with amounts and names hidden"
+    },
+    {
+      "specimen": "iphone-year-review-share-amounts",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "share your year sheet with amounts and names shown"
+    },
+    {
+      "specimen": "iphone-year-review-share-sheet",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "the system share sheet with the year image"
+    },
+    {
+      "specimen": "iphone-insights-year-review",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "insights on December 28 with the 2026 in review entry point"
+    },
+    {
       "specimen": "ipad-home",
       "platform": "iPad",
       "appearances": [
@@ -2019,6 +2173,94 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "web Home with the error report consent"
+    },
+    {
+      "specimen": "web-recap",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web October recap: spent compared with September and last October, money in and out, biggest category changes, shared and highlights"
+    },
+    {
+      "specimen": "web-recap-empty",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "web recap of a month with no recorded entries"
+    },
+    {
+      "specimen": "web-home-recap",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web home in the first days of November with the October recap banner"
+    },
+    {
+      "specimen": "web-insights-recap",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web insights in the first days of November with the October recap banner and the Recap button"
+    },
+    {
+      "specimen": "web-year-review",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web 2026 in review: categories, busiest month, trips, who paid and fun facts"
+    },
+    {
+      "specimen": "web-year-review-share",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web share your year dialog with amounts and names hidden"
+    },
+    {
+      "specimen": "web-year-review-share-amounts",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web share your year dialog with amounts and names shown"
+    },
+    {
+      "specimen": "web-insights-year-review",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web insights on December 28 with the 2026 in review entry point"
     }
   ]
 }

@@ -1,0 +1,43 @@
+<!-- @dsCard group="iPhone" name="Share your year: share sheet" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Share your year: share sheet</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"sparkles":"<path d=\"M224 48c16 110 58 152 168 168-110 16-152 58-168 168-16-110-58-152-168-168 110-16 152-58 168-168zM400 336c6 40 24 58 64 64-40 6-58 24-64 64-6-40-24-58-64-64 40-6 58-24 64-64z\" fill=\"currentColor\"/>","share":"<path d=\"M336 192h40a40 40 0 0140 40v192a40 40 0 01-40 40H136a40 40 0 01-40-40V232a40 40 0 0140-40h40M336 128l-80-80-80 80M256 321V48\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","eye":"<path d=\"M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><circle cx=\"256\" cy=\"256\" r=\"80\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/>","eye-off":"<path d=\"M432 448L80 64M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","download":"<path d=\"M256 80v256M160 240l96 96 96-96M96 416h320\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .behind { position: absolute; border: 0; width: 482px; height: 954px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .ss { position: absolute; left: 6px; right: 6px; top: 470px; bottom: 6px; border-radius: 40px; background: var(--surface-2); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .hd { display: flex; align-items: center; gap: 12px; padding: 14px 18px 14px; border-bottom: .5px solid var(--separator); }
+  .thumb { width: 42px; height: 64px; border-radius: 8px; background: linear-gradient(170deg, #FFD2B0, #FBF7F2 60%); box-shadow: 0 0 0 .5px var(--separator); flex: none; }
+  .hd .t { flex: 1; } .hd b { display: block; font-size: 15px; font-weight: 600; } .hd span { font-size: 13px; color: var(--label-2); }
+  .hd .x { width: 30px; height: 30px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; color: var(--label-2); }
+  .hd .x [data-i] { width: 14px; height: 14px; --sw: 52px; }
+  .apps { display: flex; gap: 18px; padding: 18px 20px 6px; }
+  .apps div { width: 62px; text-align: center; font-size: 11.5px; color: var(--label); }
+  .apps i { display: block; width: 62px; height: 62px; border-radius: 16px; background: var(--fill); margin-bottom: 6px; }
+  .apps .air i { border-radius: 50%; }
+  .acts { margin: 14px 16px 0; background: var(--surface); border-radius: 14px; overflow: hidden; }
+  .acts div { display: flex; justify-content: space-between; align-items: center; height: 48px; padding: 0 16px; font-size: 16px; }
+  .acts div + div { border-top: .5px solid var(--separator); }
+  .acts [data-i] { width: 20px; height: 20px; color: var(--label); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+<iframe class="behind" src="year-review-share.html" scrolling="no"></iframe>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="ss">
+    <div class="grabber"></div>
+    <div class="hd"><div class="thumb"></div><div class="t"><b>My 2026 in Penny</b><span>PNG image</span></div><div class="x"><i data-i="close"></i></div></div>
+    <div class="apps"><div class="air"><i></i>AirDrop</div><div><i></i>Messages</div><div><i></i>Mail</div><div><i></i>Notes</div><div><i></i>More</div></div>
+    <div class="acts">
+      <div>Copy<i data-i="copy"></i></div>
+      <div>Save Image<i data-i="download"></i></div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

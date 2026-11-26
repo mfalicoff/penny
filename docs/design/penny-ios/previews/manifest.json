@@ -706,6 +706,27 @@
       ]
     },
     {
+      "id": "iphone-home-recap",
+      "source": "docs/design/penny-ios/iphone/home-recap.html",
+      "sourceSha256": "06085cd0875bf3710b82cba582d7e62516374b4ab49ec101f7e6f0c9cafd331a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-home-recap.light.png",
+          "sha256": "216f16a7afed6044a3984bb39696a61373dca8d6b0612663f1925cff79a72830"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-home-recap.dark.png",
+          "sha256": "8b49d8c30ddf54401f1dbb1c6f5b7b674f77713634978a0305a6823013ffc6a1"
+        }
+      ]
+    },
+    {
       "id": "iphone-home",
       "source": "docs/design/penny-ios/iphone/home.html",
       "sourceSha256": "a3b8a1d02909b44cfcc51f0edece652b62c37e1e0e8078f2d9134e8c7566d33a",
@@ -765,6 +786,48 @@
           "appearance": "dark",
           "file": "previews/iphone-household-picker.dark.png",
           "sha256": "5e025ebe74af1eec06fe690d8cbf853ec9b4db968d3cc45336f96ca6861061ef"
+        }
+      ]
+    },
+    {
+      "id": "iphone-insights-recap",
+      "source": "docs/design/penny-ios/iphone/insights-recap.html",
+      "sourceSha256": "296098e7fbc5fe6c1923c4e9167772a9eea932cd0a05f912fd09ac7663b02ad7",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-insights-recap.light.png",
+          "sha256": "adecd773ff03c5af3d3e556d46b5aa2d3824df1c602b8ed5d79032d652e167ba"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-insights-recap.dark.png",
+          "sha256": "c0b410c0fc98c3850708f3c349fcf0cbdea34db8384d28477a47ae26a54f0daa"
+        }
+      ]
+    },
+    {
+      "id": "iphone-insights-year-review",
+      "source": "docs/design/penny-ios/iphone/insights-year-review.html",
+      "sourceSha256": "efeb5284abb1ac0dfaab2f6fd756a162f6f0f8f8aade2bf862f856f563243fba",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-insights-year-review.light.png",
+          "sha256": "1abac53c67afbbfc7ec4e1401d5bc5b10c6c08ad90641902d99b7e6270f89d82"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-insights-year-review.dark.png",
+          "sha256": "f422a1a75c13f6d9720237a8c9186a5ad1298066626648afe0214252e40fa0da"
         }
       ]
     },
@@ -1101,6 +1164,90 @@
           "appearance": "dark",
           "file": "previews/iphone-profile.dark.png",
           "sha256": "2790689a0c95e0c4d61d9a2ba09d0dc7d1445c9b6ef3163b438cc389994852eb"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recap-empty",
+      "source": "docs/design/penny-ios/iphone/recap-empty.html",
+      "sourceSha256": "e9d9ef7102266067504749570fe50b986a8e54df2ac2c29fbfe22b54b90cfb2a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recap-empty.light.png",
+          "sha256": "d6baf04a764a7dad6b090cc76205dd589e088390b19b02d98e43b74b2978ed2b"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recap-empty.dark.png",
+          "sha256": "1dc6ea7bc011d0c36f6631617bb6887678a465ca684a1fd727905da742fe2a80"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recap-notification",
+      "source": "docs/design/penny-ios/iphone/recap-notification.html",
+      "sourceSha256": "bb4e2e8e2c8c1d26843d5d3a353a17de9f054b51d7775014c20278ffc22c8ea0",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recap-notification.light.png",
+          "sha256": "4e2921c2b8c90107816192e6696f0cb114ee9df37c7d03bfd72dd147db4d665e"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recap-notification.dark.png",
+          "sha256": "f8b83d316d3d766603d20e70c91ec933ddb1f7853803ac7e56adb0428a5c17a7"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recap-setting",
+      "source": "docs/design/penny-ios/iphone/recap-setting.html",
+      "sourceSha256": "d7338fc71d1edb2b9a966f73159aae6b87bfa34b2744aef5e9bec18698b89641",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recap-setting.light.png",
+          "sha256": "ea491da0b45f9841e236305d6c1eb80ae8942c09a33604cb4bdd503e9823f278"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recap-setting.dark.png",
+          "sha256": "af292fa7ee1760d28a5819e9c0cb0cc580c879c155cb4c2d76d7f725b969a5ff"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recap",
+      "source": "docs/design/penny-ios/iphone/recap.html",
+      "sourceSha256": "0ced4316527c95847f4ea98ae688fdeb3400890c1ff08f5df25bad2374ff73e3",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recap.light.png",
+          "sha256": "f14c648a5147cfde8da164041b8a35b1b631d85f13a1f4d6d92e4e12943a4fb7"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recap.dark.png",
+          "sha256": "80c3f7ef7be25d8796d1ca1df432e2aab29489aabe0a94cd4f41227c56ab6039"
         }
       ]
     },
@@ -2024,6 +2171,153 @@
       ]
     },
     {
+      "id": "iphone-year-review-facts",
+      "source": "docs/design/penny-ios/iphone/year-review-facts.html",
+      "sourceSha256": "f02ebd7918104dfd7982237326513e9076941c20d1c6edb4d89a2605176cf016",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review-facts.light.png",
+          "sha256": "d03ad844acc6e90ba4ffcc788c91adc3a2a3ad76958982476e3a02b2447d049b"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review-facts.dark.png",
+          "sha256": "4e9afe4a38fd769965f27aa364372813246b8985e0007c00baa4d591addcea8e"
+        }
+      ]
+    },
+    {
+      "id": "iphone-year-review-share-amounts",
+      "source": "docs/design/penny-ios/iphone/year-review-share-amounts.html",
+      "sourceSha256": "35d61ebf9a93882991b10750f2bd05736527784c550fd07e5bc70f2e96fe11a5",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review-share-amounts.light.png",
+          "sha256": "7e7f71cf75b14742134ae229602b854567ee7c6ac1cedc13783510555b7bce8b"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review-share-amounts.dark.png",
+          "sha256": "ab5a4dea86b924845d24bdcda66b09f0ef7274dfcdee5369177341539649b84b"
+        }
+      ]
+    },
+    {
+      "id": "iphone-year-review-share-sheet",
+      "source": "docs/design/penny-ios/iphone/year-review-share-sheet.html",
+      "sourceSha256": "bbdc6f25c671166f2e532c733cc053bc37ee1546b32541b764e8854573dded87",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review-share-sheet.light.png",
+          "sha256": "238c597df09e5fbb92e94264c099ec51e449acd6852e21c5be5961df3ad0c43f"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review-share-sheet.dark.png",
+          "sha256": "2daade74ca4a5a72ef53cc38dca5c4c39efffc14ef7d7a8e7aa350e47a400fdf"
+        }
+      ]
+    },
+    {
+      "id": "iphone-year-review-share",
+      "source": "docs/design/penny-ios/iphone/year-review-share.html",
+      "sourceSha256": "6617229ab5a91d045e1a9faf22483be3febe83077eb50dc6ddafcc1d871d5abb",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review-share.light.png",
+          "sha256": "0155a9940af1bf8c2ee70dbaf7d4b6672473182aaff8ce89291101471fe74181"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review-share.dark.png",
+          "sha256": "fb67aaedc67e7b6b94765e8d0687d791ab7d84a3a95e9a1de758912e992676f2"
+        }
+      ]
+    },
+    {
+      "id": "iphone-year-review-shared",
+      "source": "docs/design/penny-ios/iphone/year-review-shared.html",
+      "sourceSha256": "43b755959d8f875ab7242dda57b5a983a95969e5d534235c6b8c1e6be256eb94",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review-shared.light.png",
+          "sha256": "f4e132e61f9c8dd23c41de3ab107f1bd318bea1aa5b79ddfea59ca2475b6db6d"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review-shared.dark.png",
+          "sha256": "2b236768a41180c432056246b4b4842fbd9142de9ed64443498d3ce9cd5151c2"
+        }
+      ]
+    },
+    {
+      "id": "iphone-year-review-trips",
+      "source": "docs/design/penny-ios/iphone/year-review-trips.html",
+      "sourceSha256": "f3060f5843f2fc37ded2453b9c2ca5493cb875566a2f78323542ae5f5718214a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review-trips.light.png",
+          "sha256": "6be3151f41309cadeeae86251c5d062e714f34a449077a513123351210390984"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review-trips.dark.png",
+          "sha256": "dd87a98b17228290dd5f5b6534d91cff2951e8450c10a171f6e36d6f428800d3"
+        }
+      ]
+    },
+    {
+      "id": "iphone-year-review",
+      "source": "docs/design/penny-ios/iphone/year-review.html",
+      "sourceSha256": "89f9938cc9775da7f6b10d80945c6876a8f1cb04082a894797fd700bfd044bc8",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-year-review.light.png",
+          "sha256": "98f45d8cf9b87f4649ff809875b14663ae7b0c811277ed4a113a71d0a3ab9ff8"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-year-review.dark.png",
+          "sha256": "a864f9db526d821979878fd67b68856570c35abf527f0823fd3a3c61f1499722"
+        }
+      ]
+    },
+    {
       "id": "ipad-activity",
       "source": "docs/design/penny-ios/ipad/activity.html",
       "sourceSha256": "ac03a6e2597e6e4bf185a1fc2b3488f84e8d0d13ff245f93550066dd3aa9ef6c",
@@ -2780,6 +3074,27 @@
       ]
     },
     {
+      "id": "web-home-recap",
+      "source": "docs/design/penny-ios/web/home-recap.html",
+      "sourceSha256": "fdfe8d958686c7451e2de5c8216001d46fb92f8208895b9aa35fe9c7b5bb6c76",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-home-recap.light.png",
+          "sha256": "f37efdc22e6acbf6aaace5371642895260bd041847c77ddb1940e9e1feacf15f"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-home-recap.dark.png",
+          "sha256": "92cc316f40060bf90696258598e648b1b5140f5e2145a4a91ebd768414dab6a3"
+        }
+      ]
+    },
+    {
       "id": "web-home",
       "source": "docs/design/penny-ios/web/home.html",
       "sourceSha256": "705e518da19aa0ce2b17d0a2eff3475c8c58c5fa3b6a0788432f3fd7f875eb8f",
@@ -2839,6 +3154,48 @@
           "appearance": "dark",
           "file": "previews/web-households.dark.png",
           "sha256": "53e1e3c7c235f33acf6fe521f731e1c5d7fe698b8806ef6d78948c44d9547a29"
+        }
+      ]
+    },
+    {
+      "id": "web-insights-recap",
+      "source": "docs/design/penny-ios/web/insights-recap.html",
+      "sourceSha256": "fad81969a2f247b6539b2353698a36a413b05e757fda476d5fea814541c6cb41",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-insights-recap.light.png",
+          "sha256": "925b53f5a1c2612e409ba808647aad369c01520bb6780248de021a7fc4d4cad9"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-insights-recap.dark.png",
+          "sha256": "bd6429932178e39b02fe4bb2d47ed7424b3948db879f4e0a3390016b9592f0a1"
+        }
+      ]
+    },
+    {
+      "id": "web-insights-year-review",
+      "source": "docs/design/penny-ios/web/insights-year-review.html",
+      "sourceSha256": "a1e634d9bfbb260e379b56fe86b94634c0ac66d086651359c4e1187622c9d5a3",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-insights-year-review.light.png",
+          "sha256": "e588a4181612285738cacd85d410b972a218df076c0238061b886c27571efc8a"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-insights-year-review.dark.png",
+          "sha256": "9dacee04494df6fa5f37ead056b9b9a6a477e64b27bb8d744002120cd8a18f83"
         }
       ]
     },
@@ -3007,6 +3364,48 @@
           "appearance": "dark",
           "file": "previews/web-profile.dark.png",
           "sha256": "758205e6d25806a68dd900e0c209a61e17c00a7ea70077934551683a0243631b"
+        }
+      ]
+    },
+    {
+      "id": "web-recap-empty",
+      "source": "docs/design/penny-ios/web/recap-empty.html",
+      "sourceSha256": "c3c1bb00355635837ca595fded3805ec661243ee1e5b17bb67276ae6dc9475d1",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-recap-empty.light.png",
+          "sha256": "342ba86b091dce1139067c307637bf04a592a8e58c87d1c24cbd456f50f452f1"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-recap-empty.dark.png",
+          "sha256": "454da9083e03002c1c7fc014e6ff28e5180869b2cd56106ed8725a9a1514a9df"
+        }
+      ]
+    },
+    {
+      "id": "web-recap",
+      "source": "docs/design/penny-ios/web/recap.html",
+      "sourceSha256": "358d5c53fc7fab26d3dfc9dda17d3952ceed8bad661fd960986759ac9901f9a1",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-recap.light.png",
+          "sha256": "c5d5fd5aea475d901a2579de66056847554263d894bc26a02ec08779e984b99d"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-recap.dark.png",
+          "sha256": "383b1d62d2b12998483fe0f1ea51a17f028595f85a2d664cb112858d50c76ac2"
         }
       ]
     },
@@ -3490,6 +3889,69 @@
           "appearance": "dark",
           "file": "previews/web-verify-email.dark.png",
           "sha256": "6599c1754c9513683334180ecccd7f903d7a51221ece662ee82537630c5865ed"
+        }
+      ]
+    },
+    {
+      "id": "web-year-review-share-amounts",
+      "source": "docs/design/penny-ios/web/year-review-share-amounts.html",
+      "sourceSha256": "8d9c29b904af887ec1757497ea06aa565dcddb3918e15dd48e600d385065ab80",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-year-review-share-amounts.light.png",
+          "sha256": "a2ff00294339ba8cd13bbd9bbc17a0a096b4779f0b85ae629ec3d407fdee762a"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-year-review-share-amounts.dark.png",
+          "sha256": "9e18322a82515356d077fa99da3d297ab1b9264fe2d39a43c99b9a14cb1c8e07"
+        }
+      ]
+    },
+    {
+      "id": "web-year-review-share",
+      "source": "docs/design/penny-ios/web/year-review-share.html",
+      "sourceSha256": "06c37d43b86434f12b758555df99fb724741fbc582662ac0c5fe299442398ae2",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-year-review-share.light.png",
+          "sha256": "04a7f40a8802f0abbfb752a9d2d171dd0184903169db1d16af5be76806ce2936"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-year-review-share.dark.png",
+          "sha256": "e4e27f288a90d8971d3a3346974c1870fd7ef2e8d21dbd28c681dc694eb0f06c"
+        }
+      ]
+    },
+    {
+      "id": "web-year-review",
+      "source": "docs/design/penny-ios/web/year-review.html",
+      "sourceSha256": "babaa753ae07e9ec34570415467410a1bf19c32d62517030afe95e4a4316bc9e",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-year-review.light.png",
+          "sha256": "8c636a75f99a4c61ccc8a87de2d2d1a58b520db3cfb18e95dde53395da715e38"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-year-review.dark.png",
+          "sha256": "c2224e8dc3654dcd9cf74d48e5ab3e6ceb08aeda59e4dd6ef6b7ba6f58276e48"
         }
       ]
     }

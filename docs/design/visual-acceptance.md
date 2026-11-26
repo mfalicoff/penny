@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens) · [Motion](motion.md)
 
-The 165 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 187 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (328 images: 163 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (372 images: 185 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -324,6 +324,32 @@ Behavior (owner decisions, 2026-11-26):
 - **Renews soon** marks a yearly schedule whose next date is within 7 days, on iOS and the web. Monthly and weekly schedules never show it.
 - **Renewal reminders (iOS only).** Only yearly schedules have the Reminder section. The switch is off until you turn it on, and the first time asks for notification permission. The reminder is a local notification 3 days before, at 9 AM local time, rebuilt after each sync; the lead time isn't configurable. Pausing, removing or editing the schedule moves or cancels it. "Show name and amount" is set on each schedule and is off by default; without it, the text has no name or amount. The web has no reminders.
 - **Where it shows.** Suggestions appear only on Recurring: there's no badge on Home or in the tab bar.
+## Cards: monthly recap and year in review (MAZ-292, 2026-11-26)
+
+Nothing in Penny marks the end of a month or a year. MAZ-292 draws 22 cards for a monthly recap and a yearly year in review, in the kit's styles, light and dark. The owner approved them on 2026-11-26, with the decisions below; none of it is built yet, so every new card is `not-built` (`not-applicable` for the `web-*` cards on iOS, and for the three iOS-only cards on the web). The numbers are alex's sample month from `iphone-insights` and `web-insights` (October spent $2,295, September $2,210), extended to a sample year. How each new moment moves, with its haptics and Reduce Motion fallback, is in [Motion: monthly recap and year in review](motion.md#7-monthly-recap-and-year-in-review-maz-292).
+
+| State | Cards |
+| --- | --- |
+| Monthly recap of October: spent with September and October last year as bars, money in and out (came in, spent, invested, left over), the biggest category changes ("Entertainment · New" for a category with nothing the month before, never −∞% or +∞%), your top shared expense, what others paid of your split expenses, and a highlight | `iphone-recap`, `web-recap` |
+| Nothing to recap: a month with no recorded entries (a month with only scheduled ones counts as none), with Add an entry and Choose another month | `iphone-recap-empty`, `web-recap-empty` |
+| "Your October recap is ready" banner, with a dismiss button, on Home and on Insights; Insights also has a Recap button for any past month | `iphone-home-recap`, `iphone-insights-recap`, `web-home-recap`, `web-insights-recap` |
+| Settings › Preferences: a Monthly recap switch, off by default, under Notifications; the footer says the notification never shows amounts or entry names | `iphone-recap-setting` |
+| Lock Screen on November 1: "Your October recap is ready." from Penny, with no amounts or titles | `iphone-recap-notification` |
+| The year in review's entry in Insights, from December 26 to January 31: a "2026 in review" card above the month's summary (drawn on December 28) | `iphone-insights-year-review`, `web-insights-year-review` |
+| Year in review, four pages on iPhone and one page on the web: top categories with percentages and the busiest month; trips with days away and your share; shared expenses counted by who paid (owner decision: "You paid for 41 shared expenses; Jo paid for 30", a deleted account shows as Former member); and fun facts | `iphone-year-review`, `iphone-year-review-trips`, `iphone-year-review-shared`, `iphone-year-review-facts`, `web-year-review` |
+| Share your year with amounts and names hidden (the default): percentages, rankings and counts only, "I paid for 48%" of shared expenses | `iphone-year-review-share`, `web-year-review-share` |
+| Share your year with amounts and names shown: the total, each category's amount, the busiest month's amount and who paid by name | `iphone-year-review-share-amounts`, `web-year-review-share-amounts` |
+| The share step: the system share sheet with the image on iOS; Copy image and Download in the web dialog | `iphone-year-review-share-sheet`, `web-year-review-share` |
+
+Behavior (approved with the cards):
+
+- **Numbers.** Recorded entries only, never previews or scheduled occurrences. Shared expenses count at your share through the household projection, and shared rows in another currency are left out. The recap rule lives in `apps/web/src/domain` with a golden fixture and the matching Swift rule.
+- **The recap banner** shows on Home and Insights for the first 7 days of the month, or until it's dismissed. The Recap button in Insights opens any past month's recap.
+- **A first month** (no month before it with entries) says "No September to compare with" in place of that bar; the same holds for a first year.
+- **The year in review** is offered from December 26 to January 31: through a banner in January (the recap banner's component, "Your 2026 in review is ready") and through its card in Insights for the whole window.
+- **The share image is always light.** It's a picture people send elsewhere, so it doesn't follow the app's appearance; the cards draw it on a light background in dark too. It is made on the device (in the browser on the web), uploads nothing, and never includes entry names, notes, receipts, trip or household names.
+- **Fun facts carry no text from entries.** Each comes from dates, counts, categories or amounts only. The five drawn are approved: days without spending (74), the longest run without spending (6 days, in March), expenses recorded (412, about 8 a week), the weekday you spent the most (Saturday) and the category that came up most often (Food & drinks, 96 times). The share image carries days without spending.
+- **The notification.** Local, at 9 AM local time on the 1st, only when the switch is on; turning it on asks for permission. The web has no notification and shows only the banner.
 
 ## Review scenarios
 
