@@ -164,6 +164,37 @@ Haptics (iOS), one per action, from the [Haptics](#haptics-ios) table:
 
 Haptics stay under Reduce Motion, as everywhere else.
 
+## Entries in several currencies (MAZ-151)
+
+The [MAZ-270 cards](visual-acceptance.md#drafted-cards-entries-and-shared-trips-in-several-currencies-maz-270-2026-11-26) add the moments below. Each one reuses a moment above, with the same tokens; nothing gets its own timing. Money that Penny recalculates (a converted amount, a balance) updates the way Totals do; text that only changes its wording crossfades.
+
+| What | Motion | Token | Reduced |
+| --- | --- | --- | --- |
+| **The converted amount as you type** ("≈ $124.20 CAD" under the amount) | Each keystroke shows the new converted amount at once, with tabular figures so its width doesn't jitter. It doesn't count digit by digit like Totals: typing is already the animation, and a count would lag behind the keys. | — | Same. |
+| **The currency changes** (a pick in the picker or the web menu) | The picker closes as any sheet or menu does. The amount keeps its digits and its symbol crossfades (€ to ¥); digits beyond the new currency's minor units are dropped at once (JPY has none). The chip's code, the converted amount and the Rate row crossfade to the new currency's. | sheet: system; web menu out `quick` + `exit`; crossfade `quick` | Same: crossfades are allowed under Reduce Motion. |
+| **The rate arrives or refreshes** (the form looks up the rate for a new date or currency; a provisional rate is replaced on sync while the form or a list is open) | The Rate row's text crossfades to the new rate and source, and the converted amount counts to its new value as Totals. While the lookup runs, the row keeps the old rate dimmed to 0.5 opacity, with no spinner: it's quick and the old rate is still a fair guess. In lists, a row whose amount changes uses the Edited row motion **without** the highlight: Penny made the change, not the person. | crossfade `standard`; amount `emphasized` | Text crossfades (`quick`); the new amount appears at once. |
+| **The Provisional tag** (appears when a rate is provisional; leaves when sync brings the day's rate) | The tag and the note under the Rate row fade in, and fade out when the rate is final. The row keeps its height: the tag sits on the source line that's already there. The note's line opens and closes with the Disclosures height motion. | `quick`; note height `standard` | The tag fades (`quick`); the note appears and goes at once. |
+| **Edit the rate** (the Exchange rate sheet on iOS, the inline field on the web) | iOS: the system sheet, at its medium detent. Web: the Rate row's value swaps to the field with a `quick` crossfade. As you type, "converts to" follows each keystroke as above. On Done, the sheet closes, the **Edited** tag fades in and the form's converted amount counts to its new value as Totals. **Use the published rate** does the same in reverse, and the tag fades out. | system; web `quick`; amount `emphasized` | System sheet; web crossfade (`quick`); the amount appears at once. |
+| **Rate to enter** (rates off: Save disabled until there's a rate) | Saving without a rate is refused with the Refused field shake on the Rate row, as for a missing amount. Picking the suggested last rate fills the field with a `quick` crossfade. | as Refused field | No shake; the error text and outline stay. |
+| **Settle in another currency** (a trip's Balances, Settle in EUR) | The menu or picker opens and closes as any. Every balance and suggested payment counts to its value in the new currency as Totals, all together with no stagger; the currency symbols crossfade. Suggested payments that change who pays whom leave and arrive with the Lists › Delete and Insert motions. | `emphasized`; rows `standard` | New values and rows at once. |
+| **The trip form's currency row** | The system's own picker on iOS; Web menus and popovers on the web. | system; `quick` | System; fade (`quick`). |
+| **Rates in Settings** (Latest rates updates after a fetch) | The date crossfades. | `quick` | Same. |
+
+The cards' renderer turns animation off, so the cards show where each moment ends.
+
+Haptics (iOS), one per action, from the [Haptics](#haptics-ios) table:
+
+| Action | Haptic |
+| --- | --- |
+| Open the currency picker or the Exchange rate sheet | `.impact(weight: .light)`, as opening any sheet |
+| Pick a currency (in the picker, or Settle in on a trip) | `.selection` |
+| Done on an edited rate, or Use the published rate | `.selection`; the entry's own save stays `.success` |
+| Save refused for a missing rate (rates off) | `.error`, as any refused save |
+| Typing an amount or a rate | None: the keyboard's own |
+| A rate arrives, refreshes or stops being provisional | None: Penny did it, not the person |
+
+Haptics stay under Reduce Motion, as everywhere else.
+
 ## Haptics (iOS)
 
 On iOS, **every action the person takes that animates also plays a haptic**, so it's felt as well as seen. The rule:
@@ -181,6 +212,7 @@ On iOS, **every action the person takes that animates also plays a haptic**, so 
 | Save or sync failed (the couldn't-sync banner after the person's action) | `.error` (exists today: `failedCount`) |
 | Undo (from the saved toast or after a delete) | `.impact(weight: .light)` |
 | Dismiss a schedule suggestion on Recurring (MAZ-290) | `.impact(weight: .light)` |
+| Pick a currency, or accept or reset an edited exchange rate (MAZ-151) | `.selection` |
 | **Month and period:** step to another month or period, pick one in the calendar | `.selection` |
 | Focus a chart element (a Sankey band or label, a category in Insights) | `.selection` |
 | **Lists:** delete an entry (after its confirmation, or a full swipe) | `.impact(weight: .medium)`; the system's own on a full swipe |

@@ -1,0 +1,90 @@
+<!-- @dsCard group="iPhone" name="Add expense · Rate to enter" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Add expense with a rate to enter</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>Object.assign(ICONS, {"swap-horizontal":"<polyline points=\"304 48 416 160 304 272\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><line x1=\"398.87\" y1=\"160\" x2=\"96\" y2=\"160\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><polyline points=\"208 464 96 352 208 240\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><line x1=\"114\" y1=\"352\" x2=\"416\" y2=\"352\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/>","refresh":"<path d=\"M320 146s24.36-12-64-12a160 160 0 10160 160\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-miterlimit:10;stroke-width:var(--sw,32px)\"/><polyline points=\"256 58 336 138 256 218\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .behind { position: absolute; inset: 0; background: var(--bg); }
+  .behind .glow { opacity: .8; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 62px; bottom: 6px; border-radius: 44px; background: var(--surface); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .wrap { padding: 0 18px; }
+  .amount { text-align: center; padding: 14px 0 2px; }
+  .amount .v { font-size: 60px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.05; }
+  .amount .v .cur { opacity: .4; }
+  .amount .v .caret { display: inline-block; width: 3px; height: 50px; background: var(--tint); border-radius: 2px; vertical-align: -6px; margin-left: 3px; }
+  .amount .line { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 6px; }
+  .curchip { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--tint-text); background: var(--tint-soft); padding: 4px 8px 4px 10px; border-radius: 10px; }
+  .curchip [data-i] { width: 12px; height: 12px; --sw: 56px; }
+  .conv { font-size: 15px; font-weight: 600; color: var(--label-2); }
+  .note { margin: 12px 0 0; height: 46px; border-radius: 14px; background: var(--surface-2); display: flex; align-items: center; padding: 0 14px; font-size: 17px; }
+  .cats { display: flex; gap: 8px; margin-top: 10px; overflow: hidden; }
+  .cats .pill.on { background: var(--c-entertainment); color: #fff; }
+  .opts { margin-top: 10px; border-radius: 16px; background: var(--surface-2); }
+  .opt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; font-size: 16px; position: relative; }
+  .opt + .opt::before { content: ""; position: absolute; top: 0; left: 44px; right: 0; border-top: .5px solid var(--separator); }
+  .opt > [data-i] { width: 20px; height: 20px; color: var(--label-2); flex: none; }
+  .opt .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; text-align: right; }
+  .opt .v b { color: var(--tint-text); font-weight: 600; }
+  .opt.rate { min-height: 54px; }
+  .opt.rate .v { flex-direction: column; align-items: flex-end; gap: 0; }
+  .opt.rate .v b { color: var(--label); font-weight: 600; font-size: 15px; }
+  .opt.rate .v small { font-size: 12px; color: var(--label-2); display: flex; align-items: center; gap: 5px; }
+  .tagp { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--pending) 15%, transparent); color: var(--pending); }
+  .tage { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; background: var(--fill); color: var(--label-2); }
+  .tagp [data-i], .tage [data-i] { width: 10px; height: 10px; --sw: 60px; }
+  .kb { position: absolute; left: 0; right: 0; bottom: 0; height: 252px; background: var(--surface-2); padding: 8px 6px 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .k { border-radius: 10px; background: var(--surface); display: grid; place-items: center; font-size: 25px; font-weight: 400; box-shadow: 0 1px 0 rgba(0,0,0,.12); }
+  .k.ghost { background: transparent; box-shadow: none; }
+  .dark .k { background: #3A3836; }
+  .gbtn.off { background: var(--fill); color: var(--label-3); box-shadow: none; border: 0; }
+  .opt.rate .v b.need { color: var(--tint-text); }
+  .pnote { display: flex; gap: 8px; margin: 8px 4px 0; font-size: 13px; line-height: 17px; color: var(--label-2); }
+  .pnote [data-i] { width: 15px; height: 15px; flex: none; margin-top: 1px; --sw: 44px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="behind"><div class="glow"></div></div>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar">
+      <div class="gbtn plain"><i data-i="close"></i></div>
+      <div class="seg" style="width:236px"><div class="on">Expense</div><div>Income</div><div>Invest</div></div>
+      <div class="gbtn off"><i data-i="checkmark"></i></div>
+    </div>
+    <div class="wrap">
+      <div class="amount">
+        <div class="v num"><span class="cur">€</span>85.00<span class="caret"></span></div>
+        <div class="line"><span class="curchip">EUR <i data-i="chevron-down"></i></span><span class="conv">Enter a rate to convert</span></div>
+      </div>
+      <div class="note">Cooking class</div>
+      <div class="cats">
+        <span class="pill on"><i data-i="musical-notes"></i>Fun</span>
+        <span class="pill"><i data-i="cafe"></i>Food</span>
+        <span class="pill"><i data-i="bus"></i>Transport</span>
+        <span class="pill"><i data-i="ellipsis-horizontal"></i></span>
+      </div>
+      <div class="opts">
+        <div class="opt"><i data-i="calendar"></i>Date<span class="v">Tue, Nov 3</span></div>
+        <div class="opt"><i data-i="card"></i>Account<span class="v">Visa</span></div>
+        <div class="opt rate"><i data-i="swap-horizontal"></i>Rate<span class="v"><b class="need">Enter rate</b><small class="num">Last used: 1 EUR = 1.4600 CAD</small></span><i data-i="chevron-forward" class="chev"></i></div>
+        <div class="opt"><i data-i="ellipsis-horizontal"></i>Receipt, repeat, trip<span class="v">Lisbon <i data-i="chevron-forward" class="chev"></i></span></div>
+      </div>
+      <div class="pnote"><i data-i="server"></i><span>Your server doesn't fetch exchange rates. Enter the rate you got, or tap to use the last one.</span></div>
+    </div>
+    <div class="kb">
+      <div class="k">1</div><div class="k">2</div><div class="k">3</div>
+      <div class="k">4</div><div class="k">5</div><div class="k">6</div>
+      <div class="k">7</div><div class="k">8</div><div class="k">9</div>
+      <div class="k ghost">.</div><div class="k">0</div><div class="k ghost"><i data-i="chevron-back"></i></div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

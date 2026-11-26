@@ -1,0 +1,70 @@
+<!-- @dsCard group="iPhone" name="Trip balances · Settle up in one currency" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Trip balances settled in one currency</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .title { position: absolute; top: 110px; left: 0; right: 0; height: 28px; display: grid; place-items: center; font-size: 17px; font-weight: 600; z-index: 21; pointer-events: none; }
+  .seg { margin: 146px 16px 0; }
+  .lbl { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, var(--pending) 15%, transparent); color: var(--pending); }
+  .tag [data-i] { width: 13px; height: 13px; --sw: 44px; }
+  .row .avatar { width: 36px; height: 36px; border: 0; font-size: 13px; }
+  .row .amt b { font-weight: 600; }
+  .sugg { display: flex; align-items: center; gap: 10px; padding: 12px 16px; position: relative; }
+  .sugg + .sugg::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .sugg .who { flex: 1; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .sugg .who [data-i] { width: 15px; height: 15px; color: var(--label-3); --sw: 48px; }
+  .sugg .v { font-weight: 600; font-size: 16px; }
+  .btn { height: 32px; padding: 0 12px; border-radius: 16px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; }
+  .btn.on { background: var(--tint); color: #fff; }
+  .btn.off { background: var(--fill); color: var(--label-3); }
+  .note { margin: 10px 20px 0; font-size: 13px; color: var(--label-2); line-height: 18px; display: flex; gap: 8px; }
+  .note [data-i] { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .settle { display: flex; align-items: center; gap: 10px; padding: 0 16px; min-height: 50px; font-size: 16px; }
+  .settle .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; }
+  .settle .v b { color: var(--label); font-weight: 600; }
+  .row .amt small { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .lbl .cur { display: inline-flex; align-items: center; gap: 4px; text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 500; color: var(--tint-text); }
+  .lbl .cur [data-i] { width: 13px; height: 13px; --sw: 56px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div class="grp"><div class="glass gbtn"><i data-i="chevron-back"></i></div></div>
+      <div class="grp" style="display:flex;gap:8px"><div class="glass gbtn"><i data-i="person-add"></i></div><div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="title">Lisbon</div>
+    <div class="seg"><div>Expenses</div><div class="on">Balances</div><div>People</div></div>
+
+    <div class="lbl"><span>Balances in euros</span><span class="cur">Settle in EUR <i data-i="chevron-down"></i></span></div>
+    <div class="list">
+      <div class="row"><div class="avatar mono">SK</div><div class="t"><b>Sam</b><span>Paid €564.00</span></div><div class="amt num pos">+€329.00<small>≈ US$349.76</small></div></div>
+      <div class="row"><div class="avatar mono">MF</div><div class="t"><b>You</b><span>Paid €256.00 · share €242.63</span></div><div class="amt num pos">+€13.37<small>≈ $19.56</small></div></div>
+      <div class="row"><div class="avatar mono">JS</div><div class="t"><b>Jo</b><span>Paid €120.00</span></div><div class="amt num">−€115.00<small>owes</small></div></div>
+      <div class="row"><div class="avatar mono">MI</div><div class="t"><b>Mira</b><span>Paid €15.26</span></div><div class="amt num">−€227.37<small>owes</small></div></div>
+    </div>
+
+    <div class="lbl"><span>Suggested payments</span></div>
+    <div class="list">
+      <div class="sugg"><span class="who">Mira <i data-i="arrow-up" style="transform:rotate(90deg)"></i> Sam</span><span class="v num">€227.37</span><span class="btn on">Record paid</span></div>
+      <div class="sugg"><span class="who">Jo <i data-i="arrow-up" style="transform:rotate(90deg)"></i> Sam</span><span class="v num">€101.63</span><span class="btn on">Record paid</span></div>
+      <div class="sugg"><span class="who">Jo <i data-i="arrow-up" style="transform:rotate(90deg)"></i> You</span><span class="v num">€13.37</span><span class="btn on">Record paid</span></div>
+    </div>
+    <div class="note"><i data-i="cash"></i><span>Each expense counts in euros at its own date's rate, so balances don't move later. Under a balance: that person's own currency, at today's rate.</span></div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab on"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

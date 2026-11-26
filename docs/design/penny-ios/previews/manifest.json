@@ -144,6 +144,27 @@
       ]
     },
     {
+      "id": "iphone-activity-currencies",
+      "source": "docs/design/penny-ios/iphone/activity-currencies.html",
+      "sourceSha256": "9e283f328971ce8a647afca10b1bfc2868be72ce203e5968f8de191b29af31ac",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-activity-currencies.light.png",
+          "sha256": "cf7074ac4b53255313a49dc30c6cc9cd9617023e4cacc3363fa13fa566d00fcf"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-activity-currencies.dark.png",
+          "sha256": "cd1833b43a4412e7e6811aef90a0596da50db212d899e214cadedf7fd6a9be01"
+        }
+      ]
+    },
+    {
       "id": "iphone-activity-filters",
       "source": "docs/design/penny-ios/iphone/activity-filters.html",
       "sourceSha256": "d589f909b9b96152bdc9571914c3ac2078286ff8b1a8ad0b89e6ce386aaec220",
@@ -417,6 +438,69 @@
       ]
     },
     {
+      "id": "iphone-currency-picker",
+      "source": "docs/design/penny-ios/iphone/currency-picker.html",
+      "sourceSha256": "b4b4ab70b124212d33a467652a987583df0197ef4f3fbf8c6d6990a68177caa8",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-currency-picker.light.png",
+          "sha256": "5ae077deacfc07d80e956cb1b366db057b9caf6ad5e704b4f3de21e859079668"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-currency-picker.dark.png",
+          "sha256": "b59d71c9178db7fa17ff8721caf2a14b6a90626a375eee4517588c99362a39d8"
+        }
+      ]
+    },
+    {
+      "id": "iphone-currency-rates-off",
+      "source": "docs/design/penny-ios/iphone/currency-rates-off.html",
+      "sourceSha256": "c0d6c8d6601a0404236d7a9552624a159d8b7e5e1b998497542e3a4f3b0d25fe",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-currency-rates-off.light.png",
+          "sha256": "b8ac17193664d6f7681cf56a974fba3621a13db90b99397bde12a67c62d7c7fc"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-currency-rates-off.dark.png",
+          "sha256": "300008f5ac31ea59f1099b547ac3035b9ab45beda3cb13aa4f99e12c190171f0"
+        }
+      ]
+    },
+    {
+      "id": "iphone-currency-rates",
+      "source": "docs/design/penny-ios/iphone/currency-rates.html",
+      "sourceSha256": "0deb5f3519112d030716f57187da28d22b980ec66cdf1d6866dd40ce56d708ac",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-currency-rates.light.png",
+          "sha256": "6b1056da86b8f262784439675c55ede4420cd0ed5dc1bf89514e325da79daf84"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-currency-rates.dark.png",
+          "sha256": "c4b54b29cd6f4be44f169094d06900828c6464a892c5d3b99eb1c03997886786"
+        }
+      ]
+    },
+    {
       "id": "iphone-currency",
       "source": "docs/design/penny-ios/iphone/currency.html",
       "sourceSha256": "969ee7970deee83f2c637c8004dc1daf93db5c62d3185d86f5d8f976ed55bc1e",
@@ -543,6 +627,48 @@
       ]
     },
     {
+      "id": "iphone-entry-currency",
+      "source": "docs/design/penny-ios/iphone/entry-currency.html",
+      "sourceSha256": "a81a11ab382e03cf7b30ad5fc25c8f5e3b57cbf6691ed5774a4ce7d4c109c4b3",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-currency.light.png",
+          "sha256": "84ff31710ce852150d533756864c8fb10a19f64af3353a62c45ba6fe5d1aedd0"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-currency.dark.png",
+          "sha256": "b0a63c8d9002ee5715420bc27a19c32f3c3932db6c95006c9b68b2fa9acce6f3"
+        }
+      ]
+    },
+    {
+      "id": "iphone-entry-detail-currency",
+      "source": "docs/design/penny-ios/iphone/entry-detail-currency.html",
+      "sourceSha256": "1dae5b16cba980769c85d7be35086910ffe51a0afe90aac85fe1727b2c74cf01",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-detail-currency.light.png",
+          "sha256": "b9e9931caaf9ace10e5a694586fb801e92b3d24b4db5810499500d9379f34729"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-detail-currency.dark.png",
+          "sha256": "b466958b4481e7a4b7219d88d9ca5963de4925d862a06d95e1d6720946d7e45f"
+        }
+      ]
+    },
+    {
       "id": "iphone-entry-detail",
       "source": "docs/design/penny-ios/iphone/entry-detail.html",
       "sourceSha256": "9d9e04e4db899d4d038364b41f19cbe875614c3a4ea13108d9b017ab5356f5af",
@@ -581,6 +707,69 @@
           "appearance": "dark",
           "file": "previews/iphone-entry-extras.dark.png",
           "sha256": "d7d183b7ade21318a685961e428802057044354850748a16de69d85002e26535"
+        }
+      ]
+    },
+    {
+      "id": "iphone-entry-rate-edited",
+      "source": "docs/design/penny-ios/iphone/entry-rate-edited.html",
+      "sourceSha256": "13e7b33f8d78dc7dacb89225e731938744c9d27300aecd378e2c8451ce63394d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-rate-edited.light.png",
+          "sha256": "f32783e086b4eb39d85897e0c93e13ca7028af68c341fa10ffe7c5637f9c7e2d"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-rate-edited.dark.png",
+          "sha256": "19523c5762294b2b98cefe5bfb78c6c6c2bfc08c3a8f0554bfdceb896d1f77bc"
+        }
+      ]
+    },
+    {
+      "id": "iphone-entry-rate-manual",
+      "source": "docs/design/penny-ios/iphone/entry-rate-manual.html",
+      "sourceSha256": "2952bb72f14df41fd08c36b2992d9722942a6956ab832c06601f6f485327478c",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-rate-manual.light.png",
+          "sha256": "5e53bd11028da42bc19e21e8c7ea30b0ba531890a10a8f51bba8101fd3989a0f"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-rate-manual.dark.png",
+          "sha256": "c352dc9a40033fec05b9daceddf5661ecfa59b1b54e8e076c6dd3531b1540417"
+        }
+      ]
+    },
+    {
+      "id": "iphone-entry-rate-provisional",
+      "source": "docs/design/penny-ios/iphone/entry-rate-provisional.html",
+      "sourceSha256": "b1b50245ffde9a662b324f706cc4cf64c16d7cc6b3f418bb2b8ee48c5d5b5135",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-rate-provisional.light.png",
+          "sha256": "4556cdeedea28dfe2a2b705461bbeb3f42bda1093d42022631936cb2b692ea4b"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-rate-provisional.dark.png",
+          "sha256": "69f8b5bb1f607c3838c94775ed1ae49846321832038d13760bdd3499130aeb20"
         }
       ]
     },
@@ -644,6 +833,27 @@
           "appearance": "dark",
           "file": "previews/iphone-history.dark.png",
           "sha256": "4ffb7c3c821f94baf3e1ac056916748b92653198b01b9e7bf3d44efdbc13c0fa"
+        }
+      ]
+    },
+    {
+      "id": "iphone-home-currencies",
+      "source": "docs/design/penny-ios/iphone/home-currencies.html",
+      "sourceSha256": "692f911a94eba7b90e8e5deef4bee92b0a1c4c0d60b638ec1edf28be75351d37",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-home-currencies.light.png",
+          "sha256": "34f459aff7c538b5d0e529475383e996d7e221ce8d9e695986d4389836fbff08"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-home-currencies.dark.png",
+          "sha256": "43eda6ec3ac266158442c75a17f61e198ce3e87c4fed428392214440fb8237f2"
         }
       ]
     },
@@ -2024,6 +2234,48 @@
       ]
     },
     {
+      "id": "iphone-trip-balances-currency",
+      "source": "docs/design/penny-ios/iphone/trip-balances-currency.html",
+      "sourceSha256": "541bf4d7492093a1f3cc9ead791f8ed5c174f8d71645e5b0f500db520bf8ee90",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-trip-balances-currency.light.png",
+          "sha256": "b8ad3c34cb67ae3512334b74ca70ea7a8a007becd8bad10eec70f53042aed8c4"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-trip-balances-currency.dark.png",
+          "sha256": "67a90472c2e4dc51c610785329a3da7a108d131171a45857b1b162c674aab77c"
+        }
+      ]
+    },
+    {
+      "id": "iphone-trip-currencies",
+      "source": "docs/design/penny-ios/iphone/trip-currencies.html",
+      "sourceSha256": "9bb6f986c0451e3d2837bbadf42dc5a0251fd23885421fa625dfb8c4c330f205",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-trip-currencies.light.png",
+          "sha256": "7a6e2ba5398444c76ec6a9ce958714637f2c52dead221f0702b7a579a7bc2b7c"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-trip-currencies.dark.png",
+          "sha256": "db5f63770ba5a6b9ac307453459f9b59544aebc6f39948e51b9168caa17da0c3"
+        }
+      ]
+    },
+    {
       "id": "iphone-trip-detail",
       "source": "docs/design/penny-ios/iphone/trip-detail.html",
       "sourceSha256": "cb48f21004224045d973583c6d9b2456ae185c19585d5c85beaccbb850702002",
@@ -2041,6 +2293,27 @@
           "appearance": "dark",
           "file": "previews/iphone-trip-detail.dark.png",
           "sha256": "1ea992ab0c1196fdac327030f84e078cad33928123c50bf7854e8a9b0480d7db"
+        }
+      ]
+    },
+    {
+      "id": "iphone-trip-form-currency",
+      "source": "docs/design/penny-ios/iphone/trip-form-currency.html",
+      "sourceSha256": "e336fade79c2e028fb1dd0b6a0a80ce09a93fdc3aba0fe5f7d446f3507ea9b2f",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-trip-form-currency.light.png",
+          "sha256": "194e4d1a0fa9e6a29605cbc12acfb1a8427fcf38a14dd9f14767e8afb2b5930e"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-trip-form-currency.dark.png",
+          "sha256": "429584dc3fdca62a64aed88ce6d768f5fb5c3352a2d0d107e6d14abc27d5f2d3"
         }
       ]
     },
@@ -2318,6 +2591,27 @@
       ]
     },
     {
+      "id": "ipad-activity-currencies",
+      "source": "docs/design/penny-ios/ipad/activity-currencies.html",
+      "sourceSha256": "d06409457edf973291b87d831fb2e15c5ca35c805d147e2c2f733a5b6b5553b6",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-activity-currencies.light.png",
+          "sha256": "ea6bfd4f3848ef93f2a52351973ecc2082bd51c5d217e044f551b37fc2c511cb"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-activity-currencies.dark.png",
+          "sha256": "6c603e0f33e2f7b3b2cab8a9ceb957a38374775bed6c00db96f648b1280950cf"
+        }
+      ]
+    },
+    {
       "id": "ipad-activity",
       "source": "docs/design/penny-ios/ipad/activity.html",
       "sourceSha256": "ac03a6e2597e6e4bf185a1fc2b3488f84e8d0d13ff245f93550066dd3aa9ef6c",
@@ -2335,6 +2629,27 @@
           "appearance": "dark",
           "file": "previews/ipad-activity.dark.png",
           "sha256": "245b5c5a7a84f9135d6bf00cebbe409a8712a3ebbe5f3313cb1b760b405fece8"
+        }
+      ]
+    },
+    {
+      "id": "ipad-add-entry-currency",
+      "source": "docs/design/penny-ios/ipad/add-entry-currency.html",
+      "sourceSha256": "932c989def13268be85742b3c3ed92344a1dc200ae72f7280ea162ec70833297",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-add-entry-currency.light.png",
+          "sha256": "2e0c0de765bc6a6a52ce5ef0e40be23ae4071342bef08dffe27e5c5d29378387"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-add-entry-currency.dark.png",
+          "sha256": "423c1cbc0e11f8398e82a08148293b3f46be1ca1fb042c5cc5dba77961dd18eb"
         }
       ]
     },
@@ -2591,6 +2906,27 @@
       ]
     },
     {
+      "id": "ipad-settings-currency",
+      "source": "docs/design/penny-ios/ipad/settings-currency.html",
+      "sourceSha256": "e9f1378e712bec37e3d965615848935cf804f6ec8ebb5409e0e2c93e53d59aee",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-settings-currency.light.png",
+          "sha256": "439c5138d87799924ae1630c8871a44d3e41e0fac825a6ec89bd2c23bd281484"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-settings-currency.dark.png",
+          "sha256": "41145a06cd39787ebe81de1652f3ecf31106406f79e0aa3ccd369a700950c0fd"
+        }
+      ]
+    },
+    {
       "id": "ipad-settings",
       "source": "docs/design/penny-ios/ipad/settings.html",
       "sourceSha256": "9c0b7273b6bbec038ceccfafd407ff2709cc18e3f87e7754aa44ee2fbac8d03d",
@@ -2629,6 +2965,27 @@
           "appearance": "dark",
           "file": "previews/ipad-shared.dark.png",
           "sha256": "40782f5af54747ba4cfeb585a198d2d71304c6576378a1eb090cf8dfb3411f4d"
+        }
+      ]
+    },
+    {
+      "id": "ipad-trip-currencies",
+      "source": "docs/design/penny-ios/ipad/trip-currencies.html",
+      "sourceSha256": "55d2773873092a0790855515458510c2aa08f95621c665dfb75b39f27ff26542",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-trip-currencies.light.png",
+          "sha256": "9c7b6f2b2a85d889363b0f6c40d645079b6e29d1ee3a8f04c8bb8796f87d6bdb"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-trip-currencies.dark.png",
+          "sha256": "30c810c20dcc22c949e2010ddbb0c386ec932819345759d6d06ee0523b2ae753"
         }
       ]
     },
@@ -2759,6 +3116,27 @@
       ]
     },
     {
+      "id": "web-activity-currencies",
+      "source": "docs/design/penny-ios/web/activity-currencies.html",
+      "sourceSha256": "cf57f826e900739fdf89b418dbacb15f474a76870d0339f4e665f0f632532851",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-activity-currencies.light.png",
+          "sha256": "09bcbedc780a30230403503d56d7cf1ef4f9a5e1e043b83ab417fa79bcacca88"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-activity-currencies.dark.png",
+          "sha256": "04081bd35a312c2e2179580a8efacd6c107026062282a64f010f3367c7952ac9"
+        }
+      ]
+    },
+    {
       "id": "web-activity-searching",
       "source": "docs/design/penny-ios/web/activity-searching.html",
       "sourceSha256": "50bd7682479dfd38c5f24038dd66b399ff0a8bc2c9c2672bdc027610cea3da95",
@@ -2822,6 +3200,27 @@
       ]
     },
     {
+      "id": "web-add-entry-currency",
+      "source": "docs/design/penny-ios/web/add-entry-currency.html",
+      "sourceSha256": "4f8c1002e3f9e2e827b247e63778f347c8c8a6491a8d69e22d37d2bab6f8d9ed",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-add-entry-currency.light.png",
+          "sha256": "dad068967131f4eb8f7c223ac30bd23b555745d9a5683b66e277ec0ee3acd891"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-add-entry-currency.dark.png",
+          "sha256": "305cb344bf04fbe7aa8144d779e9df71dd0ed1fc23640f78cc98375bc0dfc1be"
+        }
+      ]
+    },
+    {
       "id": "web-add-entry",
       "source": "docs/design/penny-ios/web/add-entry.html",
       "sourceSha256": "6b36266db802a968eda5aeb14e7b9c050bb8588e479cee3c37583106772865c7",
@@ -2881,6 +3280,48 @@
           "appearance": "dark",
           "file": "previews/web-create-account.dark.png",
           "sha256": "2811380e0ccd081e932714dea34f9e751f9af3718ed9bb0b0e338d52c8f2c68e"
+        }
+      ]
+    },
+    {
+      "id": "web-currency-rates-off",
+      "source": "docs/design/penny-ios/web/currency-rates-off.html",
+      "sourceSha256": "4b642dcd64bfb51716e8fb3a7d305bbe5ceb83d56dd753cf88e9d22bf0e8ec08",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-currency-rates-off.light.png",
+          "sha256": "a1065412bcca33bf414b2f71e1dd0734eaf8817b9d9e49b62d4369bd37786c38"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-currency-rates-off.dark.png",
+          "sha256": "355ebd33f0c51d70a2474939834c271733bc4fd97a22cddad1af00c547e237b3"
+        }
+      ]
+    },
+    {
+      "id": "web-currency-rates",
+      "source": "docs/design/penny-ios/web/currency-rates.html",
+      "sourceSha256": "e60050fb98110689f133641e885cf8c720a6a0e6f6d0fb4eaa67174645f31678",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-currency-rates.light.png",
+          "sha256": "3097f6c26c91efee2ab077d9a9563fc016d43f8c6e0cb13da34f022d78511df6"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-currency-rates.dark.png",
+          "sha256": "c1586138181a1dbf4f5ab83c202dcc250e969fe6cd7d623fd2043c981e59dd7f"
         }
       ]
     },
@@ -2986,6 +3427,69 @@
           "appearance": "dark",
           "file": "previews/web-email-verified.dark.png",
           "sha256": "f4681955726211632b7a67c5991e7be3c392736ddf284c01ac9d8eb47f6fdfe7"
+        }
+      ]
+    },
+    {
+      "id": "web-entry-rate-edited",
+      "source": "docs/design/penny-ios/web/entry-rate-edited.html",
+      "sourceSha256": "3af947b63f642104b03814008dcd91271b9cf7b4a1b011b565e0acdac036db70",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-entry-rate-edited.light.png",
+          "sha256": "ff04e82487c25c2c77ae3eedb472a03196cce184f2baeea75ce76de27b3da76e"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-entry-rate-edited.dark.png",
+          "sha256": "9d820d862d340ed65764c7f2120512b4b7261259947b2f01b1b98098987fdfe0"
+        }
+      ]
+    },
+    {
+      "id": "web-entry-rate-manual",
+      "source": "docs/design/penny-ios/web/entry-rate-manual.html",
+      "sourceSha256": "251e95b18482fff1a7d44a877c378dbd898bd23c80133d56e34d1d8b85822cc0",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-entry-rate-manual.light.png",
+          "sha256": "57713b677370bfdec83242f8b8a850ed7b1b44828fa1ca2fcb28e54a7624387f"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-entry-rate-manual.dark.png",
+          "sha256": "60d1fc56cf9de13558c8bc6ba8969190fd1f8ee3b5b9d067475859c4f5ff2c3f"
+        }
+      ]
+    },
+    {
+      "id": "web-entry-rate-provisional",
+      "source": "docs/design/penny-ios/web/entry-rate-provisional.html",
+      "sourceSha256": "e864ee6b02feb5eb53505d979c61ea777d7162a99ecadd66cfd5c3a14e159fb0",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-entry-rate-provisional.light.png",
+          "sha256": "a5826e873a92e50114272d7d4240c581051024cffe92ced10fa52dd7f8b9c90a"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-entry-rate-provisional.dark.png",
+          "sha256": "a27ed074c6fdbad347515d9eed2b472c6d83578898208d7e5151ce53e9821cbf"
         }
       ]
     },
@@ -3826,6 +4330,48 @@
           "appearance": "dark",
           "file": "previews/web-tablet.dark.png",
           "sha256": "5aa25ee5fb14b4457750b47551d1b9cdba4312f03a467574958638cd238a0b6a"
+        }
+      ]
+    },
+    {
+      "id": "web-trip-currencies",
+      "source": "docs/design/penny-ios/web/trip-currencies.html",
+      "sourceSha256": "d9a4c1b2fd0bb78c680dccfaafb39b868537eda580d83d556a050cb22b5a33a6",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-trip-currencies.light.png",
+          "sha256": "477505367c9a6540749171dd3c56829d7343877c27d001e6a41fbc228dee7cdd"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-trip-currencies.dark.png",
+          "sha256": "32fa708d613361046701e0289fcf3f9401fccd547497834bd303c3d4052eff9d"
+        }
+      ]
+    },
+    {
+      "id": "web-trip-form-currency",
+      "source": "docs/design/penny-ios/web/trip-form-currency.html",
+      "sourceSha256": "1ef7308179fb6a212fb058d36c5e7564eaaa95dbf4642d302f137e4d7c2acbed",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-trip-form-currency.light.png",
+          "sha256": "c6eb0adac163123a637e3f244e4a1c0f3c08e72a77b3b78a3d9df60b058ef8ca"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-trip-form-currency.dark.png",
+          "sha256": "312dd6e0384ece508d829cef5f1d6673fd3dfc8fdac5c75c5d03975f7b51b5d6"
         }
       ]
     },

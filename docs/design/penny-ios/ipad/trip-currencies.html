@@ -1,0 +1,118 @@
+<!-- @dsCard group="iPad" name="Trip · Several currencies" viewport="1290x914" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPad · Trip with expenses in several currencies</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/ipad.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .glow { left: 0; right: 200px; top: -160px; height: 520px; --glow-1: rgba(80, 150, 230, .38); --glow-2: rgba(255, 190, 120, .32); --glow-3: rgba(255, 140, 120, .2); }
+  .content { position: relative; z-index: 1; padding: 100px 24px 0; display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  .hero { padding: 4px 4px 0; }
+  .when { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .hero h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; }
+  .hero .d { font-size: 15px; color: var(--label-2); }
+  .totals { display: flex; gap: 34px; margin-top: 18px; }
+  .totals div { font-size: 14px; color: var(--label-2); }
+  .totals b { display: block; font-size: 34px; font-weight: 700; letter-spacing: -0.03em; color: var(--label); margin-top: 2px; }
+  .ppl .bal { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: .5px solid var(--separator); font-size: 15px; }
+  .ppl .bal:first-of-type { border-top: 0; }
+  .ppl .avatar { width: 30px; height: 30px; border: 0; font-size: 11px; }
+  .ppl .v { margin-left: auto; font-weight: 600; text-align: right; }
+  .ppl .v span { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .panel .list .row { padding-left: 20px; padding-right: 20px; }
+  .row .t span.pv { display: flex; }
+  .pv { display: inline-flex; gap: 5px; align-items: center; }
+  .pv [data-i] { width: 14px; height: 14px; }
+  .cats .cr { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+  .cats .ic { width: 30px; height: 30px; border-radius: 9px; }
+  .cats .ic [data-i] { width: 16px; height: 16px; }
+  .cats .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+  .cats .bar i { display: block; height: 100%; border-radius: 3px; }
+  .cats .v { width: 80px; text-align: right; }
+  .rates { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--label-2); background: var(--fill); padding: 5px 10px; border-radius: 12px; margin-top: 14px; }
+  .rates [data-i] { width: 13px; height: 13px; --sw: 44px; }
+  .row .amt .pv { color: var(--pending); }
+  .ppl .bal b.num + span { flex: 1; }
+  .ph2 { display: flex; justify-content: space-between; align-items: baseline; }
+  .cur { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--tint-text); }
+  .cur [data-i] { width: 12px; height: 12px; --sw: 56px; }
+  .sugg { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: .5px solid var(--separator); font-size: 14px; }
+  .sugg .v { margin-left: auto; font-weight: 600; }
+  .sugg [data-i] { width: 13px; height: 13px; color: var(--label-3); }
+  .btn { height: 28px; padding: 0 10px; border-radius: 14px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; background: var(--tint); color: #fff; }
+  .foot { font-size: 12.5px; color: var(--label-2); margin-top: 10px; line-height: 17px; }
+</style></head>
+<body class="canvas">
+<div class="ipad">
+  <div class="status"><span>9:41  Mon Nov 9</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="glass sidebar">
+    <div class="brand"><div class="logo"><i data-i="leaf"></i></div>penny.</div>
+    <div class="nav"><i data-i="home"></i>Home</div>
+    <div class="nav"><i data-i="list"></i>Activity</div>
+    <div class="nav"><i data-i="pie-chart"></i>Insights</div>
+    <div class="side-h">Together</div>
+    <div class="nav"><i data-i="people"></i>Apartment<span class="n">$142</span></div>
+    <div class="nav"><i data-i="people"></i>All households</div>
+    <div class="nav on"><i data-i="airplane"></i>Lisbon<span class="n">Nov 12</span></div>
+    <div class="nav"><i data-i="airplane"></i>All trips</div>
+    <div class="side-h">Manage</div>
+    <div class="nav"><i data-i="repeat"></i>Recurring</div>
+    <div class="nav"><i data-i="wallet"></i>Accounts</div>
+    <div class="nav"><i data-i="pricetag"></i>Categories</div>
+    <div class="side-foot"><div class="avatar mono">MF</div><div><b>Max</b><span>Synced just now</span></div><i data-i="settings" style="margin-left:auto;color:var(--label-2)"></i></div>
+  </div>
+
+  <div class="main">
+    <div class="glow"></div>
+    <div class="toolbar">
+      <div class="sp"></div>
+      <div class="glass gbtn"><i data-i="person-add"></i></div>
+      <div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div>
+      <div class="glass gcap tinted"><i data-i="add" style="width:19px;height:19px;--sw:44px"></i>Trip expense</div>
+    </div>
+    <div class="content">
+      <div class="hero">
+        <div class="when">In 3 days</div>
+        <h1>Lisbon</h1>
+        <div class="d">Nov 12–19, 2026 · shared with 3 people</div>
+        <div class="totals">
+          <div>Trip total<b class="num">$1,394.91</b></div>
+          <div>Your share<b class="num">$354.30</b></div>
+        </div>
+        <span class="rates"><i data-i="cash"></i>EUR, USD and CAD · each at its date's rate <i data-i="chevron-forward" class="chev"></i></span>
+      </div>
+      <div class="panel ppl">
+        <div class="ph2"><h4>Balances in euros</h4><span class="cur">Settle in EUR <i data-i="chevron-down"></i></span></div>
+        <div style="margin-top:6px">
+          <div class="bal"><div class="avatar mono">SK</div>Sam<span class="v num pos">+€329.00<span>≈ US$349.76</span></span></div>
+          <div class="bal"><div class="avatar mono">MF</div>You<span class="v num pos">+€13.37<span>≈ $19.56</span></span></div>
+          <div class="bal"><div class="avatar mono">JS</div>Jo<span class="v num">−€115.00<span>owes</span></span></div>
+          <div class="bal"><div class="avatar mono">MI</div>Mira<span class="v num">−€227.37<span>owes</span></span></div>
+        </div>
+        <div class="sugg"><span>Mira</span><i data-i="arrow-up" style="transform:rotate(90deg)"></i><span>Sam</span><span class="v num">€227.37</span><span class="btn">Record paid</span></div>
+        <div class="sugg"><span>Jo</span><i data-i="arrow-up" style="transform:rotate(90deg)"></i><span>Sam</span><span class="v num">€101.63</span><span class="btn">Record paid</span></div>
+        <div class="sugg"><span>Jo</span><i data-i="arrow-up" style="transform:rotate(90deg)"></i><span>You</span><span class="v num">€13.37</span><span class="btn">Record paid</span></div>
+      </div>
+
+      <div class="panel">
+        <h4>Expenses <span>4 shared</span></h4>
+        <div class="list">
+          <div class="row"><div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div class="t"><b>Fado tickets</b><span>Today · Jo paid · split 4 ways</span></div><div class="amt num">€120.00<span class="pv">≈ $175.56 · provisional</span></div></div>
+          <div class="row"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><div class="t"><b>Travel insurance</b><span>Nov 3 · Mira paid · 2 ways</span></div><div class="amt num">$22.30</div></div>
+          <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Apartment in Alfama</b><span>Oct 8 · you paid</span></div><div class="amt num">€256.00<span>$373.25</span></div></div>
+          <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="airplane"></i></div><div class="t"><b>Flights</b><span>Oct 2 · Sam paid · split 4 ways</span></div><div class="amt num">US$600.00<span>$823.80</span></div></div>
+        </div>
+      </div>
+      <div class="panel ppl">
+        <h4>Exchange rates</h4>
+        <div style="margin-top:6px">
+          <div class="bal" style="border-top:0"><b class="num" style="width:56px">EUR</b><span style="color:var(--label-2)">Euro · 2 expenses</span><span class="v num">€376.00<span>≈ $548.81</span></span></div>
+          <div class="bal"><b class="num" style="width:56px">USD</b><span style="color:var(--label-2)">US dollar · 1 expense</span><span class="v num">US$600.00<span>$823.80</span></span></div>
+          <div class="bal"><b class="num" style="width:56px">CAD</b><span style="color:var(--label-2)">Canadian dollar · 1 expense</span><span class="v num">$22.30<span>your currency</span></span></div>
+        </div>
+        <div class="foot">Totals here are in your currency, Canadian dollars; Sam sees the same trip in US dollars. Rates are the European Central Bank's for each expense's date. Fado tickets use Friday's rate until today's is published.</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
