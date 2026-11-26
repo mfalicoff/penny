@@ -1901,13 +1901,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The app doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -1917,13 +1917,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Recurring has no empty state that mentions suggestions yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
         "followUp": "MAZ-290"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Recurring has no empty state that mentions suggestions yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -1933,29 +1933,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The app doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
-      }
-    },
-    {
-      "id": "iphone-suggestion-dismiss",
-      "view": "confirmation before dismissing the Netflix suggestion",
-      "native": {
-        "status": "not-built",
-        "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The app doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
-      },
-      "web": {
-        "status": "not-built",
-        "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -1965,13 +1949,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The app doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -1981,13 +1965,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Recurring rows have no Renews soon badge yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
         "followUp": "MAZ-290"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Recurring rows have no Renews soon badge yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -1997,7 +1981,7 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Schedules have no renewal reminder yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Schedules have no renewal reminder yet.",
         "followUp": "MAZ-290"
       },
       "web": {
@@ -2012,7 +1996,7 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The app sends no renewal reminders yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app sends no renewal reminders yet.",
         "followUp": "MAZ-290"
       },
       "web": {
@@ -3008,13 +2992,13 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The app doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       },
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -3357,7 +3341,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -3372,7 +3356,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Recurring has no empty state that mentions suggestions yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -3387,22 +3371,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
-      }
-    },
-    {
-      "id": "web-suggestion-dismiss",
-      "view": "web confirmation before dismissing the Netflix suggestion",
-      "native": {
-        "status": "not-applicable",
-        "owner": "MAZ-290",
-        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
-      },
-      "web": {
-        "status": "not-built",
-        "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -3417,7 +3386,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. The web doesn't suggest schedules yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
       }
     },
@@ -3432,7 +3401,7 @@
       "web": {
         "status": "not-built",
         "owner": "MAZ-290",
-        "note": "Draft card (MAZ-290) for the owner's review. Recurring rows have no Renews soon badge yet.",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
         "followUp": "MAZ-290"
       }
     },

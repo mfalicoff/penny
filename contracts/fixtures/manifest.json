@@ -113,7 +113,7 @@
     },
     {
       "file": "redesign-states.json",
-      "sha256": "bccaa0dd9ad63d8111edd18fc65ae06f612df0973cb7cf3a0fe2afc510aa83ee",
+      "sha256": "ed5d0572c55d608e187b17dc3388d69666b62ec927d34c9c945b432336200570",
       "generatedBy": null,
       "consumers": {
         "typescript": [

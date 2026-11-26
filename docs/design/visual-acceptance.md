@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens) · [Motion](motion.md)
 
-The 167 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 165 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (332 images: 165 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (328 images: 163 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -304,26 +304,25 @@ Behavior (approved with the cards):
 
 ## Drafted cards: recurring suggestions and renewal reminders (MAZ-290, 2026-11-26)
 
-Penny spots entries that repeat, like Netflix every month, and offers to make them schedules. These cards draw it for the owner's review, light and dark. Following the owner's decision on MAZ-290, income is suggested too: Tutoring is the income suggestion on the cards. Nothing on them is built yet.
+Penny spots entries that repeat, like Netflix every month, and offers to make them schedules. These 13 cards draw it, light and dark. Income is suggested too: Tutoring is the income suggestion on the cards. **Approved by the owner (2026-11-26)**, with the decisions below. Nothing is built yet. [Motion](motion.md#recurring-suggestions-and-renewal-reminders-maz-290) covers how each new moment animates.
 
 | State | Cards |
 | --- | --- |
 | Recurring opens with a **Suggested** section above the schedules. Each suggestion shows its icon, name, an Expense or Income tag, the cadence ("Every month, around the 3rd"), "Seen 4 times since Aug 3", and the newest amount, with "was $15.49" after a price step. Then **Make it a schedule** and **Dismiss**. On the iPad, selecting a suggestion opens it in the detail pane, with its entries and what the schedule would be | `iphone-recurring-suggested`, `ipad-recurring-suggested`, `web-recurring-suggested` |
 | No schedules and nothing to suggest: "No schedules yet", **New schedule**, and a note that Penny suggests entries that repeat | `iphone-recurring-empty`, `web-recurring-empty` |
 | Make it a schedule opens the usual schedule form, filled in: type, name, amount, category, account, repeats, and the first date after the latest entry (Dec 3). Under it, **Already in your activity** lists the matched entries read-only, and says they stay as they are | `iphone-schedule-suggested`, `web-schedule-suggested` |
-| Dismiss asks first: "Dismiss “Netflix”?", and says the suggestion stays dismissed on every device unless its price changes by more than 25% | `iphone-suggestion-dismiss`, `web-suggestion-dismiss` |
-| After dismissing, the suggestion leaves the list and a toast offers **Undo** | `iphone-suggestion-dismissed-toast`, `web-suggestion-dismissed-toast` |
+| Dismiss acts at once: the suggestion leaves the list and a toast offers **Undo** | `iphone-suggestion-dismissed-toast`, `web-suggestion-dismissed-toast` |
 | Phase 2: a yearly schedule due soon shows an amber **Renews soon** tag on its Recurring row | `iphone-recurring-renews-soon`, `web-recurring-renews-soon` |
-| Phase 2: a yearly schedule's detail adds a **Reminder** section: "Remind me before it renews" (on) and "Show name and amount" (off), with when the reminder comes | `iphone-schedule-reminder` |
+| Phase 2: a yearly schedule's detail adds a **Reminder** section: "Remind me before it renews" and "Show name and amount" (off by default), with when the reminder comes | `iphone-schedule-reminder` |
 | Phase 2: the reminder on the Lock Screen. By default it says only "A yearly schedule renews in 3 days" and "Open Penny to see which one."; with name and amount turned on, "Domain name renews in 3 days" and "$24.00 on Wed, Nov 11." | `iphone-renewal-notification` |
 
-Proposed behavior (the owner reviews it with the cards):
+Behavior (owner decisions, 2026-11-26):
 
-- **What's suggested.** Your own expenses and income that repeat with the same name, a regular gap (weekly, monthly or yearly) and a steady amount, following the algorithm in MAZ-290's agent notes. Entries a schedule created, entries an existing schedule already covers, and household shares are left out. Investments follow the same rule; no card shows one.
+- **What's suggested.** Your own expenses, income and investments that repeat with the same name, a regular gap (weekly, monthly or yearly) and a steady amount, following the algorithm in MAZ-290's agent notes. Entries a schedule created, entries an existing schedule already covers, and household shares are left out. No card shows an investment; one looks like the expense and income rows, with an Investment tag and the indigo amount.
 - **Accepting** saves one normal schedule. Its first date is the first one after both the latest matched entry and today, so no date is recorded twice, and past entries are not changed or linked. Cancelling the form keeps the suggestion.
-- **Dismissing** syncs: the dismissal is stored in the ledger and merges with other devices' dismissals, so the suggestion stays hidden on every device until its amount changes by more than 25%. Undo restores it. The cards ask before dismissing because the issue lists a confirmation; with Undo on the toast, the confirmation could be dropped.
+- **Dismissing** needs no confirmation: it's immediate, with Undo on the toast. The dismissal is stored in the ledger and merges with other devices' dismissals, so the suggestion stays hidden on every device until its amount changes by more than 25%.
 - **Renews soon** marks a yearly schedule whose next date is within 7 days, on iOS and the web. Monthly and weekly schedules never show it.
-- **Renewal reminders (iOS only).** Only yearly schedules have the Reminder section. The switch is off until you turn it on, and the first time asks for notification permission. The reminder is a local notification 3 days before, at 9 AM, rebuilt after each sync; pausing, removing or editing the schedule moves or cancels it. Its text has no name or amount unless "Show name and amount" is on for that schedule. The web has no reminders.
+- **Renewal reminders (iOS only).** Only yearly schedules have the Reminder section. The switch is off until you turn it on, and the first time asks for notification permission. The reminder is a local notification 3 days before, at 9 AM local time, rebuilt after each sync; the lead time isn't configurable. Pausing, removing or editing the schedule moves or cancels it. "Show name and amount" is set on each schedule and is off by default; without it, the text has no name or amount. The web has no reminders.
 - **Where it shows.** Suggestions appear only on Recurring: there's no badge on Home or in the tab bar.
 
 ## Review scenarios

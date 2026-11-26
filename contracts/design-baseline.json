@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "0f98200d78dfa2820295afadf175a7bcb21691f9dfc9f8fa90260716da4bfa2f"
+      "sha256": "5bd13afd1a2bc1282f4c11d360bd98b075aaa8953c251dc33decbf0d3c03f8bf"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "3a186cdb6d939c77a7ba8c5ae50889cf549315d987b125e486e8f2e25ef17f5e"
+      "sha256": "0ee4dc20e81287ceb0506ae8c3f12090b9550e7fbad37607cf94403c5acf8207"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "128f17487511633652103a6261f2b265e6d9512e7c2e880db66ed237dc07498a"
+      "sha256": "51c91751370dacd24464e1bfd5f5baabecc57460c9d3946278598c75aeb884b6"
     }
   ],
   "tokens": {
@@ -1950,29 +1950,6 @@
       "status": "planned"
     },
     {
-      "id": "iphone-suggestion-dismiss",
-      "name": "Dismiss suggestion",
-      "group": "iPhone",
-      "platform": "iPhone",
-      "category": "Organize & settings",
-      "viewport": {
-        "w": 482,
-        "h": 954
-      },
-      "theme": "light",
-      "sourcePath": "docs/design/penny-ios/iphone/suggestion-dismiss.html",
-      "sha256": "62e981a4b5a9929c3c01f5a1b1cc85eac679af2035177735169f36531b4f5289",
-      "nativeIssue": "MAZ-290",
-      "webIssue": "MAZ-290",
-      "route": "/recurring",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
-      },
-      "status": "planned"
-    },
-    {
       "id": "iphone-suggestion-dismissed-toast",
       "name": "Suggestion dismissed",
       "group": "iPhone",
@@ -3440,29 +3417,6 @@
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/schedule-suggested.html",
       "sha256": "69dc678b3486fb2b1d597372ef879ebc02d6422e9d92be55e242b6d82242e383",
-      "nativeIssue": "MAZ-290",
-      "webIssue": "MAZ-290",
-      "route": "/recurring",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "web-suggestion-dismiss",
-      "name": "Dismiss suggestion",
-      "group": "Web",
-      "platform": "Web",
-      "category": "Web",
-      "viewport": {
-        "w": 1520,
-        "h": 980
-      },
-      "theme": "light",
-      "sourcePath": "docs/design/penny-ios/web/suggestion-dismiss.html",
-      "sha256": "9697eee387c9c04fb824f317e653b957fda228b5f619a3508c229904fe5786b8",
       "nativeIssue": "MAZ-290",
       "webIssue": "MAZ-290",
       "route": "/recurring",

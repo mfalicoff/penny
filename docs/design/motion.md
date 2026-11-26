@@ -119,6 +119,37 @@ System components keep the system's motion and are never restyled: iOS sheets an
 | **Pushed screens on iOS** | The system's navigation push. | system | System. |
 | **Web routes** | No page transition. | — | — |
 
+## Recurring suggestions and renewal reminders (MAZ-290)
+
+The [MAZ-290 cards](visual-acceptance.md#drafted-cards-recurring-suggestions-and-renewal-reminders-maz-290-2026-11-26) add four moments. Each one reuses a moment above, with the same tokens; nothing gets its own timing. A row never travels across the screen: when a suggestion becomes a schedule, it leaves Suggested and the schedule arrives in its group, so the movement stays short.
+
+| What | Motion | Token | Reduced |
+| --- | --- | --- | --- |
+| **A suggestion appears** (Recurring is open when a save or a sync finds a new one) | As Lists › Insert: the rows below make room and the suggestion fades in, rising `nudge`, with no highlight, because the person didn't add it. When it's the first one, the Suggested header and its footer arrive with it. When Recurring opens with suggestions already there, they're part of the view and don't animate. | `standard` | Rows make room at once, and the suggestion fades in (`quick`). |
+| **Make it a schedule opens the form** | iOS: the system sheet. Web: the dialog's motion (Sheets › Web dialog). On the iPad, selecting a suggestion crossfades the detail pane's content, like switching entries in the web Activity detail panel. | system; web in `standard`, out `quick` + `exit`; iPad `quick` | System sheet; web and iPad fade (`quick`). |
+| **Accept: save the filled-in form** (the row moves into the schedules list) | The form closes as any sheet or dialog does. The suggestion leaves Suggested with the Lists › Delete motion. The new schedule arrives in its group (Income, Expenses or Investments) with the Saving › New row motion, including the `tint-soft` highlight, so you can see where it went. When it was the last suggestion, the Suggested header and footer collapse with it. Both happen together, with no stagger. | leave `standard` + `exit`; arrive `standard`; highlight `linger`, `linear` | The suggestion fades out and the schedule fades in (`quick`); the space closes and opens at once. The highlight stays. |
+| **Cancel the form** | Nothing in the list moves: the suggestion stays where it was. | — | — |
+| **Dismiss** | The suggestion leaves with the Lists › Delete motion, and the toast rises as Saving › Saved toast. | row `standard` + `exit`; toast in `standard`, out `quick` + `exit` | The row fades out (`quick`) and the space closes at once; the toast fades in and out (`quick`). |
+| **Undo the dismissal** | The suggestion comes back at its old place with the Lists › Undo motion, and the toast leaves. | `standard` | As Insert reduced. |
+| **"Renews soon" appears** (the day a yearly schedule enters its 7-day window, or after an edit moves its date into it) | The tag fades in while the row's subtitle text crossfades to "renews …". The row doesn't change its height, because the tag already has its place beside the name. When the date passes, the tag fades out (`quick`). Nobody acted, so there's no highlight. | `quick` | Same: a crossfade is allowed under Reduce Motion. |
+| **Reminder switches** (Remind me before it renews, Show name and amount) | The system's own switch. Turning on the reminder for the first time shows the system's notification permission alert. | system | System. |
+
+The reminder itself is a system notification, so iOS animates it. The cards' renderer turns animation off, so the cards show where each moment ends.
+
+Haptics (iOS), one per action, from the [Haptics](#haptics-ios) table:
+
+| Action | Haptic |
+| --- | --- |
+| Make it a schedule (opens the filled-in form) | `.impact(weight: .light)`, as opening any sheet |
+| Save the filled-in form (accept) | `.success`, as any save |
+| Dismiss a suggestion | `.impact(weight: .light)` |
+| Undo the dismissal | `.impact(weight: .light)`, as any Undo |
+| Select a suggestion on the iPad | `.selection`, as opening an entry in the detail column |
+| A suggestion appears, or "Renews soon" appears | None: Penny did it, not the person |
+| The reminder switches | The system switch's own |
+
+Haptics stay under Reduce Motion, as everywhere else.
+
 ## Haptics (iOS)
 
 On iOS, **every action the person takes that animates also plays a haptic**, so it's felt as well as seen. The rule:
@@ -135,6 +166,7 @@ On iOS, **every action the person takes that animates also plays a haptic**, so 
 | Save refused by the rules (the shake) | `.error` (exists today: `refusedCount`) |
 | Save or sync failed (the couldn't-sync banner after the person's action) | `.error` (exists today: `failedCount`) |
 | Undo (from the saved toast or after a delete) | `.impact(weight: .light)` |
+| Dismiss a schedule suggestion on Recurring (MAZ-290) | `.impact(weight: .light)` |
 | **Month and period:** step to another month or period, pick one in the calendar | `.selection` |
 | Focus a chart element (a Sankey band or label, a category in Insights) | `.selection` |
 | **Lists:** delete an entry (after its confirmation, or a full swipe) | `.impact(weight: .medium)`; the system's own on a full swipe |

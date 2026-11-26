@@ -869,17 +869,6 @@
       "view": "new schedule form filled in from the Netflix suggestion, with its 4 entries read-only"
     },
     {
-      "specimen": "iphone-suggestion-dismiss",
-      "platform": "iPhone",
-      "appearances": [
-        "light",
-        "dark"
-      ],
-      "scenario": "searchable-household",
-      "as": "alex",
-      "view": "confirmation before dismissing the Netflix suggestion"
-    },
-    {
       "specimen": "iphone-suggestion-dismissed-toast",
       "platform": "iPhone",
       "appearances": [
@@ -1616,17 +1605,6 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "web new schedule dialog filled in from the Netflix suggestion, with its 4 entries read-only"
-    },
-    {
-      "specimen": "web-suggestion-dismiss",
-      "platform": "Web",
-      "appearances": [
-        "light",
-        "dark"
-      ],
-      "scenario": "searchable-household",
-      "as": "alex",
-      "view": "web confirmation before dismissing the Netflix suggestion"
     },
     {
       "specimen": "web-suggestion-dismissed-toast",

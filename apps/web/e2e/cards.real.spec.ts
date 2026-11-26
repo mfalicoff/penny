@@ -906,11 +906,10 @@ const cards: Record<string, Card> = {
     },
   },
   "iphone-schedule-form": { open: ({ page: p }) => newSchedule(p) },
-  // Recurring suggestions and renewal reminders drafted for review (MAZ-290).
+  // Recurring suggestions and renewal reminders, approved (MAZ-290); not built yet.
   "iphone-recurring-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
   "iphone-recurring-empty": { skip: { status: "not-built", note: "The web's Recurring has no empty state that mentions suggestions yet (MAZ-290)." } },
   "iphone-schedule-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "iphone-suggestion-dismiss": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
   "iphone-suggestion-dismissed-toast": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
   "iphone-recurring-renews-soon": { skip: { status: "not-built", note: "The web's Recurring rows have no Renews soon badge yet (MAZ-290)." } },
   "iphone-schedule-reminder": { skip: { status: "not-built", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
@@ -1034,7 +1033,6 @@ const cards: Record<string, Card> = {
   "web-recurring-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
   "web-recurring-empty": { skip: { status: "not-built", note: "The web's Recurring has no empty state that mentions suggestions yet (MAZ-290)." } },
   "web-schedule-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "web-suggestion-dismiss": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
   "web-suggestion-dismissed-toast": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
   "web-recurring-renews-soon": { skip: { status: "not-built", note: "The web's Recurring rows have no Renews soon badge yet (MAZ-290)." } },
   "web-edit-entry": { open: ({ page: p }) => editEntry(p) },
