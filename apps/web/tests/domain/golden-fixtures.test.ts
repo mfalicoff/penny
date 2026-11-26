@@ -15,6 +15,7 @@ import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { isExpected, monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
 import { ledgerWithHouseholds, sharedCategoryId, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
 import { selectOverview } from "../../src/domain/selectors/overview.ts";
+import { monthReview, reviewBannerMonth } from "../../src/domain/monthReview.ts";
 import { generated, manifest, sha256 } from "../../scripts/fixtures/generate-golden.ts";
 import { applyPendingEdits } from "../../../../scripts/test-env/seed.mjs";
 
@@ -77,6 +78,35 @@ const MonthTotals = z.strictObject({
 });
 
 const SharedCategory = z.strictObject({ name: z.string(), icon: z.string(), color: z.string() });
+const Payer = z.strictObject({ email: z.string(), displayName: z.string().optional(), deleted: z.literal(true).optional() });
+const ReviewProjection = z.strictObject({
+  id: z.string(), householdId: z.string(), householdName: z.string(), householdCurrency: z.string(), title: z.string(), date,
+  totalCents: z.number().int().positive(), shareCents: z.number().int().nonnegative(), category: SharedCategory, note: z.string(),
+  payerUserId: z.string(), payer: Payer, paidByYou: z.boolean(), scheduled: z.boolean().optional(), recurringId: z.string().optional(),
+});
+const Compared = z.strictObject({ month: z.string(), spent: z.number().int().nullable(), change: z.number().int().nullable() });
+const Review = z.strictObject({
+  month: z.string(), empty: z.boolean(), spent: z.number().int(), cameIn: z.number().int(), invested: z.number().int(), leftOver: z.number().int(),
+  previous: Compared, lastYear: Compared,
+  biggestChanges: z.array(z.strictObject({
+    key: z.string(), name: z.string(), icon: z.string(), color: z.string(), current: z.number().int(), previous: z.number().int(), change: z.number().int(), percent: z.number().int().nullable(),
+  })).max(3),
+  shared: z.strictObject({
+    count: z.number().int(), spent: z.number().int(),
+    top: z.strictObject({ id: z.string(), title: z.string(), categoryId: z.string(), date, share: z.number().int(), total: z.number().int(), paidByYou: z.boolean().nullable(), payer: Payer.nullable() }).nullable(),
+  }),
+  split: z.strictObject({ count: z.number().int(), total: z.number().int(), share: z.number().int(), othersPaid: z.number().int() }),
+  daysWithoutSpending: z.number().int().nonnegative(),
+  longestRun: z.strictObject({ start: date, end: date, days: z.number().int().positive() }).nullable(),
+});
+const MonthReviews = z.strictObject({
+  generator: z.string(),
+  description: z.string(),
+  ledgers: z.record(z.string(), LedgerShape),
+  projections: z.record(z.string(), z.array(ReviewProjection)),
+  cases: z.array(z.strictObject({ name: z.string(), ledger: z.string(), projection: z.string(), month: z.string(), today: date, expected: Review })).min(8),
+  banner: z.array(z.strictObject({ today: date, month: z.string().nullable() })).min(4),
+});
 const SharedCategories = z.strictObject({
   generator: z.string(),
   description: z.string(),
@@ -265,6 +295,27 @@ test("month-totals fixtures: income dated after today is expected, at the bounda
     // The entry never changes: projected is the same whatever today is.
     assert.deepEqual(summary.projected, summarizeMonth(ledger, item.month, { today: "2000-01-01" }).projected, item.name);
   }
+});
+
+test("month-review fixtures: the monthly recap counts recorded entries at your share and compares with what came before", () => {
+  const golden = parse(MonthReviews, "month-review.json");
+  const names = golden.cases.map((item) => item.name);
+  assert.ok(names.some((name) => name.startsWith("a month with no entries")) && names.some((name) => name.startsWith("a month with only previews")));
+  for (const item of golden.cases) {
+    const ledger = golden.ledgers[item.ledger]!;
+    const projection = golden.projections[item.projection]! as ProjectedExpense[];
+    const review = monthReview(ledgerWithHouseholds(ledger, projection), item.month, { today: item.today });
+    assert.deepEqual(JSON.parse(JSON.stringify(review)), item.expected, item.name);
+    // Independent checks: never ±∞, a "New" category had nothing before, shared rows in another currency never count.
+    for (const change of review.biggestChanges) {
+      assert.ok(change.percent === null ? change.previous === 0 : Number.isFinite(change.percent), item.name);
+    }
+    assert.equal(review.split.othersPaid, review.split.total - review.split.share, item.name);
+    const foreign = projection.filter((row) => row.householdCurrency !== ledger.currency).map((row) => `household:${row.householdId}:${row.id}`);
+    assert.ok(review.shared.top === null || !foreign.includes(review.shared.top.id), item.name);
+    if (review.previous.spent === null) assert.deepEqual(review.biggestChanges, [], item.name);
+  }
+  for (const item of golden.banner) assert.equal(reviewBannerMonth(item.today), item.month, item.today);
 });
 
 test("shared-categories fixtures: a shared expense counts under the personal expense category of the same name", () => {

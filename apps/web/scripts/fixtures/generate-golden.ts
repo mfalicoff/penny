@@ -14,6 +14,7 @@ import { mergeLedger } from "../../src/domain/merge.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
 import { ledgerWithHouseholds, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
+import { monthReview, reviewBannerMonth } from "../../src/domain/monthReview.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const directory = new URL("../../../../contracts/fixtures/", import.meta.url);
@@ -271,6 +272,89 @@ function sharedCategories() {
   };
 }
 
+// MAZ-292: the monthly recap (`monthReview`). Recorded entries only, shared expenses at your share
+// through `ledgerWithHouseholds` (a row in another currency is left out), compared with the month
+// before and the same month last year. Each case's expectation is the whole `MonthReview`.
+function monthReviews() {
+  const categories: Ledger["categories"] = [
+    { id: "groceries", name: "Groceries", icon: "basket-outline", color: "#2F9E6B", kind: "expense" },
+    { id: "food", name: "Food & drinks", icon: "cafe-outline", color: "#E47850", kind: "expense" },
+    { id: "fun", name: "Entertainment", icon: "musical-notes-outline", color: "#8E5BB1", kind: "expense" },
+    { id: "transport", name: "Transport", icon: "bus-outline", color: "#3B82F6", kind: "expense" },
+    { id: "salary", name: "Salary", icon: "cash-outline", color: "#3E8E5E", kind: "income" },
+    { id: "savings", name: "Investments", icon: "trending-up-outline", color: "#5B7DB1", kind: "investment" },
+  ];
+  const entry = (id: string, kind: string, categoryId: string, share: number, date: string, total = share) =>
+    ({ id, title: id, kind, total, share, categoryId, date, note: "" });
+  const history = [
+    // October last year, and September: the months October is compared with.
+    entry("groceries-2025", "expense", "groceries", 214000, "2025-10-12"),
+    entry("groceries-sep", "expense", "groceries", 25620, "2026-09-05"),
+    entry("food-sep", "expense", "food", 28045, "2026-09-12"),
+    entry("transport-sep", "expense", "transport", 6000, "2026-09-20"),
+    entry("salary-sep", "income", "salary", 320000, "2026-09-30"),
+  ];
+  const october = [
+    entry("salary-oct", "income", "salary", 320000, "2026-10-01"),
+    entry("groceries-oct", "expense", "groceries", 30240, "2026-10-02"),
+    // Split with a friend: you paid $246.80 of $493.60.
+    entry("dinner", "expense", "food", 24680, "2026-10-09", 49360),
+    entry("concert", "expense", "fun", 5350, "2026-10-18"),
+    entry("tfsa", "investment", "savings", 20000, "2026-10-25"),
+    // Income dated after the 15th: expected, not recorded, when today is Oct 15.
+    entry("refund", "income", "salary", 2500, "2026-10-28"),
+  ];
+  const rule = { ...entry("gym", "expense", "transport", 4000, "2026-09-01"), frequency: "monthly", nextDate: "2026-10-28", anchorDay: 28, active: true };
+  const ledgers = {
+    alex: ledger([...history, ...october], { categories, recurring: [rule] as Ledger["recurring"] }),
+    // Only a schedule in November: previews never count, so November has nothing to recap.
+    "previews-only": ledger(history, { categories, recurring: [{ ...rule, nextDate: "2026-11-28" }] as Ledger["recurring"] }),
+    // The first month with anything recorded is October.
+    "first-month": ledger(october, { categories }),
+    // Recorded since September only: no October last year.
+    "first-year": ledger([...history.slice(1), ...october], { categories }),
+  };
+  const shared = (id: string, shareCents: number, totalCents: number, date: string, paidByYou: boolean, extra: Partial<ProjectedExpense> = {}): ProjectedExpense => ({
+    id, householdId: "apartment", householdName: "Apartment", householdCurrency: "CAD", title: id, date, totalCents, shareCents,
+    category: { name: "groceries", icon: "basket-outline", color: "#0FA3A3" }, note: "", payerUserId: paidByYou ? "me" : "jo",
+    payer: paidByYou ? { email: "me@example.test", displayName: "Alex" } : { email: "jo@example.test", displayName: "Jo" }, paidByYou, ...extra,
+  });
+  const projections = {
+    none: [],
+    apartment: [
+      shared("costco", 6140, 18420, "2026-10-14", false),
+      shared("hydro", 4000, 8000, "2026-10-20", true, { category: { name: "Utilities", icon: "flash-outline", color: "#3B82F6" } }),
+      // A deleted payer: the client shows "Former member".
+      shared("pharmacy", 1200, 2400, "2026-10-22", false, { payer: { email: "gone@example.test", deleted: true } }),
+      // Another currency than the ledger's: left out.
+      shared("lisbon-dinner", 9000, 18000, "2026-10-16", false, { householdId: "lisbon", householdName: "Lisbon", householdCurrency: "EUR" }),
+      // A shared preview: never counted.
+      shared("internet", 3000, 6000, "2026-10-29", true, { scheduled: true, recurringId: "internet-rule" }),
+      shared("costco-sep", 5000, 10000, "2026-09-18", false),
+    ],
+  };
+  const inputs: { name: string; ledger: keyof typeof ledgers; projection: keyof typeof projections; month: string; today: string }[] = [
+    { name: "October, with September and October last year to compare with", ledger: "alex", projection: "apartment", month: "2026-10", today: "2026-11-03" },
+    { name: "October without shared expenses", ledger: "alex", projection: "none", month: "2026-10", today: "2026-11-03" },
+    { name: "the month still under way: days without spending count up to today, and later income is expected", ledger: "alex", projection: "apartment", month: "2026-10", today: "2026-10-15" },
+    { name: "a month with no entries", ledger: "alex", projection: "none", month: "2026-08", today: "2026-11-03" },
+    { name: "a month with only previews", ledger: "previews-only", projection: "none", month: "2026-11", today: "2026-12-02" },
+    { name: "a first month: nothing to compare with, and no category changes", ledger: "first-month", projection: "none", month: "2026-10", today: "2026-11-03" },
+    { name: "a first year: September to compare with, no October last year", ledger: "first-year", projection: "none", month: "2026-10", today: "2026-11-03" },
+    { name: "the month after: categories that stopped are -100%", ledger: "alex", projection: "none", month: "2026-11", today: "2026-12-02" },
+  ];
+  const cases = inputs.map((input) => ({
+    ...input,
+    expected: monthReview(ledgerWithHouseholds(ledgers[input.ledger], projections[input.projection]), input.month, { today: input.today }),
+  }));
+  const banner = ["2026-11-01", "2026-11-07", "2026-11-08", "2026-11-30", "2027-01-03", "2026-03-01"].map((today) => ({ today, month: reviewBannerMonth(today) }));
+  return {
+    generator,
+    description: "The monthly recap (MAZ-292, `monthReview` in apps/web/src/domain/monthReview.ts). Recorded entries only, never scheduled previews; shared expenses count at your share through the household projection, and shared rows in another currency are left out. Spending is compared with the month before and the same month last year; a month is null (\"No September to compare with\") when nothing is recorded in or before it. Percentages are whole numbers rounded half away from zero, null when there is nothing to compare with; a category with nothing the month before has a null percent (\"New\"). Split expenses are recorded expenses whose total is above your share; othersPaid is total minus share. Days without spending count the month's days up to today with no recorded expense; the longest run is the earliest on a tie. The banner shows last month's recap during the first 7 days of a month.",
+    ledgers, projections, cases, banner,
+  };
+}
+
 // Which suites consume each fixture. A language with no implementation yet names the
 // issue that adds it; a fixture only meaningful to some layers says so.
 const consumers: Record<string, Record<string, string[] | string>> = {
@@ -278,6 +362,7 @@ const consumers: Record<string, Record<string, string[] | string>> = {
   "recurrence.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "merge-conflicts.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"] },
   "month-totals.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
+  "month-review.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: client calculation; the recap is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/MonthReviewTests.swift"] },
   "shared-categories.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: shared expenses join the personal view on the client", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "parity-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
@@ -304,6 +389,7 @@ export function generated(): Record<string, string> {
     "merge-conflicts.json": serialize(merge()),
     "month-totals.json": serialize(monthTotals()),
     "shared-categories.json": serialize(sharedCategories()),
+    "month-review.json": serialize(monthReviews()),
   };
 }
 

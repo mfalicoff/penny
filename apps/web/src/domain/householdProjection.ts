@@ -8,9 +8,13 @@ export type ProjectedExpense = {
   totalCents: number; shareCents: number; category: { name: string; icon: string; color: string };
   note: string; receiptId?: string; receipt?: Receipt; payerUserId: string; accountId?: string;
   scheduled?: boolean; recurringId?: string;
+  // MAZ-275: who paid, as the household sees them, and whether it was you. Optional, so older rows stay valid.
+  payer?: ExpensePayer; paidByYou?: boolean;
 };
+/** Who paid a shared expense (MAZ-275). `deleted`: show "Former member", never the email. */
+export type ExpensePayer = { email: string; displayName?: string; deleted?: true };
 
-export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string; scheduled?: boolean };
+export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string; scheduled?: boolean; paidByYou?: boolean; payer?: ExpensePayer };
 
 const categoryKey = (name: string) => name.trim().toLowerCase();
 
@@ -48,6 +52,8 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
       ...(item.receipt !== undefined && { receipt: item.receipt }),
       ...(item.recurringId !== undefined && { recurringId: item.recurringId }),
       ...(item.scheduled !== undefined && { scheduled: item.scheduled }),
+      ...(item.paidByYou !== undefined && { paidByYou: item.paidByYou }),
+      ...(item.payer !== undefined && { payer: item.payer }),
     };
     transactions.push(shared);
   }
