@@ -1,0 +1,375 @@
+<!doctype html>
+<!-- @dsCard product-page-phone: the product page redesign at 390 px. Same sections and order as
+     desktop.html, in one column. Blue numbered notes are review annotations; see ../README.md. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=390" />
+    <title>Product page · phone</title>
+    <link rel="stylesheet" href="site.css" />
+    <style>
+      :root {
+        --gutter: 72px;
+      }
+      .wrap {
+        width: calc(100% - 40px);
+      }
+      .nav {
+        height: 60px;
+        padding-inline: 20px;
+      }
+      .menu {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid var(--edge-strong);
+        color: var(--label);
+        font-size: 20px;
+      }
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding-top: 24px;
+      }
+      .coin {
+        order: -1;
+        width: 230px;
+        margin-bottom: 4px;
+      }
+      .hero h1 {
+        font-size: 2.75rem;
+        line-height: 1;
+      }
+      .hero .lede {
+        font-size: 1.0625rem;
+      }
+      .actions {
+        flex-direction: column;
+      }
+      .actions .button {
+        justify-content: center;
+      }
+      .showcase {
+        margin-top: 56px;
+        padding-bottom: 0;
+      }
+      .ribbons {
+        inset: 0 -20px 40px;
+      }
+      .stage {
+        height: 520px;
+      }
+      .browser {
+        position: absolute;
+        left: -80px;
+        top: 40px;
+        width: 420px;
+        opacity: 0.55;
+      }
+      .showcase .iphone {
+        left: 50%;
+        right: auto;
+        top: 0;
+        bottom: auto;
+        width: 240px;
+        transform: translateX(-50%);
+        border-radius: 42px;
+        padding: 7px;
+      }
+      .showcase .iphone img {
+        border-radius: 35px;
+      }
+      .iphone-shot {
+        position: relative;
+      }
+      .iphone-shot .play {
+        right: 14px;
+        bottom: 26px;
+      }
+      .under {
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 24px;
+        padding: 0;
+      }
+      .captions {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .head h2,
+      .selfhost h2 {
+        font-size: 2.125rem;
+      }
+      .bento {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .bento .tile {
+        grid-column: span 2 !important;
+        grid-row: auto !important;
+        padding: 22px;
+        border-radius: 22px;
+      }
+      .bento .tile.half {
+        grid-column: span 1 !important;
+        min-height: 0 !important;
+        padding: 18px;
+      }
+      .tile.half h3 {
+        font-size: 1rem;
+      }
+      .tile.half p {
+        font-size: 0.8125rem;
+      }
+      .principles {
+        grid-template-columns: 1fr;
+      }
+      .principle {
+        padding: 26px 4px;
+      }
+      .principle + .principle {
+        border-left: 0;
+        border-top: 1px solid var(--edge);
+      }
+      .selfhost {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .terminal pre {
+        font-size: 0.6875rem;
+        padding: 18px;
+        white-space: pre;
+        overflow: hidden;
+      }
+      .closing h2 {
+        font-size: 1.75rem;
+        padding-inline: 20px;
+      }
+      .closing .actions {
+        padding-inline: 20px;
+      }
+      .footer {
+        flex-direction: column;
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="brand"><span class="logo"><i data-icon="leaf"></i></span>penny.</div>
+      <span class="menu"><i data-icon="list"></i></span>
+    </header>
+
+    <main>
+      <section class="wrap hero">
+        <div class="coin">
+          <img src="../assets/today-coin.webp" alt="" />
+          <span class="note" data-n="1" style="left: -6px; top: 6px">Coin, 40k splats</span>
+        </div>
+        <div>
+          <p class="eyebrow">Self-hosted expense tracking</p>
+          <h1>A little more clarity about your money.</h1>
+          <p class="lede">
+            Track expenses, income and investments on iPhone, iPad and the web, on a server you run yourself.
+          </p>
+          <div class="actions">
+            <span class="button">Self-host Penny</span>
+            <span class="button button-ghost">View the source</span>
+          </div>
+          <ul class="chips">
+            <li><i data-icon="laptop"></i>Web app</li>
+            <li><i data-icon="finger-print"></i>iPhone &amp; iPad</li>
+            <li><i data-icon="lock-closed"></i>No bank connection</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="wrap showcase">
+        <svg class="ribbons" viewBox="0 0 390 520" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="p-home" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#4f7dff" /></linearGradient>
+            <linearGradient id="p-left" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#ff7a45" /></linearGradient>
+            <linearGradient id="p-inv" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#8e8bff" /></linearGradient>
+            <filter id="pglow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="14" /></filter>
+          </defs>
+          <g id="pbands" fill="none">
+            <path d="M0 250 C 130 250, 230 90, 390 80" stroke="url(#p-home)" stroke-width="26" />
+            <path d="M0 275 C 130 275, 250 300, 390 300" stroke="url(#p-inv)" stroke-width="8" />
+            <path d="M0 300 C 130 300, 230 450, 390 460" stroke="url(#p-left)" stroke-width="30" />
+          </g>
+          <use href="#pbands" filter="url(#pglow)" opacity="0.8" />
+        </svg>
+        <div class="stage">
+          <div class="browser">
+            <div class="browser-bar"><span></span><span></span><span></span><b>penny.example.com</b></div>
+            <img src="../assets/web-insights.webp" alt="" />
+          </div>
+          <figure class="iphone" style="margin: 0">
+            <div class="iphone-shot">
+              <img src="../../../src/assets/screens/iphone-home.webp" alt="" />
+              <span class="play"><i data-icon="pause"></i></span>
+            </div>
+          </figure>
+        </div>
+        <span class="note" data-n="2" style="left: 0; top: 470px">Phone leads; the Overview clip plays in it</span>
+        <div class="under">
+          <ul class="captions">
+            <li class="is-current">Add it in seconds</li>
+            <li>Your month, always current</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="wrap section" id="features">
+        <div class="head">
+          <div>
+            <p class="eyebrow">Features</p>
+            <h2>Everything a month needs.</h2>
+          </div>
+          <p>Left to spend up front, every dollar traced, bills split the way they were paid, and receipts kept.</p>
+        </div>
+
+        <div class="bento">
+          <article class="tile" style="min-height: 430px; --glow: rgba(255, 111, 63, 0.26)">
+            <span class="ti"><i data-icon="wallet"></i></span>
+            <h3>Left to spend, first.</h3>
+            <p>What came in, what you spent and what you invested, with expected pay in the projection.</p>
+            <span class="badge"><i data-icon="play"></i>Clip</span>
+            <div class="screen" style="left: 40px; right: 40px; bottom: 0; height: 220px">
+              <img src="../../../src/assets/screens/iphone-home.webp" alt="" />
+            </div>
+          </article>
+
+          <article class="tile" style="min-height: 400px; --glow: rgba(61, 208, 122, 0.16)">
+            <span class="ti"><i data-icon="people"></i></span>
+            <h3>Split it the way you paid.</h3>
+            <p>Equally, by amount or by percentage. Your reports count only your share.</p>
+            <span class="badge"><i data-icon="play"></i>Clip</span>
+            <div class="screen" style="left: 40px; right: 40px; bottom: 0; height: 200px">
+              <img src="../../../src/assets/screens/iphone-split.webp" alt="" style="margin-top: -90px" />
+            </div>
+          </article>
+
+          <article class="tile" style="min-height: 0; --glow: rgba(255, 111, 63, 0.14)">
+            <span class="ti"><i data-icon="search"></i></span>
+            <h3>Search everything.</h3>
+            <div class="mini-search">
+              <div class="field"><i data-icon="search"></i>groc</div>
+              <div class="row"><b>Weekly groceries</b><span>−$86.42</span></div>
+              <div class="row"><b>Weekend groceries</b><span>−$72.35</span></div>
+            </div>
+          </article>
+
+          <article class="tile" style="min-height: 380px; --glow: rgba(61, 208, 122, 0.2)">
+            <span class="ti"><i data-icon="home"></i></span>
+            <h3>Households and trips.</h3>
+            <p>Record a shared cost once, then settle up.</p>
+            <div class="screen" style="left: 22px; bottom: 0; width: 150px; height: 190px">
+              <img src="../../../src/assets/screens/iphone-shared.webp" alt="" />
+            </div>
+            <div class="screen" style="right: 22px; bottom: 0; width: 150px; height: 220px">
+              <img src="../../../src/assets/screens/iphone-trip-detail.webp" alt="" />
+            </div>
+          </article>
+
+          <article class="tile half" style="--glow: rgba(142, 139, 255, 0.18)">
+            <span class="ti"><i data-icon="receipt"></i></span>
+            <h3>Receipts, encrypted</h3>
+            <p>Read by on-server OCR.</p>
+          </article>
+          <article class="tile half" style="--glow: rgba(255, 190, 80, 0.14)">
+            <span class="ti"><i data-icon="calendar"></i></span>
+            <h3>Recurring, previewed</h3>
+            <p>Bills in the calendar first.</p>
+          </article>
+          <article class="tile half">
+            <span class="ti"><i data-icon="finger-print"></i></span>
+            <h3>Face ID lock</h3>
+            <p>On iPhone and iPad.</p>
+          </article>
+          <article class="tile half">
+            <span class="ti"><i data-icon="cloud-offline"></i></span>
+            <h3>Offline-first</h3>
+            <p>Syncs when you're back.</p>
+          </article>
+          <article class="tile half">
+            <span class="ti"><i data-icon="key"></i></span>
+            <h3>Your sign-in</h3>
+            <p>Local or OpenID Connect.</p>
+          </article>
+          <article class="tile half">
+            <span class="ti"><i data-icon="leaf"></i></span>
+            <h3>Widgets</h3>
+            <p>Left to spend at a glance.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="wrap section">
+        <div class="principles">
+          <div class="principle">
+            <i data-icon="server"></i>
+            <h3>Your server, your data</h3>
+            <p>One Compose file or a NixOS module.</p>
+          </div>
+          <div class="principle">
+            <i data-icon="lock-closed"></i>
+            <h3>No bank connection</h3>
+            <p>You record what matters, in seconds.</p>
+          </div>
+          <div class="principle">
+            <i data-icon="document-text"></i>
+            <h3>Open source, MIT</h3>
+            <p>Web, iOS and API in one repository.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section selfhost" id="self-host">
+        <div>
+          <p class="eyebrow">Self-host</p>
+          <h2>Running in a few minutes.</h2>
+          <ol class="steps">
+            <li><span><b>Fill in two secrets</b> in <code>deploy/.env</code>.</span></li>
+            <li><span><b>Start it</b> with Docker Compose.</span></li>
+            <li><span><b>Point your reverse proxy</b> at it.</span></li>
+          </ol>
+        </div>
+        <figure class="terminal" style="margin: 0">
+          <div class="browser-bar"><span></span><span></span><span></span><b>~/penny</b></div>
+          <pre><span class="prompt">$</span> docker compose up -d --wait
+<span class="ok">✔</span> penny-postgres-1  <span class="ok">Healthy</span>
+<span class="ok">✔</span> penny-api-1       <span class="ok">Healthy</span>
+<span class="ok">✔</span> penny-web-1       <span class="ok">Healthy</span></pre>
+        </figure>
+        <div class="actions" style="margin-top: 0">
+          <span class="button">Self-hosting guide</span>
+        </div>
+      </section>
+
+      <section class="closing">
+        <h2>A little more clarity, on your own server.</h2>
+        <div class="actions">
+          <span class="button">Self-host Penny</span>
+          <span class="button button-ghost">View the source</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <span>Penny tracks investment contributions, not portfolio performance, and never connects to your bank.</span>
+      <span>MIT · GitHub</span>
+    </footer>
+
+    <div class="fold" style="top: 844px"><span>844 px: first screen</span></div>
+  </body>
+</html>

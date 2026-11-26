@@ -1,158 +1,123 @@
-// A money-flow (Sankey) diagram in depth: income on the left, categories on the right.
+// The money-flow ribbons behind the showcase: income streaming from the left into categories,
+// investments and what's left over, as glowing bands in depth.
+//
+// Each band is a regular grid of round, overlapping splats at one depth (overlapping Gaussians on
+// a grid sum to an even surface), with colour and opacity varying smoothly and no per-splat
+// randomness: bands read as smooth light rather than noise or brush strokes. Opacity falls off
+// softly over a band's outer rows, which keeps its outline clean.
 import { SplatBuilder, type SplatCloud, type Vec3 } from "../splats/cloud.ts";
-import { apportion, createRandom, lerp, mixColor, shade, smoothstep } from "../splats/random.ts";
-import { halo, r2 } from "./common.ts";
+import { apportion, lerp, mixColor, smoothstep } from "../splats/random.ts";
 import { palette } from "./palette.ts";
 
-interface Node {
-  readonly id: string;
-  readonly color: Vec3;
+/** Half the scene's width and height, in world units: the camera fits the width. */
+export const FLOW_HALF_WIDTH = 2.4;
+export const FLOW_HALF_HEIGHT = 1.25;
+
+interface Band {
+  readonly to: Vec3;
+  /** Share of the income. */
+  readonly amount: number;
+  /** Where the band ends on the right, from −1 (bottom) to 1 (top). */
+  readonly end: number;
 }
 
-const SOURCES: readonly Node[] = [
-  { id: "salary", color: palette.income },
-  { id: "freelance", color: mixColor(palette.income, palette.groceries, 0.45) },
+/** The same shape as the demo's money flow: home, groceries, food, invested, left over. */
+const BANDS: readonly Band[] = [
+  { to: palette.home, amount: 0.3, end: 0.7 },
+  { to: palette.groceries, amount: 0.09, end: 0.32 },
+  { to: palette.food, amount: 0.06, end: 0.02 },
+  { to: palette.invest, amount: 0.08, end: -0.26 },
+  { to: palette.copperDark, amount: 0.37, end: -0.66 },
 ];
 
-const TARGETS: readonly Node[] = [
-  { id: "home", color: palette.home },
-  { id: "groceries", color: palette.groceries },
-  { id: "food", color: palette.food },
-  { id: "transport", color: palette.transport },
-  { id: "invested", color: palette.invest },
-  { id: "left", color: palette.copperDark },
-];
+/** Total height of the bands where they leave the source, in world units. */
+const SOURCE_HEIGHT = 0.5;
 
-/** Demo amounts (thousands), the same shape as the README's money-flow screenshot. */
-export const FLOWS: readonly { from: string; to: string; amount: number }[] = [
-  { from: "salary", to: "home", amount: 1.5 },
-  { from: "salary", to: "groceries", amount: 0.7 },
-  { from: "salary", to: "food", amount: 0.55 },
-  { from: "salary", to: "invested", amount: 0.8 },
-  { from: "salary", to: "left", amount: 0.05 },
-  { from: "freelance", to: "transport", amount: 0.35 },
-  { from: "freelance", to: "left", amount: 1.05 },
-];
-
-const LEFT = -1.18;
-const RIGHT = 1.18;
-const BAR = 0.045;
-const HEIGHT = 1.55;
-const GAP = 0.11;
-
-interface Slot {
-  y0: number;
-  y1: number;
+interface Laid extends Band {
+  index: number;
+  /** Top and bottom at the source. */
+  s0: number;
+  s1: number;
+  /** Height in world units. */
+  h: number;
 }
 
-function layout(nodes: readonly Node[], totals: Map<string, number>, scale: number): Map<string, Slot> {
-  const height = [...totals.values()].reduce((a, b) => a + b, 0) * scale + GAP * (nodes.length - 1);
-  let y = height / 2;
-  const slots = new Map<string, Slot>();
-  for (const node of nodes) {
-    const h = (totals.get(node.id) ?? 0) * scale;
-    slots.set(node.id, { y0: y - h, y1: y });
-    y -= h + GAP;
-  }
-  return slots;
+function layBands(): Laid[] {
+  const total = BANDS.reduce((sum, band) => sum + band.amount, 0);
+  let y = SOURCE_HEIGHT / 2;
+  return BANDS.map((band, index) => {
+    const h = (band.amount / total) * SOURCE_HEIGHT;
+    const laid = { ...band, index, s0: y, s1: y - h, h };
+    y -= h;
+    return laid;
+  });
 }
 
-export function flowScene(count: number, seed = 23): SplatCloud {
-  const random = createRandom(seed);
+/** Centre line of a band at u ∈ [0, 1], left to right: flat at both ends, an S in between. */
+export function bandCentre(band: { s0: number; s1: number; end: number }, u: number): number {
+  const start = (band.s0 + band.s1) / 2;
+  const end = band.end * FLOW_HALF_HEIGHT * 0.88;
+  return lerp(start, end, smoothstep(0.18, 0.82, u));
+}
+
+export function flowScene(count: number): SplatCloud {
   const builder = new SplatBuilder(count);
+  const bands = layBands();
+  const left = -FLOW_HALF_WIDTH;
+  const width = FLOW_HALF_WIDTH * 2;
+  const depth = (band: Laid) => (band.index - (bands.length - 1) / 2) * -0.09;
+  const colorAt = (band: Laid, u: number) => mixColor(palette.income, band.to, smoothstep(0.2, 0.8, u));
 
-  const out = new Map<string, number>();
-  const into = new Map<string, number>();
-  for (const f of FLOWS) {
-    out.set(f.from, (out.get(f.from) ?? 0) + f.amount);
-    into.set(f.to, (into.get(f.to) ?? 0) + f.amount);
-  }
-  const total = [...out.values()].reduce((a, b) => a + b, 0);
-  const scale = (HEIGHT - GAP * (TARGETS.length - 1)) / total;
-  const sources = layout(SOURCES, out, scale);
-  const targets = layout(TARGETS, into, scale);
+  const [bandCount, bloomCount] = apportion(count, [0.96, 0.04]) as [number, number];
+  const perBand = apportion(bandCount, bands.map((band) => band.h));
 
-  // Each flow takes the next band of its source and target, top to bottom.
-  const sourceCursor = new Map([...sources].map(([k, s]) => [k, s.y1]));
-  const targetCursor = new Map([...targets].map(([k, s]) => [k, s.y1]));
-  const ribbons = FLOWS.map((f, index) => {
-    const h = f.amount * scale;
-    const s1 = sourceCursor.get(f.from)!;
-    const t1 = targetCursor.get(f.to)!;
-    sourceCursor.set(f.from, s1 - h);
-    targetCursor.set(f.to, t1 - h);
-    return {
-      index,
-      s: { y0: s1 - h, y1: s1 },
-      t: { y0: t1 - h, y1: t1 },
-      from: SOURCES.find((n) => n.id === f.from)!.color,
-      to: TARGETS.find((n) => n.id === f.to)!.color,
-      area: h * (RIGHT - LEFT),
+  bands.forEach((band, i) => {
+    const n = perBand[i]!;
+    // A grid as square as the band allows: columns along it, rows across it.
+    const columns = Math.min(n, Math.max(2, Math.round(Math.sqrt((n * width) / band.h))));
+    const rows = Math.max(1, Math.floor(n / columns));
+    const spacing = width / columns;
+    // Drawn additively (src/splats/stage.ts): about ten splats overlap at any point, and their
+    // light sums to an even band.
+    const sigma = spacing * 1.25;
+    const emit = (u: number, across: number, weight: number) => {
+      const y = bandCentre(band, u) + (across - 0.5) * band.h;
+      // Soft outer rows, and a fade where the band leaves the source and where it leaves the frame.
+      const edge = smoothstep(0, 0.22, across) * smoothstep(1, 0.78, across);
+      const ends = smoothstep(0, 0.22, u) * smoothstep(1, 0.9, u);
+      // Light from above: the top of each band is a little brighter, smoothly.
+      const lift = 0.9 + 0.2 * across;
+      const color = colorAt(band, u);
+      builder.push({
+        position: [left + width * u, y, depth(band)],
+        scale: [sigma, sigma, 0.002],
+        color: [Math.min(1, color[0] * lift), Math.min(1, color[1] * lift), Math.min(1, color[2] * lift)],
+        opacity: 0.065 * edge * ends * weight,
+      });
     };
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < columns; c++) emit((c + 0.5) / columns, (r + 0.5) / rows, 1);
+    }
+    // Whatever the grid leaves of the budget runs along the centre line, faintly.
+    const rest = n - rows * columns;
+    for (let k = 0; k < rest; k++) emit((k + 0.5) / rest, 0.5, 0.3);
   });
 
-  const [ribbonCount, nodeCount, haloCount] = apportion(count, [0.72, 0.18, 0.1]) as [number, number, number];
-
-  const perRibbon = apportion(ribbonCount, ribbons.map((r) => r.area + 0.04));
-  ribbons.forEach((ribbon, i) => {
-    const n = perRibbon[i]!;
-    const sigma = Math.sqrt(ribbon.area / n) * 0.95;
-    const depth = (ribbon.index - (ribbons.length - 1) / 2) * 0.07;
+  // Bloom: large, faint splats along each band's centre line, so the bands glow.
+  const perBloom = apportion(bloomCount, bands.map((band) => band.h + 0.05));
+  bands.forEach((band, i) => {
+    const n = perBloom[i]!;
     for (let k = 0; k < n; k++) {
-      const [a, across] = r2(k);
-      const x = lerp(LEFT + BAR, RIGHT - BAR, a);
-      const blend = smoothstep(0, 1, a);
-      const y0 = lerp(ribbon.s.y0, ribbon.t.y0, blend);
-      const y1 = lerp(ribbon.s.y1, ribbon.t.y1, blend);
-      const slope = (ribbon.t.y0 + ribbon.t.y1 - ribbon.s.y0 - ribbon.s.y1) / 2;
-      const z = depth * Math.sin(Math.PI * a) + (random() - 0.5) * 0.05;
-      // Brighter at the band edges, like light catching a translucent ribbon.
-      const edge = 1 - 4 * across * (1 - across);
+      const u = (k + 0.5) / n;
+      const s = Math.max(0.06, band.h * 0.8);
       builder.push({
-        position: [x, lerp(y0, y1, across), z],
-        scale: [sigma * 1.6, sigma * 0.8, sigma * 0.5],
-        tangent: [RIGHT - LEFT, slope * 6 * a * (1 - a), 0],
-        normal: [0, 0, 1],
-        color: shade(mixColor(ribbon.from, ribbon.to, smoothstep(0.15, 0.85, a)), 0.9 + 0.2 * edge),
-        opacity: 0.32 + 0.3 * edge,
-        shading: 0.35,
+        position: [left + width * u, bandCentre(band, u), depth(band) - 0.05],
+        scale: [s * 1.4, s, s * 0.3],
+        color: colorAt(band, u),
+        opacity: 0.025 * smoothstep(0, 0.25, u) * smoothstep(1, 0.9, u),
       });
     }
   });
-
-  const nodes = [
-    ...[...sources].map(([id, slot]) => ({ x: LEFT, slot, color: SOURCES.find((n) => n.id === id)!.color })),
-    ...[...targets].map(([id, slot]) => ({ x: RIGHT, slot, color: TARGETS.find((n) => n.id === id)!.color })),
-  ];
-  const perNode = apportion(nodeCount, nodes.map((n) => n.slot.y1 - n.slot.y0));
-  nodes.forEach((node, i) => {
-    const n = perNode[i]!;
-    const h = node.slot.y1 - node.slot.y0;
-    const sigma = Math.sqrt((h * 0.16) / n) * 0.8;
-    for (let k = 0; k < n; k++) {
-      const y = lerp(node.slot.y0 + 0.01, node.slot.y1 - 0.01, random());
-      builder.push({
-        position: [node.x + (random() - 0.5) * BAR * 2, y, (random() - 0.5) * 0.16],
-        scale: [sigma, sigma, sigma],
-        color: shade(node.color, 1.05),
-        opacity: 0.95,
-      });
-    }
-  });
-
-  halo(
-    builder,
-    haloCount,
-    random,
-    () => {
-      const r = ribbons[Math.floor(random() * ribbons.length)]!;
-      const a = random();
-      const b = smoothstep(0, 1, a);
-      return [lerp(LEFT, RIGHT, a), lerp((r.s.y0 + r.s.y1) / 2, (r.t.y0 + r.t.y1) / 2, b), 0];
-    },
-    [palette.income, palette.home, palette.food, palette.invest, palette.copperDark, palette.glow2],
-    { spread: 0.06, size: [0.012, 0.04], opacity: [0.02, 0.07] },
-  );
 
   return builder.build();
 }

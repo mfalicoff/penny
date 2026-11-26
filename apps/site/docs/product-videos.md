@@ -1,6 +1,8 @@
 # Product videos: licenses, storyboard and pipeline
 
-Status: **approved by the owner on 2026-11-25**, with the changes recorded under [Decisions](#decisions-2026-11-25). This was step 1 of the "apps in motion" work: the license check, the storyboard and the pipeline outline. The pipeline and the clips are built from it.
+Status: **approved by the owner on 2026-11-25**, with the changes recorded under [Decisions](#decisions-2026-11-25). This was step 1 of the "apps in motion" work: the license check, the storyboard and the pipeline outline. Phase 1 (the pipeline, the two web clips and the page wiring) is built: [apps/site/README.md](../README.md#clips-of-the-apps-in-use) is the how-to. The iOS clips follow on the Mac.
+
+Since the page redesign ([design/README.md](design/README.md)), the Insights clip plays in the showcase and the Overview and Entries clips in their feature tiles. The page has no Apps section any more, so the Apps clip is rendered but not placed.
 
 The goal is short pre-rendered clips of Penny's real screens, played inside the product page's existing device frames, with the splat scenes still around them. Only synthetic demo data appears: the web demo's sample data and the iOS demo.
 
@@ -82,7 +84,7 @@ The issue's "money flow". The browser frame shows Insights.
 
 | Time | Screen | Camera, highlight | Caption |
 | --- | --- | --- | --- |
-| 0.0 s (poster) | Insights, the full flow | Wide, slow push-in | "Follow every dollar from pay to spending" |
+| 0.0 s (poster) | Insights, the full flow | Wide, slow push-in | "Follow every dollar you earn" |
 | 1.5 s | Cursor moves to Groceries | | |
 | 2.5 s | Groceries selected: the other bands dim | Zoom 1.6× on the bands. Highlight: Groceries | "Select a band to focus it" |
 | 4.0 s | Groceries cleared, Left over selected | Pan down to Left over. Highlight: Left over | |
@@ -159,7 +161,13 @@ The web demo refuses to save an entry, so no web clip shows adding one. Adding a
 
 ## 3. Pipeline outline
 
-Not built in this step. This is what the next step would add.
+Built in phase 1, as outlined here except where noted. [apps/site/README.md](../README.md#clips-of-the-apps-in-use) is the how-to. What changed from the outline:
+
+- The render script is `render.ts`, and the shared demo setup moved to `apps/site/scripts/demo.ts`, used by both captures.
+- Chromium's screencast sends 1× frames under Playwright's emulated 2×. The captures launch Chromium with `--force-device-scale-factor=2` to get 2× frames.
+- Captions are HTML beside each clip (owner's decision), so the compositions draw no caption.
+- The loader is about 1.5 kB gzipped, not 1 kB, and adds a pause button.
+- CI lints and type-checks the pipeline, and the page's tests check the committed clips against their budgets.
 
 ```text
 apps/site/video/                 its own package.json and lockfile (Remotion, React, Playwright from apps/web)
@@ -202,7 +210,7 @@ The HTML keeps today's `<img>` in each frame. Clips are opt-in through data attr
 </figure>
 ```
 
-A small loader in `src/main.ts`, about 1 kB:
+A small loader in `src/clips.ts`, about 1.5 kB gzipped:
 
 1. Does nothing when reduced motion or Save-Data is on, or when the browser can play neither `video/webm; codecs="av01.0.05M.08"` nor `video/mp4; codecs="avc1.640028"`.
 2. Watches each `[data-clip]` frame with an `IntersectionObserver` (root margin of about one screen height). When a frame comes near, it creates `<video muted loop playsinline preload="none" poster=…>` with the AV1 and MP4 `<source>`s, the small variants under `media="(max-width: 700px)"`, places it over the `<img>`, and fades it in on `canplay`. Until then the still shows, so nothing shifts or flickers.

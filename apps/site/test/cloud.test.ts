@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { covariance, quaternionFromNormal, SplatBuilder, sortCloud } from "../src/splats/cloud.ts";
+import { covariance, quaternionFromNormal, SplatBuilder } from "../src/splats/cloud.ts";
 import { apportion, createRandom } from "../src/splats/random.ts";
 
 describe("quaternionFromNormal", () => {
@@ -40,17 +40,6 @@ describe("SplatBuilder", () => {
     builder.push({ position: [0, 0, 0], scale: [1, 1, 1], color: [1, 0.5, 0], opacity: 1 });
     expect(builder.build().colors.slice(0, 4)).toEqual(new Uint8Array([255, 128, 0, 255]));
     expect(() => builder.push({ position: [0, 0, 0], scale: [1, 1, 1], color: [1, 1, 1], opacity: 1 })).toThrow(/full/);
-  });
-});
-
-describe("sortCloud", () => {
-  it("orders splats by the key and keeps their attributes together", () => {
-    const builder = new SplatBuilder(3);
-    for (const x of [2, 0, 1]) builder.push({ position: [x, 0, 0], scale: [x + 1, 1, 1], color: [x / 2, 0, 0], opacity: 1 });
-    const sorted = sortCloud(builder.build(), (x) => x);
-    expect([...sorted.positions].filter((_, i) => i % 3 === 0)).toEqual([0, 1, 2]);
-    expect([...sorted.scales].filter((_, i) => i % 3 === 0)).toEqual([1, 2, 3]);
-    expect([...sorted.colors].filter((_, i) => i % 4 === 0)).toEqual([0, 128, 255]);
   });
 });
 

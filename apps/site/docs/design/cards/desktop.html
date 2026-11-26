@@ -1,0 +1,250 @@
+<!doctype html>
+<!-- @dsCard product-page-desktop: the product page redesign at 1440 px (hero, showcase, bento,
+     principles, self-host). Blue numbered notes are review annotations; see ../README.md. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440" />
+    <title>Product page · desktop</title>
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="brand"><span class="logo"><i data-icon="leaf"></i></span>penny.</div>
+      <nav class="nav-links">
+        <span>Features</span><span>Self-host</span><span style="position: relative">Docs<span class="note" data-n="6" style="right: -8px; top: 34px">/docs on this site</span></span>
+        <span class="button"><i data-icon="laptop"></i>GitHub</span>
+      </nav>
+    </header>
+
+    <main>
+      <section class="wrap hero">
+        <div>
+          <p class="eyebrow">Self-hosted expense tracking</p>
+          <h1>A little more clarity about your money.</h1>
+          <p class="lede">
+            Track expenses, income and investments on iPhone, iPad and the web. Split the bill, keep the receipt, and
+            see where it all went, on a server you run yourself.
+          </p>
+          <div class="actions">
+            <span class="button">Self-host Penny</span>
+            <span class="button button-ghost">View the source</span>
+          </div>
+          <ul class="chips">
+            <li><i data-icon="laptop"></i>Web app</li>
+            <li><i data-icon="finger-print"></i>Native iPhone &amp; iPad</li>
+            <li><i data-icon="lock-closed"></i>No bank connection</li>
+          </ul>
+        </div>
+        <div class="coin">
+          <img src="../assets/today-coin.webp" alt="" />
+          <span class="note" data-n="1" style="left: 30px; top: 30px">Splat 1 of 2: the coin, live, full resolution</span>
+        </div>
+      </section>
+
+      <section class="wrap showcase">
+        <svg class="ribbons" viewBox="0 0 1440 820" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="g-home" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="0.55" stop-color="#3dd07a" stop-opacity="0.6" /><stop offset="1" stop-color="#4f7dff" /></linearGradient>
+            <linearGradient id="g-groc" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#22b8a6" /></linearGradient>
+            <linearGradient id="g-food" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#e2508f" /></linearGradient>
+            <linearGradient id="g-inv" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#8e8bff" /></linearGradient>
+            <linearGradient id="g-left" x1="0" x2="1"><stop offset="0" stop-color="#3dd07a" /><stop offset="1" stop-color="#ff7a45" /></linearGradient>
+            <filter id="glow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="26" /></filter>
+            <linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset="0.22" stop-color="#fff" /><stop offset="0.85" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0.35" /></linearGradient>
+            <mask id="fade-in"><rect width="1440" height="820" fill="url(#fade)" /></mask>
+          </defs>
+          <g mask="url(#fade-in)">
+            <g id="bands" fill="none" stroke-linecap="butt">
+              <path d="M0 430 C 460 430, 760 110, 1440 90" stroke="url(#g-home)" stroke-width="54" />
+              <path d="M0 462 C 460 462, 790 240, 1440 232" stroke="url(#g-groc)" stroke-width="16" />
+              <path d="M0 478 C 460 478, 810 352, 1440 352" stroke="url(#g-food)" stroke-width="11" />
+              <path d="M0 492 C 460 492, 830 476, 1440 476" stroke="url(#g-inv)" stroke-width="14" />
+              <path d="M0 528 C 460 528, 770 720, 1440 732" stroke="url(#g-left)" stroke-width="64" />
+            </g>
+            <use href="#bands" filter="url(#glow)" opacity="0.75" />
+          </g>
+        </svg>
+        <div class="stage">
+          <div class="browser">
+            <div class="browser-bar"><span></span><span></span><span></span><b>penny.example.com</b></div>
+            <div class="browser-shot">
+              <img src="../assets/web-insights.webp" alt="" />
+              <span class="play"><i data-icon="pause"></i></span>
+            </div>
+          </div>
+          <figure class="iphone" style="margin: 0"><img src="../../../src/assets/screens/iphone-home.webp" alt="" /></figure>
+        </div>
+        <span class="note" data-n="2" style="right: 0; top: -14px">Splat 2 of 2: money-flow ribbons behind the showcase (target look)</span>
+        <span class="note" data-n="3" style="left: 300px; top: 300px">Insights clip plays here (web demo)</span>
+        <span class="note" data-n="4" style="right: 40px; top: 210px">Overview clip (iOS, phase 2)</span>
+        <div class="under">
+          <ul class="captions">
+            <li>Follow every dollar you earn</li>
+            <li class="is-current">Select a band to focus it</li>
+          </ul>
+          <ul class="chips" style="margin: 0">
+            <li><i data-icon="laptop"></i>iPhone, iPad and the web</li>
+            <li><i data-icon="server"></i>Your server</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="wrap section" id="features">
+        <div class="head">
+          <div>
+            <p class="eyebrow">Features</p>
+            <h2>Everything a month needs.<br />Nothing it doesn't.</h2>
+          </div>
+          <p>Left to spend up front, every dollar traced, bills split the way they were paid, and receipts kept, on every device.</p>
+        </div>
+
+        <div class="bento">
+          <article class="tile" style="grid-column: span 5; grid-row: span 2; min-height: 640px; --glow: rgba(255, 111, 63, 0.26)">
+            <span class="ti"><i data-icon="wallet"></i></span>
+            <h3>Left to spend, first.</h3>
+            <p>What came in, what you spent and what you invested. Expected pay already counts toward a clearly labeled projection.</p>
+            <span class="badge"><i data-icon="play"></i>Clip</span>
+            <div class="screen" style="left: 56px; right: 56px; bottom: 0; height: 400px">
+              <img src="../../../src/assets/screens/iphone-home.webp" alt="" />
+            </div>
+          </article>
+
+          <article class="tile" style="grid-column: span 7; --glow: rgba(61, 208, 122, 0.16)">
+            <span class="ti"><i data-icon="people"></i></span>
+            <h3>Split it the way you paid.</h3>
+            <p>Equally, by amount or by percentage. The total stays on the entry; your reports count only your share.</p>
+            <span class="badge" style="right: 330px"><i data-icon="play"></i>Clip</span>
+            <div class="screen" style="right: 40px; bottom: 0; width: 260px; height: 250px">
+              <img src="../../../src/assets/screens/iphone-split.webp" alt="" style="margin-top: -80px" />
+            </div>
+          </article>
+
+          <article class="tile" style="grid-column: span 4; --glow: rgba(142, 139, 255, 0.18)">
+            <span class="ti"><i data-icon="receipt"></i></span>
+            <h3>Receipts, encrypted.</h3>
+            <p>Photo or PDF, encrypted on your server and read by on-server OCR.</p>
+            <div class="screen" style="left: 40px; right: 40px; bottom: 0; height: 110px">
+              <img src="../../../src/assets/screens/iphone-receipt-inbox.webp" alt="" style="margin-top: -120px" />
+            </div>
+          </article>
+
+          <article class="tile" style="grid-column: span 3; --glow: rgba(255, 111, 63, 0.14)">
+            <span class="ti"><i data-icon="search"></i></span>
+            <h3>Search everything.</h3>
+            <div class="mini-search">
+              <div class="field"><i data-icon="search"></i>groc</div>
+              <div class="row"><b>Weekly groceries</b><span>−$86.42</span></div>
+              <div class="row"><b>Weekend groceries</b><span>−$72.35</span></div>
+            </div>
+          </article>
+
+          <article class="tile" style="grid-column: span 7; min-height: 340px; --glow: rgba(61, 208, 122, 0.2)">
+            <span class="ti"><i data-icon="home"></i></span>
+            <h3>Households and trips.</h3>
+            <p style="max-width: 250px">Record a shared cost once. Balances, suggested payments and settling up at the end.</p>
+            <div class="screen" style="right: 220px; bottom: 0; width: 200px; height: 210px">
+              <img src="../../../src/assets/screens/iphone-shared.webp" alt="" />
+            </div>
+            <div class="screen" style="right: 30px; bottom: 0; width: 200px; height: 250px">
+              <img src="../../../src/assets/screens/iphone-trip-detail.webp" alt="" />
+            </div>
+          </article>
+
+          <article class="tile" style="grid-column: span 5; min-height: 340px; --glow: rgba(255, 190, 80, 0.14)">
+            <span class="ti"><i data-icon="calendar"></i></span>
+            <h3>Recurring, previewed.</h3>
+            <p>Bills and paydays show up in the calendar before they happen.</p>
+            <div class="screen" style="left: 40px; right: 40px; bottom: 0; height: 170px">
+              <img src="../assets/iphone-calendar.webp" alt="" style="margin-top: -150px" />
+            </div>
+          </article>
+
+          <article class="tile" style="grid-column: span 6; min-height: 300px; --glow: rgba(255, 111, 63, 0.2)">
+            <span class="ti"><i data-icon="leaf"></i></span>
+            <h3>On your Home Screen.</h3>
+            <p style="max-width: 230px">Widgets for left to spend and recent expenses.</p>
+            <img src="../assets/widgets.webp" alt="" style="position: absolute; right: 24px; bottom: -40px; width: 300px; border-radius: 26px" />
+          </article>
+
+          <article class="tile" style="grid-column: span 2; min-height: 300px">
+            <span class="ti"><i data-icon="finger-print"></i></span>
+            <h3>Face ID lock</h3>
+            <p>Biometric lock on iPhone and iPad.</p>
+          </article>
+          <article class="tile" style="grid-column: span 2; min-height: 300px">
+            <span class="ti"><i data-icon="cloud-offline"></i></span>
+            <h3>Offline-first</h3>
+            <p>Edits save on the device and sync later.</p>
+          </article>
+          <article class="tile" style="grid-column: span 2; min-height: 300px">
+            <span class="ti"><i data-icon="key"></i></span>
+            <h3>Your sign-in</h3>
+            <p>Local accounts or your own OpenID Connect.</p>
+          </article>
+        </div>
+        <span class="note" data-n="5" style="position: relative; display: inline-flex; margin-top: 14px">Tiles show the real screens cropped to the part that matters, bleeding off the tile edge. Three tiles play clips.</span>
+      </section>
+
+      <section class="wrap section">
+        <div class="principles">
+          <div class="principle">
+            <i data-icon="server"></i>
+            <h3>Your server, your data</h3>
+            <p>One Compose file or a NixOS module. Nothing leaves the machine you run it on.</p>
+          </div>
+          <div class="principle">
+            <i data-icon="lock-closed"></i>
+            <h3>No bank connection</h3>
+            <p>Penny never logs in to your bank. You record what matters, in seconds.</p>
+          </div>
+          <div class="principle">
+            <i data-icon="document-text"></i>
+            <h3>Open source, MIT</h3>
+            <p>Read the code, run it, change it. The web app, the iOS app and the API are all in one repository.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section selfhost" id="self-host">
+        <div>
+          <p class="eyebrow">Self-host</p>
+          <h2>Running in a few minutes.</h2>
+          <ol class="steps">
+            <li><span><b>Fill in two secrets</b> and your public address in <code>deploy/.env</code>.</span></li>
+            <li><span><b>Start it</b>: PostgreSQL, the API and the web app.</span></li>
+            <li><span><b>Point your reverse proxy</b> at it and open Penny.</span></li>
+          </ol>
+          <div class="actions">
+            <span class="button">Self-hosting guide</span>
+            <span class="button button-ghost">Documentation</span>
+          </div>
+        </div>
+        <figure class="terminal" style="margin: 0">
+          <div class="browser-bar"><span></span><span></span><span></span><b>~/penny</b></div>
+          <pre><span class="dim"># deploy/.env from deploy/.env.example: the public origin and two secrets</span>
+<span class="prompt">$</span> docker compose -f deploy/compose.yaml up -d --wait
+<span class="ok">✔</span> Container penny-postgres-1      <span class="ok">Healthy</span>
+<span class="ok">✔</span> Container penny-penny-render-1  <span class="ok">Healthy</span>
+<span class="ok">✔</span> Container penny-api-1           <span class="ok">Healthy</span>
+<span class="ok">✔</span> Container penny-web-1           <span class="ok">Healthy</span></pre>
+        </figure>
+      </section>
+
+      <section class="closing">
+        <h2>A little more clarity, on your own server.</h2>
+        <div class="actions">
+          <span class="button">Self-host Penny</span>
+          <span class="button button-ghost">View the source</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <span>Penny tracks investment contributions, not portfolio performance, and never connects to your bank.</span>
+      <span>MIT · GitHub</span>
+    </footer>
+
+    <div class="fold" style="top: 900px"><span>900 px: first screen</span></div>
+  </body>
+</html>

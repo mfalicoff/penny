@@ -36,6 +36,18 @@ public static partial class FaroPayload
     [GeneratedRegex("^[A-Za-z0-9_-]{1,64}$", RegexOptions.CultureInvariant)]
     private static partial Regex Token();
 
+    // Grafana Cloud's Faro collector refuses a request without the session id in this header
+    // (400 "missing X-Faro-Session-Id header"); the browser SDK sets it, so the forwarder must too.
+    public const string SessionHeader = "X-Faro-Session-Id";
+
+    /// <summary>A checked payload's session id when it is a short token, else null.</summary>
+    public static string? SessionId(JsonObject payload) =>
+        payload["meta"]?["session"]?["id"] is JsonValue id
+        && id.GetValueKind() == JsonValueKind.String
+        && Token().IsMatch(id.GetValue<string>())
+            ? id.GetValue<string>()
+            : null;
+
     /// <summary>The payload to forward, scrubbed; null when it fails the schema check.</summary>
     public static JsonObject? Check(JsonNode? body, bool replay)
     {

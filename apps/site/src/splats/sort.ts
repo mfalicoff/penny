@@ -1,4 +1,5 @@
 // Back-to-front ordering for alpha blending: a 16-bit counting sort on view depth.
+import type { Mat4 } from "./mat4.ts";
 
 const BUCKETS = 65536;
 
@@ -42,4 +43,13 @@ export class DepthSorter {
     }
     return order;
   }
+}
+
+/** View-space z of splat i: the camera looks down −z, so the farthest is the most negative. */
+export function viewZ(points: Float32Array, i: number, model: Mat4, view: Mat4): number {
+  const x = points[i * 3]!, y = points[i * 3 + 1]!, z = points[i * 3 + 2]!;
+  const wx = model[0]! * x + model[4]! * y + model[8]! * z + model[12]!;
+  const wy = model[1]! * x + model[5]! * y + model[9]! * z + model[13]!;
+  const wz = model[2]! * x + model[6]! * y + model[10]! * z + model[14]!;
+  return view[2]! * wx + view[6]! * wy + view[10]! * wz + view[14]!;
 }
