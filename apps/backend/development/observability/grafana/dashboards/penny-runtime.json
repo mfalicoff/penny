@@ -655,7 +655,7 @@
             "uid": "${prometheus}"
           },
           "refId": "A",
-          "expr": "sum(dotnet_thread_pool_thread_count_total{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"})",
+          "expr": "sum(dotnet_thread_pool_thread_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"})",
           "legendFormat": "threads",
           "range": true
         },
@@ -665,7 +665,7 @@
             "uid": "${prometheus}"
           },
           "refId": "B",
-          "expr": "sum(dotnet_thread_pool_queue_length_total{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"})",
+          "expr": "sum(dotnet_thread_pool_queue_length{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"})",
           "legendFormat": "queued work items",
           "range": true
         }
@@ -787,7 +787,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {

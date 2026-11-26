@@ -1,7 +1,7 @@
 {
   "uid": "penny-auth",
   "title": "Penny auth and rate limits",
-  "description": "Sign-ins, rate limiting, sessions, ledger conflicts and household joins.",
+  "description": "Sign-ins, rate limiting, sessions, ledger conflicts, household joins, account deletion and export.",
   "tags": [
     "penny",
     "security"
@@ -479,7 +479,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -560,7 +560,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -637,7 +637,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -1066,7 +1066,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -1130,7 +1130,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -1228,6 +1228,415 @@
         "enableLogDetails": true,
         "dedupStrategy": "none",
         "prettifyLogMessage": false
+      }
+    },
+    {
+      "type": "row",
+      "id": 20,
+      "title": "Account deletion and export",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "panels": []
+    },
+    {
+      "id": 21,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 57
+      },
+      "type": "stat",
+      "title": "Accounts deleted",
+      "description": "Successful account deletions in the selected range.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=\"api/account/delete\", http_response_status_code=~\"2..\"}[$__range]))",
+          "range": true,
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 22,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 57
+      },
+      "type": "stat",
+      "title": "Deletions refused",
+      "description": "Wrong password, an unsettled household, or a creator whose household still has members.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=\"api/account/delete\", http_response_status_code=~\"4..\"}[$__range]))",
+          "range": true,
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 23,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 57
+      },
+      "type": "stat",
+      "title": "Exports",
+      "description": "Full data exports and entry CSV downloads in the selected range.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=~\"api/export.*\", http_response_status_code=~\"2..\"}[$__range]))",
+          "range": true,
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 24,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 57
+      },
+      "type": "stat",
+      "title": "Deletion and export errors (5xx)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=~\"api/account/delete|api/export.*\", http_response_status_code=~\"5..\"}[$__range])) or vector(0)",
+          "range": true,
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 25,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 61
+      },
+      "type": "timeseries",
+      "title": "Deletions and exports by status",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "interval": "2m",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum by (http_route, http_response_status_code) (increase(http_server_request_duration_seconds_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=~\"api/account/delete|api/export.*\"}[$__interval]))",
+          "legendFormat": "{{http_route}} {{http_response_status_code}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* 5..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 61
+      },
+      "type": "timeseries",
+      "title": "Export and deletion p95",
+      "description": "A full export reads the whole ledger and every receipt record, so it grows with the account.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=~\"api/account/delete|api/export.*\"}[$__rate_interval])))",
+          "legendFormat": "{{http_route}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       }
     }
   ]

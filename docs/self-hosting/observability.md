@@ -36,9 +36,28 @@ Make the value with `printf '%s:%s' <instanceID> <token> | base64`. Then restart
 
 **Web and iOS apps.** See [Client telemetry](#client-telemetry): the API forwards the apps' reports to Cloud with a URL or key only the server holds, so nothing secret goes into an app.
 
-**Dashboards.** Import each file from `apps/backend/development/observability/grafana/dashboards/` (Dashboards → New → Import) and pick your `grafanacloud-…-prom`, `-logs` and `-traces` data sources. They have not been checked against Cloud yet. If the Environment or Instance filter empties panels, leave it on All. Frontend Observability has its own web dashboards; **Penny clients** is built for the self-hosted pipeline.
+**Dashboards and alerts.** `node scripts/grafana-dashboards.mjs --push` creates or updates the six dashboards and every alert rule in a **Penny** folder through Grafana's HTTP API. It is idempotent: run it again after each change to the generator. It needs only Node, no install.
 
-**Alerts.** `grafana/provisioning/alerting/penny.yaml` is a file Grafana reads at startup and refers to local data source ids, so it does not load into Cloud. Recreate the rules in Alerting → Alert rules using the queries from that file.
+1. **Service account.** In your stack open **Administration → Users and access → Service accounts**, add one (for example `penny-push`) with the **Editor** role, and create a token. Editor can create the folder, the dashboards and the alert rules. The token is a secret: keep it out of the repository and shell history.
+2. **Push** from a checkout:
+
+   ```sh
+   export GRAFANA_URL=https://<stack>.grafana.net
+   export GRAFANA_TOKEN=<service account token>
+   node scripts/grafana-dashboards.mjs --push --web-app <Frontend Observability app name>
+   ```
+
+   It prints the data sources it picked, then one line per folder, dashboard and rule group.
+
+**Data source selection.** The push reads the stack's data sources and picks, for each kind, the only one of that type, the default one, or the one named like Grafana Cloud's own: `grafanacloud-<stack>-prom`, `-logs` and `-traces`. Other data sources of the same type (alert state history, usage insights, usage metrics) are left alone. Name another one with `--prometheus`, `--loki` or `--tempo` (its name or uid). The pushed dashboards open on those data sources, and the alert rules query them. The **Penny** folder is created with uid `penny`; `--folder <title>` changes its title.
+
+**Web app name.** Frontend Observability labels the web app's logs and traces with the name of its app (`service_name`), not with `penny-web`. Pass that name with `--web-app` so the **Penny clients** web panels find them; the dashboard's **Web app** box holds it and can be changed there too. Without `--web-app` it stays `penny-web`, the name to give the app when you create it.
+
+**Alerts.** The push creates the same rules as the self-hosted stack ([Alerts](#alerts)) in three rule groups. They are provisioned through the API, so the Grafana UI shows them read-only: change them in the generator and push again. Pushing replaces each group, so a rule removed from the generator disappears from Cloud too. Add a contact point and set it on the default notification policy, as on the self-hosted stack.
+
+**What stays empty.** Panels for things that haven't happened stay at 0 or "No data": 5xx answers, job failures, refused signatures, deleted accounts, client errors and crashes. The iOS panels need `ClientTelemetry__OtlpEndpoint` pointed at the same stack.
+
+Without a token on the machine, `--push --plan requests.json --datasources datasources.json` writes the same requests to a file instead of sending them (`datasources.json` is the answer of `GET /api/datasources`). The file holds your stack's data source uids, so delete it afterwards.
 
 ## Client telemetry
 
@@ -71,7 +90,7 @@ In `deploy/api.env` (or `services.penny.settings.ClientTelemetry` on NixOS), the
 
 The API refuses to start with a malformed URL (not http or https, with credentials, a query or a fragment), with replay but no Faro URL, or with headers but no OTLP endpoint. `GET /api/info` then reports `telemetry: { web, sessionReplay, native }`, which is how the apps know whether to ask.
 
-**With Grafana Cloud:** in **Frontend Observability**, create an app named `penny-web` and copy its collector URL (`https://faro-collector-prod-<region>.grafana.net/collect/<key>`) into `ClientTelemetry__FaroUrl`. No CORS origin is needed: the server posts, not the browser. Sessions, errors and web vitals appear within a minute of someone agreeing to share. To follow a browser request into the API, send the API's own traces to the same stack ([Grafana Cloud](#grafana-cloud)).
+**With Grafana Cloud:** in **Frontend Observability**, create an app named `penny-web` (or pass its name to the push as `--web-app`, [Grafana Cloud](#grafana-cloud)) and copy its collector URL (`https://faro-collector-prod-<region>.grafana.net/collect/<key>`) into `ClientTelemetry__FaroUrl`. No CORS origin is needed: the server posts, not the browser. Sessions, errors and web vitals appear within a minute of someone agreeing to share. To follow a browser request into the API, send the API's own traces to the same stack ([Grafana Cloud](#grafana-cloud)).
 
 **Self-hosted:** with this stack, `ClientTelemetry__FaroUrl=http://alloy:12347/collect` and `ClientTelemetry__OtlpEndpoint=http://alloy:4319`. Web reports become Loki lines labelled `service_name="penny-web"` and Faro traces join Tempo; the **Penny clients** dashboard reads both. Alloy's Faro receiver also limits everyone together to 50 requests a second (burst 100).
 
@@ -193,18 +212,18 @@ All are in the **Penny** folder and linked from each other's **Penny dashboards*
 | --- | --- |
 | **Penny API** | Is it up and healthy? Request rate, 5xx ratio, latency (p50/p95/p99) overall and by route, readiness failures, unhandled exceptions, a per-route table, warning and error logs, log search, failed and slow traces, and the trace for a request id |
 | **Penny database** | Npgsql pool use against its limit, connection time, query latency and throughput, bytes, and slow PostgreSQL spans with their parameterized SQL |
-| **Penny auth and rate limits** | Sign-ins by method and outcome, failure kinds, rejections per rate-limit policy, session and authorization results, 401/403/429 by route, ledger save conflicts, household joins |
-| **Penny background jobs** | Items and failures per job, lag from due to claimed (p50/p95), receipt text results and time, provider calls (OIDC, APNs), and worker-pass traces |
+| **Penny auth and rate limits** | Sign-ins by method and outcome, failure kinds, rejections per rate-limit policy, session and authorization results, 401/403/429 by route, ledger save conflicts, household joins, account deletions (done and refused) and data exports |
+| **Penny background jobs** | Items and failures per job, lag from due to claimed (p50/p95), the email outbox (sent, deferred, failed, dropped, by kind), receipt text results and time, emailed receipts (received, refused signatures, conversions, backlog), provider calls (OIDC, APNs), and worker-pass traces |
 | **Penny .NET runtime** | CPU, memory (working set and GC heap), garbage collection, allocation, thread pool, lock contention, exceptions by type, Kestrel connections |
-| **Penny clients** | Errors and crashes from the web and iOS apps, top exceptions, errors and crashes by app version, recent error lines, failed client operations and slow API calls seen from the client |
+| **Penny clients** | Errors and crashes from the web and iOS apps, top exceptions, errors and crashes by app version, recent error lines, web vitals (p75) and activity, what the API's telemetry endpoint accepted, forwarded and refused (400, 401, 404, 413, 415, 429), failed client operations and slow API calls seen from the client |
 
 Vertical purple markers show API starts.
 
-Provisioned dashboards are read-only. To change one, edit `scripts/grafana-dashboards.mjs`, run `node scripts/grafana-dashboards.mjs` and restart Grafana. `node scripts/grafana-dashboards.mjs --check` (also part of `npm test`) fails when the JSON and the script disagree. To experiment, use **Save as** in Grafana for your own copy.
+Provisioned dashboards are read-only. To change one, edit `scripts/grafana-dashboards.mjs`, run `node scripts/grafana-dashboards.mjs` and restart Grafana (on Grafana Cloud, push again). The script writes the dashboards and the alert rules (`penny.yaml`). `node scripts/grafana-dashboards.mjs --check` (also part of `npm test`) fails when those files and the script disagree. To experiment, use **Save as** in Grafana for your own copy.
 
 ## Alerts
 
-Grafana evaluates the rules in `grafana/provisioning/alerting/penny.yaml`:
+Grafana evaluates the rules in `grafana/provisioning/alerting/penny.yaml`, which `scripts/grafana-dashboards.mjs` generates. On Grafana Cloud the push creates the same rules ([Grafana Cloud](#grafana-cloud)):
 
 | Rule | Fires when | Severity |
 | --- | --- | --- |
@@ -215,13 +234,14 @@ Grafana evaluates the rules in `grafana/provisioning/alerting/penny.yaml`:
 | Penny background job lagging | A job's p95 lag (due → claimed) above 15 minutes for 15 minutes; recurrence excluded | warning |
 | Penny recurrences a day late | Recurrence p95 lag of a day or more, for an hour | warning |
 | Penny background job failures | More than 5 failures of one job in 15 minutes | warning |
+| Penny emails not delivering | More than 5 password reset, invite or verification emails deferred or failed in 30 minutes, for 15 minutes ([email delivery](email.md#delivery-retries-and-failures)) | warning |
 | Penny emailed receipt ingress refusing signatures | More than 10 unsigned or badly signed requests to `/api/inbound-mail` in 15 minutes: the Email Worker's secret differs from the API's, or something else reaches the endpoint ([emailed receipts](operations.md#emailed-receipts)) | warning |
 | Penny emailed receipts not converting | More than 3 emailed receipts waiting for `penny-render` in 30 minutes, for 15 minutes ([penny-render is down](operations.md#penny-render-is-down)) | warning |
 | Penny app crashes | A web or iOS crash reported in the last hour | warning |
 
 **No contact point is provisioned.** Until you add one, alerts show only under Alerting → Alert rules. Add a contact point (email needs Grafana's `GF_SMTP_*` settings; ntfy, Telegram, Slack and webhooks need none) and set it on the default notification policy. These alerts complement the [suggested checks](operations.md) that telemetry cannot see: disk space, backups and the `*-verify` commands.
 
-The thresholds are starting points. Provisioned rules are read-only in the UI: edit the file and restart Grafana, or duplicate a rule in the UI and pause the provisioned one.
+The thresholds are starting points. Provisioned rules are read-only in the UI: edit the generator, run it and restart Grafana (or push again), or duplicate a rule in the UI and pause the provisioned one.
 
 ## Follow a user-reported error end to end
 
@@ -249,7 +269,7 @@ The Aspire AppHost (`apps/backend/README.md`) starts the same Alloy, Loki, Tempo
 
 ## Tests
 
-- `npm test` runs `scripts/tests/observability.test.ts`: dashboards match their generator, panels use data source variables and the standard filters, alert rules use provisioned data sources, only Grafana is published and Alloy allows no browser origin, and images match the AppHost pins.
+- `npm test` runs `scripts/tests/observability.test.ts`: dashboards and alert rules match their generator, panels use data source variables and the standard filters, alert rules use provisioned data sources, the push picks the right Grafana Cloud data sources and sends every dashboard and rule group, only Grafana is published and Alloy allows no browser origin, and images match the AppHost pins.
 - `scripts/observability-smoke.mjs` (CI, after the deploy smoke test) starts Penny with telemetry on and this stack beside it. It then checks that API metrics, logs and traces (including SQL spans) for a request id reach Prometheus, Loki and Tempo through Grafana. It also checks that client errors and crashes sent to the API's telemetry endpoint arrive, and that the endpoint refuses callers without a session, oversized bodies and records impersonating the API. Finally it checks that Grafana provisioned every data source, dashboard and alert rule, that every rule evaluates, and that the crash alert fires.
 
 ```sh

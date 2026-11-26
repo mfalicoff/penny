@@ -272,7 +272,7 @@
       },
       "type": "stat",
       "title": "Instances up",
-      "description": "API processes that exported telemetry in the last 5 minutes. Zero means the API is down or cannot reach Alloy.",
+      "description": "API processes that exported telemetry in the last 5 minutes. Zero means the API is down or cannot reach its collector.",
       "datasource": {
         "type": "prometheus",
         "uid": "${prometheus}"
@@ -1777,7 +1777,7 @@
         "type": "loki",
         "uid": "${loki}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -1813,8 +1813,8 @@
         "overrides": [
           {
             "matcher": {
-              "id": "byName",
-              "options": "Information"
+              "id": "byRegexp",
+              "options": "^(Information|info)$"
             },
             "properties": [
               {
@@ -1828,8 +1828,8 @@
           },
           {
             "matcher": {
-              "id": "byName",
-              "options": "Warning"
+              "id": "byRegexp",
+              "options": "^(Warning|warn|warning)$"
             },
             "properties": [
               {
@@ -1843,8 +1843,8 @@
           },
           {
             "matcher": {
-              "id": "byName",
-              "options": "Error"
+              "id": "byRegexp",
+              "options": "^(Error|error)$"
             },
             "properties": [
               {
@@ -1858,8 +1858,8 @@
           },
           {
             "matcher": {
-              "id": "byName",
-              "options": "Critical"
+              "id": "byRegexp",
+              "options": "^(Critical|critical|fatal)$"
             },
             "properties": [
               {
@@ -1873,8 +1873,8 @@
           },
           {
             "matcher": {
-              "id": "byName",
-              "options": "Debug"
+              "id": "byRegexp",
+              "options": "^(Debug|debug|Trace|trace)$"
             },
             "properties": [
               {
