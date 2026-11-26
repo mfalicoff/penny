@@ -119,6 +119,15 @@ public sealed class LedgerReaderTests
     [InlineData("string-participants")]
     [InlineData("income-participants")]
     [InlineData("investment-recurring-participants")]
+    [InlineData("null-dismissed-suggestions")]
+    [InlineData("object-dismissed-suggestions")]
+    [InlineData("empty-dismissed-suggestion")]
+    [InlineData("long-dismissed-suggestion")]
+    [InlineData("numeric-dismissed-suggestion")]
+    [InlineData("null-dismissed-suggestion")]
+    [InlineData("duplicate-dismissed-suggestions")]
+    [InlineData("too-many-dismissed-suggestions")]
+    [InlineData("nul-dismissed-suggestion")]
     public void whenLedgerBreaksRule_Read_ShouldReject(string mutation)
     {
         Read(Mutate(mutation)).ShouldBeNull(mutation);
@@ -204,6 +213,47 @@ public sealed class LedgerReaderTests
     {
         LedgerDates.TryParse(value, out _).ShouldBe(valid);
     }
+
+    [Fact]
+    public void whenDismissedSuggestionsSent_Read_ShouldKeepThemVerbatimAndInOrder()
+    {
+        var body = JsonNode.Parse(Valid)!;
+        // Opaque to the server: any 1-200 character strings, the newest last, case kept.
+        body["ledger"]!["dismissedSuggestions"] = new JsonArray(
+            "expense|netflix|monthly|1699",
+            "income|salary|weekly|120000",
+            "Expense|netflix|monthly|1699",
+            "x",
+            new string('z', 200)
+        );
+        Read(body)!
+            .Ledger.DismissedSuggestions.ShouldBe([
+                "expense|netflix|monthly|1699",
+                "income|salary|weekly|120000",
+                "Expense|netflix|monthly|1699",
+                "x",
+                new string('z', 200),
+            ]);
+    }
+
+    [Fact]
+    public void whenDismissedSuggestionsAbsentEmptyOrFull_Read_ShouldAcceptThem()
+    {
+        Read(JsonNode.Parse(Valid)!)!.Ledger.DismissedSuggestions.ShouldBeEmpty();
+        var empty = JsonNode.Parse(Valid)!;
+        empty["ledger"]!["dismissedSuggestions"] = new JsonArray();
+        Read(empty)!.Ledger.DismissedSuggestions.ShouldBeEmpty();
+        var full = JsonNode.Parse(Valid)!;
+        full["ledger"]!["dismissedSuggestions"] = Dismissals(LedgerLimits.MaxDismissedSuggestions);
+        Read(full)!.Ledger.DismissedSuggestions.Count.ShouldBe(500);
+    }
+
+    private static JsonArray Dismissals(int count) =>
+        new([
+            .. Enumerable
+                .Range(0, count)
+                .Select(index => (JsonNode?)JsonValue.Create($"expense|item {index}|monthly|100")),
+        ]);
 
     private static LedgerWrite? Read(JsonNode body) => Read(body.ToJsonString());
 
@@ -433,6 +483,37 @@ public sealed class LedgerReaderTests
                 rule["kind"] = "investment";
                 rule["categoryId"] = "investments";
                 rule["participants"] = 2;
+                break;
+            case "null-dismissed-suggestions":
+                ledger["dismissedSuggestions"] = null;
+                break;
+            case "object-dismissed-suggestions":
+                ledger["dismissedSuggestions"] = new JsonObject();
+                break;
+            case "empty-dismissed-suggestion":
+                ledger["dismissedSuggestions"] = new JsonArray("expense|rent|monthly|145000", "");
+                break;
+            case "long-dismissed-suggestion":
+                ledger["dismissedSuggestions"] = new JsonArray(new string('a', 201));
+                break;
+            case "numeric-dismissed-suggestion":
+                ledger["dismissedSuggestions"] = new JsonArray(1699);
+                break;
+            case "null-dismissed-suggestion":
+                ledger["dismissedSuggestions"] = new JsonArray((JsonNode?)null);
+                break;
+            case "duplicate-dismissed-suggestions":
+                ledger["dismissedSuggestions"] = new JsonArray(
+                    "expense|netflix|monthly|1699",
+                    "expense|rent|monthly|145000",
+                    "expense|netflix|monthly|1699"
+                );
+                break;
+            case "too-many-dismissed-suggestions":
+                ledger["dismissedSuggestions"] = Dismissals(501);
+                break;
+            case "nul-dismissed-suggestion":
+                ledger["dismissedSuggestions"] = new JsonArray("expense|a\u0000|monthly|1");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(mutation));

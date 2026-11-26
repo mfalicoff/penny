@@ -8,5 +8,7 @@ public sealed record StoredLedger(
     IReadOnlyList<StoredCategory> Categories,
     IReadOnlyList<StoredTrip> Trips,
     IReadOnlyList<StoredRecurring> Recurring,
-    IReadOnlyList<StoredEntry> Entries
+    IReadOnlyList<StoredEntry> Entries,
+    // Dismissed recurring suggestions (contract 2.3.0), in the order sent.
+    IReadOnlyList<string> DismissedSuggestions
 );

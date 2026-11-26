@@ -17,6 +17,10 @@ public static class LedgerLimits
     // How many people split an expense, the person included (contract 2.2.0).
     public const int MinParticipants = 2;
     public const int MaxParticipants = 100;
+
+    // Recurring suggestions the person dismissed (contract 2.3.0): opaque, unique strings.
+    public const int MaxDismissedSuggestions = 500;
+    public const int DismissedSuggestionLength = 200;
     public static readonly IReadOnlyList<string> Currencies = ["CAD", "USD", "EUR", "GBP"];
     public static readonly IReadOnlyList<string> Kinds = ["income", "expense", "investment"];
     public static readonly IReadOnlyList<string> AccountTypes = ["bank", "credit", "cash", "other"];

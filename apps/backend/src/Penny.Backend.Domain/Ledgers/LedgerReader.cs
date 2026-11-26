@@ -54,6 +54,14 @@ public static class LedgerReader
             LedgerLimits.MaxRecurring,
             ReadRecurring
         );
+        // Recurring suggestions dismissed on any device (contract 2.3.0), in the order sent.
+        var dismissedSuggestions = ledger.TryGetValue("dismissedSuggestions", out var dismissed)
+            ? List(
+                dismissed,
+                LedgerLimits.MaxDismissedSuggestions,
+                item => Text(item, 1, LedgerLimits.DismissedSuggestionLength)
+            )
+            : [];
 
         // Cross-field rules: unique ids, ordered trip dates and consistent references.
         Unique(accounts.Select(account => account.Id));
@@ -61,6 +69,7 @@ public static class LedgerReader
         Unique(categories.Select(category => category.Id));
         Unique(transactions.Select(entry => entry.Id));
         Unique(recurring.Select(rule => rule.Id));
+        Unique(dismissedSuggestions);
         foreach (var trip in trips)
             Require(trip.EndDate >= trip.StartDate);
         var accountIds = accounts.Select(account => account.Id).ToHashSet(StringComparer.Ordinal);
@@ -99,7 +108,10 @@ public static class LedgerReader
 
         // Its successor would exceed Number.MAX_SAFE_INTEGER (and the column bound).
         Require(revision < LedgerLimits.MaxSafeInteger);
-        return new(revision, new(currency, accounts, trips, categories, transactions, recurring));
+        return new(
+            revision,
+            new(currency, accounts, trips, categories, transactions, recurring, dismissedSuggestions)
+        );
     }
 
     private static PaymentAccount ReadAccount(JsonElement value)

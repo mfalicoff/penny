@@ -165,6 +165,56 @@ public sealed class GoldenFixtureTests
         }
     }
 
+    // Contract 2.3.0. Detection runs on the devices only, so the server decodes the fixture
+    // strictly and accepts every case ledger, `dismissedSuggestions` kept in order.
+    [Fact]
+    public void whenRecurringSuggestionsRead_LedgerReader_ShouldAcceptEveryCaseLedger()
+    {
+        var golden = StrictJson.Read<RecurringSuggestionsFixture>("recurring-suggestions.json");
+        golden.Keys.ShouldNotBeEmpty();
+        golden.Cases.ShouldNotBeEmpty();
+        var dismissing = 0;
+        foreach (var item in golden.Cases)
+        {
+            var body = new JsonObject
+            {
+                ["revision"] = 0,
+                ["ledger"] = JsonNode.Parse(item.Ledger.GetRawText()),
+            };
+            using var document = JsonDocument.Parse(body.ToJsonString());
+            var write = LedgerReader.Read(document.RootElement);
+            write.ShouldNotBeNull(item.Name);
+            var sent = item.Ledger.TryGetProperty("dismissedSuggestions", out var dismissed)
+                ? dismissed.EnumerateArray().Select(value => value.GetString()!).ToList()
+                : [];
+            write.Ledger.DismissedSuggestions.ShouldBe(sent, item.Name);
+            if (sent.Count > 0)
+                dismissing++;
+            var entryIds = write
+                .Ledger.Transactions.Select(entry => entry.Id)
+                .ToHashSet(StringComparer.Ordinal);
+            foreach (var suggestion in item.Expected)
+            {
+                suggestion.Id.ShouldBe(
+                    $"{suggestion.Kind}|{suggestion.Key}|{suggestion.Frequency}",
+                    item.Name
+                );
+                suggestion.EntryIds.Count.ShouldBe(suggestion.Count, item.Name);
+                suggestion.EntryIds.All(entryIds.Contains).ShouldBeTrue(item.Name);
+            }
+        }
+        dismissing.ShouldBeGreaterThan(0);
+        StrictJson
+            .Read<FixtureManifest>("manifest.json")
+            .Fixtures.Single(entry => entry.File == "recurring-suggestions.json")
+            .Consumers["csharp"]
+            .EnumerateArray()
+            .Select(path => path.GetString())
+            .ShouldContain(
+                "apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"
+            );
+    }
+
     [Fact]
     public void whenManifestRead_Fixtures_ShouldMatchTheirPublishedHashes()
     {

@@ -143,6 +143,9 @@ public sealed class PostgresAccountDeletionRepository(
 
             // The personal ledger.
             await context
+                .LedgerDismissedSuggestions.Where(suggestion => suggestion.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+            await context
                 .LedgerEntries.Where(entry => entry.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
             await context

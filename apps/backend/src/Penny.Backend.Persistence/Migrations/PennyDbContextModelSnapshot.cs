@@ -1036,6 +1036,32 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerDismissedSuggestion", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text")
+                        .HasColumnName("value")
+                        .UseCollation("C");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.HasKey("UserId", "Value");
+
+                    b.ToTable("ledger_dismissed_suggestions", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_ledger_dismissed_suggestions_position", "position BETWEEN 0 AND 499");
+
+                            t.HasCheckConstraint("ck_ledger_dismissed_suggestions_value", "length(value) BETWEEN 1 AND 200");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerEntry", b =>
                 {
                     b.Property<string>("UserId")
@@ -2723,6 +2749,14 @@ namespace Penny.Backend.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerCategory", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.Ledger", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerDismissedSuggestion", b =>
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.Ledger", null)
                         .WithMany()
