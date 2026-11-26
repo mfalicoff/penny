@@ -15,12 +15,25 @@ enum ShellSession {
 @Observable
 final class ShellModel {
     var route = ShellRoute()
-    var month: MonthKey
+    var month: MonthKey {
+        // The way the month moved, for the slide of its content (MAZ-287): an earlier month
+        // enters from the leading edge.
+        didSet { if month != oldValue { monthMovedEarlier = month < oldValue } }
+    }
+    private(set) var monthMovedEarlier = false
     /// The latest save, shown as a toast with Undo until it times out.
     private(set) var toast: SavedChange?
     /// Bumped on every save and every save failure, to drive haptics.
     private(set) var savedCount = 0
     private(set) var failedCount = 0
+    /// Bumped when the person's Undo succeeds, and when a Sync now or Retry they asked for ends
+    /// (MAZ-287: one haptic per action the person takes; a sync nobody asked for plays none).
+    private(set) var undoCount = 0
+    private(set) var syncSucceededCount = 0
+    private(set) var syncFailedCount = 0
+    /// Bumped when the person deletes an entry or changes rows in bulk, for the delete haptic.
+    private(set) var deletedCount = 0
+    @ObservationIgnored private var syncRequested = false
 
     let workspace: any LedgerWorkspace
     let session: ShellSession
@@ -203,10 +216,12 @@ final class ShellModel {
     /// Saves `change`. On success shows the toast (with a success haptic); on failure returns
     /// the failure so the caller keeps the draft and shows it (with an error haptic).
     @discardableResult
-    func commit(_ change: LedgerChange, summary: ChangeSummary) async -> SaveFailure? {
+    func commit(_ change: LedgerChange, summary: ChangeSummary, deleting: Bool = false) async -> SaveFailure? {
         switch await workspace.commit(change, summary: summary) {
         case .success(let saved):
-            show(saved)
+            // A delete plays the delete haptic instead of the save one (MAZ-287).
+            if deleting { deletedCount += 1 }
+            show(saved, haptic: !deleting)
             return nil
         case .failure(let failure):
             failedCount += 1
@@ -256,8 +271,29 @@ final class ShellModel {
             failedCount += 1
             return failure
         }
+        undoCount += 1
         return nil
     }
+
+    /// Sync now and Retry: syncs, and plays the success or error haptic when that sync ends.
+    func syncNow() async {
+        syncRequested = true
+        await workspace.syncNow()
+    }
+
+    /// Ends a sync the person asked for once its status settles; other changes play nothing.
+    func syncChanged(to status: SyncStatus) {
+        guard syncRequested else { return }
+        switch status {
+        case .syncing: return
+        case .upToDate, .localOnly: syncSucceededCount += 1
+        case .offline, .failing, .signInRequired: syncFailedCount += 1
+        }
+        syncRequested = false
+    }
+
+    /// The person deleted an entry (after its confirmation) or changed rows in bulk.
+    func didDelete() { deletedCount += 1 }
 
     /// Changes the route from outside the current screen (a deep link, Edit categories).
     /// SwiftUI cannot present one sheet while another is up or still closing, so when the
@@ -331,8 +367,8 @@ final class ShellModel {
         toast = nil
     }
 
-    private func show(_ saved: SavedChange) {
-        savedCount += 1
+    private func show(_ saved: SavedChange, haptic: Bool = true) {
+        if haptic { savedCount += 1 }
         toast = saved
         toastTask?.cancel()
         toastTask = Task { [weak self] in

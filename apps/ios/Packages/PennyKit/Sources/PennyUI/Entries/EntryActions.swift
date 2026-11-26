@@ -18,7 +18,7 @@ extension ShellModel {
     /// Deletes `entry` as it was shown. Refused when it changed on another device since
     /// (`LedgerChange.deleteEntry`); the toast offers Undo.
     func delete(_ entry: LedgerEntry) async -> SaveFailure? {
-        await commit(.deleteEntry(entry), summary: EntrySummary.deleted(entry, currency: currency))
+        await commit(.deleteEntry(entry), summary: EntrySummary.deleted(entry, currency: currency), deleting: true)
     }
 }
 
@@ -223,6 +223,7 @@ struct SharedDeleteConfirmation: ViewModifier {
                 if let refused = await model.deleteExpense(expense) {
                     failure = refused.message
                 } else {
+                    shell.didDelete()
                     await shell.activityShared.refresh(shell.activityFilters.period)
                     onDeleted()
                 }

@@ -165,6 +165,8 @@ public struct HeroAmount<Detail: View>: View {
             let fraction = Text(parts.fraction).foregroundStyle(PennyColor.secondaryLabel).font(.title.weight(.bold))
             Text("\(whole)\(fraction)")
                 .modifier(HeroAmountFont())
+                // Counts to a new total digit by digit (MAZ-287); at once under Reduce Motion.
+                .pennyCounting(Double(cents))
                 .lineLimit(1)
                 .minimumScaleFactor(0.4)
             detail

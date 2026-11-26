@@ -287,6 +287,7 @@ Simulators cannot check these; run them on a physical iPhone and iPad with the r
 - [ ] **Performance**: cold launch and Activity scroll in Instruments against the device budgets above.
 - [ ] **Network**: airplane mode while adding an entry, then reconnect; the entry syncs once.
 - [ ] **Server restart**: restart the API (or PostgreSQL) while the app is open; pending changes sync once the server is back and totals match the server.
+- [ ] **Haptics and motion** (MAZ-287, [motion](../design/motion.md#haptics-ios)): on an iPhone, do every action in the haptics table and feel exactly one haptic of the right kind for each: save, a refused save, Undo, step the month, focus a money-flow band, delete after its confirmation, open and close Add entry, a category menu and Show as a table, open the filters, open an entry and a household, Retry a failed sync. A sync from another device plays none. With Reduce Motion on, nothing slides, scales, shakes or counts; fades and haptics stay.
 
 ## Triage procedure
 

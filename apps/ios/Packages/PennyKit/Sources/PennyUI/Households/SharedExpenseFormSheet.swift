@@ -246,7 +246,9 @@ private struct SharedExpenseForm: View {
             .pennySolidBars()
         }
         .interactiveDismissDisabled(form.hasChanges || form.isSaving)
-        .sensoryFeedback(.error, trigger: form.refusedCount)
+        .pennyHaptic(.refused, trigger: form.refusedCount)
+        // Opening or closing one of the form's own pickers (the category menu, date, split): a light impact.
+        .pennyHaptic(.openClose, trigger: overlay)
         .onAppear {
             if upload == nil {
                 let form = self.form
@@ -382,6 +384,8 @@ private struct SharedExpenseForm: View {
             }
         }
         .frame(maxWidth: .infinity)
+        // A save the rules refuse shakes the amount, with the error haptic (MAZ-287).
+        .pennyShake(trigger: form.refusedCount)
     }
 
     /// The category as a pill in the name field (`iphone-shared-expense-add`); it opens the

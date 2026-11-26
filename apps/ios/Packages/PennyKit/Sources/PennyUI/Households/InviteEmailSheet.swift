@@ -9,6 +9,7 @@ import SwiftUI
 struct InviteEntrySheet: View {
     @Bindable var model: HouseholdModel
     @Environment(ShellModel.self) private var shell
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sharesCode = false
 
     private var emailEnabled: Bool { shell.auth?.server?.emailEnabled == true }
@@ -17,7 +18,7 @@ struct InviteEntrySheet: View {
         Group {
             if emailEnabled, !sharesCode {
                 InviteEmailSheet(model: model, service: model.service) {
-                    withAnimation { sharesCode = true }
+                    withAnimation(Motion.animation(.standard, reduceMotion: reduceMotion)) { sharesCode = true }
                 } emailOff: {
                     Task { await shell.auth?.refreshServerInfo() }
                 }

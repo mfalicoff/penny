@@ -33,6 +33,10 @@
         /// Penny's own views, for screenshot variants (system controls follow the simulator).
         static let reduceTransparencyVariable = "PENNY_TEST_REDUCE_TRANSPARENCY"
         static let reduceMotionVariable = "PENNY_TEST_REDUCE_MOTION"
+        /// Environment variable (`1`) that turns animation off at the root (`UIView` animations and
+        /// every SwiftUI transaction), so card captures and screenshots never catch a view mid-way
+        /// (MAZ-287, "Tests and captures" in docs/design/motion.md). Journey tests keep motion on.
+        static let disableAnimationsVariable = "PENNY_TEST_DISABLE_ANIMATIONS"
         /// Environment variables with a notification payload (JSON, the APNs custom keys) that Penny
         /// handles as if the person had opened that notification (MAZ-79): at launch (a cold start),
         /// or the first time Penny returns from the background (a warm start). It goes through the
@@ -59,6 +63,7 @@
         var containerSeed: URL?
         var reduceTransparency = false
         var reduceMotion = false
+        var disablesAnimations = false
         var notificationAtLaunch: String?
         var notificationOnResume: String?
         var standInAuthenticator = false
@@ -75,6 +80,7 @@
                 containerSeed: environment[containerSeedVariable].flatMap { $0.isEmpty ? nil : URL(filePath: $0) },
                 reduceTransparency: environment[reduceTransparencyVariable] == "1",
                 reduceMotion: environment[reduceMotionVariable] == "1",
+                disablesAnimations: environment[disableAnimationsVariable] == "1",
                 notificationAtLaunch: environment[notificationVariable],
                 notificationOnResume: environment[notificationOnResumeVariable],
                 standInAuthenticator: environment[deviceAuthVariable] == "1",
@@ -191,6 +197,12 @@
                 }
                 .transformEnvironment(\._accessibilityReduceMotion) { value in
                     value = value || controls.reduceMotion
+                }
+                .transaction { transaction in
+                    if controls.disablesAnimations { transaction.disablesAnimations = true }
+                }
+                .onAppear {
+                    if controls.disablesAnimations { UIView.setAnimationsEnabled(false) }
                 }
         }
     }

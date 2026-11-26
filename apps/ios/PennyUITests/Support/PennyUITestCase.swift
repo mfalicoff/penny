@@ -25,6 +25,9 @@ struct LaunchOptions {
     var contentSize: String?
     var reduceTransparency = false
     var reduceMotion = false
+    /// Turn animation off at the root (`PENNY_TEST_DISABLE_ANIMATIONS`), for card captures and
+    /// screenshots, so nothing is captured mid-way (MAZ-287).
+    var disablesAnimations = false
     /// A notification payload (JSON) Penny opens as if tapped: at launch, or the first time it
     /// returns from the background (MAZ-79, `PENNY_TEST_NOTIFICATION*`).
     var notification: String?
@@ -38,6 +41,15 @@ struct LaunchOptions {
     /// What Appearance › System shows (`light` or `dark`; `PENNY_TEST_SYSTEM_APPEARANCE`), for cards
     /// that show System selected.
     var systemAppearance: String?
+
+    /// A card capture: Reduce Motion and no animation, so every view is at rest when it is captured
+    /// (docs/design/motion.md, Tests and captures).
+    static var capture: LaunchOptions {
+        var options = LaunchOptions()
+        options.reduceMotion = true
+        options.disablesAnimations = true
+        return options
+    }
 }
 
 /// Base class for Penny's UI tests: launches against the full-stack environment, creates
@@ -128,6 +140,7 @@ class PennyUITestCase: XCTestCase {
         }
         if options.reduceTransparency { environment["PENNY_TEST_REDUCE_TRANSPARENCY"] = "1" }
         if options.reduceMotion { environment["PENNY_TEST_REDUCE_MOTION"] = "1" }
+        if options.disablesAnimations { environment["PENNY_TEST_DISABLE_ANIMATIONS"] = "1" }
         if let notification = options.notification { environment["PENNY_TEST_NOTIFICATION"] = notification }
         if let notification = options.notificationOnResume {
             environment["PENNY_TEST_NOTIFICATION_ON_RESUME"] = notification

@@ -209,6 +209,10 @@ struct TabStack: View {
                     DetailPage(route: $0).pennySolidBars().underPennyTabBar(underTabBar)
                 }
         }
+        // Opening an entry, a household or a trip plays the selection haptic (MAZ-287).
+        .pennyHaptic(.open, trigger: shell.route.path(for: tab)) { old, new in
+            new.count > old.count && new.last.map(DetailRoute.opensItem) == true
+        }
     }
 }
 
@@ -251,6 +255,8 @@ private struct SplitShell: View {
     /// The sidebar shows beside the detail in landscape and starts hidden behind the system's
     /// toggle in portrait, where the detail takes the full width (`ipad-home-portrait`).
     @State private var columns = NavigationSplitViewVisibility.all
+    /// The columns Penny set itself; a change to anything else came from the person.
+    @State private var expectedColumns = NavigationSplitViewVisibility.all
     @State private var portrait: Bool?
 
     var body: some View {
@@ -270,12 +276,15 @@ private struct SplitShell: View {
         // Only when the orientation changes, so a sidebar opened with the toggle stays open.
         .task(id: portrait) {
             guard let portrait else { return }
-            columns = portrait ? .detailOnly : .all
+            setColumns(portrait ? .detailOnly : .all)
         }
         // In portrait a pick in the sidebar shows its page with the sidebar put away again.
         .onChange(of: shell.route.sidebarSelection) {
-            if portrait == true { columns = .detailOnly }
+            if portrait == true { setColumns(.detailOnly) }
         }
+        // The person showing or hiding the sidebar with the system's toggle: a light impact.
+        .pennyHaptic(.sidebar, trigger: columns) { _, new in new != expectedColumns }
+        .onChange(of: columns) { expectedColumns = columns }
         .modifier(ToastOverlay(bottomPadding: 16))
         // ⌘N opens Add entry wherever the iPad is (MAZ-254). An invisible button, so the shortcut
         // is in the window's key commands without a second visible control.
@@ -285,6 +294,14 @@ private struct SplitShell: View {
                 .opacity(0)
                 .accessibilityHidden(true)
         }
+    }
+
+    /// Penny changing the column visibility: the system's show and hide, started with `.snappy`
+    /// (docs/design/motion.md, Navigation). The system follows Reduce Motion itself.
+    private func setColumns(_ visibility: NavigationSplitViewVisibility) {
+        guard columns != visibility else { return }
+        expectedColumns = visibility
+        withAnimation(.snappy) { columns = visibility }
     }
 
     /// The Settings column's path without the Manage pages, which have their own stack. Opening
@@ -496,6 +513,8 @@ private struct SidebarFooter: View {
                 Text(shell.accountShortName).font(.subheadline.weight(.semibold)).lineLimit(1)
                 Text(SyncText.line(shell.workspace.sync)).font(.footnote)
                     .foregroundStyle(PennyColor.secondaryLabel)
+                    // The sync status crossfades as it changes (MAZ-287).
+                    .pennyCrossfade(shell.workspace.sync)
             }
             Spacer()
             Button {
@@ -576,6 +595,17 @@ private struct SplitStyle: ViewModifier {
             content.navigationSplitViewStyle(.prominentDetail)
         } else {
             content.navigationSplitViewStyle(.balanced)
+        }
+    }
+}
+
+extension DetailRoute {
+    /// An entry, a household or a trip (with their pages): opening one plays the selection
+    /// haptic (docs/design/motion.md#haptics-ios). Home's analysis pages and the inbox don't.
+    static func opensItem(_ route: DetailRoute) -> Bool {
+        switch route {
+        case .entry, .household, .householdExpense, .trip: true
+        case .householdHistory, .moneyFlow, .insights, .categorySpending, .receiptInbox: false
         }
     }
 }

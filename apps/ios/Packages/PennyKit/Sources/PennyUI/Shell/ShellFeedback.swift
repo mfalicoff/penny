@@ -11,23 +11,26 @@ import SwiftUI
 /// and offers Retry; nothing is lost while it shows.
 struct SyncBanner: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let status = shell.workspace.sync
         if case .offline(let pending, _) = status {
             OfflineCapsule(pending: pending, message: Self.message(status) ?? "") {
-                Task { await shell.workspace.syncNow() }
+                Task { await shell.syncNow() }
             }
             .accessibilityIdentifier("banner.sync")
+            .transition(Motion.transition(edge: .top, reduceMotion: reduceMotion))
         } else if status.needsAttention {
             StatusBanner(tone: tone(status), title: Self.title(status), message: Self.message(status)) {
                 if case .signInRequired = status {
                     EmptyView()
                 } else {
-                    InlineActionButton("Retry") { Task { await shell.workspace.syncNow() } }
+                    InlineActionButton("Retry") { Task { await shell.syncNow() } }
                 }
             }
             .accessibilityIdentifier("banner.sync")
+            .transition(Motion.transition(edge: .top, reduceMotion: reduceMotion))
         }
     }
 
@@ -124,8 +127,9 @@ struct DemoBanner: View {
     }
 }
 
-/// The save toast over the shell, with Undo, a success haptic, and an error haptic when a
-/// save fails. VoiceOver announces it.
+/// The save toast over the shell, with Undo, and the shell's haptics: one per action the person
+/// takes (save, failure, undo, delete, sync, month step, opening an entry beside Activity; MAZ-287).
+/// VoiceOver announces the toast.
 struct ToastOverlay: ViewModifier {
     @Environment(ShellModel.self) private var shell
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -142,14 +146,25 @@ struct ToastOverlay: ViewModifier {
                     )
                     .padding(.horizontal, Metrics.gutter)
                     .padding(.bottom, bottomPadding)
-                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                    .transition(Motion.transition(edge: .bottom, reduceMotion: reduceMotion))
                     .accessibilityIdentifier("toast.saved")
                     .onAppear { announce("\(toast.summary.title). \(toast.detail ?? "")") }
                 }
             }
-            .animation(reduceMotion ? nil : .snappy, value: shell.toast?.id)
-            .sensoryFeedback(.success, trigger: shell.savedCount)
-            .sensoryFeedback(.error, trigger: shell.failedCount)
+            .animation(Motion.animation(.standard, reduceMotion: reduceMotion), value: shell.toast?.id)
+            // One haptic per action the person takes (docs/design/motion.md#haptics-ios).
+            .pennyHaptic(.save, trigger: shell.savedCount)
+            .pennyHaptic(.failed, trigger: shell.failedCount)
+            .pennyHaptic(.undo, trigger: shell.undoCount)
+            .pennyHaptic(.delete, trigger: shell.deletedCount)
+            .pennyHaptic(.syncSucceeded, trigger: shell.syncSucceededCount)
+            .pennyHaptic(.syncFailed, trigger: shell.syncFailedCount)
+            .pennyHaptic(.stepPeriod, trigger: shell.month)
+            // Add entry opening or closing.
+            .pennyHaptic(.openClose, trigger: shell.route.isAddEntryPresented)
+            // An entry opened in the iPad detail column beside Activity.
+            .pennyHaptic(.open, trigger: shell.activitySelection) { _, new in new != nil }
+            .onChange(of: shell.workspace.sync) { _, status in shell.syncChanged(to: status) }
             .alert(
                 "Couldn't undo",
                 isPresented: Binding(get: { undoFailure != nil }, set: { if !$0 { undoFailure = nil } })

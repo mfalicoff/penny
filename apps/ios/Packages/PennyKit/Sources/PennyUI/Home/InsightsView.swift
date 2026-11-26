@@ -18,21 +18,25 @@ struct InsightsView: View {
             let breakdown = CategoryBreakdown(summary)
             let currency = ledger.currency.rawValue
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Spending · your share").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                    if breakdown.isEmpty {
-                        PennyStateView(
-                            .empty, title: "No spending in \(MonthPicker.title(shell.month, long: false))",
-                            message: summary.recorded.income > 0 || summary.recorded.investment > 0
-                                ? "Income and contributions were recorded, but nothing was spent."
-                                : "Spending shows up here once you add an expense.")
-                    } else {
-                        SpendingCard(
-                            breakdown: breakdown, comparison: report.comparison(summary),
-                            previous: summary.month.shifted(by: -1).map { CategoryBreakdown(report.month($0)) },
-                            currency: currency)
-                        CategoryList(breakdown: breakdown, report: report, currency: currency)
+                // The month's content slides in from the side its month comes from (MAZ-287).
+                ZStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Spending · your share").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                        if breakdown.isEmpty {
+                            PennyStateView(
+                                .empty, title: "No spending in \(MonthPicker.title(shell.month, long: false))",
+                                message: summary.recorded.income > 0 || summary.recorded.investment > 0
+                                    ? "Income and contributions were recorded, but nothing was spent."
+                                    : "Spending shows up here once you add an expense.")
+                        } else {
+                            SpendingCard(
+                                breakdown: breakdown, comparison: report.comparison(summary),
+                                previous: summary.month.shifted(by: -1).map { CategoryBreakdown(report.month($0)) },
+                                currency: currency)
+                            CategoryList(breakdown: breakdown, report: report, currency: currency)
+                        }
                     }
+                    .pennyMonthContent(shell.month, earlier: shell.monthMovedEarlier)
                 }
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 24)
@@ -93,6 +97,8 @@ struct SpendingCard: View {
                     "\(MoneyFormat.amount(row.amount, currency: currency)), \(row.percent) of spending")
         }
         .chartLegend(.hidden)
+        // Each segment's angle moves to its new value.
+        .pennyChartMotion(breakdown.rows.map(\.amount))
         .frame(width: 130, height: 130)
         .overlay {
             VStack(spacing: 0) {
@@ -125,6 +131,7 @@ struct ComparisonBars: View {
             bar(currentTitle, current, scale: scale, color: PennyColor.label.opacity(0.75))
             bar(previousTitle, previous, scale: scale, color: PennyColor.tertiaryLabel)
         }
+        .pennyChartMotion([current, previous])
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             "\(currentTitle) \(MoneyFormat.amount(current, currency: currency)), \(previousTitle) \(MoneyFormat.amount(previous, currency: currency))"
@@ -164,6 +171,8 @@ struct CategoryList: View {
                     if row.id != breakdown.rows.last?.id { Divider().padding(.leading, 64) }
                 }
             }
+            // Bars move to their new lengths and the list reorders; joining or leaving rows fade.
+            .pennyChartMotion(breakdown.rows.map { [$0.category.id: $0.amount] })
             .background(
                 PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
         }
@@ -264,6 +273,7 @@ struct CategorySpendingView: View {
 /// preview and says so. A list outside a tab's stack (the calendar sheet) passes `open`, which
 /// is handed the row's page instead of pushing it there.
 struct EntryList: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let entries: [ReportEntry]
     let report: LedgerReport
     let currency: String
@@ -281,12 +291,20 @@ struct EntryList: View {
         } else {
             LazyVStack(spacing: 0) {
                 ForEach(entries) { entry in
-                    row(entry).background(tint(entry))
-                    if entry.id != entries.last?.id { Divider().padding(.leading, 64) }
+                    // A new row fades in rising `nudge` while the rows below make room; a deleted
+                    // one fades out, then the space closes (MAZ-287, docs/design/motion.md).
+                    VStack(spacing: 0) {
+                        row(entry).background(tint(entry))
+                        if entry.id != entries.last?.id { Divider().padding(.leading, 64) }
+                    }
+                    .transition(Motion.transition(edge: .bottom, reduceMotion: reduceMotion))
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
-            .animation(.easeOut(duration: 0.3), value: highlighted)
+            .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: entries.map(\.id))
+            // The highlight appears with the save and fades over `linger`; it isn't motion, so it
+            // stays under Reduce Motion.
+            .animation(highlighted == nil ? Motion.highlightFade : nil, value: highlighted)
             .background(
                 PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
         }
@@ -310,12 +328,12 @@ struct EntryList: View {
             } label: {
                 EntryRow(entry: entry, report: report, currency: currency)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pennyPress)
         } else {
             NavigationLink(value: ActivityRoute.destination(entry)) {
                 EntryRow(entry: entry, report: report, currency: currency)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pennyPress)
         }
     }
 }
