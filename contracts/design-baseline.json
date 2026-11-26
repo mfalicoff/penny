@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "5bd13afd1a2bc1282f4c11d360bd98b075aaa8953c251dc33decbf0d3c03f8bf"
+      "sha256": "91e696a7c2b3c52c5325da6795c08eeea600221e38039fc2552312370abb9851"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "0ee4dc20e81287ceb0506ae8c3f12090b9550e7fbad37607cf94403c5acf8207"
+      "sha256": "a2224fe548a94304d81c018eb8e4cbc41be92dce2a3c51f8f6ca770bef2971bf"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "51c91751370dacd24464e1bfd5f5baabecc57460c9d3946278598c75aeb884b6"
+      "sha256": "4d9c2bf8c78254da8f2689aa7471e00ea418f323a7f78c784b5cf73b17934696"
     }
   ],
   "tokens": {
@@ -2617,6 +2617,305 @@
       "status": "planned"
     },
     {
+      "id": "iphone-entry-currency",
+      "name": "Add expense · Another currency",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-currency.html",
+      "sha256": "a81a11ab382e03cf7b30ad5fc25c8f5e3b57cbf6691ed5774a4ce7d4c109c4b3",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-currency-picker",
+      "name": "Currency picker",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/currency-picker.html",
+      "sha256": "b4b4ab70b124212d33a467652a987583df0197ef4f3fbf8c6d6990a68177caa8",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-entry-rate-provisional",
+      "name": "Add expense · Provisional rate",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-rate-provisional.html",
+      "sha256": "b1b50245ffde9a662b324f706cc4cf64c16d7cc6b3f418bb2b8ee48c5d5b5135",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-entry-rate-edited",
+      "name": "Exchange rate · Edited",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-rate-edited.html",
+      "sha256": "13e7b33f8d78dc7dacb89225e731938744c9d27300aecd378e2c8451ce63394d",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-entry-rate-manual",
+      "name": "Add expense · Rate to enter",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-rate-manual.html",
+      "sha256": "2952bb72f14df41fd08c36b2992d9722942a6956ab832c06601f6f485327478c",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-home-currencies",
+      "name": "Home · Recent in several currencies",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/home-currencies.html",
+      "sha256": "692f911a94eba7b90e8e5deef4bee92b0a1c4c0d60b638ec1edf28be75351d37",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-activity-currencies",
+      "name": "Activity · Several currencies",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/activity-currencies.html",
+      "sha256": "9e283f328971ce8a647afca10b1bfc2868be72ce203e5968f8de191b29af31ac",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-entry-detail-currency",
+      "name": "Entry detail · Another currency",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-detail-currency.html",
+      "sha256": "1dae5b16cba980769c85d7be35086910ffe51a0afe90aac85fe1727b2c74cf01",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-currencies",
+      "name": "Trip detail · Several currencies",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-currencies.html",
+      "sha256": "9bb6f986c0451e3d2837bbadf42dc5a0251fd23885421fa625dfb8c4c330f205",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-balances-currency",
+      "name": "Trip balances · Settle up in one currency",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-balances-currency.html",
+      "sha256": "541bf4d7492093a1f3cc9ead791f8ed5c174f8d71645e5b0f500db520bf8ee90",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-form-currency",
+      "name": "Trip form · Currency",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-form-currency.html",
+      "sha256": "e336fade79c2e028fb1dd0b6a0a80ce09a93fdc3aba0fe5f7d446f3507ea9b2f",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-currency-rates",
+      "name": "Currency · Exchange rates",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/currency-rates.html",
+      "sha256": "0deb5f3519112d030716f57187da28d22b980ec66cdf1d6866dd40ce56d708ac",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-currency-rates-off",
+      "name": "Currency · Rates off",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/currency-rates-off.html",
+      "sha256": "c0d6c8d6601a0404236d7a9552624a159d8b7e5e1b998497542e3a4f3b0d25fe",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
       "id": "ipad-home",
       "name": "Home",
       "group": "iPad",
@@ -2984,6 +3283,98 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "suggestions from repeating expenses and income, accept into one schedule, dismiss with undo, dismissals merge offline"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-add-entry-currency",
+      "name": "Add entry · Another currency",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/add-entry-currency.html",
+      "sha256": "932c989def13268be85742b3c3ed92344a1dc200ae72f7280ea162ec70833297",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-activity-currencies",
+      "name": "Activity + detail · Several currencies",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/activity-currencies.html",
+      "sha256": "d06409457edf973291b87d831fb2e15c5ca35c805d147e2c2f733a5b6b5553b6",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-trip-currencies",
+      "name": "Trip · Several currencies",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/trip-currencies.html",
+      "sha256": "55d2773873092a0790855515458510c2aa08f95621c665dfb75b39f27ff26542",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-settings-currency",
+      "name": "Settings · Currency and exchange rates",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/settings-currency.html",
+      "sha256": "e9f1378e712bec37e3d965615848935cf804f6ec8ebb5409e0e2c93e53d59aee",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
       },
       "status": "planned"
     },
@@ -4229,6 +4620,213 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-add-entry-currency",
+      "name": "Add entry dialog · Another currency",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/add-entry-currency.html",
+      "sha256": "4f8c1002e3f9e2e827b247e63778f347c8c8a6491a8d69e22d37d2bab6f8d9ed",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-entry-rate-provisional",
+      "name": "Add entry dialog · Provisional rate",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/entry-rate-provisional.html",
+      "sha256": "e864ee6b02feb5eb53505d979c61ea777d7162a99ecadd66cfd5c3a14e159fb0",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-entry-rate-edited",
+      "name": "Add entry dialog · Edited rate",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/entry-rate-edited.html",
+      "sha256": "3af947b63f642104b03814008dcd91271b9cf7b4a1b011b565e0acdac036db70",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-entry-rate-manual",
+      "name": "Add entry dialog · Rate to enter",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/entry-rate-manual.html",
+      "sha256": "251e95b18482fff1a7d44a877c378dbd898bd23c80133d56e34d1d8b85822cc0",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-currencies",
+      "name": "Activity table + detail · Several currencies",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-currencies.html",
+      "sha256": "cf57f826e900739fdf89b418dbacb15f474a76870d0339f4e665f0f632532851",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-trip-currencies",
+      "name": "Trip · Several currencies",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/trip-currencies.html",
+      "sha256": "d9a4c1b2fd0bb78c680dccfaafb39b868537eda580d83d556a050cb22b5a33a6",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-trip-form-currency",
+      "name": "Trip form · Currency",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/trip-form-currency.html",
+      "sha256": "1ef7308179fb6a212fb058d36c5e7564eaaa95dbf4642d302f137e4d7c2acbed",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-currency-rates",
+      "name": "Currency · Exchange rates",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/currency-rates.html",
+      "sha256": "e60050fb98110689f133641e885cf8c720a6a0e6f6d0fb4eaa67174645f31678",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-currency-rates-off",
+      "name": "Currency · Rates off",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/currency-rates-off.html",
+      "sha256": "4b642dcd64bfb51716e8fb3a7d305bbe5ceb83d56dd753cf88e9d22bf0e8ec08",
+      "nativeIssue": "MAZ-151",
+      "webIssue": "MAZ-151",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
       },
       "status": "planned"
     }

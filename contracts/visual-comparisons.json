@@ -2616,6 +2616,214 @@
       }
     },
     {
+      "id": "iphone-entry-currency",
+      "view": "add expense in euros: €85.00 cooking class, ≈ $124.20 CAD at the ECB rate for Nov 3",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-currency-picker",
+      "view": "currency picker: the trip's EUR and home CAD suggested, recent USD and JPY, then all ISO currencies",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-entry-rate-provisional",
+      "view": "add expense dated today in euros: Friday's rate, marked provisional until today's is published",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-entry-rate-edited",
+      "view": "exchange rate sheet: the rate edited to 1.4900, with the ECB rate 1.4612 to go back to",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-entry-rate-manual",
+      "view": "add expense in euros on a server with rate fetching off: the rate to enter, the last one suggested",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-home-currencies",
+      "view": "home with Recent rows in euros and US dollars, home amount first",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-activity-currencies",
+      "view": "activity with entries in euros and US dollars, both amounts, one rate provisional",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-entry-detail-currency",
+      "view": "entry detail of a €85.00 trip entry: $124.20 CAD and its ECB rate",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-trip-currencies",
+      "view": "shared Lisbon trip with expenses in EUR, USD and CAD, totals in CAD",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-trip-balances-currency",
+      "view": "Lisbon trip balances and suggested payments in euros, each person's own currency under it",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-trip-form-currency",
+      "view": "new trip form with its currency, EUR, no longer locked",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-currency-rates",
+      "view": "currency settings: home currency CAD, daily ECB rates on, recent currencies",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "iphone-currency-rates-off",
+      "view": "currency settings on a server with rate fetching turned off",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
       "id": "ipad-home",
       "view": "iPad home dashboard, October 2026",
       "native": {
@@ -3000,6 +3208,70 @@
         "owner": "MAZ-290",
         "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
         "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "ipad-add-entry-currency",
+      "view": "iPad add entry in euros with the converted amount and the rate",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "ipad-activity-currencies",
+      "view": "iPad activity with entries in several currencies and the €85.00 entry in the detail pane",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "ipad-trip-currencies",
+      "view": "iPad Lisbon trip with expenses in three currencies, balances and payments in euros",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "ipad-settings-currency",
+      "view": "iPad settings with Currency in the detail column: home currency and daily rates",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
       }
     },
     {
@@ -4031,6 +4303,150 @@
           "dark"
         ],
         "note": "Captured with the server offering reports (the test stack has no collector, so /api/info is routed). The server name is the test stack's."
+      }
+    },
+    {
+      "id": "web-add-entry-currency",
+      "view": "web add entry dialog in euros with the currency menu open",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-entry-rate-provisional",
+      "view": "web add entry dialog dated today: Friday's rate, marked provisional",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-entry-rate-edited",
+      "view": "web add entry dialog with the rate edited inline to 1.4900",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-entry-rate-manual",
+      "view": "web add entry dialog on a server with rate fetching off: the rate to enter",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-activity-currencies",
+      "view": "web activity with entries in several currencies and the €85.00 entry in the detail panel",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-trip-currencies",
+      "view": "web Lisbon trip with expenses in three currencies, balances and payments in euros",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-trip-form-currency",
+      "view": "web new trip dialog with its currency, EUR",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-currency-rates",
+      "view": "web currency settings: home currency CAD and daily ECB rates",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      }
+    },
+    {
+      "id": "web-currency-rates-off",
+      "view": "web currency settings on a server with rate fetching turned off",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The app records each entry in one currency today.",
+        "followUp": "MAZ-151"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-151",
+        "note": "Draft card (MAZ-270), waiting for the owner's review; not built yet. The web records each entry in one currency today.",
+        "followUp": "MAZ-151"
       }
     }
   ]

@@ -1,0 +1,62 @@
+<!-- @dsCard group="iPhone" name="Currency picker" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Currency picker</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>Object.assign(ICONS, {"swap-horizontal":"<polyline points=\"304 48 416 160 304 272\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><line x1=\"398.87\" y1=\"160\" x2=\"96\" y2=\"160\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><polyline points=\"208 464 96 352 208 240\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><line x1=\"114\" y1=\"352\" x2=\"416\" y2=\"352\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/>","refresh":"<path d=\"M320 146s24.36-12-64-12a160 160 0 10160 160\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-miterlimit:10;stroke-width:var(--sw,32px)\"/><polyline points=\"256 58 336 138 256 218\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .behind { position: absolute; border: 0; width: 482px; height: 954px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 76px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .search { margin: 14px 16px 0; height: 40px; border-radius: 12px; background: var(--fill); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--label-2); font-size: 16px; }
+  .search [data-i] { width: 17px; height: 17px; }
+  .gh { padding: 18px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 7px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .sr .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; font-size: 16px; white-space: nowrap; }
+  .code { width: 46px; font-weight: 700; font-size: 16px; letter-spacing: .01em; flex: none; }
+  .check { color: var(--tint); } .check[data-i] { width: 20px; height: 20px; --sw: 48px; }
+  .alpha { position: absolute; right: 6px; top: 470px; display: flex; flex-direction: column; gap: 1px; font-size: 10px; font-weight: 600; color: var(--tint-text); z-index: 2; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <iframe class="behind" src="entry-currency.html" scrolling="no"></iframe>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar">
+      <div class="gbtn plain"><i data-i="close"></i></div>
+      <h2>Currency</h2>
+      <div style="width:44px"></div>
+    </div>
+    <div class="search"><i data-i="search"></i>Search currencies or countries</div>
+    <div class="gh"><span>Suggested</span></div>
+    <div class="glist">
+      <div class="sr"><span class="code">EUR</span><div class="tx">Euro<small>Lisbon's currency</small></div><span class="v">€ <i data-i="checkmark" class="check"></i></span></div>
+      <div class="sr"><span class="code">CAD</span><div class="tx">Canadian dollar<small>Your home currency</small></div><span class="v">$</span></div>
+    </div>
+    <div class="gh"><span>Recent</span></div>
+    <div class="glist">
+      <div class="sr"><span class="code">USD</span><div class="tx">US dollar</div><span class="v">US$</span></div>
+      <div class="sr"><span class="code">JPY</span><div class="tx">Japanese yen<small>No decimals</small></div><span class="v">¥</span></div>
+    </div>
+    <div class="gh"><span>All currencies</span></div>
+    <div class="glist">
+      <div class="sr"><span class="code">AED</span><div class="tx">UAE dirham</div><span class="v">AED</span></div>
+      <div class="sr"><span class="code">AFN</span><div class="tx">Afghan afghani</div><span class="v">AFN</span></div>
+      <div class="sr"><span class="code">ALL</span><div class="tx">Albanian lek</div><span class="v">ALL</span></div>
+      <div class="sr"><span class="code">AMD</span><div class="tx">Armenian dram</div><span class="v">AMD</span></div>
+    </div>
+    <div class="alpha"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span><span>K</span><span>L</span><span>M</span><span>N</span><span>O</span><span>P</span><span>Q</span><span>R</span><span>S</span><span>T</span><span>U</span><span>V</span><span>W</span><span>X</span><span>Y</span><span>Z</span></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

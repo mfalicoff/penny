@@ -1,0 +1,102 @@
+<!-- @dsCard group="Web" name="Trip · Several currencies" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Trip with expenses in several currencies</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .feature { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 18px; overflow: hidden; padding: 0; }
+  .feature .l { padding: 24px 26px; position: relative; }
+  .feature .l::before { content: ""; position: absolute; inset: -60px; background: radial-gradient(45% 55% at 25% 40%, rgba(59,130,246,.30), transparent 70%), radial-gradient(40% 50% at 70% 60%, rgba(255,160,90,.30), transparent 70%); filter: blur(30px); }
+  .feature .l > * { position: relative; }
+  .feature h2 { font-size: 34px; font-weight: 700; letter-spacing: -0.03em; margin-top: 6px; }
+  .feature .meta { color: var(--label-2); font-size: 14px; margin-top: 2px; }
+  .feature .nums { display: flex; gap: 32px; margin-top: 20px; }
+  .feature .nums div { font-size: 13px; color: var(--label-2); }
+  .feature .nums b { display: block; font-size: 26px; color: var(--label); font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+  .feature .r { padding: 20px 22px 18px 0; }
+  .ppl h4 { font-size: 16px; font-weight: 700; } .ppl .ph span { font-size: 13px; }
+  .person { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: .5px solid var(--separator); font-size: 14px; }
+  .person:first-of-type { border-top: 0; }
+  .person .avatar { width: 30px; height: 30px; border: 0; font-size: 11px; }
+  .person .t { flex: 1; } .person .t span { display: block; font-size: 12px; color: var(--label-2); }
+  .person .v { text-align: right; font-size: 12px; color: var(--label-2); }
+  .person .v b { display: block; font-size: 14px; color: var(--label); }
+  .tabsrow { display: flex; align-items: center; margin: 18px 0 14px; }
+  .cols { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 18px; align-items: start; }
+  .sec { display: flex; align-items: center; justify-content: space-between; padding: 4px 12px 10px; font-size: 13px; color: var(--label-2); }
+  .sec b { font-size: 15px; color: var(--label); font-weight: 700; display: flex; gap: 6px; align-items: center; }
+  .sec b [data-i] { width: 14px; height: 14px; color: var(--label-2); }
+  .catrow { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .catrow .ic { width: 30px; height: 30px; border-radius: 9px; }
+  .catrow .ic [data-i] { width: 16px; height: 16px; }
+  .catrow .t { flex: 1; font-size: 14px; font-weight: 600; }
+  .catrow .bar { height: 5px; border-radius: 3px; background: var(--fill); margin-top: 5px; overflow: hidden; }
+  .catrow .bar i { display: block; height: 100%; border-radius: 3px; }
+  .catrow .v { font-size: 14px; font-weight: 600; }
+  .tbl td small { display: block; font-size: 12px; color: var(--label-2); }
+  .rates { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--label-2); background: var(--surface); padding: 5px 10px; border-radius: 10px; margin-top: 14px; }
+  .rates [data-i] { width: 13px; height: 13px; }
+  .cur { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--tint-text); }
+  .cur [data-i] { width: 12px; height: 12px; }
+  .pv { color: var(--pending); }
+  .sugg { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: .5px solid var(--separator); font-size: 13.5px; }
+  .sugg [data-i] { width: 12px; height: 12px; color: var(--label-3); }
+  .sugg b { margin-left: auto; }
+  .sugg .btn { height: 26px; font-size: 12.5px; padding: 0 10px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="lisbon" data-url="penny.example.com/trips/lisbon">
+  <main class="wmain">
+    <div class="wtop">
+      <div class="btn icon" title="Back to Trips"><i data-i="chevron-back"></i></div>
+      <h1>Lisbon</h1>
+      <div class="sp"></div>
+      <div class="btn"><i data-i="person-add"></i>Invite</div>
+      <div class="btn icon" title="Trip actions"><i data-i="ellipsis-horizontal"></i></div>
+      <div class="btn primary"><i data-i="add"></i>Trip expense</div>
+    </div>
+    <div class="wbody">
+      <div class="panel feature">
+        <div class="l">
+          <span class="tag" style="background:var(--surface)">In 3 days</span>
+          <h2>Lisbon</h2>
+          <div class="meta">Nov 12–19, 2026 · shared with 4 people</div>
+          <div class="nums"><div>Trip total<b class="num">$1,394.91</b></div><div>Your share<b class="num">$354.30</b></div></div>
+          <span class="rates"><i data-i="cash"></i>EUR, USD and CAD · each at its date's rate · in your currency, CAD</span>
+        </div>
+        <div class="r ppl">
+          <div class="ph" style="margin-bottom:4px"><h4>Balances in euros</h4><span class="cur" style="color:var(--tint-text)">Settle in EUR <i data-i="chevron-down"></i></span></div>
+          <div class="person"><div class="avatar">SK</div><div class="t">Sam<span>Paid €564.00</span></div><div class="v"><b class="num pos">+€329.00</b>≈ US$349.76</div></div>
+          <div class="person"><div class="avatar">MF</div><div class="t">You<span>Paid €256.00</span></div><div class="v"><b class="num pos">+€13.37</b>≈ $19.56</div></div>
+          <div class="person"><div class="avatar">JS</div><div class="t">Jo<span>Paid €120.00</span></div><div class="v"><b class="num">−€115.00</b>owes</div></div>
+          <div class="person"><div class="avatar">MI</div><div class="t">Mira<span>Paid €15.26</span></div><div class="v"><b class="num">−€227.37</b>owes</div></div>
+        </div>
+      </div>
+      <div class="tabsrow"><div class="wchips"><span class="wchip on">Expenses</span><span class="wchip">Balances</span><span class="wchip">People</span></div></div>
+      <div class="cols">
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="panel" style="padding:14px 8px 8px">
+            <div class="sec"><b>Shared with everyone</b><span class="num">4 expenses</span></div>
+            <table class="tbl">
+              <thead><tr><th>Expense</th><th>Paid by</th><th class="r">Amount</th><th class="r">In CAD</th><th class="r">Your share</th></tr></thead>
+              <tbody>
+                <tr><td><div class="cell"><div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div><b>Fado tickets</b><small>Today</small></div></div></td><td class="muted">Jo · 4 ways</td><td class="r num"><b>€120.00</b></td><td class="r num">$175.56<small class="pv">provisional</small></td><td class="r num">$43.89</td></tr>
+                <tr><td><div class="cell"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><div><b>Travel insurance</b><small>Nov 3</small></div></div></td><td class="muted">Mira · 2 ways</td><td class="r num"><b>$22.30</b></td><td class="r num muted">—</td><td class="r num">$11.15</td></tr>
+                <tr><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div><b>Apartment in Alfama</b><small>Oct 8</small></div></div></td><td class="muted">You · 4 ways</td><td class="r num"><b>€256.00</b></td><td class="r num">$373.25</td><td class="r num">$93.31</td></tr>
+                <tr><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="airplane"></i></div><div><b>Flights</b><small>Oct 2</small></div></div></td><td class="muted">Sam · 4 ways</td><td class="r num"><b>US$600.00</b></td><td class="r num">$823.80</td><td class="r num">$205.95</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>Suggested payments</h4><span>in euros</span></div>
+          <div class="sugg" style="border-top:0">Mira <i data-i="arrow-up" style="transform:rotate(90deg)"></i> Sam<b class="num">€227.37</b><span class="btn primary">Record paid</span></div>
+          <div class="sugg">Jo <i data-i="arrow-up" style="transform:rotate(90deg)"></i> Sam<b class="num">€101.63</b><span class="btn primary">Record paid</span></div>
+          <div class="sugg">Jo <i data-i="arrow-up" style="transform:rotate(90deg)"></i> You<b class="num">€13.37</b><span class="btn primary">Record paid</span></div>
+          <div class="hint" style="margin-top:10px;line-height:17px">Each expense counts in euros at its own date's rate, so balances don't move later. Under a balance: that person's own currency, at today's rate. Penny records payments; it never moves money.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

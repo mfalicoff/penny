@@ -1209,6 +1209,149 @@
       "view": "Settings \u203a Privacy with the report switches and the privacy policy link"
     },
     {
+      "specimen": "iphone-entry-currency",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "add expense in euros: \u20ac85.00 cooking class, \u2248 $124.20 CAD at the ECB rate for Nov 3"
+    },
+    {
+      "specimen": "iphone-currency-picker",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "currency picker: the trip's EUR and home CAD suggested, recent USD and JPY, then all ISO currencies"
+    },
+    {
+      "specimen": "iphone-entry-rate-provisional",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "add expense dated today in euros: Friday's rate, marked provisional until today's is published"
+    },
+    {
+      "specimen": "iphone-entry-rate-edited",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "exchange rate sheet: the rate edited to 1.4900, with the ECB rate 1.4612 to go back to"
+    },
+    {
+      "specimen": "iphone-entry-rate-manual",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "add expense in euros on a server with rate fetching off: the rate to enter, the last one suggested"
+    },
+    {
+      "specimen": "iphone-home-currencies",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home with Recent rows in euros and US dollars, home amount first"
+    },
+    {
+      "specimen": "iphone-activity-currencies",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity with entries in euros and US dollars, both amounts, one rate provisional"
+    },
+    {
+      "specimen": "iphone-entry-detail-currency",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry detail of a \u20ac85.00 trip entry: $124.20 CAD and its ECB rate"
+    },
+    {
+      "specimen": "iphone-trip-currencies",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared Lisbon trip with expenses in EUR, USD and CAD, totals in CAD"
+    },
+    {
+      "specimen": "iphone-trip-balances-currency",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Lisbon trip balances and suggested payments in euros, each person's own currency under it"
+    },
+    {
+      "specimen": "iphone-trip-form-currency",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new trip form with its currency, EUR, no longer locked"
+    },
+    {
+      "specimen": "iphone-currency-rates",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "currency settings: home currency CAD, daily ECB rates on, recent currencies"
+    },
+    {
+      "specimen": "iphone-currency-rates-off",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "currency settings on a server with rate fetching turned off"
+    },
+    {
       "specimen": "ipad-home",
       "platform": "iPad",
       "appearances": [
@@ -1392,6 +1535,50 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "iPad recurring with the Netflix suggestion open in the detail pane"
+    },
+    {
+      "specimen": "ipad-add-entry-currency",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad add entry in euros with the converted amount and the rate"
+    },
+    {
+      "specimen": "ipad-activity-currencies",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad activity with entries in several currencies and the \u20ac85.00 entry in the detail pane"
+    },
+    {
+      "specimen": "ipad-trip-currencies",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad Lisbon trip with expenses in three currencies, balances and payments in euros"
+    },
+    {
+      "specimen": "ipad-settings-currency",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad settings with Currency in the detail column: home currency and daily rates"
     },
     {
       "specimen": "web-home",
@@ -2019,6 +2206,105 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "web Home with the error report consent"
+    },
+    {
+      "specimen": "web-add-entry-currency",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web add entry dialog in euros with the currency menu open"
+    },
+    {
+      "specimen": "web-entry-rate-provisional",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web add entry dialog dated today: Friday's rate, marked provisional"
+    },
+    {
+      "specimen": "web-entry-rate-edited",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web add entry dialog with the rate edited inline to 1.4900"
+    },
+    {
+      "specimen": "web-entry-rate-manual",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web add entry dialog on a server with rate fetching off: the rate to enter"
+    },
+    {
+      "specimen": "web-activity-currencies",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity with entries in several currencies and the \u20ac85.00 entry in the detail panel"
+    },
+    {
+      "specimen": "web-trip-currencies",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web Lisbon trip with expenses in three currencies, balances and payments in euros"
+    },
+    {
+      "specimen": "web-trip-form-currency",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web new trip dialog with its currency, EUR"
+    },
+    {
+      "specimen": "web-currency-rates",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web currency settings: home currency CAD and daily ECB rates"
+    },
+    {
+      "specimen": "web-currency-rates-off",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web currency settings on a server with rate fetching turned off"
     }
   ]
 }

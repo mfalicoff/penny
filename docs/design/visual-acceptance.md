@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens) · [Motion](motion.md)
 
-The 165 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 191 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (328 images: 163 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (380 images: 189 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -324,6 +324,38 @@ Behavior (owner decisions, 2026-11-26):
 - **Renews soon** marks a yearly schedule whose next date is within 7 days, on iOS and the web. Monthly and weekly schedules never show it.
 - **Renewal reminders (iOS only).** Only yearly schedules have the Reminder section. The switch is off until you turn it on, and the first time asks for notification permission. The reminder is a local notification 3 days before, at 9 AM local time, rebuilt after each sync; the lead time isn't configurable. Pausing, removing or editing the schedule moves or cancels it. "Show name and amount" is set on each schedule and is off by default; without it, the text has no name or amount. The web has no reminders.
 - **Where it shows.** Suggestions appear only on Recurring: there's no badge on Home or in the tab bar.
+
+## Drafted cards: entries and shared trips in several currencies (MAZ-270, 2026-11-26)
+
+Each entry can be recorded in the currency it was paid in, while the ledger keeps one home currency for its totals (the design is MAZ-151's, confirmed by the owner on 2026-11-26). These 26 cards draw it on iPhone, iPad and the web, light and dark, after the add expense, Recent, Activity, entry detail, trip, trip form and Settings › Currency cards. **Drafted for the owner's review; nothing is built yet.** [Motion](motion.md#entries-in-several-currencies-maz-151) covers how each new moment animates.
+
+The sample: Max's home currency is CAD, today is Monday, Nov 9, and the shared Lisbon trip (Nov 12–19, EUR) is booked ahead. Rates are illustrative ECB reference rates: EUR 1.4612 CAD on Nov 3, 1.4630 on Friday Nov 6 (the latest before today's is published), USD 1.3730 on Oct 2.
+
+| State | Cards |
+| --- | --- |
+| **The entry form in another currency.** The amount is typed in the entry's currency (€85.00); a currency chip under it opens the picker, and the converted home amount ("≈ $124.20 CAD") updates as you type. A **Rate** row shows "1 EUR = 1.4612 CAD" and where it comes from ("European Central Bank · Nov 3"). On the web the currency is a menu beside the amount | `iphone-entry-currency`, `ipad-add-entry-currency`, `web-add-entry-currency` (menu open) |
+| **The currency picker.** Search by code, name or country; **Suggested** holds the trip's currency (the default for a trip entry) and the home currency, **Recent** the ones you used last, then all ISO 4217 currencies A–Z with their symbols. Each currency uses its own minor units: JPY has no decimals ("No decimals"), KWD has 3 | `iphone-currency-picker`, the menu in `web-add-entry-currency` |
+| **Provisional rate.** An entry dated today before the day's rate is published, or made offline, uses the latest known rate (Friday's on a Monday morning) with an amber **Provisional** tag and a line saying it's updated on the next sync unless you change it. Lists mark it "provisional rate" | `iphone-entry-rate-provisional`, `web-entry-rate-provisional`; the row in `iphone-activity-currencies`, `iphone-home-currencies` and the trips |
+| **Edited rate.** Tapping the Rate row opens **Exchange rate**: "1 EUR = [1.4900] CAD", what the amount converts to ($126.65), the published rate for the entry's date, and **Use the published rate**. An edited rate carries an **Edited** tag and is never replaced by sync or a date change. The web edits it inline | `iphone-entry-rate-edited`, `web-entry-rate-edited` |
+| **Rates off.** On a server that doesn't fetch rates, the Rate row asks for a rate ("Enter rate", suggesting the last one used for that currency) and Save stays disabled until there is one | `iphone-entry-rate-manual`, `web-entry-rate-manual` |
+| **Both amounts in lists and details.** Recent and Activity rows lead with the home amount, so the day totals read straight down, with the original under it ("−$70.22 / €48.00", "−$48.07 / US$34.99"). A foreign currency that shares the home symbol is written with its prefix (US$). The entry detail of a trip entry leads with the original ("−€85.00", then "$124.20 CAD") and shows the rate and its source | `iphone-home-currencies`, `iphone-activity-currencies`, `iphone-entry-detail-currency`, `ipad-activity-currencies`, `web-activity-currencies` |
+| **A shared trip in three currencies.** The trip total and your share are in your home currency ($1,394.91, your share $354.30), with "EUR, USD and CAD · each at its date's rate" opening the rates. Expense rows lead with the original amount, the home amount under it | `iphone-trip-currencies`, `ipad-trip-currencies`, `web-trip-currencies` |
+| **Balances and settle-up in one currency.** Balances and suggested payments are in the trip's currency (EUR), chosen with **Settle in EUR**; each person's balance also shows in their own home currency at today's rate (Sam's in US$) | `iphone-trip-balances-currency`, `ipad-trip-currencies`, `web-trip-currencies` |
+| **The trip form's currency row** is no longer locked: the trip's currency is the default for its new expenses and the currency payments are suggested in | `iphone-trip-form-currency`, `web-trip-form-currency` |
+| **Settings › Currency.** The home currency (locked once the ledger has entries), **Exchange rates** (daily ECB rates, the latest date) and recent currencies; with fetching off, "Turned off on this server" and your last rates | `iphone-currency-rates`, `iphone-currency-rates-off`, `ipad-settings-currency`, `web-currency-rates`, `web-currency-rates-off` |
+
+Behavior the cards assume (from MAZ-151 and the owner's 2026-11-26 rules):
+
+- **Stored on the entry:** the original amount, its currency and the rate, plus the converted home amount in `total` and `share`, so older apps and reports keep working. Later rates never move old totals.
+- **Which rate:** the daily reference rate for the entry's date; on weekends and holidays, the last published one. Today's entries before publication, and offline entries, are provisional and replaced on the next sync. Changing the date or currency recomputes the rate, unless it was edited.
+- **Rounding:** the home amount is rounded once, to the home currency's minor units; split shares come from that rounded total with the existing remainder rule (`$373.25` over 4 is $93.31 for you).
+- **Shared trips:** each member's share is converted into their own home currency; balances and suggested payments use the trip's settle-up currency, each expense at its own date's rate.
+
+Open questions for the owner:
+
+1. **Which amount leads in lists.** The cards lead with the home amount in Recent and Activity and with the original on the trip and in a trip entry's detail. MAZ-151 says "the original first while on a trip": should Recent and Activity switch to the original first while a trip is under way?
+2. **Settle-up currency.** The cards make the trip's currency both the default for new expenses and the settle-up currency, changed from Balances or the trip form. Should they be two settings?
+3. **Rates off.** The cards require a rate (Save disabled until one is entered) and suggest the last one used. Is a 1:1 fallback, or saving without a rate, wanted instead?
 
 ## Review scenarios
 

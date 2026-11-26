@@ -1,0 +1,77 @@
+<!-- @dsCard group="Web" name="Currency · Exchange rates" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Currency and exchange rates</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .sx { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 28px; }
+  .snav { display: flex; flex-direction: column; gap: 2px; }
+  .snav .wnav [data-i] { color: var(--label-2); }
+  .sec { margin-bottom: 18px; }
+  .sec h3 { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .themes { display: flex; gap: 14px; }
+  .theme { width: 176px; text-align: center; font-size: 14px; font-weight: 600; }
+  .theme .pv { height: 110px; border-radius: 14px; margin-bottom: 8px; box-shadow: 0 0 0 .5px var(--separator); position: relative; overflow: hidden; }
+  .theme.on .pv { box-shadow: 0 0 0 2.5px var(--tint); }
+  .pv i { position: absolute; left: 12px; right: 12px; height: 14px; border-radius: 4px; }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .srow:first-of-type { border-top: 0; }
+  .srow .t { flex: 1; } .srow .t span { display: block; font-size: 12.5px; color: var(--label-2); margin-top: 1px; }
+  .srow .v { color: var(--label-2); display: flex; gap: 6px; align-items: center; }
+  .switch { width: 42px; height: 25px; border-radius: 13px; background: var(--tint); position: relative; }
+  .switch::after { content: ""; position: absolute; top: 2px; right: 2px; width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .switch.off { background: var(--fill); } .switch.off::after { right: auto; left: 2px; }
+  .pane { max-width: 640px; }
+  .radio { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--label-3); flex: none; position: relative; }
+  .radio.on { box-shadow: inset 0 0 0 6px var(--tint); }
+  .opt { opacity: .45; }
+  .code { width: 46px; font-weight: 700; font-size: 14px; letter-spacing: .02em; }
+  .fs { border-radius: 14px; box-shadow: 0 0 0 .5px var(--separator); padding: 2px 14px; margin-top: 2px; }
+  .lockn { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); font-size: 13px; color: var(--label-2); line-height: 1.45; }
+  .lockn [data-i] { width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--label-2); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="" data-url="penny.example.com/settings/currency">
+  <main class="wmain">
+    <div class="wtop"><h1>Settings</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="sx">
+        <div class="snav">
+          <div class="wnav"><i data-i="people"></i>Profile</div>
+          <div class="wnav"><i data-i="sunny"></i>Appearance</div>
+          <div class="wnav on"><i data-i="cash"></i>Currency</div>
+          <div class="wnav"><i data-i="server"></i>Server &amp; sync</div>
+          <div class="wnav"><i data-i="document-text"></i>Export data</div>
+          <div class="wnav" style="color:var(--danger)"><i data-i="log-out" style="color:var(--danger)"></i>Sign out</div>
+        </div>
+        <div class="pane">
+          <div class="panel sec">
+            <h3>Home currency</h3>
+            <div class="fs">
+              <div class="srow"><span class="code">CAD</span><span class="t">Canadian dollar</span><i data-i="lock-closed" style="width:14px;height:14px;color:var(--label-3)"></i></div>
+            </div>
+            <div class="lockn"><i data-i="lock-closed"></i><span>Insights, Left to spend, budgets and recaps add up in Canadian dollars. Your home currency is locked once your ledger has entries. Each entry can be in any currency.</span></div>
+          </div>
+          <div class="panel sec">
+            <h3>Exchange rates</h3>
+            <div class="fs">
+              <div class="srow"><span class="t">Daily rates<span>European Central Bank reference rates</span></span><span class="v">On</span></div>
+              <div class="srow"><span class="t">Latest rates</span><span class="v">Fri, Nov 6</span></div>
+            </div>
+            <div class="lockn"><i data-i="cash"></i><span>Each entry in another currency is converted at the rate for its date, and keeps it: later rates never change old totals. On weekends and holidays, the last business day's rate is used. Your server fetches the rates; turning them off is up to whoever runs it.</span></div>
+          </div>
+          <div class="panel sec">
+            <h3>Recent currencies</h3>
+            <div class="fs">
+              <div class="srow"><span class="code">EUR</span><span class="t">Euro</span><span class="v">Used 3 times</span></div>
+              <div class="srow"><span class="code">USD</span><span class="t">US dollar</span><span class="v">Used once</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

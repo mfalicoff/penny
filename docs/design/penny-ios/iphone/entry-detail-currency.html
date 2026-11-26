@@ -1,0 +1,70 @@
+<!-- @dsCard group="iPhone" name="Entry detail · Another currency" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Entry detail in another currency</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .glow { --glow-1: rgba(122, 143, 58, .32); --glow-2: rgba(200, 210, 130, .28); --glow-3: rgba(255, 190, 150, .22); }
+  .top { position: relative; z-index: 1; padding: 118px 24px 0; }
+  .top .ic { width: 52px; height: 52px; border-radius: 16px; }
+  .top .ic [data-i] { width: 26px; height: 26px; }
+  .top h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+  .top .meta { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .amt-h { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; margin-top: 16px; line-height: 1; }
+  .amt-h small { display: block; font-size: 15px; font-weight: 500; letter-spacing: 0; color: var(--label-2); margin-top: 8px; }
+  .grp-h { padding: 22px 32px 6px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .kv { display: flex; justify-content: space-between; align-items: center; padding: 0 16px; height: 48px; font-size: 16px; position: relative; }
+  .kv + .kv::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .kv span { color: var(--label-2); }
+  .kv b { font-weight: 500; }
+  .two { display: grid; grid-template-columns: 1fr 112px; gap: 12px; margin: 0 16px; }
+  .two .list { margin: 0; }
+  .rcpt { border-radius: var(--r-card); background: var(--surface); padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--label-2); }
+  .paper { width: 100%; height: 104px; border-radius: 10px; background: #FBFAF7; border: .5px solid var(--separator); padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; }
+  .paper i { display: block; height: 4px; border-radius: 2px; background: #D9D5CE; }
+  .kv b small { font-weight: 400; color: var(--label-2); font-size: 13px; margin-left: 4px; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="grp"><div class="glass gbtn" style="color:var(--danger)"><i data-i="trash"></i></div><div class="glass gcap"><i data-i="create" style="width:18px;height:18px"></i>Edit</div></div>
+    </div>
+    <div class="top">
+      <div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div>
+      <h1>Cooking class</h1>
+      <div class="meta">Fun · Tuesday, Nov 3</div>
+      <div class="amt-h num">−€85.00<small>$124.20 CAD</small></div>
+    </div>
+
+    <div class="grp-h">Details</div>
+    <div class="list">
+      <div class="kv"><span>Account</span><b>Visa</b></div>
+      <div class="kv"><span>Trip</span><b>Lisbon</b></div>
+      <div class="kv"><span>Repeats</span><b>Never</b></div>
+      <div class="kv"><span>Note</span><b>Pastéis de nata, Alfama</b></div>
+    </div>
+
+    <div class="grp-h">Exchange rate</div>
+    <div class="list">
+      <div class="kv"><span>Rate</span><b class="num">1 EUR = 1.4612 CAD</b></div>
+      <div class="kv"><span>Source</span><b>European Central Bank<small>Nov 3</small></b></div>
+    </div>
+    <div class="gf">Your totals use $124.20. To use your card's rate instead, edit the entry and change its rate.</div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab on"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

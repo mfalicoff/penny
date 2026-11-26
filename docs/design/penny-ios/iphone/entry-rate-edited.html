@@ -1,0 +1,67 @@
+<!-- @dsCard group="iPhone" name="Exchange rate · Edited" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Edit an entry's exchange rate</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>Object.assign(ICONS, {"swap-horizontal":"<polyline points=\"304 48 416 160 304 272\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><line x1=\"398.87\" y1=\"160\" x2=\"96\" y2=\"160\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><polyline points=\"208 464 96 352 208 240\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/><line x1=\"114\" y1=\"352\" x2=\"416\" y2=\"352\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/>","refresh":"<path d=\"M320 146s24.36-12-64-12a160 160 0 10160 160\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-miterlimit:10;stroke-width:var(--sw,32px)\"/><polyline points=\"256 58 336 138 256 218\" style=\"fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .behind { position: absolute; border: 0; width: 482px; height: 954px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 76px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .search { margin: 14px 16px 0; height: 40px; border-radius: 12px; background: var(--fill); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--label-2); font-size: 16px; }
+  .search [data-i] { width: 17px; height: 17px; }
+  .gh { padding: 18px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 7px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .sr .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; font-size: 16px; white-space: nowrap; }
+  .code { width: 46px; font-weight: 700; font-size: 16px; letter-spacing: .01em; flex: none; }
+  .check { color: var(--tint); } .check[data-i] { width: 20px; height: 20px; --sw: 48px; }
+  .sheet { top: 300px; }
+  .ratebox { margin: 16px 16px 0; background: var(--surface); border-radius: 22px; padding: 16px; }
+  .ratebox .eq { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+  .ratebox .eq .one { color: var(--label-2); white-space: nowrap; }
+  .ratebox .in { flex: 1; height: 48px; border-radius: 12px; background: var(--surface-2); box-shadow: inset 0 0 0 1.5px var(--tint); display: flex; align-items: center; padding: 0 12px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .ratebox .in .caret { width: 2px; height: 24px; background: var(--tint); margin-left: 2px; border-radius: 1px; }
+  .ratebox .eq .to { font-weight: 600; }
+  .ratebox .res { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: .5px solid var(--separator); font-size: 15px; color: var(--label-2); }
+  .ratebox .res b { color: var(--label); font-weight: 600; }
+  .tage { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 7px; background: var(--fill); color: var(--label-2); text-transform: none; letter-spacing: 0; }
+  .tage [data-i] { width: 11px; height: 11px; --sw: 56px; }
+  .reset { color: var(--tint-text); font-weight: 500; }
+  .reset [data-i] { width: 18px; height: 18px; color: var(--tint-text); --sw: 40px; }
+  .gbtn.done { width: auto; padding: 0 16px; border-radius: 22px; font-weight: 600; font-size: 16px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <iframe class="behind" src="entry-currency.html" scrolling="no"></iframe>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar">
+      <div class="gbtn plain"><i data-i="close"></i></div>
+      <h2>Exchange rate</h2>
+      <div class="gbtn glass tinted done">Done</div>
+    </div>
+    <div class="gh"><span>Cooking class · Tue, Nov 3</span><span class="tage"><i data-i="create"></i>Edited</span></div>
+    <div class="ratebox" style="margin-top:0">
+      <div class="eq"><span class="one num">1 EUR =</span><span class="in num">1.4900<span class="caret"></span></span><span class="to">CAD</span></div>
+      <div class="res"><span class="num">€85.00 converts to</span><b class="num">$126.65 CAD</b></div>
+    </div>
+    <div class="gf">Use the rate on your card statement or from the exchange counter. Penny keeps a rate you edit: sync and date changes never replace it.</div>
+    <div class="gh"><span>Published rate</span></div>
+    <div class="glist">
+      <div class="sr"><div class="tx">European Central Bank<small>For Tue, Nov 3</small></div><span class="v num">1.4612</span></div>
+      <div class="sr reset"><i data-i="refresh"></i><div class="tx">Use the published rate</div></div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
