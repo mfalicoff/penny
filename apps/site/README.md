@@ -15,6 +15,8 @@ Each section pairs real app screens in device frames with a live **3D Gaussian s
 | Together | iPhone household, trip | `trio`: three coins in different metals |
 | Self-host | terminal | `coin` again |
 
+A redesign of this page is proposed in [docs/design](docs/design/README.md): hero, showcase and a feature grid instead of one screen per feature, with two sharper splat scenes.
+
 ## Screens
 
 - `web-*.webp`: the real web app (`apps/web`) in its demo mode (sample data, no account), dark appearance, captured at 2×.
