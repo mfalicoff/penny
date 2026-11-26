@@ -55,6 +55,9 @@ export type Ledger = {
   categories: Category[];
   transactions: Transaction[];
   recurring: Recurring[];
+  // Contract 2.3.0: recurring suggestions dismissed on any device, as `{kind}|{key}|{frequency}|{share}`
+  // (src/domain/suggestions.ts), at most 500, merged as a set union. Optional, so older ledgers stay valid.
+  dismissedSuggestions?: string[];
 };
 export const palette = [
   "#E47850",

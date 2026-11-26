@@ -1,3 +1,4 @@
+import { dismissalOf, withDismissal, type RecurringSuggestion } from "./suggestions.ts";
 import { accountTypes, dateKey, nextOccurrence, validDate, type Category, type Ledger, type PaymentAccount, type Recurring, type Transaction, type Trip } from "./ledger.ts";
 
 export type LedgerChange = (ledger: Ledger) => Ledger;
@@ -91,6 +92,30 @@ export function saveSchedule(rule: Recurring, original: Recurring): LedgerChange
     if (!ledger.categories.some((c) => c.id === rule.categoryId && c.kind === rule.kind))
       throw new Error("This category was removed on another device. Choose another category.");
     return { ...ledger, recurring: ledger.recurring.map((r) => r.id === original.id ? rule : r) };
+  };
+}
+
+/** Accept a recurring suggestion: save `rule` (the filled-in form) as one new schedule. Past entries stay as they are. */
+export function acceptSuggestion(rule: Recurring): LedgerChange {
+  return (ledger) => {
+    assertAccount(ledger, rule.accountId);
+    if (!ledger.categories.some((c) => c.id === rule.categoryId && c.kind === rule.kind))
+      throw new Error("This category was removed on another device. Choose another category.");
+    if (ledger.recurring.some((r) => r.id === rule.id)) return ledger;
+    return { ...ledger, recurring: [...ledger.recurring, rule] };
+  };
+}
+
+/** Dismiss a recurring suggestion on every device (contract 2.3.0); `undoDismissSuggestion` takes it back. */
+export function dismissSuggestion(suggestion: Pick<RecurringSuggestion, "id" | "share">): LedgerChange {
+  return (ledger) => ({ ...ledger, dismissedSuggestions: withDismissal(ledger.dismissedSuggestions ?? [], dismissalOf(suggestion)) });
+}
+
+export function undoDismissSuggestion(suggestion: Pick<RecurringSuggestion, "id" | "share">): LedgerChange {
+  return (ledger) => {
+    const dismissal = dismissalOf(suggestion);
+    if (!ledger.dismissedSuggestions?.includes(dismissal)) return ledger;
+    return { ...ledger, dismissedSuggestions: ledger.dismissedSuggestions.filter((item) => item !== dismissal) };
   };
 }
 

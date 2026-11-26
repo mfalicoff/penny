@@ -62,8 +62,12 @@ const ledgerSchema = z
         }),
       )
       .max(1000),
+    // Contract 2.3.0: dismissed recurring suggestions, `{kind}|{key}|{frequency}|{share}`. Optional.
+    dismissedSuggestions: z.array(z.string().min(1).max(200)).max(500).optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.dismissedSuggestions && new Set(data.dismissedSuggestions).size !== data.dismissedSuggestions.length)
+      ctx.addIssue({ code: "custom", message: "Duplicate dismissed suggestions" });
     const accounts = new Set(data.accounts.map((a) => a.id));
     const trips = new Set(data.trips.map((trip) => trip.id));
     const categories = new Map(data.categories.map((c) => [c.id, c]));

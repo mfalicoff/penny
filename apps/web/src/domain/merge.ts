@@ -1,4 +1,5 @@
 import type { Ledger, Recurring, Transaction } from "./ledger.ts";
+import { mergeDismissals } from "./suggestions.ts";
 
 // Three-way merge of an unsynced local ledger onto a newer server ledger (offline sync).
 // Golden cases: contracts/fixtures/merge-conflicts.json. The native app (`LedgerMerge.swift`)
@@ -8,6 +9,7 @@ import type { Ledger, Recurring, Transaction } from "./ledger.ts";
 // both sides keeps every remote field this device did not edit (same-field races: local wins); a
 // record this device deleted is removed; a record this device edited that the server deleted comes
 // back; records created here are appended after the server's. Currency: a local change wins.
+// Dismissed recurring suggestions (contract 2.3.0): a set union, less what this device undid.
 //
 // Four personal-recurrence refinements keep a rule this device only caught up offline from undoing
 // what another device did (docs/ios/offline-sync.md). An occurrence is "untouched" when it equals
@@ -62,8 +64,12 @@ export function mergeLedger(base: Ledger, local: Ledger, remote: Ledger): Ledger
   const recurring = keepConsumedDates(
     mergeItems(base.recurring, withoutCatchUpOfDeletedRules(base, local, remote), remote.recurring), base, local, remote);
   const ruleIds = new Set(recurring.map((rule) => rule.id));
+  // Contract 2.3.0: dismissed suggestions are a set union, less what this device undid.
+  const dismissedSuggestions = mergeDismissals(base.dismissedSuggestions, local.dismissedSuggestions, remote.dismissedSuggestions);
+  const { dismissedSuggestions: _remoteDismissals, ...server } = remote;
   return {
-    ...remote,
+    ...server,
+    ...(dismissedSuggestions !== undefined ? { dismissedSuggestions } : {}),
     currency: local.currency !== base.currency ? local.currency : remote.currency,
     accounts: mergeItems(base.accounts, local.accounts, remote.accounts),
     trips: mergeItems(base.trips, local.trips, remote.trips),

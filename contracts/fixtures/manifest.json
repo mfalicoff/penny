@@ -35,7 +35,7 @@
     },
     {
       "file": "merge-conflicts.json",
-      "sha256": "5858c476bba1153fb9bc2b71ebcf941bffd6dbe09bc2de5d5c8e6efa445c6833",
+      "sha256": "cd77bcc214b110c37b708da630f08406396a209ead45873dfa01797c73a9c29e",
       "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
@@ -123,6 +123,23 @@
         ],
         "swift": [
           "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "recurring-suggestions.json",
+      "sha256": "12b3cd7c7a50bb9c4d8baddc092ef5184a05cf68f2b4339c72bdca6b2abf0fbd",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "apps/web/tests/domain/golden-fixtures.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/RecurringSuggestionsTests.swift"
         ]
       }
     },

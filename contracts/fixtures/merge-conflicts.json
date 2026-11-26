@@ -2684,6 +2684,345 @@
         ],
         "transactions": []
       }
+    },
+    {
+      "name": "dismissals: both sides' dismissals are kept, the server's first",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699"
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699",
+          "income|tutoring|weekly|6000"
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699",
+          "expense|gym|monthly|4500"
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699",
+          "expense|gym|monthly|4500",
+          "income|tutoring|weekly|6000"
+        ]
+      }
+    },
+    {
+      "name": "dismissals: an Undo on this device stays undone",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699"
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|netflix|monthly|1699",
+          "expense|gym|monthly|4500"
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|gym|monthly|4500"
+        ]
+      }
+    },
+    {
+      "name": "dismissals: the first dismissal on a ledger that had none",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "dismissedSuggestions": [
+          "expense|gym|monthly|4500"
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          }
+        ],
+        "dismissedSuggestions": [
+          "expense|gym|monthly|4500"
+        ]
+      }
     }
   ]
 }
