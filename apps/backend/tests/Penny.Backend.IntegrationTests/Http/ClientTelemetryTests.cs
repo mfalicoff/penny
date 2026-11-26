@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Penny.Backend.Api.ClientTelemetry;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -197,6 +198,8 @@ public sealed class ClientTelemetryTests(ApiFixture fixture) : IntegrationTestBa
         forwarded.Url.ShouldBe(new Uri(FaroUrl));
         forwarded.Headers.ShouldNotContainKey("Authorization");
         forwarded.Headers.ShouldNotContainKey("Cookie");
+        // MAZ-289: Grafana Cloud's collector refuses a report without its session header.
+        forwarded.Headers[FaroPayload.SessionHeader].ShouldBe("aBcDeFgHiJ");
         foreach (
             var secret in new[]
             {
@@ -552,6 +555,7 @@ public sealed class ClientTelemetryTests(ApiFixture fixture) : IntegrationTestBa
         var forwarded = await collector.NextAsync(Ct);
         forwarded.Url.ShouldBe(new Uri(OtlpEndpoint + "/v1/logs"));
         forwarded.Headers["Authorization"].ShouldBe("Basic c3ludGhldGlj");
+        forwarded.Headers.ShouldNotContainKey(FaroPayload.SessionHeader);
         foreach (var secret in new[] { Email, "Quokkatitle", Amount, Search, token })
             forwarded.Body.ShouldNotContain(secret);
         var record = JsonNode.Parse(forwarded.Body)!["resourceLogs"]![0]!["scopeLogs"]![0]![
@@ -567,6 +571,61 @@ public sealed class ClientTelemetryTests(ApiFixture fixture) : IntegrationTestBa
             .GetValue<string>()
             .ShouldBe("https://penny.example.test/api/search");
         collector.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task whenCollectorRefusesReport_Forwarder_ShouldLogScrubbedReasonWithoutUrlOrKey()
+    {
+        // A collector URL that carries a key, as Grafana Cloud's does.
+        const string key = "f00dfeedcafe4242";
+        var settings = Settings();
+        settings["ClientTelemetry:FaroUrl"] = $"{FaroUrl}/{key}";
+        // The test host turns logging off; this test reads the forwarder's warning.
+        settings["Logging:LogLevel:Default"] = "Warning";
+        var collector = new CapturingCollector
+        {
+            Status = HttpStatusCode.BadRequest,
+            ResponseBody =
+                $"missing X-Faro-Session-Id header, activate the SessionInstrumentation\n(app {key} at {FaroUrl}/{key} for {Email}) "
+                + new string('x', 400),
+        };
+        var logs = new CapturingLoggerProvider();
+        await using var factory = new TestApiFactory(Fixture.Connection, settings, services =>
+        {
+            services
+                .AddHttpClient(ClientTelemetryForwarder.HttpClientName)
+                .ConfigurePrimaryHttpMessageHandler(() => collector);
+            services.AddSingleton<ILoggerProvider>(logs);
+        });
+        using var client = CreateClient(factory);
+        var token = await RegisterAsync("telemetry-refused@example.test", client);
+
+        using (
+            var accepted = await client.SendAsync(
+                Post("/api/telemetry/faro", token, Faro().ToJsonString()),
+                Ct
+            )
+        )
+            accepted.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        await collector.NextAsync(Ct);
+
+        string? refused = null;
+        for (var attempt = 0; attempt < 100 && refused is null; attempt++)
+        {
+            refused = logs.Messages.FirstOrDefault(message =>
+                message.Contains("refused a faro report", StringComparison.Ordinal)
+            );
+            if (refused is null)
+                await Task.Delay(50, Ct);
+        }
+        refused.ShouldNotBeNull();
+        refused.ShouldContain(
+            "HTTP 400: missing X-Faro-Session-Id header, activate the SessionInstrumentation"
+        );
+        refused.ShouldNotContain(key);
+        refused.ShouldNotContain("alloy.internal.test");
+        refused.ShouldNotContain(Email);
+        refused.ShouldNotContain(new string('x', ClientTelemetryForwarder.ReasonLength));
     }
 
     [Fact]

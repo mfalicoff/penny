@@ -21,7 +21,7 @@ export function encodePly(cloud: SplatCloud): Uint8Array {
   for (let i = 0; i < cloud.count; i++) {
     const values = [
       cloud.positions[i * 3]!, cloud.positions[i * 3 + 1]!, cloud.positions[i * 3 + 2]!,
-      cloud.normals[i * 4]! / 127.5 - 1, cloud.normals[i * 4 + 1]! / 127.5 - 1, cloud.normals[i * 4 + 2]! / 127.5 - 1,
+      cloud.normals[i * 4]!, cloud.normals[i * 4 + 1]!, cloud.normals[i * 4 + 2]!,
       (cloud.colors[i * 4]! / 255 - 0.5) / SH_C0,
       (cloud.colors[i * 4 + 1]! / 255 - 0.5) / SH_C0,
       (cloud.colors[i * 4 + 2]! / 255 - 0.5) / SH_C0,

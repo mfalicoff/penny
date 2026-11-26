@@ -1,7 +1,10 @@
+using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Diagnostics;
 using Penny.Backend.Application.Mail;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -131,6 +134,35 @@ public sealed class EmailPasswordResetTests(ApiFixture fixture, EmailHost email)
     [Fact]
     public async Task whenServerFailsTemporarily_MailDelivery_ShouldRetryWithBackoffAndThenSend()
     {
+        // MAZ-289: each recorded message counts once by kind and outcome. Other tests in the
+        // process can record too, so this only checks that both outcomes were seen.
+        var outcomes = new ConcurrentBag<(string? Kind, string? Outcome)>();
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (
+                instrument.Meter.Name == BackendTelemetry.Name
+                && instrument.Name == "penny.mail.deliveries"
+            )
+                meterListener.EnableMeasurementEvents(instrument);
+        };
+        listener.SetMeasurementEventCallback<long>(
+            (_, _, tags, _) =>
+            {
+                string? kind = null,
+                    outcome = null;
+                foreach (var tag in tags)
+                {
+                    if (tag.Key == BackendTelemetry.MailKindAttribute)
+                        kind = tag.Value as string;
+                    if (tag.Key == BackendTelemetry.MailOutcomeAttribute)
+                        outcome = tag.Value as string;
+                }
+                outcomes.Add((kind, outcome));
+            }
+        );
+        listener.Start();
+
         await RegisterAsync(Address);
         Smtp.Refuse(1, "451 4.3.0 Try again later");
         (await RequestResetAsync(Address)).Dispose();
@@ -156,6 +188,8 @@ public sealed class EmailPasswordResetTests(ApiFixture fixture, EmailHost email)
         using var redeemed = await RedeemAsync(code, NewPassword);
         redeemed.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await PendingMailAsync()).ShouldBe(0L);
+        outcomes.ShouldContain((MailKinds.PasswordReset, "deferred"));
+        outcomes.ShouldContain((MailKinds.PasswordReset, "sent"));
     }
 
     [Fact]

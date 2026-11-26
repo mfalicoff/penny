@@ -1,6 +1,8 @@
 # Product videos: licenses, storyboard and pipeline
 
-Status: **approved by the owner on 2026-11-25**, with the changes recorded under [Decisions](#decisions-2026-11-25). This was step 1 of the "apps in motion" work: the license check, the storyboard and the pipeline outline. The pipeline and the clips are built from it.
+Status: **approved by the owner on 2026-11-25**, with the changes recorded under [Decisions](#decisions-2026-11-25). This was step 1 of the "apps in motion" work: the license check, the storyboard and the pipeline outline. Both phases are built: the pipeline, the two web clips and the page wiring on Linux, then the two iOS clips on the Mac. [apps/site/README.md](../README.md#clips-of-the-apps-in-use) is the how-to.
+
+Since the page redesign ([design/README.md](design/README.md)), the Insights clip plays in the showcase and the Overview and Entries clips in their feature tiles. The page has no Apps section any more, so the Apps clip is rendered but not placed.
 
 The goal is short pre-rendered clips of Penny's real screens, played inside the product page's existing device frames, with the splat scenes still around them. Only synthetic demo data appears: the web demo's sample data and the iOS demo.
 
@@ -82,7 +84,7 @@ The issue's "money flow". The browser frame shows Insights.
 
 | Time | Screen | Camera, highlight | Caption |
 | --- | --- | --- | --- |
-| 0.0 s (poster) | Insights, the full flow | Wide, slow push-in | "Follow every dollar from pay to spending" |
+| 0.0 s (poster) | Insights, the full flow | Wide, slow push-in | "Follow every dollar you earn" |
 | 1.5 s | Cursor moves to Groceries | | |
 | 2.5 s | Groceries selected: the other bands dim | Zoom 1.6× on the bands. Highlight: Groceries | "Select a band to focus it" |
 | 4.0 s | Groceries cleared, Left over selected | Pan down to Left over. Highlight: Left over | |
@@ -159,12 +161,18 @@ The web demo refuses to save an entry, so no web clip shows adding one. Adding a
 
 ## 3. Pipeline outline
 
-Not built in this step. This is what the next step would add.
+Built in phase 1, as outlined here except where noted. [apps/site/README.md](../README.md#clips-of-the-apps-in-use) is the how-to. What changed from the outline:
+
+- The render script is `render.ts`, and the shared demo setup moved to `apps/site/scripts/demo.ts`, used by both captures.
+- Chromium's screencast sends 1× frames under Playwright's emulated 2×. The captures launch Chromium with `--force-device-scale-factor=2` to get 2× frames.
+- Captions are HTML beside each clip (owner's decision), so the compositions draw no caption.
+- The loader is about 1.5 kB gzipped, not 1 kB, and adds a pause button.
+- CI lints and type-checks the pipeline, and the page's tests check the committed clips against their budgets.
 
 ```text
 apps/site/video/                 its own package.json and lockfile (Remotion, React, Playwright from apps/web)
   capture/web.ts                 drives the web demo, records frames and a timeline
-  capture/ios.sh                 Mac only: simulator recording through an XCUITest
+  capture/ios.ts                 Mac only: runs capture/ios/ClipCaptureTests.swift and records the simulator
   captures/                      raw recordings (gitignored)
   src/Root.tsx                   one <Composition> per clip
   src/clips/*.tsx                insights, apps, overview, entries (together)
@@ -176,7 +184,8 @@ apps/site/src/assets/clips/      the encoded clips and posters the page imports
 ### Capture
 
 - **Web** (`capture/web.ts`, Linux): starts from the same demo setup as `scripts/capture-screens.ts`, at 1440 × 900, 2×, dark. It records lossless frames with Chromium's screencast (CDP `Page.startScreencast`, PNG) instead of Playwright's `recordVideo`, which is low-bitrate VP8. Each scripted step (click, type, select) also writes a timeline entry with the time and the target element's bounding box. The compositions read that timeline, so camera moves, highlights and the cursor follow the real layout instead of hand-tuned coordinates.
-- **iOS** (`capture/ios.sh`, the Mac): a UI test in the iOS project drives the demo. `xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100` cleans the status bar, and `xcrun simctl io booted recordVideo --codec h264` records. Timeline entries come from the UI test's element frames, as on the web.
+- **iOS** (`capture/ios.ts`, the Mac): a UI test drives the iOS demo. It lives in `apps/site/video/capture/ios` and is copied into the iOS project's UI tests for the run only, which runs through `apps/ios/scripts/ios.sh` on that script's throwaway simulator. Each test signals when its screen is set up, and the script then cleans the status bar (9:41, full battery) and records that clip with `simctl io recordVideo`. A single recording of the whole run doesn't work: the recorder stops when the simulator finishes booting. Timeline entries come from the UI test's element frames, as on the web.
+- What changed on iOS: UI tests wait for the app between steps, so a recorded step takes one or two seconds. The compositions play the half second after each step at real speed and squeeze the waits in between (`paced` in `src/capture.ts`). Recordings leave out the simulator's touch indicator, so the clips draw their own (`src/lib/Touch.tsx`). The push-ins go below the storyboard's 1.2× and 1.3× where a closer shot would cut the highlighted element at the screen's sides. In the redesign's tiles the clips crop to their own action (`[data-clip] video` in `src/styles.css`), not the still's. The demo's own banner ("Demo · Changes are temporary") stays on Home: the app has no way to hide it.
 - `scripts/capture-screens.ts` clicks "Explore a demo", but the sign-in button is now "Take a look around with sample data". The capture step fixes that script too, and both share the demo setup.
 
 ### Render and encode
@@ -202,7 +211,7 @@ The HTML keeps today's `<img>` in each frame. Clips are opt-in through data attr
 </figure>
 ```
 
-A small loader in `src/main.ts`, about 1 kB:
+A small loader in `src/clips.ts`, about 1.5 kB gzipped:
 
 1. Does nothing when reduced motion or Save-Data is on, or when the browser can play neither `video/webm; codecs="av01.0.05M.08"` nor `video/mp4; codecs="avc1.640028"`.
 2. Watches each `[data-clip]` frame with an `IntersectionObserver` (root margin of about one screen height). When a frame comes near, it creates `<video muted loop playsinline preload="none" poster=…>` with the AV1 and MP4 `<source>`s, the small variants under `media="(max-width: 700px)"`, places it over the `<img>`, and fades it in on `canplay`. Until then the still shows, so nothing shifts or flickers.
@@ -214,7 +223,7 @@ Vite imports the clips as hashed URLs, so they're served from `/assets/*` with t
 ### Phases
 
 1. **Linux:** the pipeline, the web capture, the Insights and Apps clips, the page loader, the README section.
-2. **The Mac:** the iOS capture script and the Overview and Entries clips.
+2. **The Mac:** the iOS capture script and the Overview and Entries clips. Built.
 
 ## Decisions (2026-11-25)
 

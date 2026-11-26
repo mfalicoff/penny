@@ -1,24 +1,17 @@
-// Packs scenes into the texture layout the vertex shader reads: one block of rows per scene,
-// TEXTURE_WIDTH texels per row, splat i at (i % width, i / width + scene * rows). Scenes are
-// packed one at a time so the page can show the first while the rest are generated.
+// Packs a scene into the textures the vertex shader reads: TEXTURE_WIDTH texels per row,
+// splat i at (i % width, i / width).
 import { covariance, type SplatCloud } from "./cloud.ts";
-import { delayFor } from "./morph.ts";
-import { createRandom } from "./random.ts";
 
 export const TEXTURE_WIDTH = 2048;
 
 export interface Layout {
   readonly count: number;
-  readonly sceneCount: number;
   readonly width: number;
-  /** Rows per scene. */
   readonly rows: number;
 }
 
-/** One scene's block of rows in every texture. */
 export interface PackedScene {
-  readonly index: number;
-  /** x, y, z, morph delay. RGBA32F. */
+  /** x, y, z, and how far the splat drifts (dust only). RGBA32F. */
   readonly centers: Float32Array;
   /** Covariance c00, c01, c02, c11. RGBA32F. */
   readonly covA: Float32Array;
@@ -26,36 +19,44 @@ export interface PackedScene {
   readonly covB: Float32Array;
   /** sRGB colour and opacity. RGBA8. */
   readonly colors: Uint8Array;
-  /** Normal and shading amount. RGBA8. */
-  readonly normals: Uint8Array;
+  /**
+   * Normal and how much it's lit. RGBA16F: 8-bit normals band the specular highlight, which
+   * is what drew stripes across the coin's face.
+   */
+  readonly normals: Uint16Array;
 }
 
-export function layoutFor(count: number, sceneCount: number): Layout {
-  return { count, sceneCount, width: TEXTURE_WIDTH, rows: Math.max(1, Math.ceil(count / TEXTURE_WIDTH)) };
+export function layoutFor(count: number): Layout {
+  return { count, width: TEXTURE_WIDTH, rows: Math.max(1, Math.ceil(count / TEXTURE_WIDTH)) };
 }
 
-/** Per-splat morph delay in [0, 1], shared by every scene. */
-export function morphDelays(count: number, seed = 99): Float32Array {
-  const random = createRandom(seed);
-  const delays = new Float32Array(count);
-  for (let i = 0; i < count; i++) delays[i] = delayFor(i, count, random());
-  return delays;
+/** IEEE half-precision bits of `value` (round to nearest), for RGBA16F uploads. */
+export function toHalf(value: number): number {
+  const f32 = new Float32Array([value]);
+  const bits = new Uint32Array(f32.buffer)[0]!;
+  const sign = (bits >>> 16) & 0x8000;
+  const exponent = ((bits >>> 23) & 0xff) - 127 + 15;
+  const mantissa = bits & 0x7fffff;
+  if (exponent <= 0) return sign;
+  if (exponent >= 31) return sign | 0x7c00;
+  const half = sign | (exponent << 10) | (mantissa >>> 13);
+  return mantissa & 0x1000 ? half + 1 : half;
 }
 
-export function packScene(scene: SplatCloud, index: number, layout: Layout, delays: Float32Array): PackedScene {
-  if (scene.count !== layout.count) throw new Error(`Scene ${index} has ${scene.count} splats, not ${layout.count}`);
+export function packScene(scene: SplatCloud, layout: Layout): PackedScene {
+  if (scene.count !== layout.count) throw new Error(`The scene has ${scene.count} splats, not ${layout.count}`);
   const texels = layout.width * layout.rows;
   const centers = new Float32Array(texels * 4);
   const covA = new Float32Array(texels * 4);
   const covB = new Float32Array(texels * 2);
   const colors = new Uint8Array(texels * 4);
-  const normals = new Uint8Array(texels * 4);
+  const normals = new Uint16Array(texels * 4);
   const cov = new Float32Array(6);
   for (let i = 0; i < scene.count; i++) {
     centers[i * 4] = scene.positions[i * 3]!;
     centers[i * 4 + 1] = scene.positions[i * 3 + 1]!;
     centers[i * 4 + 2] = scene.positions[i * 3 + 2]!;
-    centers[i * 4 + 3] = delays[i]!;
+    centers[i * 4 + 3] = scene.drift[i]!;
     covariance(scene.scales, i * 3, scene.rotations, i * 4, cov, 0);
     covA[i * 4] = cov[0]!;
     covA[i * 4 + 1] = cov[1]!;
@@ -63,8 +64,8 @@ export function packScene(scene: SplatCloud, index: number, layout: Layout, dela
     covA[i * 4 + 3] = cov[3]!;
     covB[i * 2] = cov[4]!;
     covB[i * 2 + 1] = cov[5]!;
+    for (let k = 0; k < 4; k++) normals[i * 4 + k] = toHalf(scene.normals[i * 4 + k]!);
   }
   colors.set(scene.colors);
-  normals.set(scene.normals);
-  return { index, centers, covA, covB, colors, normals };
+  return { centers, covA, covB, colors, normals };
 }

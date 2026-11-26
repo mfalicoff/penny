@@ -125,12 +125,16 @@ public sealed class TelemetryController(
             BackendTelemetry.ClientTelemetry(kind, "duplicate");
             return StatusCode(202, new OkResponse(true));
         }
+        var session = otlp ? null : FaroPayload.SessionId(payload);
         forwarder.Enqueue(
             new ClientTelemetryForwarder.Report(
                 kind,
                 target,
                 Encoding.UTF8.GetBytes(payload.ToJsonString()),
-                otlp
+                otlp,
+                session is null
+                    ? null
+                    : new Dictionary<string, string> { [FaroPayload.SessionHeader] = session }
             )
         );
         return StatusCode(202, new OkResponse(true));

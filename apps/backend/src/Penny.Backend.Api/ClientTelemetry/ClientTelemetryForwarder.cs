@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Channels;
 using OpenTelemetry;
 using Penny.Backend.Api.Configuration;
@@ -20,6 +21,10 @@ public sealed partial class ClientTelemetryForwarder(
     public const string HttpClientName = "client-telemetry";
     private const int Capacity = 256;
 
+    // How much of a refusal's body is read, and how much of it is logged.
+    private const int ReasonBytes = 4096;
+    public const int ReasonLength = 200;
+
     private readonly Channel<Report> queue = Channel.CreateBounded<Report>(
         new BoundedChannelOptions(Capacity)
         {
@@ -28,7 +33,14 @@ public sealed partial class ClientTelemetryForwarder(
         }
     );
 
-    public sealed record Report(string Kind, Uri Target, byte[] Body, bool Otlp);
+    // Headers are per report (Faro's session id); OTLP adds the server's configured headers.
+    public sealed record Report(
+        string Kind,
+        Uri Target,
+        byte[] Body,
+        bool Otlp,
+        IReadOnlyDictionary<string, string>? Headers = null
+    );
 
     /// <summary>Queues a report; false when the queue is full and it was dropped.</summary>
     public bool Enqueue(Report report)
@@ -66,11 +78,18 @@ public sealed partial class ClientTelemetryForwarder(
             if (report.Otlp)
                 foreach (var (name, value) in options.OtlpHeaders)
                     request.Headers.TryAddWithoutValidation(name, value);
+            foreach (var (name, value) in report.Headers ?? new Dictionary<string, string>())
+                request.Headers.TryAddWithoutValidation(name, value);
             using var response = await client.SendAsync(request, cancellationToken);
             var outcome = response.IsSuccessStatusCode ? "forwarded" : "refused";
             BackendTelemetry.ClientTelemetry(report.Kind, outcome);
             if (!response.IsSuccessStatusCode)
-                LogRefused(logger, report.Kind, (int)response.StatusCode);
+                LogRefused(
+                    logger,
+                    report.Kind,
+                    (int)response.StatusCode,
+                    Reason(await ReadStartAsync(response, cancellationToken), report.Target)
+                );
         }
         catch (Exception error)
             when ((error is HttpRequestException or TaskCanceledException)
@@ -82,11 +101,49 @@ public sealed partial class ClientTelemetryForwarder(
         }
     }
 
+    private static async Task<string> ReadStartAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var buffer = new byte[ReasonBytes];
+        var read = 0;
+        int count;
+        while (
+            read < buffer.Length
+            && (count = await stream.ReadAsync(buffer.AsMemory(read), cancellationToken)) > 0
+        )
+            read += count;
+        return Encoding.UTF8.GetString(buffer, 0, read);
+    }
+
+    /// <summary>
+    /// A short, scrubbed reason from a collector's refusal: one line, at most ReasonLength
+    /// characters, without the collector's URL, host or the path segments that carry a key.
+    /// </summary>
+    public static string Reason(string body, Uri target)
+    {
+        var text = string.Join(
+            ' ',
+            body.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+        );
+        text = text.Replace(target.AbsoluteUri, "<collector>", StringComparison.OrdinalIgnoreCase)
+            .Replace(target.Host, "<collector>", StringComparison.OrdinalIgnoreCase);
+        foreach (var segment in target.Segments)
+            if (segment.Trim('/') is { Length: >= 8 } secret)
+                text = text.Replace(secret, "<redacted>", StringComparison.OrdinalIgnoreCase);
+        text = TelemetryScrubber.ScrubText(text);
+        if (text.Length > ReasonLength)
+            text = text[..ReasonLength];
+        return text.Length == 0 ? "no message" : text;
+    }
+
     [LoggerMessage(
         Level = LogLevel.Warning,
-        Message = "The telemetry collector refused a {Kind} report with HTTP {Status}."
+        Message = "The telemetry collector refused a {Kind} report with HTTP {Status}: {Reason}"
     )]
-    private static partial void LogRefused(ILogger logger, string kind, int status);
+    private static partial void LogRefused(ILogger logger, string kind, int status, string reason);
 
     [LoggerMessage(
         Level = LogLevel.Warning,

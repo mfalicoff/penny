@@ -126,6 +126,17 @@
                 "accountId": "chq"
               },
               {
+                "id": "p-mira",
+                "title": "Coffee with Mira",
+                "kind": "expense",
+                "total": 1280,
+                "share": 640,
+                "participants": 2,
+                "categoryId": "food",
+                "date": "2026-10-15",
+                "note": ""
+              },
+              {
                 "id": "p-coffee-2",
                 "title": "Coffee",
                 "kind": "expense",
@@ -619,11 +630,13 @@
             "query": "coffee"
           },
           "keys": [
+            "personal:p-mira",
             "personal:p-coffee-2",
             "personal:p-coffee-1",
             "shared:$expense:coffee"
           ],
           "matches": [
+            "title",
             "title",
             "title",
             "title"
@@ -688,6 +701,7 @@
           },
           "keys": [
             "shared:$expense:groceries",
+            "personal:p-mira",
             "personal:p-coffee-2",
             "personal:p-lait",
             "personal:p-cafe",
@@ -697,6 +711,7 @@
           ],
           "matches": [
             "title",
+            "text",
             "text",
             "text",
             "text",
@@ -752,6 +767,7 @@
             "shared:$expense:apartment",
             "shared:$expense:flights",
             "personal:p-airport-train",
+            "personal:p-mira",
             "shared:$expense:internet",
             "personal:p-coffee-2",
             "personal:p-lait",
@@ -768,6 +784,7 @@
             "shared:$expense:groceries"
           ],
           "matches": [
+            null,
             null,
             null,
             null,
@@ -912,6 +929,7 @@
           {
             "query": "coffee",
             "expectedIds": [
+              "p-mira",
               "p-pending",
               "p-coffee-1"
             ]

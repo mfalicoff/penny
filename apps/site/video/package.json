@@ -1,0 +1,33 @@
+{
+  "name": "penny-site-video",
+  "private": true,
+  "description": "Renders the product page's clips of the apps in use. Remotion runs at render time only; the page never loads it. See apps/site/docs/product-videos.md.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "capture:web": "node capture/web.ts",
+    "capture:ios": "node capture/ios.ts",
+    "studio": "remotion studio src/index.ts",
+    "render": "node render.ts",
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.547",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.547"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.3",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0"
+  }
+}
