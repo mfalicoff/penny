@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "5bd13afd1a2bc1282f4c11d360bd98b075aaa8953c251dc33decbf0d3c03f8bf"
+      "sha256": "fb9c4e72266d4ff102c47d27cde5fbf8774ba6b517a5b939c678b922f1719a3a"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "0ee4dc20e81287ceb0506ae8c3f12090b9550e7fbad37607cf94403c5acf8207"
+      "sha256": "ba210aaa7b3e751349a4f710aa1774bfeb39f554c126afc2070f9536855b88a1"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "51c91751370dacd24464e1bfd5f5baabecc57460c9d3946278598c75aeb884b6"
+      "sha256": "43283cd903f4d1bef66e849e7552512eb47f6b24923c922d1e198a675d1c1e9b"
     }
   ],
   "tokens": {
@@ -2617,6 +2617,328 @@
       "status": "planned"
     },
     {
+      "id": "iphone-recap",
+      "name": "Monthly recap",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recap.html",
+      "sha256": "0ced4316527c95847f4ea98ae688fdeb3400890c1ff08f5df25bad2374ff73e3",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-recap-empty",
+      "name": "Monthly recap: nothing recorded",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recap-empty.html",
+      "sha256": "e9d9ef7102266067504749570fe50b986a8e54df2ac2c29fbfe22b54b90cfb2a",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-home-recap",
+      "name": "Home: recap ready",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/home-recap.html",
+      "sha256": "06085cd0875bf3710b82cba582d7e62516374b4ab49ec101f7e6f0c9cafd331a",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-insights-recap",
+      "name": "Insights: recap ready",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/insights-recap.html",
+      "sha256": "296098e7fbc5fe6c1923c4e9167772a9eea932cd0a05f912fd09ac7663b02ad7",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-recap-setting",
+      "name": "Monthly recap notification setting",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recap-setting.html",
+      "sha256": "d7338fc71d1edb2b9a966f73159aae6b87bfa34b2744aef5e9bec18698b89641",
+      "nativeIssue": "MAZ-292",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-recap-notification",
+      "name": "Recap notification on the Lock Screen",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recap-notification.html",
+      "sha256": "bb4e2e8e2c8c1d26843d5d3a353a17de9f054b51d7775014c20278ffc22c8ea0",
+      "nativeIssue": "MAZ-292",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review",
+      "name": "Year in review: categories",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review.html",
+      "sha256": "89f9938cc9775da7f6b10d80945c6876a8f1cb04082a894797fd700bfd044bc8",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review-trips",
+      "name": "Year in review: trips",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review-trips.html",
+      "sha256": "f3060f5843f2fc37ded2453b9c2ca5493cb875566a2f78323542ae5f5718214a",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review-shared",
+      "name": "Year in review: who paid",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review-shared.html",
+      "sha256": "43b755959d8f875ab7242dda57b5a983a95969e5d534235c6b8c1e6be256eb94",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review-facts",
+      "name": "Year in review: fun facts",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review-facts.html",
+      "sha256": "f02ebd7918104dfd7982237326513e9076941c20d1c6edb4d89a2605176cf016",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review-share",
+      "name": "Share your year: amounts hidden",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review-share.html",
+      "sha256": "6617229ab5a91d045e1a9faf22483be3febe83077eb50dc6ddafcc1d871d5abb",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review-share-amounts",
+      "name": "Share your year: amounts shown",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review-share-amounts.html",
+      "sha256": "35d61ebf9a93882991b10750f2bd05736527784c550fd07e5bc70f2e96fe11a5",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-year-review-share-sheet",
+      "name": "Share your year: share sheet",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/year-review-share-sheet.html",
+      "sha256": "bbdc6f25c671166f2e532c733cc053bc37ee1546b32541b764e8854573dded87",
+      "nativeIssue": "MAZ-292",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-insights-year-review",
+      "name": "Insights: year in review",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/insights-year-review.html",
+      "sha256": "efeb5284abb1ac0dfaab2f6fd756a162f6f0f8f8aade2bf862f856f563243fba",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
       "id": "ipad-home",
       "name": "Home",
       "group": "iPad",
@@ -4229,6 +4551,190 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-recap",
+      "name": "Monthly recap",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/recap.html",
+      "sha256": "358d5c53fc7fab26d3dfc9dda17d3952ceed8bad661fd960986759ac9901f9a1",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-recap-empty",
+      "name": "Monthly recap: nothing recorded",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/recap-empty.html",
+      "sha256": "c3c1bb00355635837ca595fded3805ec661243ee1e5b17bb67276ae6dc9475d1",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-home-recap",
+      "name": "Home: recap ready",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/home-recap.html",
+      "sha256": "fdfe8d958686c7451e2de5c8216001d46fb92f8208895b9aa35fe9c7b5bb6c76",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-insights-recap",
+      "name": "Insights: recap ready",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/insights-recap.html",
+      "sha256": "fad81969a2f247b6539b2353698a36a413b05e757fda476d5fea814541c6cb41",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-year-review",
+      "name": "Year in review",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/year-review.html",
+      "sha256": "babaa753ae07e9ec34570415467410a1bf19c32d62517030afe95e4a4316bc9e",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-year-review-share",
+      "name": "Share your year: amounts hidden",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/year-review-share.html",
+      "sha256": "06c37d43b86434f12b758555df99fb724741fbc582662ac0c5fe299442398ae2",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-year-review-share-amounts",
+      "name": "Share your year: amounts shown",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/year-review-share-amounts.html",
+      "sha256": "8d9c29b904af887ec1757497ea06aa565dcddb3918e15dd48e600d385065ab80",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-insights-year-review",
+      "name": "Insights: year in review",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/insights-year-review.html",
+      "sha256": "a1e634d9bfbb260e379b56fe86b94634c0ac66d086651359c4e1187622c9d5a3",
+      "nativeIssue": "MAZ-292",
+      "webIssue": "MAZ-292",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
       },
       "status": "planned"
     }

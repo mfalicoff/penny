@@ -1,0 +1,159 @@
+<!-- @dsCard group="Web" name="Share your year: amounts shown" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Share your year: amounts shown</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"sparkles":"<path d=\"M224 48c16 110 58 152 168 168-110 16-152 58-168 168-16-110-58-152-168-168 110-16 152-58 168-168zM400 336c6 40 24 58 64 64-40 6-58 24-64 64-6-40-24-58-64-64 40-6 58-24 64-64z\" fill=\"currentColor\"/>","share":"<path d=\"M336 192h40a40 40 0 0140 40v192a40 40 0 01-40 40H136a40 40 0 01-40-40V232a40 40 0 0140-40h40M336 128l-80-80-80 80M256 321V48\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","eye":"<path d=\"M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><circle cx=\"256\" cy=\"256\" r=\"80\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/>","eye-off":"<path d=\"M432 448L80 64M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","download":"<path d=\"M256 80v256M160 240l96 96 96-96M96 416h320\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .yr { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+  .yr .span2 { grid-column: span 2; }
+  .lead h2 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+  .lead p { font-size: 14.5px; color: var(--label-2); margin-top: 6px; }
+  .lead p b { color: var(--label); }
+  .rk { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+  .rk .n { width: 16px; font-size: 14px; font-weight: 700; color: var(--label-2); text-align: center; }
+  .rk .ic, .rk .avatar { width: 30px; height: 30px; border-radius: 9px; flex: none; }
+  .rk .ic [data-i] { width: 16px; height: 16px; }
+  .rk .avatar { border-radius: 50%; border: 0; font-size: 11px; }
+  .rk .avatar.you { background: var(--tint); }
+  .rk .avatar.gone { background: var(--fill); color: var(--label-2); }
+  .rk .avatar.gone [data-i] { width: 15px; height: 15px; }
+  .rk .t { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+  .rk .bar { height: 5px; border-radius: 3px; background: var(--fill); margin-top: 5px; overflow: hidden; }
+  .rk .bar i { display: block; height: 100%; border-radius: 3px; }
+  .rk .v { font-size: 14px; font-weight: 600; text-align: right; min-width: 64px; }
+  .rk .v span { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .months { display: flex; align-items: flex-end; gap: 10px; height: 168px; margin-top: 6px; }
+  .months div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--label-2); }
+  .months i { width: 100%; max-width: 34px; border-radius: 5px 5px 2px 2px; background: var(--label); opacity: .22; }
+  .months .hi i { background: var(--tint); opacity: 1; }
+  .months .hi { color: var(--tint-text); font-weight: 600; }
+  .li { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .li + .li { border-top: .5px solid var(--separator); }
+  .li .ic { width: 30px; height: 30px; border-radius: 9px; background: var(--fill); color: var(--label); }
+  .li .ic [data-i] { width: 16px; height: 16px; }
+  .li .t { flex: 1; } .li .t b { display: block; font-size: 14px; font-weight: 600; } .li .t span { font-size: 12.5px; color: var(--label-2); }
+  .li .v { text-align: right; font-size: 14px; font-weight: 600; } .li .v span { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fact { background: var(--surface-2); border-radius: 14px; padding: 12px 14px; font-size: 12.5px; color: var(--label-2); line-height: 1.3; }
+  .fact b { display: block; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--label); margin-bottom: 2px; }
+  .foot { font-size: 12.5px; color: var(--label-2); margin-top: 8px; line-height: 1.4; }
+  .modal { left: 50%; top: 110px; transform: translateX(-50%); width: 780px; }
+  .mbody { display: flex; gap: 26px; padding: 22px 24px; }
+  .mbody .r { flex: 1; display: flex; flex-direction: column; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: var(--surface-2); }
+  .opt .si { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; color: var(--label); flex: none; }
+  .opt .si [data-i] { width: 17px; height: 17px; --sw: 40px; }
+  .opt .tx { flex: 1; font-size: 15px; font-weight: 600; } .opt .tx small { display: block; font-size: 13px; color: var(--label-2); font-weight: 400; margin-top: 2px; }
+  .sw { width: 42px; height: 26px; border-radius: 13px; background: var(--fill); position: relative; flex: none; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .sw.on { background: var(--tint); } .sw.on::after { left: 18px; }
+  .mbody p { font-size: 13.5px; color: var(--label-2); line-height: 1.45; margin-top: 14px; }
+  .mbody ul { font-size: 13.5px; color: var(--label-2); line-height: 1.6; margin: 10px 0 0 18px; }
+  .mf .sp { flex: 1; }
+  .img { width: 270px; height: 480px; border-radius: 26px; overflow: hidden; position: relative; background: #FBF7F2; color: #16120F; box-shadow: 0 10px 30px rgba(0,0,0,.14), 0 0 0 .5px var(--separator); padding: 22px 20px; flex: none; }
+  .img .g { position: absolute; left: -60px; right: -60px; top: -90px; height: 300px; filter: blur(36px); background: radial-gradient(40% 45% at 30% 45%, rgba(255,138,76,.55), transparent 70%), radial-gradient(35% 40% at 75% 35%, rgba(255,196,120,.45), transparent 70%); }
+  .img > * { position: relative; }
+  .img .brand { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+  .img .brand i { width: 20px; height: 20px; border-radius: 6px; background: #E4572E; color: #fff; display: grid; place-items: center; }
+  .img .brand i [data-i] { width: 12px; height: 12px; --sw: 44px; }
+  .img h3 { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; margin-top: 14px; line-height: 1; }
+  .img .tot { font-size: 14px; color: #57524D; margin-top: 5px; }
+  .img .tot b { color: #16120F; }
+  .img .cats { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .img .cats div { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+  .img .cats em { font-style: normal; width: 12px; color: #57524D; }
+  .img .cats .d { width: 9px; height: 9px; border-radius: 3px; }
+  .img .cats span { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .img .cats span small { color: #57524D; font-weight: 500; font-size: 12px; margin-right: 4px; }
+  .img .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+  .img .tiles div { background: rgba(255,255,255,.75); border-radius: 12px; padding: 9px 10px; font-size: 11.5px; color: #57524D; line-height: 1.25; }
+  .img .tiles b { display: block; font-size: 16px; color: #16120F; letter-spacing: -0.02em; }
+  .img .tiles .w { grid-column: span 2; }
+  .img .url { position: absolute; left: 20px; bottom: 16px; font-size: 11px; color: #A9A49D; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="insights" data-url="penny.example.com/insights">
+<main class="wmain">
+    <div class="glow"></div>
+    <div class="wtop">
+      <div class="btn icon" title="Back to Insights"><i data-i="chevron-back"></i></div>
+      <h1>2026 in review</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="btn primary"><i data-i="share"></i>Share your year</div>
+    </div>
+    <div class="wbody">
+      <div class="yr">
+        <div class="panel">
+          <div class="lead"><h2>Home took the biggest share of your year</h2><p>You spent <b class="num">$27,410</b> in 2026, your share of shared expenses included.</p></div>
+          <div style="margin-top:12px">
+            <div class="rk"><span class="n">1</span><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t">Home<div class="bar"><i style="width:63%;background:var(--c-home)"></i></div></div><div class="v num">$17,400<span>63%</span></div></div>
+            <div class="rk"><span class="n">2</span><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t">Groceries<div class="bar"><i style="width:12%;background:var(--c-groceries)"></i></div></div><div class="v num">$3,290<span>12%</span></div></div>
+            <div class="rk"><span class="n">3</span><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t">Food &amp; drinks<div class="bar"><i style="width:10%;background:var(--c-food)"></i></div></div><div class="v num">$2,740<span>10%</span></div></div>
+            <div class="rk"><span class="n">4</span><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t">Transport<div class="bar"><i style="width:6%;background:var(--c-transport)"></i></div></div><div class="v num">$1,650<span>6%</span></div></div>
+            <div class="rk"><span class="n">5</span><div class="ic" style="background:var(--c-shopping)"><i data-i="bag-handle"></i></div><div class="t">Shopping<div class="bar"><i style="width:5%;background:var(--c-shopping)"></i></div></div><div class="v num">$1,370<span>5%</span></div></div>
+          </div>
+        </div>
+        <div class="panel span2">
+          <div class="ph"><h4>Busiest month: December</h4><span class="num">$2,780 spent · the year averaged $2,284 a month</span></div>
+          <div class="months"><div><i style="height:107px"></i>Jan</div><div><i style="height:103px"></i>Feb</div><div><i style="height:113px"></i>Mar</div><div><i style="height:110px"></i>Apr</div><div><i style="height:95px"></i>May</div><div><i style="height:121px"></i>Jun</div><div><i style="height:133px"></i>Jul</div><div><i style="height:120px"></i>Aug</div><div><i style="height:111px"></i>Sep</div><div><i style="height:116px"></i>Oct</div><div><i style="height:110px"></i>Nov</div><div class="hi"><i style="height:140px"></i>Dec</div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>3 trips, 14 days away</h4><span class="num">$2,410 your share</span></div>
+          <div class="li"><div class="ic"><i data-i="airplane"></i></div><div class="t"><b>Lisbon</b><span>Nov 12–19 · shared with 3</span></div><div class="v num">$1,240<span>8 days</span></div></div>
+          <div class="li"><div class="ic"><i data-i="airplane"></i></div><div class="t"><b>Ski week</b><span>Feb 14–16 · only you</span></div><div class="v num">$860<span>3 days</span></div></div>
+          <div class="li"><div class="ic"><i data-i="airplane"></i></div><div class="t"><b>Cottage weekend</b><span>Aug 22–24 · shared with 1</span></div><div class="v num">$310<span>3 days</span></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>Who paid</h4><span>85 shared expenses</span></div>
+          <div class="rk"><div class="avatar you">MF</div><div class="t">You<div class="bar"><i style="width:48%;background:var(--tint)"></i></div></div><div class="v num">41</div></div>
+          <div class="rk"><div class="avatar">JO</div><div class="t">Jo<div class="bar"><i style="width:35%;background:var(--label);opacity:.55"></i></div></div><div class="v num">30</div></div>
+          <div class="rk"><div class="avatar">MI</div><div class="t">Mira<div class="bar"><i style="width:14%;background:var(--label);opacity:.55"></i></div></div><div class="v num">12</div></div>
+          <div class="rk"><div class="avatar gone"><i data-i="people"></i></div><div class="t">Former member<div class="bar"><i style="width:3%;background:var(--label);opacity:.55"></i></div></div><div class="v num">2</div></div>
+          <p class="foot">Counted by who paid, in Apartment and Lisbon. Others paid <b class="num">$4,120</b> of the ones you split.</p>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>A few things about your year</h4></div>
+          <div class="facts">
+            <div class="fact"><b class="num">74</b>days without spending</div>
+            <div class="fact"><b class="num">6 days</b>longest run without spending, in March</div>
+            <div class="fact"><b class="num">412</b>expenses recorded, about 8 a week</div>
+            <div class="fact"><b>Saturday</b>the day you spent the most</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="scrimw"></div>
+  <div class="modal" role="dialog">
+    <div class="mh"><h3>Share your year</h3><div class="btn icon"><i data-i="close"></i></div></div>
+    <div class="mbody">
+      <div class="img"><div class="g"></div>
+          <div class="brand"><i><i data-i="leaf"></i></i>Penny</div>
+          <h3>My 2026</h3>
+          <div class="tot"><b class="num">$27,410</b> spent</div>
+          <div class="cats">
+            <div><em>1</em><i class="d" style="background:#3B82F6"></i>Home<span><small>$17,400</small>63%</span></div>
+            <div><em>2</em><i class="d" style="background:#0FA3A3"></i>Groceries<span><small>$3,290</small>12%</span></div>
+            <div><em>3</em><i class="d" style="background:#E0529C"></i>Food &amp; drinks<span><small>$2,740</small>10%</span></div>
+          </div>
+          <div class="tiles">
+            <div><b>December</b>busiest month · $2,780</div>
+            <div><b class="num">3 trips</b>14 days away</div>
+            <div class="w"><b>I paid 41 · Jo paid 30</b>of our shared expenses · Mira 12</div>
+            <div class="w"><b class="num">74</b>days without spending</div>
+          </div>
+          <div class="url">Made with Penny</div>
+        </div>
+      <div class="r">
+        <div class="opt"><div class="si"><i data-i="eye"></i></div><div class="tx">Show amounts and names<small>Amounts and who paid are on the image</small></div><div class="sw on"></div></div>
+        <p>Penny makes this image in your browser and uploads nothing. It leaves your computer only when you copy or download it.</p>
+        <ul><li>Never includes entry names, notes or receipts</li><li>Trip and household names stay off the image</li></ul>
+      </div>
+    </div>
+    <div class="mf"><span class="hint">PNG, 1080 × 1920</span><div class="sp"></div><div class="btn"><i data-i="copy"></i>Copy image</div><div class="btn primary"><i data-i="download"></i>Download</div></div>
+  </div>
+</div>
+</body></html>

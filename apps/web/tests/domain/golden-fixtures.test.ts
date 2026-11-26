@@ -370,7 +370,7 @@ test("pending offline edits produce the published local search results", () => {
   }
 });
 
-test("redesign states cover all 165 cards with seeded, consistent data", () => {
+test("redesign states cover all 187 cards with seeded, consistent data", () => {
   const states = parse(Redesign, "redesign-states.json");
   const baseline = JSON.parse(readFileSync(new URL("contracts/design-baseline.json", root), "utf8"));
   const seeds = parse(Seeds, "full-stack-seeds.json");
