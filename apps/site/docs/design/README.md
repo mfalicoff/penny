@@ -30,7 +30,7 @@ Decided with the owner (2026-11-25): keep the splats, but fewer and sharper; her
 
 ## Sections
 
-1. **Nav** (sticky, glass): logo; Features, Self-host, Docs; GitHub as the one filled button. On phones, the links fold into a menu button. **Docs** opens the documentation site, `https://docs.pennyapp.dev` (owner's decision, 2026-11-25).
+1. **Nav** (sticky, glass): logo; Features, Self-host, Docs; GitHub as the one filled button. On phones, the links fold into a menu button. **Docs** opens the documentation under `/docs` on this site (owner's decision, 2026-11-25).
 2. **Hero:** eyebrow, H1 "A little more clarity about your money.", the lede, *Self-host Penny* and *View the source*, then the three chips. The coin (splat 1) sits to the right at about 440 px on desktop, and above the headline at about 230 px on phones.
 3. **Showcase:** the web app in a 1000 px browser frame playing the Insights clip, and the iPhone overlapping its lower right corner playing the Overview clip. The ribbons (splat 2) stream from behind the frames. Below: the clip's captions (HTML, from the clips work) and two chips. On phones the iPhone leads, centred, with the browser dimmed behind it.
 4. **Features:** H2 "Everything a month needs. Nothing it doesn't." with a one-line summary, then the bento:
@@ -48,7 +48,7 @@ Decided with the owner (2026-11-25): keep the splats, but fewer and sharper; her
 
    On phones, the large tiles stack at full width and the small ones pair up in two columns.
 5. **Principles:** three columns separated by hairlines. *Your server, your data*, *No bank connection*, *Open source, MIT*.
-6. **Self-host:** "Running in a few minutes." with three numbered steps and the two buttons, beside the terminal. *Self-hosting guide* opens the self-hosting page of docs.pennyapp.dev, and *Documentation* its home.
+6. **Self-host:** "Running in a few minutes." with three numbered steps and the two buttons, beside the terminal. *Self-hosting guide* opens `/docs/self-hosting/deployment/`, and *Documentation* opens `/docs/`.
 7. **Closing:** one line ("A little more clarity, on your own server.") and the two calls to action, over a soft copper glow. Then the footer note.
 
 ## Splat quality bar
@@ -96,14 +96,9 @@ The redesign uses all four clips from the clips work: Insights and Overview in t
 - `src/clips.ts`: unchanged, with new slots for the tiles.
 - `README.md`: the new section table and the splat budget.
 
-## Documentation site
+## Documentation
 
-The page's docs links go to **docs.pennyapp.dev**, not GitHub. That site doesn't exist yet: the domain doesn't resolve, and the docs are Markdown in `docs/`. It's its own piece of work, ahead of or alongside the rebuild:
-
-- a static site built from the public part of `docs/` (self-hosting and using Penny), in the page's look, deployed like this page on Cloudflare Workers static assets;
-- the domain and its DNS, which only the owner can set up.
-
-Until it's live, the rebuilt page links to the same documents on GitHub, so no link breaks.
+The page's docs links go to **`/docs` on this site**, not GitHub (owner's decision, 2026-11-25). The public part of `docs/` (self-hosting and using Penny) is built from its Markdown into static pages in the page's look, served by the same Workers static assets. No other domain or DNS is needed. It ships on its own, ahead of the rebuild.
 
 ## No public demo
 
