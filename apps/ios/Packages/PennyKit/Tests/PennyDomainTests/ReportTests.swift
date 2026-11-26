@@ -135,8 +135,8 @@ struct ReportTests {
         }
         #expect(scheduled == expected.scheduled.map { "\($0.source) \($0.title) \($0.date) \($0.shareCents)" })
         #expect(month.expectedIncome == 0)
-        #expect(month.recordedRemaining == -175_950)
-        #expect(month.projectedRemaining == -180_750)
+        #expect(month.recordedRemaining == -176_590)
+        #expect(month.projectedRemaining == -181_390)
         #expect(month.recorded.investment == 50_000, "the ETF purchase is a contribution, not spending")
     }
 

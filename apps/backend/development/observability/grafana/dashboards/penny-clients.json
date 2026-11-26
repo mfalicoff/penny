@@ -1,7 +1,7 @@
 {
   "uid": "penny-clients",
   "title": "Penny clients",
-  "description": "Errors, crashes and failed operations reported by the Penny web and iOS apps (opt-in client telemetry).",
+  "description": "Errors, crashes, web performance and failed operations reported by the Penny web and iOS apps (opt-in client telemetry), and the API's telemetry endpoint.",
   "tags": [
     "penny",
     "clients"
@@ -50,6 +50,22 @@
   "templating": {
     "list": [
       {
+        "name": "prometheus",
+        "label": "Metrics",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "prometheus",
+          "value": "prometheus"
+        },
+        "hide": 0,
+        "refresh": 1,
+        "regex": "",
+        "includeAll": false,
+        "multi": false,
+        "options": []
+      },
+      {
         "name": "loki",
         "label": "Logs",
         "type": "datasource",
@@ -82,22 +98,88 @@
         "options": []
       },
       {
-        "name": "client",
-        "label": "Client",
-        "type": "custom",
-        "query": "penny-web,penny-ios",
-        "current": {
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+        "name": "service",
+        "label": "Service",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus}"
         },
-        "options": [],
+        "query": {
+          "query": "label_values(target_info{telemetry_sdk_language=\"dotnet\"}, job)",
+          "refId": "service"
+        },
+        "definition": "label_values(target_info{telemetry_sdk_language=\"dotnet\"}, job)",
+        "current": {
+          "text": "penny-backend",
+          "value": "penny-backend"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": false,
+        "multi": false,
+        "hide": 0,
+        "options": []
+      },
+      {
+        "name": "environment",
+        "label": "Environment",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus}"
+        },
+        "query": {
+          "query": "label_values(target_info{job=\"$service\"}, deployment_environment_name)",
+          "refId": "environment"
+        },
+        "definition": "label_values(target_info{job=\"$service\"}, deployment_environment_name)",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2,
+        "sort": 1,
         "includeAll": true,
-        "allValue": "penny-web|penny-ios",
+        "allValue": ".*",
+        "multi": false,
+        "hide": 0,
+        "options": []
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus}"
+        },
+        "query": {
+          "query": "label_values(target_info{job=\"$service\", deployment_environment_name=~\"$environment\"}, instance)",
+          "refId": "instance"
+        },
+        "definition": "label_values(target_info{job=\"$service\", deployment_environment_name=~\"$environment\"}, instance)",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "allValue": ".*",
         "multi": true,
+        "hide": 0,
+        "options": []
+      },
+      {
+        "name": "web_app",
+        "label": "Web app",
+        "type": "textbox",
+        "query": "penny-web",
+        "current": {
+          "text": "penny-web",
+          "value": "penny-web"
+        },
         "hide": 0
       },
       {
@@ -150,7 +232,7 @@
       "title": "",
       "options": {
         "mode": "markdown",
-        "content": "Errors and crashes from the web and iOS apps. Client telemetry is opt-in per server and off in demo mode, so these panels stay empty until a client turns it on. Open a failed client trace to follow it into the API and its SQL."
+        "content": "Errors, crashes and performance from the web and iOS apps, and what the API's telemetry endpoint did with their reports. Client telemetry is opt-in per server and per person, and off in demo mode, so the client panels stay empty until someone agrees to share. Open a failed client trace to follow it into the API and its SQL."
       }
     },
     {
@@ -187,7 +269,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "sum(count_over_time({service_name=~\"$client\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\"$web_app|penny-ios\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -255,7 +337,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "sum(count_over_time({service_name=~\"$client\"} | severity_number >= 21 [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\"$web_app|penny-ios\"} | severity_number >= 21 [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -319,7 +401,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "sum(count_over_time({service_name=\"penny-web\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -432,7 +514,7 @@
         "type": "loki",
         "uid": "${loki}"
       },
-      "interval": "1m",
+      "interval": "2m",
       "targets": [
         {
           "datasource": {
@@ -440,7 +522,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "sum by (service_name) (count_over_time({service_name=~\"$client\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__auto]))",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$web_app|penny-ios\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__auto]))",
           "legendFormat": "{{service_name}} errors",
           "queryType": "range"
         },
@@ -450,7 +532,7 @@
             "uid": "${loki}"
           },
           "refId": "B",
-          "expr": "sum by (service_name) (count_over_time({service_name=~\"$client\"} | severity_number >= 21 [$__auto]))",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$web_app|penny-ios\"} | severity_number >= 21 [$__auto]))",
           "legendFormat": "{{service_name}} crashes",
           "queryType": "range"
         }
@@ -517,7 +599,7 @@
         "y": 16
       },
       "type": "table",
-      "title": "Top exceptions",
+      "title": "Top exceptions (iOS)",
       "datasource": {
         "type": "loki",
         "uid": "${loki}"
@@ -529,7 +611,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "topk(20, sum by (service_name, exception_type) (count_over_time({service_name=~\"$client\"} | severity_number >= 17 | exception_type != \"\" [$__range])))",
+          "expr": "topk(20, sum by (service_name, exception_type) (count_over_time({service_name=~\"$web_app|penny-ios\"} | severity_number >= 17 | exception_type != \"\" [$__range])))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -583,7 +665,7 @@
         "y": 16
       },
       "type": "table",
-      "title": "Top exceptions (Faro)",
+      "title": "Top exceptions (web)",
       "datasource": {
         "type": "loki",
         "uid": "${loki}"
@@ -595,7 +677,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "topk(20, sum by (type, value) (count_over_time({service_name=~\"$client\", telemetry_sdk=\"faro\"} | logfmt | kind = \"exception\" [$__range])))",
+          "expr": "topk(20, sum by (type, value) (count_over_time({service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"exception\" [$__range])))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -662,7 +744,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "sum by (service_name, service_version) (count_over_time({service_name=~\"$client\"} | severity_number >= 17 [$__range]))",
+          "expr": "sum by (service_name, service_version) (count_over_time({service_name=~\"$web_app|penny-ios\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -728,7 +810,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "sum by (service_name, service_version, exception_type) (count_over_time({service_name=~\"$client\"} | severity_number >= 21 [$__range]))",
+          "expr": "sum by (service_name, service_version, exception_type) (count_over_time({service_name=~\"$web_app|penny-ios\"} | severity_number >= 21 [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -795,7 +877,7 @@
             "uid": "${loki}"
           },
           "refId": "A",
-          "expr": "{service_name=~\"$client\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\"",
+          "expr": "{service_name=~\"$web_app|penny-ios\"} | logfmt | drop __error__, __error_details__ | severity_number >= 17 or kind = \"exception\"",
           "queryType": "range"
         }
       ],
@@ -811,7 +893,7 @@
     {
       "type": "row",
       "id": 13,
-      "title": "Client traces",
+      "title": "Web performance",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -824,10 +906,411 @@
     {
       "id": 14,
       "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 44
+      },
+      "type": "timeseries",
+      "title": "Web vitals (p75)",
+      "description": "75th percentile of what browsers measured. Good is LCP under 2.5 s, INP under 200 ms, FCP under 1.8 s and TTFB under 800 ms.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki}"
+          },
+          "refId": "A",
+          "expr": "quantile_over_time(0.75, {service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"measurement\" and type = \"web-vitals\" and value_lcp != \"\" | unwrap value_lcp | __error__ = \"\" [$__auto]) by ()",
+          "legendFormat": "LCP",
+          "queryType": "range"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki}"
+          },
+          "refId": "B",
+          "expr": "quantile_over_time(0.75, {service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"measurement\" and type = \"web-vitals\" and value_inp != \"\" | unwrap value_inp | __error__ = \"\" [$__auto]) by ()",
+          "legendFormat": "INP",
+          "queryType": "range"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki}"
+          },
+          "refId": "C",
+          "expr": "quantile_over_time(0.75, {service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"measurement\" and type = \"web-vitals\" and value_fcp != \"\" | unwrap value_fcp | __error__ = \"\" [$__auto]) by ()",
+          "legendFormat": "FCP",
+          "queryType": "range"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki}"
+          },
+          "refId": "D",
+          "expr": "quantile_over_time(0.75, {service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"measurement\" and type = \"web-vitals\" and value_ttfb != \"\" | unwrap value_ttfb | __error__ = \"\" [$__auto]) by ()",
+          "legendFormat": "TTFB",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 44
+      },
+      "type": "stat",
+      "title": "Layout shift (CLS p75)",
+      "description": "Cumulative layout shift; under 0.1 is good.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki}"
+          },
+          "refId": "A",
+          "expr": "quantile_over_time(0.75, {service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"measurement\" and type = \"web-vitals\" and value_cls != \"\" | unwrap value_cls | __error__ = \"\" [$__range]) by ()",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 2,
+          "noValue": "No data",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 16,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 52
+      },
+      "type": "timeseries",
+      "title": "Web activity",
+      "description": "Faro events: sessions, page loads and navigation, resource timings and traced API calls.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki}"
+      },
+      "interval": "2m",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki}"
+          },
+          "refId": "A",
+          "expr": "sum by (event_name) (count_over_time({service_name=\"$web_app\"} | logfmt | drop __error__, __error_details__ | kind = \"event\" [$__auto]))",
+          "legendFormat": "{{event_name}}",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "id": 17,
+      "title": "Telemetry intake (API)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "panels": []
+    },
+    {
+      "id": 18,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 61
+      },
+      "type": "timeseries",
+      "title": "Reports by kind and outcome",
+      "description": "accepted reports were queued; forwarded reached the collector. duplicate is a retry with a seen Idempotency-Key, invalid failed the shape check, dropped means the queue was full, refused and failed are the collector's answers.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "interval": "2m",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum by (penny_telemetry_kind, penny_outcome) (increase(penny_client_telemetry_reports_total{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"}[$__interval]))",
+          "legendFormat": "{{penny_telemetry_kind}} {{penny_outcome}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* (failed|refused)$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 61
+      },
+      "type": "timeseries",
+      "title": "Refusals by status",
+      "description": "400 shape check, 401 no session, 404 telemetry off, 413 over ClientTelemetry__MaxPayloadBytes, 415 not uncompressed JSON, 429 over ClientTelemetry__RateLimitPermits per session.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "interval": "2m",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum by (http_response_status_code, http_route) (increase(http_server_request_duration_seconds_count{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\", http_route=~\"api/telemetry/.*\", http_response_status_code=~\"4..\"}[$__interval]))",
+          "legendFormat": "{{http_response_status_code}} {{http_route}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "id": 20,
+      "title": "Client traces",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 69
+      },
+      "panels": []
+    },
+    {
+      "id": 21,
+      "gridPos": {
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 70
       },
       "type": "table",
       "title": "Failed client operations",
@@ -844,7 +1327,7 @@
           },
           "refId": "A",
           "queryType": "traceql",
-          "query": "{ resource.service.name =~ \"$client\" && status = error }",
+          "query": "{ resource.service.name =~ \"$web_app|penny-ios\" && status = error }",
           "limit": 25,
           "tableType": "traces"
         }
@@ -863,12 +1346,12 @@
       }
     },
     {
-      "id": 15,
+      "id": 22,
       "gridPos": {
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 70
       },
       "type": "table",
       "title": "Slow API calls from clients (over $slow)",
@@ -884,7 +1367,7 @@
           },
           "refId": "A",
           "queryType": "traceql",
-          "query": "{ resource.service.name =~ \"$client\" && kind = client && duration > $slow }",
+          "query": "{ resource.service.name =~ \"$web_app|penny-ios\" && kind = client && duration > $slow }",
           "limit": 25,
           "tableType": "traces"
         }

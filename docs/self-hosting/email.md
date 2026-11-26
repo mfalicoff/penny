@@ -97,6 +97,8 @@ Delivery is at least once: if the API stops between sending and recording, the e
 
 Finished outbox rows are deleted after 7 days.
 
+With [telemetry](operations.md#telemetry-opentelemetry) on, each recorded email counts once in `penny.mail.deliveries` by kind and outcome (`sent`, `deferred` for a retry, `failed`, `dropped`). The **Email outbox** row of the Penny background jobs dashboard shows them, and the **Penny emails not delivering** alert fires after more than 5 deferred or failed emails in 30 minutes ([alerts](observability.md#alerts)).
+
 ## Without email: verification
 
 New password accounts are verified through the emailed link. Without email, verification is off: nothing is sent, the apps show no unverified state, and nothing in Penny waits for it. To mark an account verified anyway, for example before turning email on, run `verify-email EMAIL` with the API's configuration ([email verification](../reference/authentication.md#email-verification-maz-172)).

@@ -1,0 +1,3 @@
+# Recordings and rendered masters: large, and rebuilt by `npm run capture:web` and `npm run render`.
+/captures/
+/out/

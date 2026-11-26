@@ -309,8 +309,8 @@ test("redesign fixture: recorded and projected totals match summarizeMonth", () 
   assert.deepEqual(summary.recorded, totalsOf(expected.recorded));
   assert.deepEqual(summary.projected, totalsOf(expected.projected));
   assert.equal(summary.expectedIncome, 0);
-  assert.equal(summary.recordedNet, -175950);
-  assert.equal(summary.projectedNet, -180750);
+  assert.equal(summary.recordedNet, -176590);
+  assert.equal(summary.projectedNet, -181390);
   const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "", today: `${month}-31` });
   assert.deepEqual(overview.scheduled.map((entry) => `${entry.title} ${entry.date} ${entry.share}`).sort(),
     expected.scheduled.map((item: { title: string; date: string; shareCents: number }) => `${item.title} ${item.date} ${item.shareCents}`).sort());

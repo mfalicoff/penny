@@ -84,6 +84,7 @@ Export runs in the background, in batches. A slow, failing or unreachable collec
   | `penny.job.lag` (seconds, histogram) | `penny.job` (`push.delivery`, `search.embedding`, `recurrence`) | Time from when work became due (push message created, embedding owed, start of the occurrence's UTC day) to when a worker claimed it |
   | `penny.job.items` | `penny.job` | Items claimed by worker passes |
   | `penny.job.failures` | `penny.job`, `error.type` (exception type name) | Failed items or passes; each is retried |
+  | `penny.mail.deliveries` | `penny.mail.kind` (`password-reset`, `household-invite`, `email-verification`), `penny.mail.outcome` (`sent`, `deferred`, `failed`, `dropped`) | Outbox emails recorded by a delivery pass ([email delivery](email.md#delivery-retries-and-failures)) |
 - **Logs.** The same structured `ILogger` records as the console, at the same levels (`Logging__LogLevel__*`): the formatted message, its template and structured values, the `RequestId` scope, and the trace and span ids of the request or worker pass that wrote them, so a Loki line links to its Tempo trace.
 
 ### Privacy guarantees

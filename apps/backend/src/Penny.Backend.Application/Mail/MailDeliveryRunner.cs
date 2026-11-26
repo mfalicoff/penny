@@ -190,6 +190,16 @@ public sealed class MailDeliveryRunner(
                     dropped++;
                     break;
             }
+            BackendTelemetry.MailDelivered(
+                claim.Kind,
+                outcome.Kind switch
+                {
+                    MailOutcomeKind.Sent => "sent",
+                    MailOutcomeKind.Retry => "deferred",
+                    MailOutcomeKind.Permanent => "failed",
+                    _ => "dropped",
+                }
+            );
         }
         if (failures.Count > 0)
             BackendTelemetry.Failed(activity, failures[0]);

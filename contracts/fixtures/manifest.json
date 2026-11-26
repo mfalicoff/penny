@@ -4,7 +4,7 @@
   "fixtures": [
     {
       "file": "full-stack-seeds.json",
-      "sha256": "5fdd4f9e29dcff128cb596bf88f7be363ba9e16f651abf203b9f518dc19a3b0b",
+      "sha256": "b87e49b15beb412d0b07eee2bcb4a1645cd222a177b419fee11abdd2f40361d7",
       "generatedBy": null,
       "consumers": {
         "typescript": [
@@ -113,7 +113,7 @@
     },
     {
       "file": "redesign-states.json",
-      "sha256": "b6d949ee8d1ffcc9e75404a93b73bd43619cc52c0c0914c8369ca4ef5f0412c6",
+      "sha256": "b010fc8c20c81da55ea8ce9fc8ef21d7a963deb0abfb230543d385dd244b8f14",
       "generatedBy": null,
       "consumers": {
         "typescript": [

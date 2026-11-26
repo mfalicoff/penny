@@ -5,7 +5,7 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  { ignores: ["node_modules/**", "dist/**", ".wrangler/**", "splats/**"] },
+  { ignores: ["node_modules/**", "dist/**", ".wrangler/**", "splats/**", "video/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -20,7 +20,7 @@ export default defineConfig([
     languageOptions: { globals: {} },
   },
   {
-    files: ["scripts/**/*.ts", "test/**/*.ts", "vite.config.ts"],
+    files: ["scripts/**/*.ts", "test/**/*.ts", "docs/**/*.ts", "vite.config.ts"],
     languageOptions: { globals: { ...globals.node } },
   },
 ]);

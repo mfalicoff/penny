@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { dashboardDirectory, render } from "../../scripts/grafana-dashboards.mjs";
+import { alertFile, alertGroups, dashboardDirectory, pushRequests, render, renderAlerts, resolveDatasources } from "../../scripts/grafana-dashboards.mjs";
 
 const observability = new URL("../../apps/backend/development/observability/", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, observability), "utf8");
@@ -53,7 +53,7 @@ test("panels have unique ids, fit the grid and query through data source variabl
 });
 
 test("API panels filter by service, environment and instance", () => {
-  for (const [file, board] of boards.filter(([, b]) => b.uid !== "penny-clients")) {
+  for (const [file, board] of boards) {
     for (const panel of board.panels) {
       for (const target of panel.targets ?? []) {
         if (target.datasource?.type !== "prometheus" || !target.expr) continue;
@@ -69,7 +69,7 @@ test("alert rules use provisioned data sources and unique ids", () => {
   const datasources = [...read("grafana/provisioning/datasources/datasources.yaml").matchAll(/^\s+uid: (\S+)$/gm)].map((match) => match[1]);
   const alerts = read("grafana/provisioning/alerting/penny.yaml");
   const uids = [...alerts.matchAll(/^\s+- uid: (\S+)$/gm)].map((match) => match[1]);
-  assert.equal(uids.length, 10);
+  assert.equal(uids.length, 11);
   assert.equal(new Set(uids).size, uids.length);
   for (const [, uid] of alerts.matchAll(/datasourceUid: (\S+)/g)) {
     assert.ok(uid === "__expr__" || datasources.includes(uid), `alert rule data source ${uid} is not provisioned`);
@@ -100,4 +100,54 @@ test("the operator stack pins the same images as the local AppHost", () => {
   const compose = [...read("compose.yaml").matchAll(/^\s+image: (\S+)$/gm)].map((match) => match[1]);
   assert.equal(pinned.length, 5);
   assert.deepEqual(compose.sort(), pinned.sort());
+});
+
+test("alert rules match scripts/grafana-dashboards.mjs (node scripts/grafana-dashboards.mjs)", () => {
+  assert.equal(readFileSync(alertFile, "utf8"), renderAlerts(), "penny.yaml is out of date");
+});
+
+// MAZ-289: --push. Data source lists here are made up; Grafana Cloud names its own
+// grafanacloud-<stack>-prom, -logs and -traces, next to other Loki and Prometheus sources.
+const cloud = [
+  { uid: "u-prom", name: "grafanacloud-example-prom", type: "prometheus", isDefault: true },
+  { uid: "u-usage", name: "grafanacloud-usage", type: "prometheus", isDefault: false },
+  { uid: "u-logs", name: "grafanacloud-example-logs", type: "loki", isDefault: false },
+  { uid: "u-history", name: "grafanacloud-example-alert-state-history", type: "loki", isDefault: false },
+  { uid: "u-traces", name: "grafanacloud-example-traces", type: "tempo", isDefault: false },
+];
+
+test("push picks Grafana Cloud's metrics, logs and traces data sources, or the ones named", () => {
+  const picked = resolveDatasources(cloud);
+  assert.deepEqual(Object.fromEntries(Object.entries(picked).map(([kind, source]) => [kind, source.uid])), { prometheus: "u-prom", loki: "u-logs", tempo: "u-traces" });
+  assert.equal(resolveDatasources(cloud, { loki: "grafanacloud-example-alert-state-history" }).loki.uid, "u-history");
+  const twoLokis = [...cloud.filter((source) => source.uid !== "u-logs"), { uid: "u-other", name: "loki-b", type: "loki", isDefault: false }];
+  assert.throws(() => resolveDatasources(twoLokis), /cannot pick the loki data source.*--loki/);
+  assert.throws(() => resolveDatasources(cloud, { tempo: "missing" }), /"missing"/);
+});
+
+test("push creates the folder, then every dashboard and rule group, on the chosen data sources", () => {
+  const requests = pushRequests(resolveDatasources(cloud), { webApp: "penny" });
+  assert.deepEqual(requests[0], { method: "POST", path: "/api/folders", body: { uid: "penny", title: "Penny" }, ok: [200, 409, 412] });
+  const boardsPushed = requests.filter((request) => request.path === "/api/dashboards/db");
+  assert.deepEqual(boardsPushed.map((request) => request.body.dashboard.uid).sort(), boards.map(([, board]) => board.uid).sort());
+  for (const { body } of boardsPushed) {
+    assert.equal(body.folderUid, "penny");
+    assert.equal(body.overwrite, true);
+    assert.equal(body.dashboard.id, null);
+    for (const variable of body.dashboard.templating.list) {
+      if (variable.type === "datasource") assert.match(variable.current.value, /^u-(prom|logs|traces)$/, `${body.dashboard.uid} ${variable.name}`);
+      if (variable.name === "web_app") assert.equal(variable.current.value, "penny");
+    }
+  }
+  const groups = requests.filter((request) => request.method === "PUT");
+  assert.deepEqual(groups.map((request) => request.path), alertGroups.map((group) => `/api/v1/provisioning/folder/penny/rule-groups/${encodeURIComponent(group.name)}`));
+  const rules = groups.flatMap((request) => request.body.rules);
+  assert.equal(rules.length, 11);
+  for (const rule of rules) {
+    assert.equal(rule.folderUID, "penny");
+    for (const query of rule.data) assert.match(query.datasourceUid, /^(u-prom|u-logs|__expr__)$/, rule.uid);
+  }
+  assert.equal(groups.find((request) => request.body.title === "Penny clients")?.body.interval, 300);
+  // The repository's dashboards keep the provisioned names; only the pushed copies change.
+  assert.equal(JSON.parse(rendered["penny-clients.json"]).templating.list.find((variable: { name: string }) => variable.name === "web_app").current.value, "penny-web");
 });
