@@ -1289,6 +1289,69 @@
       ]
     },
     {
+      "id": "iphone-recurring-empty",
+      "source": "docs/design/penny-ios/iphone/recurring-empty.html",
+      "sourceSha256": "d1c6e73a6151cc4f957ee76012c9c2218c87b34c6e94f8d00ecd0b9e9b9f7e6a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recurring-empty.light.png",
+          "sha256": "cf18848fca512f7c674a8d98979d8a6aae81ab2b5ee4f00ec65f07cfa17e12fe"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recurring-empty.dark.png",
+          "sha256": "416bf5ec71c02eca34c168c00078f939b658391053f48584a00734d6e4e5d3de"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recurring-renews-soon",
+      "source": "docs/design/penny-ios/iphone/recurring-renews-soon.html",
+      "sourceSha256": "44992895b4eb37160cb4f936704d8b3dd3333498f2dd9c17fe92c04aaf3cfdba",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recurring-renews-soon.light.png",
+          "sha256": "fea1ae34db531f5e99abc791728eb0401f49fb02a1045e50c48eabd519ce0b35"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recurring-renews-soon.dark.png",
+          "sha256": "36687f4360ab7e8d5c5ea0ad8a45fbf398423f78c869459d384f6fb4a111899e"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recurring-suggested",
+      "source": "docs/design/penny-ios/iphone/recurring-suggested.html",
+      "sourceSha256": "939f575cce5eedc9b076351f9033b165eb210e5b15d555f509aa08678fe1d24c",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recurring-suggested.light.png",
+          "sha256": "3459a3565f76c5787007ef1332814b1dbab19481f46c12a6f548d77e44fffae0"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recurring-suggested.dark.png",
+          "sha256": "908a399f9336c6b26732604448022ff8c2b2d56c9df4aa2c87c4ba63a1ed2db4"
+        }
+      ]
+    },
+    {
       "id": "iphone-recurring",
       "source": "docs/design/penny-ios/iphone/recurring.html",
       "sourceSha256": "37dcbdfb5eac7fc14fffa25a43baf0d514126fbda764a6aa94b36713e434782f",
@@ -1306,6 +1369,27 @@
           "appearance": "dark",
           "file": "previews/iphone-recurring.dark.png",
           "sha256": "57d53eb8628fb276af9a3e179514e35032bc465ba9953f45cf64734e66120837"
+        }
+      ]
+    },
+    {
+      "id": "iphone-renewal-notification",
+      "source": "docs/design/penny-ios/iphone/renewal-notification.html",
+      "sourceSha256": "8a075e3699b4b89980be90c2f91ba2205e3e1c1dff14ccecb537c996661e184d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-renewal-notification.light.png",
+          "sha256": "b3bf2937d2bb5b6f7a96fdc902f336d0b9ff8a35f9b825e07bd6f7062192f094"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-renewal-notification.dark.png",
+          "sha256": "67455f7b0d2b505d2e102b91556a12cd8220d3d4b0cf8adec6776c51204e2aa6"
         }
       ]
     },
@@ -1390,6 +1474,48 @@
           "appearance": "dark",
           "file": "previews/iphone-schedule-form.dark.png",
           "sha256": "cc6a0206631f1bb5292ba51065d0f4727507189c7a8228dc1566b3531d74c27f"
+        }
+      ]
+    },
+    {
+      "id": "iphone-schedule-reminder",
+      "source": "docs/design/penny-ios/iphone/schedule-reminder.html",
+      "sourceSha256": "55198ec945559471eb0be66621866f00d2cfc58a1c06560aa704b8096ac7eb91",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-schedule-reminder.light.png",
+          "sha256": "bfcba9953b7156ac388a38a476841fa0fcad9fe7f6a82add134818e0c0a20b54"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-schedule-reminder.dark.png",
+          "sha256": "53da0a8b7514b7ebbe882162d1bc538c1c5c91b49ca7f1edd698de2b241f9b00"
+        }
+      ]
+    },
+    {
+      "id": "iphone-schedule-suggested",
+      "source": "docs/design/penny-ios/iphone/schedule-suggested.html",
+      "sourceSha256": "f595b57dfea1a73ed039944945e9951a2fc141b857baad4b22781953db0b9d86",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-schedule-suggested.light.png",
+          "sha256": "7bf995bcfd852a1a3e295a2f2c152d03cc7753b5c4ad8090fc45b0311202cd6e"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-schedule-suggested.dark.png",
+          "sha256": "6762813aae3be7aaec35ae6e35c09700c35fa06fb7521cab51b31ab19aaeca06"
         }
       ]
     },
@@ -1705,6 +1831,27 @@
           "appearance": "dark",
           "file": "previews/iphone-split.dark.png",
           "sha256": "0f8cfa0c286de28e5b201ade7f9748497083306a9d719f3a85da5ba0b51f70fa"
+        }
+      ]
+    },
+    {
+      "id": "iphone-suggestion-dismissed-toast",
+      "source": "docs/design/penny-ios/iphone/suggestion-dismissed-toast.html",
+      "sourceSha256": "a62797e068f8d030704a37fc2b3357df128af270cfe5bbcfe1ae2ee19c7f01a5",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-suggestion-dismissed-toast.light.png",
+          "sha256": "45e632f09c698985b9bd28362ea1fd228acd40dd1d0f445fbedbe889924543db"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-suggestion-dismissed-toast.dark.png",
+          "sha256": "fa11f3f7542ca9d33ca3db2958e3be318e56292763e8f1aaaf2c2a2f2f1e8215"
         }
       ]
     },
@@ -2125,6 +2272,27 @@
           "appearance": "dark",
           "file": "previews/ipad-receipt-inbox.dark.png",
           "sha256": "a60bde0edf94084e6d5a1aea427caa17592547f1f6a35923a338fe9dd8f199bd"
+        }
+      ]
+    },
+    {
+      "id": "ipad-recurring-suggested",
+      "source": "docs/design/penny-ios/ipad/recurring-suggested.html",
+      "sourceSha256": "1d763ba04232888b1a80ae41bb8f1e0a8bb6ff466a62ebd4da0efdf6d86c46ac",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-recurring-suggested.light.png",
+          "sha256": "854832184577d8e2672df3a81fb7503c05f803a338d50c4e0c214c16d6a30fb1"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-recurring-suggested.dark.png",
+          "sha256": "0b962f3bcf036609c2d31d959c364101c8557cc60dc4a1734075550109014b3d"
         }
       ]
     },
@@ -2990,6 +3158,69 @@
       ]
     },
     {
+      "id": "web-recurring-empty",
+      "source": "docs/design/penny-ios/web/recurring-empty.html",
+      "sourceSha256": "f9ace10f0bacb725f3539b94b6ad8fd8f8e14973de393890b3882ed6a775ab81",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-recurring-empty.light.png",
+          "sha256": "0d399a2ccaba990e6429335d25cae8a869a2a7f1f66acc0413d4cb2d2b3ea3b5"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-recurring-empty.dark.png",
+          "sha256": "181678dd089f07775e9fbac07cbf2948d70da14395a83fad21edf50891b6a98e"
+        }
+      ]
+    },
+    {
+      "id": "web-recurring-renews-soon",
+      "source": "docs/design/penny-ios/web/recurring-renews-soon.html",
+      "sourceSha256": "476493ceeccb7d70fa49966d7bed53f8de04b06bead95478717132363d2715e8",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-recurring-renews-soon.light.png",
+          "sha256": "396fba588aa36c12d8943aaf219fb62e3b04337b5ef335a3896d417bf7d97882"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-recurring-renews-soon.dark.png",
+          "sha256": "92e861793e2c8f8513a0464356893a0d051bc5492686d43aaf90351d5076916d"
+        }
+      ]
+    },
+    {
+      "id": "web-recurring-suggested",
+      "source": "docs/design/penny-ios/web/recurring-suggested.html",
+      "sourceSha256": "cc3c7fc706109b7525027125492460c315d28462317467bfbbae7a8030c4ef7f",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-recurring-suggested.light.png",
+          "sha256": "4b2d0ca4c1e12e769174cb04431608ab2660b0c8bc6bcc90e8ac6704e172e452"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-recurring-suggested.dark.png",
+          "sha256": "c75dee5134a1adb0a711c39debed516217f84a4e8cd2c222de3870cf11990240"
+        }
+      ]
+    },
+    {
       "id": "web-recurring",
       "source": "docs/design/penny-ios/web/recurring.html",
       "sourceSha256": "9b6df70434beb9105efd3e2633bcd4df3da5661878d1ec73932e342fc205c4c2",
@@ -3028,6 +3259,27 @@
           "appearance": "dark",
           "file": "previews/web-schedule-form.dark.png",
           "sha256": "95638261068aaa9c07f692bb13b6125e5a87f2813e381a7a5673be7e44537895"
+        }
+      ]
+    },
+    {
+      "id": "web-schedule-suggested",
+      "source": "docs/design/penny-ios/web/schedule-suggested.html",
+      "sourceSha256": "69dc678b3486fb2b1d597372ef879ebc02d6422e9d92be55e242b6d82242e383",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-schedule-suggested.light.png",
+          "sha256": "279984355b248aef8b5aeb75aadcfca777a533f0536aa3d982bfd7f771e536e5"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-schedule-suggested.dark.png",
+          "sha256": "26a80fd7fda4b49ebea0710343caeb22da9350b6181eef4955690c425abe13f3"
         }
       ]
     },
@@ -3133,6 +3385,27 @@
           "appearance": "dark",
           "file": "previews/web-sign-in.dark.png",
           "sha256": "1287150ca33f5c6c401fa21eabe08ffba2892d96dc21c91c0d58021810908e99"
+        }
+      ]
+    },
+    {
+      "id": "web-suggestion-dismissed-toast",
+      "source": "docs/design/penny-ios/web/suggestion-dismissed-toast.html",
+      "sourceSha256": "ba00b3060bb93743045f822d4def6ac6b3315e8cf37d92782a3e0c369d814ee4",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-suggestion-dismissed-toast.light.png",
+          "sha256": "78b8ea8590ffae1f523ae3778da93969a32dc1ecf86b66c475533d3a1b77d1d3"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-suggestion-dismissed-toast.dark.png",
+          "sha256": "5cc4c926eed1aaf6d9cf6cd566331f9f0d2b0519d6288816e46860d36705497b"
         }
       ]
     },

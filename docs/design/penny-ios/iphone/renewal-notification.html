@@ -1,0 +1,44 @@
+<!-- @dsCard group="iPhone" name="Renewal reminder · Lock Screen" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Renewal reminder · Lock Screen</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+
+  .wall { position: absolute; inset: 0; background: radial-gradient(120% 70% at 20% 10%, #E4572E 0%, rgba(228,87,46,0) 60%), radial-gradient(110% 80% at 90% 80%, #4F46E5 0%, rgba(79,70,229,0) 65%), #1A1214; }
+  .ls { position: absolute; inset: 0; color: #fff; text-align: center; z-index: 2; }
+  .ls .lk { margin-top: 64px; } .ls .lk [data-i] { width: 22px; height: 22px; }
+  .ls .date { font-size: 21px; font-weight: 600; margin-top: 8px; opacity: .92; }
+  .ls .time { font-size: 104px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-top: 2px; }
+  .notes { position: absolute; left: 14px; right: 14px; bottom: 132px; z-index: 3; display: flex; flex-direction: column; gap: 8px; }
+  .nt { display: flex; gap: 12px; padding: 13px 14px; border-radius: 24px; background: rgba(245,242,238,.72); backdrop-filter: blur(24px) saturate(180%); color: #16120F; text-align: left; }
+  .dark .nt { background: rgba(40,38,36,.72); color: #F6F4F1; }
+  .nt .ai { width: 38px; height: 38px; border-radius: 10px; background: var(--tint); color: #fff; display: grid; place-items: center; flex: none; }
+  .nt .ai [data-i] { width: 21px; height: 21px; --sw: 36px; }
+  .nt .t { flex: 1; min-width: 0; font-size: 15px; line-height: 1.3; }
+  .nt .h { display: flex; justify-content: space-between; }
+  .nt .h b { font-weight: 600; } .nt .h span { font-size: 13px; opacity: .6; }
+  .nt p { opacity: .9; }
+  .qa { position: absolute; bottom: 44px; width: 50px; height: 50px; border-radius: 50%; background: rgba(0,0,0,.32); backdrop-filter: blur(16px); z-index: 3; display: grid; place-items: center; color: #fff; }
+  .qa [data-i] { width: 22px; height: 22px; }
+  .status, .home-ind { z-index: 4; }
+  .home-ind { background: #fff; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="wall"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span></span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="ls">
+    <div class="lk"><i data-i="lock-closed"></i></div>
+    <div class="date">Monday, November 9</div>
+    <div class="time num">9:41</div>
+  </div>
+  <div class="notes">
+    <div class="nt"><div class="ai"><i data-i="leaf"></i></div><div class="t"><div class="h"><b>Penny</b><span>9:00 AM</span></div><b>A yearly schedule renews in 3 days</b><p>Open Penny to see which one.</p></div></div>
+    <div class="nt"><div class="ai"><i data-i="leaf"></i></div><div class="t"><div class="h"><b>Penny</b><span>Yesterday</span></div><b>Domain name renews in 3 days</b><p>$24.00 on Wed, Nov 11.</p></div></div>
+  </div>
+  <div class="qa" style="left:46px"><i data-i="sunny"></i></div>
+  <div class="qa" style="right:46px"><i data-i="image"></i></div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

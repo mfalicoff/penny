@@ -836,6 +836,83 @@
       "view": "new schedule form: monthly Internet expense"
     },
     {
+      "specimen": "iphone-recurring-suggested",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "recurring with two suggestions: Netflix expense (was $15.49) and Tutoring income"
+    },
+    {
+      "specimen": "iphone-recurring-empty",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "recurring with no schedules and nothing to suggest"
+    },
+    {
+      "specimen": "iphone-schedule-suggested",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new schedule form filled in from the Netflix suggestion, with its 4 entries read-only"
+    },
+    {
+      "specimen": "iphone-suggestion-dismissed-toast",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "recurring after dismissing Netflix: the toast with Undo"
+    },
+    {
+      "specimen": "iphone-recurring-renews-soon",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "recurring with yearly Amazon Prime marked Renews soon"
+    },
+    {
+      "specimen": "iphone-schedule-reminder",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "yearly schedule Amazon Prime with the renewal reminder on and name and amount hidden"
+    },
+    {
+      "specimen": "iphone-renewal-notification",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Lock Screen with a private renewal reminder and one that shows its name and amount"
+    },
+    {
       "specimen": "iphone-currency",
       "platform": "iPhone",
       "appearances": [
@@ -1306,6 +1383,17 @@
       "view": "Settings with Profile in the detail column"
     },
     {
+      "specimen": "ipad-recurring-suggested",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad recurring with the Netflix suggestion open in the detail pane"
+    },
+    {
       "specimen": "web-home",
       "platform": "Web",
       "appearances": [
@@ -1484,6 +1572,61 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "web new schedule dialog: monthly Internet expense"
+    },
+    {
+      "specimen": "web-recurring-suggested",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web recurring with two suggestions: Netflix expense (was $15.49) and Tutoring income"
+    },
+    {
+      "specimen": "web-recurring-empty",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web recurring with no schedules and nothing to suggest"
+    },
+    {
+      "specimen": "web-schedule-suggested",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web new schedule dialog filled in from the Netflix suggestion, with its 4 entries read-only"
+    },
+    {
+      "specimen": "web-suggestion-dismissed-toast",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web recurring after dismissing Netflix: the toast with Undo"
+    },
+    {
+      "specimen": "web-recurring-renews-soon",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web recurring with yearly Amazon Prime marked Renews soon"
     },
     {
       "specimen": "web-edit-entry",

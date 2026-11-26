@@ -1896,6 +1896,116 @@
       }
     },
     {
+      "id": "iphone-recurring-suggested",
+      "view": "recurring with two suggestions: Netflix expense (was $15.49) and Tutoring income",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "iphone-recurring-empty",
+      "view": "recurring with no schedules and nothing to suggest",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "iphone-schedule-suggested",
+      "view": "new schedule form filled in from the Netflix suggestion, with its 4 entries read-only",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "iphone-suggestion-dismissed-toast",
+      "view": "recurring after dismissing Netflix: the toast with Undo",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "iphone-recurring-renews-soon",
+      "view": "recurring with yearly Amazon Prime marked Renews soon",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "iphone-schedule-reminder",
+      "view": "yearly schedule Amazon Prime with the renewal reminder on and name and amount hidden",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Schedules have no renewal reminder yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "iOS only: the web has no local notifications, so renewal reminders are native."
+      }
+    },
+    {
+      "id": "iphone-renewal-notification",
+      "view": "Lock Screen with a private renewal reminder and one that shows its name and amount",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app sends no renewal reminders yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "iOS only: the web has no local notifications, so renewal reminders are native."
+      }
+    },
+    {
       "id": "iphone-currency",
       "view": "currency settings, locked by existing entries",
       "native": {
@@ -2877,6 +2987,22 @@
       }
     },
     {
+      "id": "ipad-recurring-suggested",
+      "view": "iPad recurring with the Netflix suggestion open in the detail pane",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
       "id": "web-home",
       "view": "web home dashboard, October 2026, Groceries focused in Follow your money",
       "native": {
@@ -3202,6 +3328,81 @@
           "light",
           "dark"
         ]
+      }
+    },
+    {
+      "id": "web-recurring-suggested",
+      "view": "web recurring with two suggestions: Netflix expense (was $15.49) and Tutoring income",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-290",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "web-recurring-empty",
+      "view": "web recurring with no schedules and nothing to suggest",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-290",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "web-schedule-suggested",
+      "view": "web new schedule dialog filled in from the Netflix suggestion, with its 4 entries read-only",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-290",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "web-suggestion-dismissed-toast",
+      "view": "web recurring after dismissing Netflix: the toast with Undo",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-290",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
+        "followUp": "MAZ-290"
+      }
+    },
+    {
+      "id": "web-recurring-renews-soon",
+      "view": "web recurring with yearly Amazon Prime marked Renews soon",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-290",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-290",
+        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
+        "followUp": "MAZ-290"
       }
     },
     {
