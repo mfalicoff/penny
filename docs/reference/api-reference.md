@@ -48,6 +48,16 @@ Since contract 2.2.0 a personal expense entry or rule may carry `participants`: 
 - A client before contract 2.2.0 ignores the field when it reads the ledger and drops it when it saves; the entry's `share` is unchanged, only the "split N ways" text is lost.
 - Storage: the nullable `participants` column of `ledger_entries` and `ledger_recurring`. The rules and their golden cases (`ledgerParticipants` in `contracts/fixtures/money.json`) are shared by TypeScript, C# and Swift.
 
+## Dismissed suggestions
+
+Since contract 2.3.0 a ledger may carry `dismissedSuggestions`: the recurring suggestions the person dismissed on Recurring, on any device. The apps find suggestions on the device, from the personal ledger (`apps/web/src/domain/suggestions.ts` and `RecurringSuggestions.swift`, kept identical by `contracts/fixtures/recurring-suggestions.json`); the server never analyses the ledger.
+
+- Each item is `{kind}|{key}|{frequency}|{share}`, for example `expense|netflix|monthly|1699`: the suggestion's id and the amount it had when dismissed. A dismissed suggestion comes back when its amount moves by more than 25%.
+- At most 500 items, each 1–200 characters, no duplicates, oldest first; the apps keep the newest 500. The server stores the list in order and doesn't read it.
+- Offline, the apps merge it as a set union: both sides' dismissals are kept, except one this device undid (golden cases `dismissals:` in `contracts/fixtures/merge-conflicts.json`).
+- It is optional, so ledgers written before contract 2.3.0 stay valid and read back unchanged. A server before 2.3.0 rejects a ledger that carries it (`400 Invalid ledger data.`), so deploy the API before the clients that send it. A client before 2.3.0 drops it when it saves, so its dismissed suggestions show again.
+- Storage: STORAGE_TBD.
+
 ## Error codes
 
 Since contract 2.1.0 (MAZ-187) every error body carries a stable, machine-readable `code` next to the English `error` message, for example `{"error":"Your data changed on another device. Please refresh and try again.","code":"ledger.conflict"}`. The message is unchanged, so clients that read only `error` keep working.
