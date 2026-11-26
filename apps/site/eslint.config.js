@@ -5,7 +5,7 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  { ignores: ["node_modules/**", "dist/**", ".wrangler/**", "splats/**"] },
+  { ignores: ["node_modules/**", "dist/**", ".wrangler/**", "splats/**", "video/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

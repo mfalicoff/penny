@@ -20,11 +20,41 @@ A redesign of this page is proposed in [docs/design](docs/design/README.md): her
 ## Screens
 
 - `web-*.webp`: the real web app (`apps/web`) in its demo mode (sample data, no account), dark appearance, captured at 2×.
-- `iphone-*.webp`: the native app's design renders from `docs/design/penny-ios/previews` (dark), cropped to the screen. The web demo has no shared households or trips, and the iOS simulator doesn't run on Linux.
+- `iphone-*.webp`: the native app's design renders from `docs/design/penny-ios/previews` (dark), cropped to the screen, because the iOS simulator doesn't run on Linux.
 
 `scripts/capture-screens.ts` re-captures the web screens; its header has the crop and WebP commands. Icons are the apps' own (Ionicons v7 outline, MIT, from `design-kit/src/icons.ts`), inlined into the HTML at build time; the typeface is the apps' Inter (OFL), subset to Latin as WOFF2.
 
-Short pre-rendered clips of the apps in use are planned for four frames: see [docs/product-videos.md](docs/product-videos.md) for the license check, the approved storyboard and the pipeline outline.
+## Clips of the apps in use
+
+Four frames play a short loop of the app in use instead of their still. [docs/product-videos.md](docs/product-videos.md) has the storyboard, the license check (Remotion, free license) and the owner's decisions.
+
+| Clip | Frame | Source | Status |
+| --- | --- | --- | --- |
+| `insights` | Insights, browser | web demo | rendered |
+| `apps` | Apps, browser | web demo | rendered |
+| `overview` | Overview, iPhone | iOS simulator | slot ready, recorded on the Mac |
+| `entries` | Entries, first iPhone | iOS simulator | slot ready, recorded on the Mac |
+
+**On the page** (`src/clips.ts`, about 1.5 kB gzipped). A frame opts in with `data-clip="<id>"`; its captions are the `<ol data-clip-captions="<id>">` beside it, HTML rather than words in the video, with `data-at` seconds for the beat each one describes. When the section is about a screen away, the loader lays a `<video muted loop playsinline>` over the still (AV1 WebM, then H.264 MP4 for Safari; the 720-pixel variants below 701 CSS px) and fades it in once it plays. It plays only in view, pauses when the tab is hidden, and has a pause button (WCAG 2.2.2). Reduced motion, Save-Data (`navigator.connection.saveData` or `prefers-reduced-data`), no JavaScript, or no playable format keep the still; captions show for every clip that's rendered. A slot without files, like the iOS ones today, keeps its still and hides its captions.
+
+**The files** are committed in `src/assets/clips`: `<id>.webm`, `<id>.mp4`, `<id>-720.webm`, `<id>-720.mp4` (browser frames only) and `<id>-poster.webp`. `npm test` checks each against its budget in `video/src/clips.ts`.
+
+**Rendering** happens in `video/`, its own package (Remotion, used at render time only; the page never loads it):
+
+```bash
+npm --prefix apps/web ci && npm --prefix apps/site/video ci
+npm --prefix apps/web run dev                    # note the port it prints
+cd apps/site/video
+PENNY_WEB_ORIGIN=http://localhost:<port> npm run capture:web   # captures/<clip>: 2× frames + capture.json
+npm run render                                   # out/<clip>.mp4 master, then the files above
+npm run studio                                   # optional: preview and tune the compositions
+```
+
+- The capture drives the demo with Playwright and records Chromium's screencast at 2×, plus a timeline (`capture.json`): the time of each step and the box of the element involved. The compositions (`src/clips/*.tsx`) put the camera, the highlight ring and the cursor (`src/lib/`, Penny's own code) on those boxes, so they follow the real layout. Every clip starts and ends on the full screen, so the loop doesn't jump.
+- `render` needs ffmpeg with libsvtav1, libx264 and libwebp (`FFMPEG` overrides the one on `PATH`) and fails when a file is over budget. On NixOS, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` and `REMOTION_CHROME` to a system Chromium.
+- Re-capture and re-render after a visible change to Insights, Home, search or Activity, then refresh the stills with `scripts/capture-screens.ts` so the still and the clip match.
+
+**Adding the iOS clips** (on the Mac): record the simulator running the iOS demo into `video/captures/overview` and `video/captures/entries`, in the same format as the web capture (frames at the screen's scale, plus `capture.json` with points, see `video/src/capture.ts`), following the storyboard's beats. Then add a composition per clip in `video/src/clips/`, register it in `src/Root.tsx` and `COMPOSED` in `render.ts`, and run `npm run render overview entries`. The page picks the files up with no HTML change: the slots and captions are already there.
 
 ## How the splats work
 

@@ -1,4 +1,5 @@
 import "./styles.css";
+import { startClips } from "./clips.ts";
 import { cameraFor, mixPlacement, morphBetween, sceneIndex, sceneModel, stageAt, STAGES, type Anchor, type Placement } from "./choreography.ts";
 import { SCENE_IDS } from "./scenes/ids.ts";
 import { lookAt, perspective } from "./splats/mat4.ts";
@@ -182,5 +183,6 @@ function start(canvas: HTMLCanvasElement): void {
 }
 
 if (canvas) start(canvas);
+startClips(reducedMotion);
 
 document.querySelector("#year")?.replaceChildren(String(new Date().getFullYear()));
