@@ -1,6 +1,6 @@
 # Product page redesign
 
-Status: **proposal for the owner's review.** No code changes yet. Once approved, the page (`apps/site`) is rebuilt to these cards.
+Status: **approved and built** (2026-11-26). The page in `apps/site` follows these cards; its README describes the build. The cards' ribbons were drawn as the target look, and the live scene now matches it.
 
 Today's page gives each idea a full screen of its own: seven sections of exactly one screen height, one device per section, with the copy and the device each using about half the width. The page feels empty, and the splat scenes around every device look grainy up close. The ideas stay. The layout gets denser, the product leads, and the splats get fewer and better.
 

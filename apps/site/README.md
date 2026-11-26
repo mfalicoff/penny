@@ -2,38 +2,34 @@
 
 Penny's public product page: one static page, served by Cloudflare Workers static assets (no Worker script, no server).
 
-Each section pairs real app screens in device frames with a live **3D Gaussian splat** scene that sits around them and morphs into the next one as you scroll:
+The page follows the design in [docs/design](docs/design/README.md): the product above the fold, a showcase, a grid of feature tiles, principles, self-hosting and a closing call to action. Sections size to their content; nothing is a full screen per feature.
 
-| Section | Screens (`src/assets/screens`) | Splat scene (`src/scenes`) |
-| --- | --- | --- |
-| Intro | | `nebula`: warm dust that condenses into the coin on load |
-| Hero | | `coin`: a minted copper coin with the app icon's leaf in relief |
-| Overview | iPhone home | `rings`: orbits in the overview's colours with small coins |
-| Insights | web Insights (money flow) | `flow`: the money-flow ribbons streaming out of the browser |
-| Entries | iPhone split, receipt inbox | `papers`: receipts caught in a slow vortex |
-| Apps | web home, iPhone home | `loop`: a figure-eight sync loop between the devices |
-| Together | iPhone household, trip | `trio`: three coins in different metals |
-| Self-host | terminal | `coin` again |
-
-A redesign of this page is proposed in [docs/design](docs/design/README.md): hero, showcase and a feature grid instead of one screen per feature, with two sharper splat scenes.
+| Section | What's in it |
+| --- | --- |
+| Hero | The headline and calls to action, and the **coin** (splat scene `coin`): a copper coin with the app icon's leaf in relief |
+| Showcase | The web app (Insights clip) and the iPhone home, with the **money-flow ribbons** (splat scene `flow`) streaming behind them |
+| Features | The bento: Left to spend (Overview clip), Split (Entries clip), receipts, search, households and trips, recurring, widgets, Face ID, offline and sign-in. Each tile shows a real screen cropped to the part that matters |
+| Principles | Your server, no bank connection, open source |
+| Self-host | Three steps and the terminal, linking to `/docs` |
 
 ## Screens
 
-- `web-*.webp`: the real web app (`apps/web`) in its demo mode (sample data, no account), dark appearance, captured at 2×.
-- `iphone-*.webp`: the native app's design renders from `docs/design/penny-ios/previews` (dark), cropped to the screen, because the iOS simulator doesn't run on Linux.
+- `web-insights*.webp`: the real web app (`apps/web`) in its demo mode (sample data, no account), dark appearance, captured at 2×.
+- `iphone-*.webp`: the native app's design renders from `docs/design/penny-ios/previews` (dark), cropped to the screen at full size (804 × 1748), because the iOS simulator doesn't run on Linux. Tiles crop them further with `object-position` (`--crop`), so a clip laid over a still crops the same way.
+- `widgets.webp`: the widgets from the iOS design's `system-widgets` card.
 
 `scripts/capture-screens.ts` re-captures the web screens; its header has the crop and WebP commands. Icons are the apps' own (Ionicons v7 outline, MIT, from `design-kit/src/icons.ts`), inlined into the HTML at build time; the typeface is the apps' Inter (OFL), subset to Latin as WOFF2.
 
 ## Clips of the apps in use
 
-Four frames play a short loop of the app in use instead of their still. [docs/product-videos.md](docs/product-videos.md) has the storyboard, the license check (Remotion, free license) and the owner's decisions.
+Three frames play a short loop of the app in use instead of their still: the showcase's browser and the Left to spend and Split tiles. [docs/product-videos.md](docs/product-videos.md) has the storyboard, the license check (Remotion, free license) and the owner's decisions.
 
 | Clip | Frame | Source | Status |
 | --- | --- | --- | --- |
-| `insights` | Insights, browser | web demo | rendered |
-| `apps` | Apps, browser | web demo | rendered |
-| `overview` | Overview, iPhone | iOS simulator | slot ready, recorded on the Mac |
-| `entries` | Entries, first iPhone | iOS simulator | slot ready, recorded on the Mac |
+| `insights` | Showcase, browser | web demo | rendered |
+| `overview` | Left to spend tile | iOS simulator | slot ready, recorded on the Mac |
+| `entries` | Split tile | iOS simulator | slot ready, recorded on the Mac |
+| `apps` | none in the redesign | web demo | rendered, not placed |
 
 **On the page** (`src/clips.ts`, about 1.5 kB gzipped). A frame opts in with `data-clip="<id>"`; its captions are the `<ol data-clip-captions="<id>">` beside it, HTML rather than words in the video, with `data-at` seconds for the beat each one describes. When the section is about a screen away, the loader lays a `<video muted loop playsinline>` over the still (AV1 WebM, then H.264 MP4 for Safari; the 720-pixel variants below 701 CSS px) and fades it in once it plays. It plays only in view, pauses when the tab is hidden, and has a pause button (WCAG 2.2.2). Reduced motion, Save-Data (`navigator.connection.saveData` or `prefers-reduced-data`), no JavaScript, or no playable format keep the still; captions show for every clip that's rendered. A slot without files, like the iOS ones today, keeps its still and hides its captions.
 
@@ -58,12 +54,14 @@ npm run studio                                   # optional: preview and tune th
 
 ## How the splats work
 
-- **Generated, not captured.** Each scene is a deterministic generator (seeded PRNG, Vogel and R2 low-discrepancy surface sampling, so surfaces have no holes) that emits standard 3DGS splats: centre, per-axis scale, rotation, colour and opacity, plus a surface normal and how much the splat is lit. Generation runs in a Web Worker; scenes are posted one by one, so the coin shows while the rest build. 160 000 splats per scene, 70 000 on phones and devices with `deviceMemory < 4`. Nothing is downloaded but ~35 kB of JavaScript.
-- **Our own renderer** (`src/splats`, WebGL2, no dependencies): each splat's 3D covariance is projected to a screen-space ellipse with the camera Jacobian (Kerbl et al. 2023) and blended back to front, sorted every frame in the worker with a 16-bit counting sort. Splats smaller than a pixel keep their energy instead of turning into hard dots (the Mip-Splatting 2D filter), which keeps edges smooth. It renders at the device's full resolution (up to 2×), stepping down only while frames are slow.
-- **Lighting.** Splats with a normal are lit in the vertex shader: a warm key light, a cool rim light and a fresnel sheen, with metal-tinted highlights. The coin's domed faces, bevel and reeded rim catch the light as it turns.
-- **Morphing.** Every scene has the same splat count and the same left-to-right order, so splat *i* of one scene flies to splat *i* of the next, after a delay that follows that order, swinging out of its path and shrinking to a spark mid-flight. `src/splats/morph.ts` and the shader implement the same formula; the sort uses the former.
-- **Placement** (`src/choreography.ts`). Each section has a `data-stage` (its scene) and a `[data-splat]` box with a `data-fit` scale. Every frame the camera's distance and lens shift put the scene on that box, so the scene stays attached to the screenshots as the page scrolls, and travels from one box to the next during a morph.
-- **Fallbacks.** `prefers-reduced-motion` gets still scenes that switch without the flight. Without WebGL2 the coin boxes show the app icon. `?splats=N` overrides the splat count for profiling.
+Two scenes, each in its own canvas inside its section (`[data-scene]`), so they scroll with the page: the **coin** in the hero and the **ribbons** behind the showcase. `src/splats/stage.ts` mounts them.
+
+- **Generated, not captured.** Each scene is a deterministic generator that emits standard 3DGS splats: centre, per-axis scale, rotation, colour and opacity, plus a surface normal, how much it's lit and how far it drifts. A Web Worker per scene builds it. About 64 000 splats for the coin and 40 000 for the ribbons, 26 000 and 16 000 on phones and devices with `deviceMemory < 4`. Nothing is downloaded but the page's JavaScript.
+- **Our own renderer** (`src/splats`, WebGL2, no dependencies): each splat's 3D covariance is projected to a screen-space ellipse with the camera Jacobian (Kerbl et al. 2023). Splats smaller than a pixel keep their energy instead of turning into hard dots (the Mip-Splatting 2D filter). It always renders at the device's resolution, up to 2×, and never steps down.
+- **The coin** is a solid object, blended back to front and sorted every frame in its worker (a 16-bit counting sort). Its splats are lit in the vertex shader: a warm key light, a cool rim light and a fresnel sheen, with a broad and a tight metal highlight. Normals are half floats, because 8-bit normals band the highlight. Every face splat has the same colour, so only the lighting varies it. Splats that straddle the leaf's outline are split into four smaller ones, so the edge is crisp. The leaf is domed across its width, so it reads as relief. The dust is a few hundred faint, soft motes, the only splats that drift.
+- **The ribbons** are light: drawn additively, so they need no sorting. Each band is a regular grid of round splats that overlap about ten deep at low opacity. That sums to an even, glowing band, with soft outer rows and a faint bloom along the centre.
+- **Only while it's seen.** A scene renders only while its section is on screen and the tab is visible. The coin sways (the leaf always faces you) and the ribbons drift gently, with a little parallax from the pointer.
+- **Fallbacks.** `prefers-reduced-motion` draws each scene once, still. Without WebGL2 the coin is the app icon in a glow, and the ribbons are left out. `?splats=N` sets the coin to N splats and the ribbons in proportion, for profiling.
 
 ## Documentation (`/docs`)
 
@@ -91,10 +89,10 @@ npm --prefix apps/site run build        # static site in apps/site/dist
 To look at a scene in a splat editor (SuperSplat, for example), or to replace a generated scene with a captured or Blender-made one, export the scenes as standard 3DGS `.ply` files:
 
 ```bash
-npm --prefix apps/site run splats:export -- 160000 /tmp/penny-splats
+npm --prefix apps/site run splats:export -- 64000 /tmp/penny-splats
 ```
 
-A replacement scene must have the same splat count as the others; `buildScene` sorts it into the shared morph order.
+A replacement scene can have any splat count. It needs the same fields as a generated one, including lighting and drift (`src/splats/cloud.ts`), and its entry in `src/splats/stage.ts`: budget, camera fit and resting motion.
 
 ## Deploy
 

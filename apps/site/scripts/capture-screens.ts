@@ -1,6 +1,7 @@
 // Re-captures the product page's screenshots (src/assets/screens):
 //
-// - web-*.png: the real web app in its demo (sample data, no account, no server), dark, 2×.
+// - web-insights.png: the real web app's Insights in its demo (sample data, no account, no
+//   server), dark, 2×: the showcase's still, under the Insights clip.
 //   Needs the web app's dev server and Playwright: see scripts/demo.ts.
 // - iphone-*.png: the native app's committed design renders (docs/design/penny-ios/previews,
 //   dark), cropped to the screen. Linux can't run the iOS simulator.
@@ -9,8 +10,8 @@
 //   (out-dir defaults to /tmp/penny-screens)
 //
 // Then convert to WebP (vips is in nixpkgs):
-//   vips copy out/web-home.png apps/site/src/assets/screens/web-home.webp[Q=86]
-//   vips thumbnail out/web-home.png apps/site/src/assets/screens/web-home-1440.webp[Q=84] 1440
+//   vips copy out/web-insights.png apps/site/src/assets/screens/web-insights.webp[Q=86]
+//   vips thumbnail out/web-insights.png apps/site/src/assets/screens/web-insights-1440.webp[Q=84] 1440
 //   vips crop docs/design/penny-ios/previews/iphone-home.dark.png out/iphone-home.png 80 80 804 1748
 //
 // The clips of the apps in use have their own capture: video/capture/web.ts.
@@ -22,8 +23,8 @@ const out = resolve(process.argv[2] ?? "/tmp/penny-screens");
 mkdirSync(out, { recursive: true });
 
 const { browser, page } = await openDemo();
-for (const [name, href] of [["home", "/"], ["insights", "/insights"]] as const) {
-  if (href !== "/") await page.locator(`a[href="${href}"]`).first().click();
+for (const [name, href] of [["insights", "/insights"]] as const) {
+  await page.locator(`a[href="${href}"]`).first().click();
   await page.waitForTimeout(1500);
   await hideDemoBanner(page);
   await page.screenshot({ path: join(out, `web-${name}.png`) });

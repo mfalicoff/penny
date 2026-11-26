@@ -15,10 +15,12 @@ export interface SplatCloud {
   /** r, g, b, opacity per splat, 0–255. */
   readonly colors: Uint8Array;
   /**
-   * Surface normal (x, y, z mapped from −1…1 to 0–255) and how much it is lit (0 = emissive
-   * glow, 255 = fully shaded metal) per splat.
+   * Unit surface normal (x, y, z) and how much it is lit (0 = emissive glow, 1 = fully shaded
+   * metal) per splat. Floats: quantized normals band a sharp highlight.
    */
-  readonly normals: Uint8Array;
+  readonly normals: Float32Array;
+  /** How far each splat drifts while the scene rests, in world units (0 for surfaces). */
+  readonly drift: Float32Array;
 }
 
 export interface SplatInput {
@@ -34,6 +36,8 @@ export interface SplatInput {
   readonly opacity: number;
   /** 0 = unlit (glow, dust), 1 = lit like polished metal. Needs a meaningful normal. */
   readonly shading?: number;
+  /** How far it drifts while the scene rests, in world units: dust only. Defaults to 0. */
+  readonly drift?: number;
 }
 
 export class SplatBuilder {
@@ -49,7 +53,8 @@ export class SplatBuilder {
       scales: new Float32Array(capacity * 3),
       rotations: new Float32Array(capacity * 4),
       colors: new Uint8Array(capacity * 4),
-      normals: new Uint8Array(capacity * 4),
+      normals: new Float32Array(capacity * 4),
+      drift: new Float32Array(capacity),
     };
   }
 
@@ -64,14 +69,13 @@ export class SplatBuilder {
   push(splat: SplatInput): void {
     if (this.length >= this.capacity) throw new Error(`SplatBuilder is full (${this.capacity})`);
     const i = this.length++;
-    const { positions, scales, rotations, colors, normals } = this.cloud;
+    const { positions, scales, rotations, colors, normals, drift } = this.cloud;
+    drift[i] = splat.drift ?? 0;
     positions.set(splat.position, i * 3);
     scales.set(splat.scale, i * 3);
     const normal = normalize(splat.normal ?? [0, 0, 1]);
-    normals[i * 4] = Math.round(normal[0] * 127.5 + 127.5);
-    normals[i * 4 + 1] = Math.round(normal[1] * 127.5 + 127.5);
-    normals[i * 4 + 2] = Math.round(normal[2] * 127.5 + 127.5);
-    normals[i * 4 + 3] = toByte(splat.shading ?? 0);
+    normals.set(normal, i * 4);
+    normals[i * 4 + 3] = Math.min(1, Math.max(0, splat.shading ?? 0));
     const q = quaternionFromNormal(normal, splat.tangent ?? [1, 0, 0]);
     rotations.set(q, i * 4);
     colors[i * 4] = toByte(splat.color[0]);
@@ -182,35 +186,4 @@ export function covariance(
   out[outOffset + 3] = m10 * m10 + m11 * m11 + m12 * m12;
   out[outOffset + 4] = m10 * m20 + m11 * m21 + m12 * m22;
   out[outOffset + 5] = m20 * m20 + m21 * m21 + m22 * m22;
-}
-
-/**
- * Reorders a cloud's splats by `key` (ascending). Every scene is ordered the same way, so
- * splat i of one scene flies to the splat i of the next in roughly the same region.
- */
-export function sortCloud(cloud: SplatCloud, key: (x: number, y: number, z: number) => number): SplatCloud {
-  const n = cloud.count;
-  const keys = new Float64Array(n);
-  for (let i = 0; i < n; i++) {
-    keys[i] = key(cloud.positions[i * 3]!, cloud.positions[i * 3 + 1]!, cloud.positions[i * 3 + 2]!);
-  }
-  const order = new Uint32Array(n);
-  for (let i = 0; i < n; i++) order[i] = i;
-  order.sort((a, b) => keys[a]! - keys[b]! || a - b);
-  const out: SplatCloud = {
-    count: n,
-    positions: new Float32Array(n * 3),
-    scales: new Float32Array(n * 3),
-    rotations: new Float32Array(n * 4),
-    colors: new Uint8Array(n * 4),
-    normals: new Uint8Array(n * 4),
-  };
-  order.forEach((src, dst) => {
-    out.positions.set(cloud.positions.subarray(src * 3, src * 3 + 3), dst * 3);
-    out.scales.set(cloud.scales.subarray(src * 3, src * 3 + 3), dst * 3);
-    out.rotations.set(cloud.rotations.subarray(src * 4, src * 4 + 4), dst * 4);
-    out.colors.set(cloud.colors.subarray(src * 4, src * 4 + 4), dst * 4);
-    out.normals.set(cloud.normals.subarray(src * 4, src * 4 + 4), dst * 4);
-  });
-  return out;
 }
