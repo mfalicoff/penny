@@ -229,32 +229,32 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-year-review-share` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-year-review-share`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-year-review-share-amounts` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-year-review-share-amounts`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-insights-year-review` | — | Web-only draft reference (MAZ-292): native behavior is traced through `iphone-insights-year-review`; the browser journeys are MAZ-96 | Not applicable to native |
-| `iphone-entry-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-currency-picker` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-entry-rate-provisional` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-entry-rate-edited` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-entry-rate-manual` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-home-currencies` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-activity-currencies` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-entry-detail-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-trip-currencies` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-trip-balances-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-trip-form-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-currency-rates` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `iphone-currency-rates-off` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `ipad-add-entry-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `ipad-activity-currencies` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `ipad-trip-currencies` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `ipad-settings-currency` | — | Draft card (MAZ-270), waiting for the owner's review; the feature isn't built yet (MAZ-151) | Gap: draft card, not built yet |
-| `web-add-entry-currency` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-entry-currency`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-entry-rate-provisional` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-entry-rate-provisional`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-entry-rate-edited` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-entry-rate-edited`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-entry-rate-manual` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-entry-rate-manual`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-activity-currencies` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-activity-currencies`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-trip-currencies` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-trip-currencies`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-trip-form-currency` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-trip-form-currency`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-currency-rates` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-currency-rates`; the browser journeys are MAZ-96 | Not applicable to native |
-| `web-currency-rates-off` | — | Web-only draft reference (MAZ-270): native behavior is traced through `iphone-currency-rates-off`; the browser journeys are MAZ-96 | Not applicable to native |
+| `iphone-entry-currency` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-currency-picker` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-entry-rate-provisional` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-entry-rate-edited` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-entry-rate-manual` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-home-currencies` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-activity-currencies` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-entry-detail-currency` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-trip-currencies` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-trip-balances-currency` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-trip-form-currency` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-currency-rates` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `iphone-currency-rates-off` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `ipad-add-entry-currency` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `ipad-activity-currencies` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `ipad-trip-currencies` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `ipad-settings-currency` | — | Card approved by the owner (MAZ-270, 2026-11-26); the feature isn't built yet (MAZ-151) | Gap: approved card, not built yet |
+| `web-add-entry-currency` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-entry-currency`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-entry-rate-provisional` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-entry-rate-provisional`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-entry-rate-edited` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-entry-rate-edited`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-entry-rate-manual` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-entry-rate-manual`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-activity-currencies` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-activity-currencies`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-trip-currencies` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-trip-currencies`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-trip-form-currency` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-trip-form-currency`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-currency-rates` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-currency-rates`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-currency-rates-off` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-currency-rates-off`; the browser journeys are MAZ-96 | Not applicable to native |
 
 Justified native adaptations are recorded in [redesign](../reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 
