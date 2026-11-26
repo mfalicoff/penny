@@ -23,7 +23,7 @@ const IPHONE_BUDGET = { webm: 800_000, mp4: 1_300_000 };
 export const CLIPS: readonly Clip[] = [
   { id: "insights", source: "web", width: 1440, height: 900, seconds: 7, small: { width: 720, height: 450 }, budget: WEB_BUDGET },
   { id: "apps", source: "web", width: 1440, height: 900, seconds: 6, small: { width: 720, height: 450 }, budget: WEB_BUDGET },
-  // Recorded on the Mac from the iOS simulator. Their compositions come with the recordings.
+  // Recorded on the Mac from the iOS simulator (capture/ios.ts).
   { id: "overview", source: "ios", width: 590, height: 1284, seconds: 7, budget: IPHONE_BUDGET },
   { id: "entries", source: "ios", width: 590, height: 1284, seconds: 6, budget: IPHONE_BUDGET },
 ];

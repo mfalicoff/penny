@@ -495,6 +495,16 @@ img {
   object-position: 50% var(--crop, 0%);
 }
 
+/* The iPhone clips crop to their own action, not the still's: Left to spend and the add form
+   in Overview, the Split row and the share in Entries (video/src/clips). */
+[data-clip="overview"] video {
+  object-position: 50% 15%;
+}
+
+[data-clip="entries"] video {
+  object-position: 50% 76%;
+}
+
 .tile-tall {
   grid-column: span 5;
   grid-row: span 2;
