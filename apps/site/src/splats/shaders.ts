@@ -1,12 +1,10 @@
 // 3D Gaussian splatting (Kerbl et al. 2023): each splat's 3D covariance is projected to a 2D
 // screen-space ellipse with the camera Jacobian, drawn as an instanced quad and blended back
-// to front. On top of that, every splat morphs between two scenes; the motion matches
-// morph.ts, which the sort worker uses.
-import { STAGGER, SWIRL } from "./morph.ts";
+// to front.
 import { TEXTURE_WIDTH } from "./pack.ts";
 
 /** Half-size of each quad in standard deviations. */
-export const QUAD_EXTENT = 2.6;
+export const QUAD_EXTENT = 3;
 
 export const vertexShader = /* glsl */ `#version 300 es
 precision highp float;
@@ -22,13 +20,8 @@ uniform sampler2D uCovB;
 uniform sampler2D uColors;
 uniform sampler2D uNormals;
 uniform vec3 uEye;
-uniform int uRows;
-uniform int uFrom;
-uniform int uTo;
-uniform float uT;
 uniform float uTime;
-uniform mat4 uModelA;
-uniform mat4 uModelB;
+uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProj;
 uniform vec2 uViewport;
@@ -37,17 +30,15 @@ uniform vec2 uFocal;
 out vec4 vColor;
 out vec2 vPos;
 
-const float STAGGER = ${STAGGER.toFixed(4)};
-const float SWIRL = ${SWIRL.toFixed(4)};
 const int WIDTH = ${TEXTURE_WIDTH};
 
-ivec2 texel(int scene, int id) {
-  return ivec2(id % WIDTH, id / WIDTH + scene * uRows);
+ivec2 texel(int id) {
+  return ivec2(id % WIDTH, id / WIDTH);
 }
 
-mat3 covariance(int scene, int id) {
-  vec4 a = texelFetch(uCovA, texel(scene, id), 0);
-  vec2 b = texelFetch(uCovB, texel(scene, id), 0).xy;
+mat3 covariance(int id) {
+  vec4 a = texelFetch(uCovA, texel(id), 0);
+  vec2 b = texelFetch(uCovB, texel(id), 0).xy;
   return mat3(a.x, a.y, a.z, a.y, a.w, b.x, a.z, b.x, b.y);
 }
 
@@ -59,38 +50,31 @@ vec3 light(vec3 base, vec3 n, vec3 p) {
   vec3 key = normalize(vec3(-0.45, 0.75, 0.55));
   vec3 rim = normalize(vec3(0.85, 0.15, -0.5));
   vec3 fill = normalize(vec3(0.6, -0.4, 0.7));
-  float diffuse = 0.32 + 0.68 * max(dot(n, key), 0.0) + 0.18 * max(dot(n, fill), 0.0);
-  float spec = pow(max(dot(n, normalize(key + v)), 0.0), 42.0) * 1.35
-    + pow(max(dot(n, normalize(rim + v)), 0.0), 18.0) * 0.55;
-  float sheen = pow(1.0 - max(dot(n, v), 0.0), 3.0) * 0.35;
-  vec3 tint = mix(vec3(1.0, 0.94, 0.86), base * 1.4 + 0.25, 0.55);
+  float diffuse = 0.3 + 0.62 * max(dot(n, key), 0.0) + 0.16 * max(dot(n, fill), 0.0);
+  // A broad highlight plus a tight one: polished metal rather than plastic.
+  float h = max(dot(n, normalize(key + v)), 0.0);
+  float spec = pow(h, 18.0) * 0.55 + pow(h, 90.0) * 0.9 + pow(max(dot(n, normalize(rim + v)), 0.0), 14.0) * 0.45;
+  float sheen = pow(1.0 - max(dot(n, v), 0.0), 3.0) * 0.3;
+  vec3 tint = mix(vec3(1.0, 0.94, 0.86), base * 1.4 + 0.25, 0.5);
   return base * diffuse + (spec + sheen) * tint;
 }
 
 void main() {
   int id = int(aIndex);
-  vec4 ca = texelFetch(uCenters, texel(uFrom, id), 0);
-  vec4 cb = texelFetch(uCenters, texel(uTo, id), 0);
-  float delay = ca.w;
+  vec4 center = texelFetch(uCenters, texel(id), 0);
+  vec4 normal = texelFetch(uNormals, texel(id), 0);
+  float shading = normal.w;
 
-  float e = clamp((uT - delay * STAGGER) / (1.0 - STAGGER), 0.0, 1.0);
-  e = e * e * (3.0 - 2.0 * e);
-  float lift = sin(3.14159265 * e);
+  vec3 p = (uModel * vec4(center.xyz, 1.0)).xyz;
+  // Only dust drifts, slowly (center.w is how far); surfaces and ribbons stay put, so they read
+  // as solid. The golden-ratio sequence spreads the phases evenly.
+  if (center.w > 0.0) {
+    float phase = fract(float(id) * 0.6180339887) * 6.2831853;
+    p += center.w * vec3(sin(uTime * 0.31 + phase), sin(uTime * 0.27 + phase * 1.7), 0.5 * sin(uTime * 0.23 + phase * 2.3));
+  }
 
-  vec3 pa = (uModelA * vec4(ca.xyz, 1.0)).xyz;
-  vec3 pb = (uModelB * vec4(cb.xyz, 1.0)).xyz;
-  vec3 swirl = vec3(sin(delay * 7919.1), sin(delay * 3571.7 + 1.3), sin(delay * 1237.3 + 2.1));
-  vec3 p = mix(pa, pb, e) + lift * SWIRL * swirl;
-  // A faint shimmer so a resting scene still breathes.
-  p += 0.0022 * vec3(sin(uTime * 1.3 + delay * 911.0), sin(uTime * 1.1 + delay * 533.0), 0.0);
-
-  mat3 ma = mat3(uModelA);
-  mat3 mb = mat3(uModelB);
-  mat3 sa = ma * covariance(uFrom, id) * transpose(ma);
-  mat3 sb = mb * covariance(uTo, id) * transpose(mb);
-  // Splats shrink to sparks mid-flight.
-  float shrink = 1.0 - 0.6 * lift;
-  mat3 sigma = (sa * (1.0 - e) + sb * e) * (shrink * shrink);
+  mat3 m = mat3(uModel);
+  mat3 sigma = m * covariance(id) * transpose(m);
 
   vec4 cam = uView * vec4(p, 1.0);
   vec4 clip = uProj * cam;
@@ -116,7 +100,7 @@ void main() {
   float a = a0 + 0.3;
   float c = c0 + 0.3;
   // Keep the energy of splats smaller than a pixel instead of turning them into hard dots
-  // (the 2D filter of Mip-Splatting): this is what removes the sparkle and aliasing.
+  // (the 2D filter of Mip-Splatting).
   float coverage = sqrt(max(a0 * c0 - b * b, 1e-12) / max(a * c - b * b, 1e-12));
   float mid = 0.5 * (a + c);
   float radius = length(vec2(0.5 * (a - c), b));
@@ -126,12 +110,9 @@ void main() {
   vec2 v1 = min(sqrt(l1), 1024.0) * e1;
   vec2 v2 = min(sqrt(l2), 1024.0) * vec2(-e1.y, e1.x);
 
-  vec4 color = mix(texelFetch(uColors, texel(uFrom, id), 0), texelFetch(uColors, texel(uTo, id), 0), e);
-  vec4 na = texelFetch(uNormals, texel(uFrom, id), 0);
-  vec4 nb = texelFetch(uNormals, texel(uTo, id), 0);
-  float shading = mix(na.w, nb.w, e);
+  vec4 color = texelFetch(uColors, texel(id), 0);
   if (shading > 0.004) {
-    vec3 n = normalize(mix(ma * (na.xyz * 2.0 - 1.0), mb * (nb.xyz * 2.0 - 1.0), e) + 1e-5);
+    vec3 n = normalize(m * normal.xyz + 1e-5);
     color.rgb = mix(color.rgb, light(color.rgb, n, p), shading);
   }
   vColor = vec4(min(color.rgb, vec3(1.0)), color.a * coverage);
@@ -150,7 +131,9 @@ uniform float uOpacity;
 out vec4 fragColor;
 
 void main() {
-  float alpha = vColor.a * exp(-0.5 * dot(vPos, vPos)) * uOpacity;
+  float r2 = dot(vPos, vPos);
+  if (r2 > ${(3 * 3).toFixed(1)}) discard;
+  float alpha = vColor.a * exp(-0.5 * r2) * uOpacity;
   if (alpha < 1.0 / 255.0) discard;
   fragColor = vec4(vColor.rgb * alpha, alpha);
 }

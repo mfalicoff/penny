@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cameraFor, mixPlacement, morphBetween, sceneIndex, stageAt, STAGES } from "../src/choreography.ts";
-import { SCENE_IDS } from "../src/scenes/ids.ts";
-import { identity, lookAt, perspective, transformPoint, translation } from "../src/splats/mat4.ts";
-import { morphedViewZ, morphProgress, STAGGER } from "../src/splats/morph.ts";
-import { layoutFor, morphDelays, packScene } from "../src/splats/pack.ts";
+import { buildScene } from "../src/scenes/index.ts";
+import { compose, lookAt, perspective, rotationY, transformPoint, translation } from "../src/splats/mat4.ts";
+import { layoutFor, packScene, toHalf } from "../src/splats/pack.ts";
 import { encodePly } from "../src/splats/ply.ts";
-import { DepthSorter } from "../src/splats/sort.ts";
-import { buildScenes } from "../src/scenes/index.ts";
+import { DepthSorter, viewZ } from "../src/splats/sort.ts";
+import { cameraDistance, SCENES, splatCount } from "../src/splats/stage.ts";
 
 describe("DepthSorter", () => {
   it("orders far to near (most negative view z first)", () => {
@@ -21,94 +19,76 @@ describe("DepthSorter", () => {
   });
 });
 
-describe("morph", () => {
-  it("starts at scene A and ends at scene B for every delay", () => {
-    for (const delay of [0, 0.3, 1]) {
-      expect(morphProgress(0, delay)).toBe(0);
-      expect(morphProgress(1, delay)).toBe(1);
-    }
-    // Late splats are still waiting when early ones are half way.
-    expect(morphProgress(STAGGER * 0.5, 0)).toBeGreaterThan(morphProgress(STAGGER * 0.5, 1));
-  });
-
-  it("depth follows the splat from A to B", () => {
-    const a = new Float32Array([0, 0, 0]);
-    const b = new Float32Array([0, 0, -2]);
+describe("viewZ", () => {
+  it("is the splat's depth in front of the camera, after the scene's motion", () => {
+    const points = new Float32Array([0, 0, 0, 0, 0, -2]);
     const view = lookAt([0, 0, 5], [0, 0, 0]);
-    expect(morphedViewZ(a, b, 0, 0.5, 0, identity(), identity(), view)).toBeCloseTo(-5);
-    expect(morphedViewZ(a, b, 0, 0.5, 1, identity(), identity(), view)).toBeCloseTo(-7);
-    expect(morphedViewZ(a, b, 0, 0.5, 0, translation(0, 0, 1), identity(), view)).toBeCloseTo(-4);
+    const still = compose(rotationY(0));
+    expect(viewZ(points, 0, still, view)).toBeCloseTo(-5);
+    expect(viewZ(points, 1, still, view)).toBeCloseTo(-7);
+    expect(viewZ(points, 0, translation(0, 0, 1), view)).toBeCloseTo(-4);
+    // Turned half way round, the point behind the centre comes in front of it.
+    expect(viewZ(points, 1, rotationY(Math.PI), view)).toBeCloseTo(-3);
   });
 });
 
 describe("camera", () => {
-  it("looks down −z at the target, and the lens shift moves the image", () => {
+  it("looks down −z at the target", () => {
     const view = lookAt([0, 0, 4], [0, 0, 0]);
     expect(transformPoint(view, 0, 0, 0)).toEqual([0, 0, -4]);
-    const shifted = perspective(1, 1, 0.1, 10, 0.4, 0);
-    const clip = [shifted[8]! * -4 + shifted[12]!, shifted[11]! * -4];
-    expect(clip[0]! / clip[1]!).toBeCloseTo(0.4);
+  });
+
+  it("fits the coin into its box and the ribbons across the window", () => {
+    const fov = (30 * Math.PI) / 180;
+    const radiusOnScreen = (distance: number, extent: number, height: number) => (extent * height) / (2 * Math.tan(fov / 2) * distance);
+    // The coin's radius covers its share of the box's half-size, whichever side is shorter.
+    const coin = SCENES.coin;
+    expect(radiusOnScreen(cameraDistance(coin, 600, 400), coin.extent, 400)).toBeCloseTo(200 * coin.fill);
+    // The ribbons' half width covers half the window's width.
+    const flow = SCENES.flow;
+    expect(radiusOnScreen(cameraDistance(flow, 1440, 800), flow.extent, 800)).toBeCloseTo(720 * flow.fill);
+    const proj = perspective(fov, 1, 0.1, 100);
+    expect(proj[0]).toBeCloseTo(proj[5]!);
   });
 });
 
-describe("choreography", () => {
-  const anchors = [
-    { scroll: 0, stage: 1 },
-    { scroll: 1000, stage: 2 },
-    { scroll: 2000, stage: 3 },
-  ];
-
-  it("holds each section's scene and morphs in between", () => {
-    expect(stageAt(0, anchors)).toBe(1);
-    expect(stageAt(200, anchors)).toBe(1);
-    expect(stageAt(500, anchors)).toBeCloseTo(1.5);
-    expect(stageAt(750, anchors)).toBe(2);
-    expect(stageAt(5000, anchors)).toBe(3);
-    expect(stageAt(10, [])).toBe(1);
+describe("budgets", () => {
+  it("are about 100 000 splats on large screens and 40 000 on small ones", () => {
+    const total = (small: boolean) => splatCount(SCENES.coin, small) + splatCount(SCENES.flow, small);
+    expect(total(false)).toBeLessThanOrEqual(105_000);
+    expect(total(true)).toBeLessThanOrEqual(42_000);
   });
 
-  it("splits a stage into the scenes it morphs between", () => {
-    expect(morphBetween(1)).toEqual({ fromStage: 1, toStage: 1, t: 0 });
-    expect(morphBetween(2.25)).toEqual({ fromStage: 2, toStage: 3, t: 0.25 });
-    expect(morphBetween(99)).toEqual({ fromStage: STAGES.length - 1, toStage: STAGES.length - 1, t: 0 });
-  });
-
-  it("places the scene on its section's box", () => {
-    const placement = { x: 1080, y: 450, radius: 300 };
-    const camera = cameraFor(placement, 1440, 900, Math.PI / 6, 1.35);
-    expect(camera.shiftX).toBeCloseTo(0.5);
-    expect(camera.shiftY).toBeCloseTo(0);
-    // The subject's radius projects to the requested pixels.
-    const focal = 900 / (2 * Math.tan(Math.PI / 12));
-    expect((1.35 * focal) / camera.distance).toBeCloseTo(300);
-    const mid = mixPlacement(placement, { x: 360, y: 450, radius: 100 }, 0.5);
-    expect(mid).toEqual({ x: 720, y: 450, radius: 200 });
-  });
-
-  it("names only scenes that exist", () => {
-    STAGES.forEach((_, stage) => expect(sceneIndex(stage)).toBeGreaterThanOrEqual(0));
-    expect(SCENE_IDS[sceneIndex(0)]).toBe("nebula");
+  it("scale every scene with ?splats=N, within limits", () => {
+    expect(splatCount(SCENES.coin, false, 32_000)).toBe(32_000);
+    expect(splatCount(SCENES.flow, false, 32_000)).toBe(20_000);
+    expect(splatCount(SCENES.coin, true, 50)).toBe(SCENES.coin.splats[1]);
   });
 });
 
 describe("packing and export", () => {
-  const scenes = buildScenes(3000);
+  const scene = buildScene("coin", 3000);
 
-  it("lays each scene out as a block of rows the shader can address", () => {
-    const layout = layoutFor(3000, scenes.length);
-    const delays = morphDelays(3000);
+  it("converts floats to half precision", () => {
+    expect(toHalf(1)).toBe(0x3c00);
+    expect(toHalf(-2)).toBe(0xc000);
+    expect(toHalf(0.5)).toBe(0x3800);
+    expect(toHalf(0)).toBe(0);
+  });
+
+  it("lays the scene out in rows the shader can address", () => {
+    const layout = layoutFor(3000);
     expect(layout.rows).toBe(Math.ceil(3000 / layout.width));
-    const packed = packScene(scenes[2]!, 2, layout, delays);
+    const packed = packScene(scene, layout);
     expect(packed.centers.length).toBe(layout.width * layout.rows * 4);
-    expect(packed.centers[7 * 4]).toBe(scenes[2]!.positions[7 * 3]);
-    expect(packed.centers[7 * 4 + 3]).toBe(delays[7]);
+    expect(packed.centers[7 * 4]).toBe(scene.positions[7 * 3]);
     expect(packed.covA[7 * 4]).toBeGreaterThan(0);
-    expect([...packed.normals.subarray(0, 8)]).toEqual([...scenes[2]!.normals.subarray(0, 8)]);
-    expect(() => packScene(buildScenes(2000)[0]!, 0, layout, delays)).toThrow(/2000 splats/);
+    expect(packed.normals[7 * 4 + 3]).toBe(toHalf(scene.normals[7 * 4 + 3]!));
+    expect(() => packScene(buildScene("coin", 2000), layout)).toThrow(/2000 splats/);
   });
 
   it("writes a standard 3DGS .ply", () => {
-    const ply = encodePly(scenes[1]!);
+    const ply = encodePly(scene);
     const text = new TextDecoder().decode(ply.subarray(0, 600));
     const headerEnd = text.indexOf("end_header\n") + "end_header\n".length;
     expect(text.startsWith("ply\nformat binary_little_endian 1.0\nelement vertex 3000\n")).toBe(true);
@@ -116,7 +96,7 @@ describe("packing and export", () => {
     expect(text).toContain("property float rot_3");
     expect(ply.length).toBe(headerEnd + 3000 * 17 * 4);
     const first = new DataView(ply.buffer, headerEnd);
-    expect(first.getFloat32(0, true)).toBeCloseTo(scenes[1]!.positions[0]!);
-    expect(Math.exp(first.getFloat32(10 * 4, true))).toBeCloseTo(scenes[1]!.scales[0]!, 5);
+    expect(first.getFloat32(0, true)).toBeCloseTo(scene.positions[0]!);
+    expect(Math.exp(first.getFloat32(10 * 4, true))).toBeCloseTo(scene.scales[0]!, 5);
   });
 });

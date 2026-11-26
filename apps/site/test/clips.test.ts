@@ -35,16 +35,21 @@ describe("rendered clips", () => {
 });
 
 describe("the page's clip slots", () => {
-  it("name a clip and have its captions", () => {
-    const slots = [...html.matchAll(/data-clip="([a-z-]+)"/g)].map((match) => match[1]);
-    expect(slots.sort()).toEqual(CLIPS.map((clip) => clip.id).sort());
-    for (const id of slots) {
-      const captions = html.match(new RegExp(`<ol class="clip-captions" data-clip-captions="${id}" hidden>([\\s\\S]*?)</ol>`));
-      expect(captions, id).not.toBeNull();
-      const items = [...captions![1]!.matchAll(/<li data-at="([\d.]+)">([^<]+)<\/li>/g)];
+  const slots = [...html.matchAll(/data-clip="([a-z-]+)"/g)].map((match) => match[1]!);
+
+  it("each name a clip the pipeline knows, once", () => {
+    expect(slots.length).toBeGreaterThan(0);
+    expect(new Set(slots).size).toBe(slots.length);
+    for (const id of slots) expect(CLIPS.map((clip) => clip.id)).toContain(id);
+  });
+
+  it("keep captions short and within the clip", () => {
+    for (const [, id, body] of html.matchAll(/<ol class="clip-captions" data-clip-captions="([a-z-]+)" hidden>([\s\S]*?)<\/ol>/g)) {
+      expect(slots, `captions for "${id}" without its slot`).toContain(id);
+      const clip = CLIPS.find((candidate) => candidate.id === id)!;
+      const items = [...body!.matchAll(/<li data-at="([\d.]+)">([^<]+)<\/li>/g)];
       expect(items.length, id).toBeGreaterThan(0);
       expect(items.length, id).toBeLessThanOrEqual(2);
-      const clip = CLIPS.find((candidate) => candidate.id === id)!;
       for (const [, at, text] of items) {
         expect(Number(at)).toBeLessThan(clip.seconds);
         expect(text!.trim().split(/\s+/).length, text).toBeLessThanOrEqual(6);

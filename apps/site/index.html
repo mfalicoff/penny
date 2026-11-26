@@ -21,33 +21,27 @@
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
-    <div class="backdrop" aria-hidden="true"></div>
-    <canvas id="splats" aria-hidden="true"></canvas>
-
     <header class="nav">
       <a class="brand" href="#top" aria-label="Penny home">
         <i data-logo></i>
         <span>penny<span class="dot">.</span></span>
       </a>
       <nav aria-label="Main">
-        <a href="#glance">Features</a>
-        <a href="#everywhere">Apps</a>
+        <a href="#features">Features</a>
         <a href="#self-host">Self-host</a>
         <a href="/docs/">Docs</a>
-        <a class="button button-small" href="https://github.com/mfalicoff/penny">
-          GitHub
-        </a>
+        <a class="button button-small" href="https://github.com/mfalicoff/penny">GitHub</a>
       </nav>
     </header>
 
     <main id="top">
-      <section class="hero" data-stage="1">
-        <div class="copy">
+      <section class="hero wrap">
+        <div class="hero-copy">
           <p class="eyebrow">Self-hosted expense tracking</p>
           <h1>A little more clarity about your money.</h1>
           <p class="lede">
-            Track expenses, income and investment contributions on iPhone, iPad and the web. Split the bill, keep the
-            receipt, and see where it all went, on a server you run yourself.
+            Track expenses, income and investments on iPhone, iPad and the web. Split the bill, keep the receipt, and see
+            where it all went, on a server you run yourself.
           </p>
           <div class="actions">
             <a class="button" href="#self-host">Self-host Penny</a>
@@ -59,193 +53,124 @@
             <li><i data-icon="lock-closed"></i>No bank connection</li>
           </ul>
         </div>
-        <div class="hero-stage" data-splat data-fit="0.95" aria-hidden="true"></div>
-        <a class="scroll-hint" href="#glance" aria-label="Scroll to features"><span></span></a>
+        <div class="coin-stage" data-scene="coin" aria-hidden="true"></div>
       </section>
 
-      <section class="feature" id="glance" data-stage="2">
-        <div class="visual" data-splat data-fit="0.95">
-          <figure class="iphone" data-clip="overview">
-            <img
-              src="./src/assets/screens/iphone-home.webp"
-              alt="Penny's iPhone home screen: $1,116.65 left to spend this month, a spent, invested and left bar, and recent entries."
-              width="804"
-              height="1748"
-              loading="lazy"
-            />
-          </figure>
-          <ol class="clip-captions" data-clip-captions="overview" hidden>
-            <li data-at="1">Add it in seconds</li>
-            <li data-at="5">Your month, always current</li>
-          </ol>
-        </div>
-        <div class="copy">
-          <p class="eyebrow">Overview</p>
-          <h2>Your month, at a glance.</h2>
-          <p>
-            Left to spend, front and centre: what came in, what you spent and what you invested. Expected pay already
-            counts toward a clearly labeled projection, so a late-month payday is in the picture before it arrives.
-          </p>
-          <ul class="features">
-            <li>
-              <i data-icon="calendar"></i>
-              <div><h3>Calendar and categories</h3><p>See which days and categories the month went to, then filter the entries behind them.</p></div>
-            </li>
-            <li>
-              <i data-icon="trending-up"></i>
-              <div><h3>Investments, kept apart</h3><p>Contributions get their own total and never count as spending.</p></div>
-            </li>
-            <li>
-              <i data-icon="repeat"></i>
-              <div><h3>Recurring, previewed</h3><p>Upcoming bills and paydays appear in the calendar before they happen.</p></div>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="feature feature-wide" id="flow" data-stage="3">
-        <div class="copy">
-          <p class="eyebrow">Insights</p>
-          <h2>Follow your money.</h2>
-          <p>
-            An interactive flow connects every source of income to spending, investments and what's left over. Split
-            expenses count only your share, so the picture reflects your spending, not the whole bill.
-          </p>
-          <ul class="features features-inline">
-            <li><i data-icon="pie-chart"></i><div><h3>Your share</h3><p>Band widths follow what you actually paid.</p></div></li>
-            <li><i data-icon="search"></i><div><h3>Search everything</h3><p>Any entry, from anywhere, with ⌘K.</p></div></li>
-          </ul>
-        </div>
-        <div class="visual" data-splat data-fit="1.65">
+      <section class="showcase wrap" aria-label="Penny on the web and on iPhone">
+        <div class="ribbons" data-scene="flow" aria-hidden="true"></div>
+        <div class="stage">
           <figure class="browser" data-clip="insights">
             <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><b>penny.example.com</b></div>
             <img
               src="./src/assets/screens/web-insights-1440.webp"
               srcset="./src/assets/screens/web-insights-1440.webp 1440w, ./src/assets/screens/web-insights.webp 2880w"
-              sizes="(min-width: 1100px) 720px, 92vw"
+              sizes="(min-width: 1100px) 1000px, 92vw"
               alt="Penny's Insights page in the web app: $5,450 came in, $2,155.35 went out, and a flow diagram from salary and freelance income to categories, investments and money left over."
               width="1440"
               height="900"
-              loading="lazy"
             />
           </figure>
+          <figure class="iphone">
+            <img
+              src="./src/assets/screens/iphone-home.webp"
+              alt="Penny's iPhone home screen: $1,116.65 left to spend this month, a spent, invested and left bar, and recent entries."
+              width="804"
+              height="1748"
+            />
+          </figure>
+        </div>
+        <div class="under">
           <ol class="clip-captions" data-clip-captions="insights" hidden>
             <li data-at="0">Follow every dollar you earn</li>
             <li data-at="1.6">Select a band to focus it</li>
           </ol>
+          <ul class="chips">
+            <li><i data-icon="laptop"></i>iPhone, iPad and the web</li>
+            <li><i data-icon="server"></i>Your server</li>
+          </ul>
         </div>
       </section>
 
-      <section class="feature" id="receipts" data-stage="4">
-        <div class="visual" data-splat data-fit="1.1">
-          <div class="phone-pair">
-            <figure class="iphone" data-clip="entries">
-              <img
-                src="./src/assets/screens/iphone-split.webp"
-                alt="Splitting a $74.40 dinner equally between three people on iPhone: your share is $24.80."
-                width="804"
-                height="1748"
-                loading="lazy"
-              />
-            </figure>
-            <figure class="iphone">
-              <img
-                src="./src/assets/screens/iphone-receipt-inbox.webp"
-                alt="Penny's receipt inbox on iPhone, listing emailed receipts to attach to entries."
-                width="804"
-                height="1748"
-                loading="lazy"
-              />
-            </figure>
+      <section class="section wrap" id="features">
+        <div class="head">
+          <div>
+            <p class="eyebrow">Features</p>
+            <h2>Everything a month needs. Nothing it doesn't.</h2>
           </div>
-          <ol class="clip-captions" data-clip-captions="entries" hidden>
-            <li data-at="1">Split it the way you paid</li>
-            <li data-at="3">Only your share counts</li>
-          </ol>
+          <p>Left to spend up front, every dollar traced, bills split the way they were paid, and receipts kept, on every device.</p>
         </div>
-        <div class="copy">
-          <p class="eyebrow">Entries</p>
-          <h2>Add it, split it, keep the receipt.</h2>
-          <p>
-            Record an expense, income or investment contribution in a few taps. Make it recurring, attach the receipt,
-            and split it however the bill was really shared.
-          </p>
-          <ul class="features">
-            <li>
-              <i data-icon="people"></i>
-              <div><h3>Split any way</h3><p>Equally, by amount or by percentage. The total stays on the entry; your reports count your share.</p></div>
-            </li>
-            <li>
-              <i data-icon="receipt"></i>
-              <div><h3>Receipts, encrypted</h3><p>Attach a photo or PDF. It's encrypted at rest on your server and read by on-server OCR.</p></div>
-            </li>
-            <li>
-              <i data-icon="document-text"></i>
-              <div><h3>Forward receipts by email <span class="soon">Soon</span></h3><p>A private address per person; order confirmations land in your receipt inbox.</p></div>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <section class="feature feature-wide" id="everywhere" data-stage="5">
-        <div class="copy">
-          <p class="eyebrow">Apps</p>
-          <h2>On your phone, in your browser, on your server.</h2>
-          <p>
-            A native SwiftUI app for iPhone and iPad and a fast web app for everything else, kept in sync by a .NET and
-            PostgreSQL server you host.
-          </p>
-          <ul class="features features-grid">
-            <li><i data-icon="finger-print"></i><div><h3>Face ID lock</h3><p>Biometric app lock on iPhone and iPad.</p></div></li>
-            <li><i data-icon="cloud-offline"></i><div><h3>Offline-first</h3><p>Edits save on the device and sync when you're back.</p></div></li>
-            <li><i data-icon="key"></i><div><h3>Your sign-in</h3><p>Local accounts or your own OpenID Connect provider.</p></div></li>
-            <li><i data-icon="leaf"></i><div><h3>Widgets</h3><p>Left to spend on your Home Screen.</p></div></li>
-          </ul>
-        </div>
-        <div class="visual" data-splat data-fit="1.5">
-          <div class="device-pair">
-            <figure class="browser" data-clip="apps">
-              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><b>penny.example.com</b></div>
-              <img
-                src="./src/assets/screens/web-home-1440.webp"
-                srcset="./src/assets/screens/web-home-1440.webp 1440w, ./src/assets/screens/web-home.webp 2880w"
-                sizes="(min-width: 1100px) 720px, 92vw"
-                alt="Penny's web app home: $3,294.65 left to spend, totals for the month, the money flow, upcoming recurring entries and spending by category."
-                width="1440"
-                height="900"
-                loading="lazy"
-              />
-            </figure>
-            <figure class="iphone">
+        <div class="bento">
+          <article class="tile tile-tall" style="--glow: rgba(255, 111, 63, 0.26)">
+            <span class="ti"><i data-icon="wallet"></i></span>
+            <h3>Left to spend, first.</h3>
+            <p>What came in, what you spent and what you invested. Expected pay already counts toward a clearly labeled projection.</p>
+            <figure class="screen screen-phone" data-clip="overview">
               <img
                 src="./src/assets/screens/iphone-home.webp"
-                alt=""
+                alt="The iPhone home screen: $1,116.65 left to spend, $3,366.65 projected with expected pay."
                 width="804"
                 height="1748"
                 loading="lazy"
               />
             </figure>
-          </div>
-          <ol class="clip-captions" data-clip-captions="apps" hidden>
-            <li data-at="0">Your month on the web</li>
-            <li data-at="1.3">Search every entry from anywhere</li>
-          </ol>
-        </div>
-      </section>
+          </article>
 
-      <section class="feature" id="shared" data-stage="6">
-        <div class="visual" data-splat data-fit="1.45">
-          <div class="phone-pair">
-            <figure class="iphone">
+          <article class="tile tile-split" style="--glow: rgba(61, 208, 122, 0.16)">
+            <span class="ti"><i data-icon="people"></i></span>
+            <h3>Split it the way you paid.</h3>
+            <p>Equally, by amount or by percentage. The total stays on the entry; your reports count only your share.</p>
+            <figure class="screen screen-phone" data-clip="entries">
+              <img
+                src="./src/assets/screens/iphone-split.webp"
+                alt="Splitting a $74.40 dinner equally between three people on iPhone."
+                width="804"
+                height="1748"
+                loading="lazy"
+              />
+            </figure>
+          </article>
+
+          <article class="tile tile-receipts" style="--glow: rgba(142, 139, 255, 0.18)">
+            <span class="ti"><i data-icon="receipt"></i></span>
+            <h3>Receipts, encrypted.</h3>
+            <p>Attach a photo or PDF. It's encrypted on your server and read by on-server OCR.</p>
+            <figure class="screen screen-phone">
+              <img
+                src="./src/assets/screens/iphone-receipt-inbox.webp"
+                alt="The receipt inbox on iPhone, listing receipts to attach to entries."
+                width="804"
+                height="1748"
+                loading="lazy"
+              />
+            </figure>
+          </article>
+
+          <article class="tile tile-search">
+            <span class="ti"><i data-icon="search"></i></span>
+            <h3>Search everything.</h3>
+            <p>Any entry, from any month, from anywhere.</p>
+            <div class="mini-search" aria-hidden="true">
+              <div class="field"><i data-icon="search"></i>groc</div>
+              <div class="row"><b>Weekly groceries</b><span>−$86.42</span></div>
+              <div class="row"><b>Weekend groceries</b><span>−$72.35</span></div>
+            </div>
+          </article>
+
+          <article class="tile tile-shared" style="--glow: rgba(61, 208, 122, 0.2)">
+            <span class="ti"><i data-icon="home"></i></span>
+            <h3>Households and trips.</h3>
+            <p>Record a shared cost once. Balances, suggested payments and settling up at the end.</p>
+            <figure class="screen screen-phone screen-back">
               <img
                 src="./src/assets/screens/iphone-shared.webp"
-                alt="A shared household on iPhone: you're owed $142.50 this month, with rent, hydro and a Costco run split between three people."
+                alt="A shared household on iPhone: you're owed $142.50 this month."
                 width="804"
                 height="1748"
                 loading="lazy"
               />
             </figure>
-            <figure class="iphone">
+            <figure class="screen screen-phone screen-front">
               <img
                 src="./src/assets/screens/iphone-trip-detail.webp"
                 alt="A shared trip on iPhone with its expenses and each person's balance."
@@ -254,38 +179,88 @@
                 loading="lazy"
               />
             </figure>
-          </div>
-        </div>
-        <div class="copy">
-          <p class="eyebrow">Together</p>
-          <h2>Personal finances, shared plans.</h2>
-          <p>Record a shared expense once. Everyone's reports keep only their own share.</p>
-          <ul class="features">
-            <li>
-              <i data-icon="home"></i>
-              <div><h3>Households</h3><p>Rent and bills split equally, by amount or by percentage, with monthly balances and suggested reimbursements.</p></div>
-            </li>
-            <li>
-              <i data-icon="airplane"></i>
-              <div><h3>Trips</h3><p>Invite friends with a short-lived code, add expenses together and settle up at the end.</p></div>
-            </li>
-            <li>
-              <i data-icon="pricetag"></i>
-              <div><h3>Your categories and accounts</h3><p>Your own names, colours and icons; payment accounts tracked by hand.</p></div>
-            </li>
-          </ul>
+          </article>
+
+          <article class="tile tile-recurring" style="--glow: rgba(255, 190, 80, 0.14)">
+            <span class="ti"><i data-icon="calendar"></i></span>
+            <h3>Recurring, previewed.</h3>
+            <p>Upcoming bills and paydays show up in the calendar before they happen.</p>
+            <figure class="screen screen-phone">
+              <img
+                src="./src/assets/screens/iphone-calendar.webp"
+                alt="The month's calendar on iPhone, with dots on the days with spending, income and scheduled entries."
+                width="804"
+                height="1748"
+                loading="lazy"
+              />
+            </figure>
+          </article>
+
+          <article class="tile tile-widgets" style="--glow: rgba(255, 111, 63, 0.2)">
+            <span class="ti"><i data-icon="leaf"></i></span>
+            <h3>On your Home Screen.</h3>
+            <p>Widgets for left to spend and recent expenses.</p>
+            <img
+              class="widgets"
+              src="./src/assets/screens/widgets.webp"
+              alt="Penny's Home Screen widgets: left to spend, recent expenses, and the month at a glance."
+              width="780"
+              height="820"
+              loading="lazy"
+            />
+          </article>
+
+          <article class="tile tile-small">
+            <span class="ti"><i data-icon="finger-print"></i></span>
+            <h3>Face ID lock</h3>
+            <p>Biometric lock on iPhone and iPad.</p>
+          </article>
+          <article class="tile tile-small">
+            <span class="ti"><i data-icon="cloud-offline"></i></span>
+            <h3>Offline-first</h3>
+            <p>Edits save on the device and sync when you're back.</p>
+          </article>
+          <article class="tile tile-small">
+            <span class="ti"><i data-icon="key"></i></span>
+            <h3>Your sign-in</h3>
+            <p>Local accounts or your own OpenID Connect provider.</p>
+          </article>
         </div>
       </section>
 
-      <section class="selfhost" id="self-host" data-stage="7">
-        <div class="coin-stage" data-splat data-fit="0.95" aria-hidden="true"></div>
-        <div class="copy">
+      <section class="section wrap" aria-label="Principles">
+        <div class="principles">
+          <div class="principle">
+            <i data-icon="server"></i>
+            <h3>Your server, your data</h3>
+            <p>One Compose file or a NixOS module. Nothing leaves the machine you run it on.</p>
+          </div>
+          <div class="principle">
+            <i data-icon="lock-closed"></i>
+            <h3>No bank connection</h3>
+            <p>Penny never logs in to your bank. You record what matters, in seconds.</p>
+          </div>
+          <div class="principle">
+            <i data-icon="document-text"></i>
+            <h3>Open source, MIT</h3>
+            <p>Read the code, run it, change it. The web app, the iOS app and the API are all in one repository.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap selfhost" id="self-host">
+        <div>
           <p class="eyebrow">Self-host</p>
-          <h2>Run it yourself in a few minutes.</h2>
-          <p>
-            One Compose file starts PostgreSQL, the API and the web app; there's a NixOS module too. Fill in the
-            secrets, point your reverse proxy at it, and open Penny.
-          </p>
+          <h2>Running in a few minutes.</h2>
+          <ol class="steps">
+            <li><span><b>Fill in two secrets</b> and your public address in <code>deploy/.env</code>.</span></li>
+            <li><span><b>Start it</b>: PostgreSQL, the API and the web app, with one Compose file.</span></li>
+            <li><span><b>Point your reverse proxy</b> at it and open Penny.</span></li>
+          </ol>
+          <div class="actions">
+            <a class="button" href="/docs/self-hosting/deployment/">Self-hosting guide</a>
+            <a class="button button-ghost" href="/docs/">Documentation</a>
+          </div>
         </div>
         <figure class="terminal" aria-label="Starting Penny with Docker Compose">
           <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><b>~/penny</b></div>
@@ -296,17 +271,21 @@
 <span class="ok">✔</span> Container penny-api-1           <span class="ok">Healthy</span>
 <span class="ok">✔</span> Container penny-web-1           <span class="ok">Healthy</span></code></pre>
         </figure>
-        <div class="actions actions-centre">
-          <a class="button" href="/docs/self-hosting/deployment/">Self-hosting guide</a>
-          <a class="button button-ghost" href="/docs/">Documentation</a>
+      </section>
+
+      <section class="closing">
+        <h2>A little more clarity, on your own server.</h2>
+        <div class="actions">
+          <a class="button" href="/docs/self-hosting/deployment/">Self-host Penny</a>
+          <a class="button button-ghost" href="https://github.com/mfalicoff/penny">View the source</a>
         </div>
-        <p class="note">Penny tracks investment contributions, not portfolio performance, and never connects to your bank.</p>
       </section>
     </main>
 
-    <footer class="footer">
-      <span>© <span id="year">2026</span> Penny</span>
-      <span>Screens: the web app's demo and the iPhone app's design renders, with sample data. The coin and everything floating around it are live Gaussian splats, generated in your browser.</span>
+    <footer class="footer wrap">
+      <span>© <span id="year">2026</span> Penny · MIT</span>
+      <span>Penny tracks investment contributions, not portfolio performance, and never connects to your bank.</span>
+      <span>Screens: the web app's demo and the iPhone app's design renders, with sample data. The coin and the ribbons are Gaussian splats, generated in your browser.</span>
     </footer>
   </body>
 </html>

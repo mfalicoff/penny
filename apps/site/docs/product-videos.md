@@ -2,6 +2,8 @@
 
 Status: **approved by the owner on 2026-11-25**, with the changes recorded under [Decisions](#decisions-2026-11-25). This was step 1 of the "apps in motion" work: the license check, the storyboard and the pipeline outline. Phase 1 (the pipeline, the two web clips and the page wiring) is built: [apps/site/README.md](../README.md#clips-of-the-apps-in-use) is the how-to. The iOS clips follow on the Mac.
 
+Since the page redesign ([design/README.md](design/README.md)), the Insights clip plays in the showcase and the Overview and Entries clips in their feature tiles. The page has no Apps section any more, so the Apps clip is rendered but not placed.
+
 The goal is short pre-rendered clips of Penny's real screens, played inside the product page's existing device frames, with the splat scenes still around them. Only synthetic demo data appears: the web demo's sample data and the iOS demo.
 
 ## 1. Licenses
