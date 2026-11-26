@@ -10,6 +10,9 @@ datasources:
     isDefault: true
     jsonData:
       httpMethod: POST
+      # The API exports metrics every 60 s by default (OTEL_METRIC_EXPORT_INTERVAL); rate windows
+      # must hold at least two samples. Grafana Cloud's Prometheus declares the same.
+      timeInterval: 60s
       exemplarTraceIdDestinations:
         - name: trace_id
           datasourceUid: tempo
