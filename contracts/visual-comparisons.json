@@ -2064,17 +2064,7 @@
         ],
         "deviations": [
           {
-            "summary": "The locked home currency shows as one row (CAD, Canadian dollar, a lock), not the list of CAD, USD, EUR and GBP with a gray check",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Exchange rates (Daily rates, Your last rates) and Recent currencies sections follow the list; the footer reads “Insights, Left to spend, budgets and recaps add up in Canadian dollars. Your home currency is locked once your ledger has entries.”",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Design decision: the screen follows the approved MAZ-270 currency and rates cards (iphone-currency-rates, web-currency-rates), which supersede this card; it needs to be retired or redrawn",
+            "summary": "The test stack runs with fetching off, so Daily rates shows Off and Your last rates instead of On and Latest rates (the same screen as iphone-currency-rates)",
             "kind": "follow-up",
             "ref": "MAZ-151"
           }
@@ -2090,17 +2080,7 @@
         ],
         "deviations": [
           {
-            "summary": "The locked home currency shows as one row with its name and a lock in a Home currency card, not the list of four currencies",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Exchange rates and Recent currencies cards follow, and the help text names the home currency and says each entry can be in any currency",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Design decision: the screen follows the approved MAZ-270 currency and rates cards (iphone-currency-rates, web-currency-rates), which supersede this card; it needs to be retired or redrawn",
+            "summary": "The home currency note adds “Each entry can be in any currency.”, as web-currency draws it, after the footer the iPhone card draws",
             "kind": "follow-up",
             "ref": "MAZ-151"
           }
@@ -4002,29 +3982,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-85",
         "capture": "1440x900",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "A Home currency card with one locked row (CAD, Canadian dollar) replaces the Ledger currency list of CAD, USD, EUR and GBP, and its help text differs",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Exchange rates and Recent currencies cards follow the home currency",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Design decision: the screen follows the approved MAZ-270 currency and rates cards (iphone-currency-rates, web-currency-rates), which supersede this card; it needs to be retired or redrawn",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          }
         ]
       }
     },
