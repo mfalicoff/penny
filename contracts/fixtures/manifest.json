@@ -217,6 +217,21 @@
           "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
         ]
       }
+    },
+    {
+      "file": "year-review.json",
+      "sha256": "a4107839e67a4ddc668837e38582ff6281a47c7537da1161e8c25aaaf853567d",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "apps/web/tests/domain/year-review.test.ts"
+        ],
+        "csharp": "not applicable: client calculation; the year in review is computed on the device",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/YearReviewTests.swift"
+        ]
+      }
     }
   ]
 }

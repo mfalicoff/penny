@@ -16,6 +16,7 @@ import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
 import { ledgerWithHouseholds, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
 import { monthReview, reviewBannerMonth } from "../../src/domain/monthReview.ts";
 import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
+import { yearReviews } from "./year-review.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const directory = new URL("../../../../contracts/fixtures/", import.meta.url);
@@ -433,6 +434,7 @@ const consumers: Record<string, Record<string, string[] | string>> = {
   "recurring-suggestions.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/RecurringSuggestionsTests.swift"] },
   "month-totals.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "month-review.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: client calculation; the recap is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/MonthReviewTests.swift"] },
+  "year-review.json": { typescript: ["apps/web/tests/domain/year-review.test.ts"], csharp: "not applicable: client calculation; the year in review is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/YearReviewTests.swift"] },
   "shared-categories.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: shared expenses join the personal view on the client", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "parity-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
@@ -461,6 +463,7 @@ export function generated(): Record<string, string> {
     "shared-categories.json": serialize(sharedCategories()),
     "month-review.json": serialize(monthReviews()),
     "recurring-suggestions.json": serialize(recurringSuggestionCases()),
+    "year-review.json": serialize(yearReviews(generator)),
   };
 }
 
