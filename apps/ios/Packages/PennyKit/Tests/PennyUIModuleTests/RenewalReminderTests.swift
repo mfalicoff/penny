@@ -102,7 +102,8 @@ struct RenewalReminderTests {
         #expect(await center.days == ["penny.renewal.domain": Self.day("2027-01-29")])
         #expect(
             await center.texts == [
-                RenewalText.Notification(title: "A yearly schedule renews in 3 days", body: "Open Penny to see which one.")
+                RenewalText.Notification(
+                    title: "A yearly schedule renews in 3 days", body: "Open Penny to see which one.")
             ])
 
         let again = RenewalReminders(defaults: defaults, center: center)

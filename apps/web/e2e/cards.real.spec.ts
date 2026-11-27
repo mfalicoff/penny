@@ -571,6 +571,25 @@ async function dismissedCard(p: Page) {
   await p.mouse.move(0, 0);
 }
 
+/**
+ * MAZ-290: yearly Amazon Prime renewing 3 days after the scenario's today (Oct 15), on Visa, written
+ * through the revision-checked ledger API before Recurring opens. Made-up amount.
+ */
+async function renewsSoonCard(p: Page) {
+  const read = await p.request.get("/api/ledger");
+  expect(read.status(), "read the ledger").toBe(200);
+  const { revision, ledger } = (await read.json()) as { revision: number; ledger: WireLedger & { recurring: object[] } };
+  const shopping = ledger.categories.find((category) => category.kind === "expense" && /shop/i.test(category.name)) ?? ledger.categories.find((category) => category.kind === "expense");
+  const visa = ledger.accounts.find((account) => /visa/i.test(account.name)) ?? ledger.accounts[0];
+  if (!shopping) throw new Error("alex has no expense category");
+  const prime = { id: "card-prime", title: "Amazon Prime", kind: "expense", total: 9900, share: 9900, categoryId: shopping.id, ...(visa ? { accountId: visa.id } : {}), date: "2025-10-18", note: "", frequency: "yearly", nextDate: "2026-10-18", anchorDay: 18, active: true };
+  const written = await p.request.put("/api/ledger", { data: { revision, ledger: { ...ledger, recurring: [...ledger.recurring, prime] } } });
+  expect(written.status(), "write the yearly schedule").toBe(200);
+  await page(p, "/recurring", "Recurring");
+  await expect(p.locator("[data-schedule='card-prime']")).toContainText("Renews soon");
+  await expect(p.locator("[data-schedule='card-prime']")).toContainText("Yearly · renews Sun, Oct 18");
+}
+
 /** Home after the server stops taking ledger syncs, with the scenario's pending create waiting. */
 async function syncFailed(run: Run) {
   const p = run.page;
@@ -1024,15 +1043,14 @@ const cards: Record<string, Card> = {
     },
   },
   "iphone-schedule-form": { open: ({ page: p }) => newSchedule(p) },
-  // Recurring suggestions and renewal reminders, approved (MAZ-290); not built yet.
   // MAZ-290: the same states as the web cards, in the phone layout.
   "iphone-recurring-suggested": { fresh: true, open: ({ page: p }) => suggestedCard(p), note: "Suggestions are ordered by their latest entry, so Tutoring (weekly) comes before Netflix." },
   "iphone-recurring-empty": { open: ({ page: p }) => emptyCard(p), note: "solo in the empty scenario: no schedules and no entries." },
   "iphone-schedule-suggested": { fresh: true, open: ({ page: p }) => suggestionFormCard(p) },
   "iphone-suggestion-dismissed-toast": { fresh: true, open: ({ page: p }) => dismissedCard(p) },
-  "iphone-recurring-renews-soon": { skip: { status: "not-built", note: "The web's Recurring rows have no Renews soon badge yet (MAZ-290)." } },
-  "iphone-schedule-reminder": { skip: { status: "not-built", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
-  "iphone-renewal-notification": { skip: { status: "not-built", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
+  "iphone-recurring-renews-soon": { fresh: true, open: ({ page: p }) => renewsSoonCard(p), note: "Amazon Prime renews 3 days after the scenario's Oct 15." },
+  "iphone-schedule-reminder": { skip: { status: "not-applicable", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
+  "iphone-renewal-notification": { skip: { status: "not-applicable", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
   "iphone-currency": { open: ({ page: p }) => page(p, "/settings/currency", "Currency") },
   "iphone-sync-failed": { fresh: true, faults: true, open: (run) => syncFailed(run) },
   "iphone-shared-missing": { faults: true, open: (run) => sharedMissing(run) },
@@ -1153,7 +1171,7 @@ const cards: Record<string, Card> = {
   "web-recurring-empty": { open: ({ page: p }) => emptyCard(p), note: "solo in the empty scenario: no schedules and no entries." },
   "web-schedule-suggested": { fresh: true, open: ({ page: p }) => suggestionFormCard(p) },
   "web-suggestion-dismissed-toast": { fresh: true, open: ({ page: p }) => dismissedCard(p) },
-  "web-recurring-renews-soon": { skip: { status: "not-built", note: "The web's Recurring rows have no Renews soon badge yet (MAZ-290)." } },
+  "web-recurring-renews-soon": { fresh: true, open: ({ page: p }) => renewsSoonCard(p), note: "Amazon Prime renews 3 days after the scenario's Oct 15." },
   "web-edit-entry": { open: ({ page: p }) => editEntry(p) },
   "web-join-code": { open: ({ page: p }) => joinWithCode(p) },
   "web-activity-searching": { faults: true, open: (run) => searching(run) },

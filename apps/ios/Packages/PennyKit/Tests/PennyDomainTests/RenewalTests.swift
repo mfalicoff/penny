@@ -43,7 +43,9 @@ struct RenewalTests {
     func reminder() {
         let reminders = RenewalReminder.upcoming(
             [Self.rule(next: "2027-02-01")], reminding: ["prime"], today: Self.day("2026-11-09"), minutesIntoDay: 600)
-        #expect(reminders == [RenewalReminder(ruleID: "prime", renews: Self.day("2027-02-01"), day: Self.day("2027-01-29"))])
+        #expect(
+            reminders == [RenewalReminder(ruleID: "prime", renews: Self.day("2027-02-01"), day: Self.day("2027-01-29"))]
+        )
         #expect(reminders.first?.identifier == "penny.renewal.prime")
         #expect(RenewalReminder.hour == 9 && RenewalReminder.minute == 0)
     }

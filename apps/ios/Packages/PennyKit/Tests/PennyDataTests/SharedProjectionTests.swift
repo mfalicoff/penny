@@ -209,7 +209,8 @@ struct SharedProjectionTests {
         let model = SharedProjectionModel(service: service)
         await model.refresh(year: 2026)
         await model.refresh(year: 2026)
-        #expect(model.status(forYear: 2026) == .failed("You're offline. Shared expenses update when you're back online."))
+        #expect(
+            model.status(forYear: 2026) == .failed("You're offline. Shared expenses update when you're back online."))
         #expect(model.shares(currency: .cad).recorded.map { $0.id } == ["e1"])
         await model.refresh(year: 2026)
         #expect(model.status(forYear: 2026) == .loaded)
