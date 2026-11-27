@@ -31,6 +31,20 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertTrue(recurrence.sequences.allSatisfy { $0.dates.first == $0.start && $0.dates.count == 13 })
         let merge = try Fixtures.decode(MergeFixture.self, from: "merge-conflicts.json")
         XCTAssertTrue(merge.cases.allSatisfy { $0.expected.version == 4 })
+        // Contract 2.3.0: the dismissal cases carry `dismissedSuggestions`; the older ones omit it.
+        XCTAssertTrue(merge.cases.contains { $0.expected.dismissedSuggestions != nil })
+        XCTAssertTrue(merge.cases.contains { $0.base.dismissedSuggestions == nil })
+        let suggestions = try Fixtures.decode(RecurringSuggestionsFixture.self, from: "recurring-suggestions.json")
+        XCTAssertFalse(suggestions.keys.isEmpty)
+        XCTAssertTrue(suggestions.cases.contains { $0.expected.isEmpty })
+        XCTAssertTrue(suggestions.cases.contains { $0.ledger.dismissedSuggestions != nil })
+        for item in suggestions.cases {
+            for suggestion in item.expected {
+                XCTAssertEqual(suggestion.id, "\(suggestion.kind)|\(suggestion.key)|\(suggestion.frequency)", item.name)
+                XCTAssertEqual(suggestion.entryIds.count, suggestion.count, item.name)
+                XCTAssertGreaterThan(suggestion.nextDate, item.today, item.name)
+            }
+        }
         let splits = try Fixtures.decode(SharedSplitsFixture.self, from: "shared-splits.json")
         for item in splits.cases where item.error != true {
             XCTAssertEqual(item.expected?.reduce(0) { $0 + $1.amountCents }, item.totalCents, item.name)

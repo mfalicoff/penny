@@ -188,4 +188,17 @@ struct WireModelTests {
         let again = try PennyDomain.Ledger(wire: JSONDecoder().decode(WireLedger.self, from: data))
         #expect(again == ledger)
     }
+
+    @Test("whenDismissedSuggestionsAreAbsentEmptyOrSet_WireLedger_ShouldRoundTripEachAsItWas")
+    func dismissedSuggestionsRoundTrip() throws {
+        for dismissed in [nil, [], ["expense|netflix|monthly|1699", "income|tutoring|weekly|6000"]] as [[String]?] {
+            let ledger = PennyDomain.Ledger(dismissedSuggestions: dismissed)
+            let data = try JSONEncoder().encode(WireLedger(ledger))
+            let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+            #expect(json["dismissedSuggestions"] as? [String] == dismissed)
+            #expect(json.keys.contains("dismissedSuggestions") == (dismissed != nil))
+            let again = try PennyDomain.Ledger(wire: JSONDecoder().decode(WireLedger.self, from: data))
+            #expect(again == ledger)
+        }
+    }
 }

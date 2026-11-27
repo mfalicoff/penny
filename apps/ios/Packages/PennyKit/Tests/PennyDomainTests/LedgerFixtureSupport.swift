@@ -35,7 +35,8 @@ enum ContractLedger {
                     categoryId: $0.categoryId, accountId: $0.accountId, date: try date($0.date), note: $0.note,
                     frequency: try #require(RecurrenceFrequency(rawValue: $0.frequency)),
                     nextDate: try date($0.nextDate), anchorDay: $0.anchorDay, active: $0.active)
-            })
+            },
+            dismissedSuggestions: wire.dismissedSuggestions)
     }
 
     static func entry(_ wire: PennyContracts.Ledger.Entry) throws -> LedgerEntry {

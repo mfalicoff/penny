@@ -70,6 +70,46 @@ extension LedgerChange {
         }
     }
 
+    /// Accepts a recurring suggestion: saves `rule` (the filled-in form) as one new schedule. Past
+    /// entries stay as they are and aren't linked. A rule whose id is already there changes nothing,
+    /// so re-applying the change after a sync adds no second schedule.
+    public static func acceptSuggestion(_ rule: RecurringRule) -> LedgerChange {
+        LedgerChange { (ledger) throws(LedgerRuleError) in
+            try requireAccount(rule.accountId, in: ledger)
+            guard ledger.categories.contains(where: { $0.id == rule.categoryId && $0.kind == rule.kind }) else {
+                throw .categoryRemoved
+            }
+            if ledger.rule(id: rule.id) != nil { return ledger }
+            var next = ledger
+            next.recurring.append(rule)
+            return next
+        }
+    }
+
+    /// Dismisses a recurring suggestion on every device (contract 2.3.0): stores
+    /// `{id}|{share}`, keeping the newest 500. `undoDismissSuggestion` takes it back.
+    public static func dismissSuggestion(_ suggestion: RecurringSuggestion) -> LedgerChange {
+        LedgerChange { ledger in
+            var next = ledger
+            next.dismissedSuggestions = RecurringSuggestions.adding(
+                suggestion.dismissal, to: ledger.dismissedSuggestions ?? [])
+            return next
+        }
+    }
+
+    /// Takes a dismissal back (the toast's Undo). A ledger without it changes nothing.
+    public static func undoDismissSuggestion(_ suggestion: RecurringSuggestion) -> LedgerChange {
+        LedgerChange { ledger in
+            let dismissal = suggestion.dismissal
+            guard let dismissed = ledger.dismissedSuggestions,
+                dismissed.contains(where: { RecurringSuggestions.same($0, dismissal) })
+            else { return ledger }
+            var next = ledger
+            next.dismissedSuggestions = dismissed.filter { !RecurringSuggestions.same($0, dismissal) }
+            return next
+        }
+    }
+
     /// Pauses or resumes a rule. Resuming skips every date on or before `today`, so a pause
     /// never records the dates it covered. Pausing, or resuming an active rule, keeps
     /// `nextDate`. An unknown id changes nothing.

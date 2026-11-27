@@ -103,12 +103,14 @@ private struct TabShell: View {
                 PennyTabBar(shell: shell).ignoresSafeArea(.keyboard, edges: .bottom)
             }
         }
-        .modifier(ToastOverlay(bottomPadding: 72))
+        // Under the Settings sheet the toast shows in the sheet instead (Recurring's Dismiss, MAZ-290).
+        .modifier(ToastOverlay(bottomPadding: 72, showsToast: !shell.route.isSettingsPresented))
         .sheet(isPresented: $shell.route.isSettingsPresented, onDismiss: shell.sheetDismissed) {
             NavigationStack(path: $shell.route.settingsPath) {
                 SettingsView(onDone: { shell.route.isSettingsPresented = false })
                     .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
             }
+            .modifier(ToastOverlay(bottomPadding: 16, playsHaptics: false))
             .environment(shell)
         }
     }

@@ -79,7 +79,7 @@ extension Ledger {
         }
         self.init(
             currency: currency, accounts: accounts, trips: trips, categories: categories, transactions: transactions,
-            recurring: recurring)
+            recurring: recurring, dismissedSuggestions: wire.dismissedSuggestions)
     }
 }
 
@@ -120,6 +120,7 @@ extension WireLedger {
                     categoryId: $0.categoryId, accountId: $0.accountId, date: $0.date.description, note: $0.note,
                     frequency: $0.frequency.rawValue, nextDate: $0.nextDate.description, anchorDay: $0.anchorDay,
                     active: $0.active)
-            })
+            },
+            dismissedSuggestions: ledger.dismissedSuggestions)
     }
 }

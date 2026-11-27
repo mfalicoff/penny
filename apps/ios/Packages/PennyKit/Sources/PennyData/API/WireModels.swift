@@ -160,10 +160,14 @@ public struct WireLedger: Codable, Equatable, Sendable {
     public var trips: [WireTrip]?
     public var transactions: [WireEntry]
     public var recurring: [WireRecurring]
+    /// Contract 2.3.0: dismissed recurring suggestions, `{kind}|{key}|{frequency}|{share}`. Omitted
+    /// when nil, so an older ledger round-trips without it.
+    public var dismissedSuggestions: [String]?
 
     public init(
         version: Int, currency: String, categories: [WireCategory], accounts: [WireAccount]? = nil,
-        trips: [WireTrip]? = nil, transactions: [WireEntry], recurring: [WireRecurring]
+        trips: [WireTrip]? = nil, transactions: [WireEntry], recurring: [WireRecurring],
+        dismissedSuggestions: [String]? = nil
     ) {
         self.version = version
         self.currency = currency
@@ -172,6 +176,7 @@ public struct WireLedger: Codable, Equatable, Sendable {
         self.trips = trips
         self.transactions = transactions
         self.recurring = recurring
+        self.dismissedSuggestions = dismissedSuggestions
     }
 }
 

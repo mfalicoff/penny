@@ -56,6 +56,8 @@ public enum AccessibilityID {
         public static let categoryForm = "screen.categoryForm"
         public static let schedule = "screen.schedule"
         public static let scheduleForm = "screen.scheduleForm"
+        /// A suggested schedule in the iPad detail pane beside Recurring (MAZ-290).
+        public static let suggestion = "screen.suggestion"
         // Overview, calendar and money flow (MAZ-77).
         // Password reset (MAZ-124).
         public static let forgotPassword = "screen.forgotPassword"
@@ -70,7 +72,7 @@ public enum AccessibilityID {
             appLock, recurring, accounts, categories, lock,
             editEntry, entryDetail, activityFilters, categoryPicker, accountPicker, datePicker, split, entryExtras,
             householdPicker, deleteConfirm,
-            accountForm, categoryForm, schedule, scheduleForm,
+            accountForm, categoryForm, schedule, scheduleForm, suggestion,
             moneyFlow, insights, calendar, categorySpending,
             forgotPassword, resetPassword,
         ]
@@ -375,12 +377,30 @@ public enum AccessibilityID {
         public static func schedule(_ id: String) -> String { "schedule.\(id)" }
         /// A household's shared schedule on Recurring (MAZ-198), by its rule id.
         public static func sharedSchedule(_ id: String) -> String { "sharedSchedule.\(id)" }
+        /// Recurring's Suggested section (MAZ-290): each suggestion by its id (`{kind}|{key}|{frequency}`,
+        /// written with dots and underscores), with Make it a schedule and Dismiss.
+        public static func suggestion(_ id: String) -> String { "suggestion.\(token(id))" }
+        public static func suggestionAccept(_ id: String) -> String { "suggestionAccept.\(token(id))" }
+        public static func suggestionDismiss(_ id: String) -> String { "suggestionDismiss.\(token(id))" }
+        /// The Suggested section's header (with the count) and the empty Recurring page.
+        public static let suggestedHeader = "recurring.suggested"
+        public static let empty = "recurring.empty"
+        public static let emptyAdd = "recurring.emptyAdd"
+        /// The filled-in form's Already in your activity section.
+        public static let scheduleFormMatched = "scheduleForm.matched"
+
+        static func token(_ id: String) -> String {
+            String(id.map { $0 == "|" ? "." : $0 == " " ? "_" : $0 })
+        }
 
         static let all = [
             addAccount, addCategory, addSchedule, accountName, accountSave, categoryName, categorySave, scheduleSave,
-            scheduleMore,
+            scheduleMore, suggestedHeader, empty, emptyAdd, scheduleFormMatched,
         ]
-        static let prefixes = ["account.", "category.", "schedule.", "sharedSchedule."]
+        static let prefixes = [
+            "account.", "category.", "schedule.", "sharedSchedule.", "suggestion.", "suggestionAccept.",
+            "suggestionDismiss.",
+        ]
     }
 
     /// Banners, toasts and named states.

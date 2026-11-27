@@ -125,6 +125,16 @@ extension Ledger {
             date(rule.nextDate, rule.id)
             if !(1...31).contains(rule.anchorDay) { found.append(.invalidAnchorDay(rule.id)) }
         }
+        // Contract 2.3.0: at most 500 dismissed suggestions, each 1...200 units, no duplicates.
+        if let dismissed = dismissedSuggestions {
+            if dismissed.count > RecurringSuggestions.maxDismissed { found.append(.tooMany("dismissedSuggestions")) }
+            if dismissed.contains(where: { !text($0, 1...RecurringSuggestions.maxDismissalLength) }) {
+                found.append(.invalidText("dismissedSuggestions"))
+            }
+            if Set(dismissed.map { Array($0.utf16) }).count != dismissed.count {
+                found.append(.duplicateID("dismissedSuggestions"))
+            }
+        }
         return found
     }
 

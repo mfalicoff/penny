@@ -1899,10 +1899,13 @@
       "id": "iphone-recurring-suggested",
       "view": "recurring with two suggestions: Netflix expense (was $15.49) and Tutoring income",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "matches",
@@ -1918,10 +1921,13 @@
       "id": "iphone-recurring-empty",
       "view": "recurring with no schedules and nothing to suggest",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "matches",
@@ -1937,10 +1943,13 @@
       "id": "iphone-schedule-suggested",
       "view": "new schedule form filled in from the Netflix suggestion, with its 4 entries read-only",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1978,10 +1987,13 @@
       "id": "iphone-suggestion-dismissed-toast",
       "view": "recurring after dismissing Netflix: the toast with Undo",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "matches",
@@ -3482,10 +3494,20 @@
       "id": "ipad-recurring-suggested",
       "view": "iPad recurring with the Netflix suggestion open in the detail pane",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The toolbar has only +: the iPad Manage pages (Recurring among them) have no copper Add entry capsule beside it",
+            "kind": "follow-up",
+            "ref": "MAZ-290"
+          }
+        ]
       },
       "web": {
         "status": "not-built",

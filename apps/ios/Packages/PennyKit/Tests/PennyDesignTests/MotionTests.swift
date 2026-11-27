@@ -82,6 +82,7 @@ struct MotionTests {
         (.disclosure, .selection), (.destructiveConfirmation, .warning), (.toggle, .selection),
         (.syncSucceeded, .success), (.syncFailed, .error), (.sidebar, .impact(weight: .light)),
         (.open, .selection), (.dismissRecap, .impact(weight: .light)), (.openRecap, .selection),
+        (.dismissSuggestion, .impact(weight: .light)),
     ]
 
     @Test("whenHapticsListed_EveryCase_ShouldMapToTheTablesFeedback")

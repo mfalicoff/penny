@@ -33,6 +33,8 @@ final class ShellModel {
     private(set) var syncFailedCount = 0
     /// Bumped when the person deletes an entry or changes rows in bulk, for the delete haptic.
     private(set) var deletedCount = 0
+    /// Bumped when the person dismisses a schedule suggestion on Recurring (MAZ-290).
+    private(set) var dismissedSuggestionCount = 0
     @ObservationIgnored private var syncRequested = false
 
     let workspace: any LedgerWorkspace
@@ -247,12 +249,16 @@ final class ShellModel {
     /// Saves `change`. On success shows the toast (with a success haptic); on failure returns
     /// the failure so the caller keeps the draft and shows it (with an error haptic).
     @discardableResult
-    func commit(_ change: LedgerChange, summary: ChangeSummary, deleting: Bool = false) async -> SaveFailure? {
+    func commit(
+        _ change: LedgerChange, summary: ChangeSummary, deleting: Bool = false, dismissing: Bool = false
+    ) async -> SaveFailure? {
         switch await workspace.commit(change, summary: summary) {
         case .success(let saved):
-            // A delete plays the delete haptic instead of the save one (MAZ-287).
+            // A delete plays the delete haptic instead of the save one (MAZ-287), and dismissing a
+            // suggestion a light one (MAZ-290).
             if deleting { deletedCount += 1 }
-            show(saved, haptic: !deleting)
+            if dismissing { dismissedSuggestionCount += 1 }
+            show(saved, haptic: !deleting && !dismissing)
             return nil
         case .failure(let failure):
             failedCount += 1

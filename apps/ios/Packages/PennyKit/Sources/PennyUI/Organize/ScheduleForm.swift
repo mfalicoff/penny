@@ -24,6 +24,12 @@ struct ScheduleFormSheet: View {
         _model = State(initialValue: ScheduleFormModel(today: today, categories: categories))
     }
 
+    /// Make it a schedule (MAZ-290, `iphone-schedule-suggested`): the form filled in from a suggestion,
+    /// with the matched entries under it, read-only.
+    init(suggestion: RecurringSuggestion) {
+        _model = State(initialValue: ScheduleFormModel(suggestion: suggestion))
+    }
+
     var body: some View {
         let ledger = shell.workspace.load.ledger ?? Ledger(categories: [])
         NavigationStack {
@@ -46,13 +52,23 @@ struct ScheduleFormSheet: View {
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     .accessibilityIdentifier("scheduleForm.kind")
                 }
+                if let suggestion = model.suggestion {
+                    Section {
+                        filledIn(suggestion)
+                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    }
+                }
                 amountSection
                 detailsSection(ledger)
-                CardSection("Note") {
-                    TextField("Optional", text: $model.draft.note, axis: .vertical)
-                        .lineLimit(1...4)
-                        .accessibilityLabel("Note")
-                        .accessibilityIdentifier("scheduleForm.note")
+                if let suggestion = model.suggestion {
+                    matchedSection(suggestion, ledger: ledger)
+                } else {
+                    CardSection("Note") {
+                        TextField("Optional", text: $model.draft.note, axis: .vertical)
+                            .lineLimit(1...4)
+                            .accessibilityLabel("Note")
+                            .accessibilityIdentifier("scheduleForm.note")
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -146,7 +162,8 @@ struct ScheduleFormSheet: View {
                 }
             }
         } footer: {
-            if model.draft.kind == .expense { Text("Reports count only your share.") }
+            // The filled-in form (`iphone-schedule-suggested`) goes straight on to Schedule.
+            if model.draft.kind == .expense, model.suggestion == nil { Text("Reports count only your share.") }
         }
     }
 
@@ -215,11 +232,53 @@ struct ScheduleFormSheet: View {
         } header: {
             Text("Schedule").cardSectionHeader()
         } footer: {
-            Text(
-                model.isNew
-                    ? "Penny records the first date now, then on each date as it comes. On the 29th to 31st, "
-                        + "shorter months use their last day."
-                    : "Changes apply to future occurrences. Recorded entries keep their original details.")
+            if let suggestion = model.suggestion {
+                Text(
+                    "The first date is the next one after your latest \(suggestion.title) entry, so nothing is "
+                        + "recorded twice.")
+            } else {
+                scheduleFooter
+            }
+        }
+    }
+
+    private var scheduleFooter: some View {
+        Text(
+            model.isNew
+                ? "Penny records the first date now, then on each date as it comes. On the 29th to 31st, "
+                    + "shorter months use their last day."
+                : "Changes apply to future occurrences. Recorded entries keep their original details.")
+    }
+
+    /// The card's `.from` note under the kind: where the form's values came from.
+    private func filledIn(_ suggestion: RecurringSuggestion) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "repeat").font(.body.weight(.semibold)).foregroundStyle(PennyColor.tintText)
+                .accessibilityHidden(true)
+            Text("Filled in from \(suggestion.count) \(suggestion.title) entries.").font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    /// Already in your activity: the matched entries, newest first, read-only. They stay as they
+    /// are: the schedule starts after the latest one and never links them.
+    private func matchedSection(_ suggestion: RecurringSuggestion, ledger: Ledger) -> some View {
+        Section {
+            ForEach(suggestion.entryIds.compactMap(ledger.entry(id:)), id: \.id) { entry in
+                MatchedEntryRow(entry: entry, currency: ledger.currency.rawValue, today: shell.today)
+            }
+        } header: {
+            HStack {
+                Text("Already in your activity").cardSectionHeader()
+                Spacer()
+                Text("\(suggestion.count)").font(.footnote.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("scheduleForm.matched")
+        } footer: {
+            Text("These entries stay as they are.")
         }
     }
 

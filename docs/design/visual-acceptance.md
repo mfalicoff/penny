@@ -304,7 +304,7 @@ Behavior (approved with the cards):
 
 ## Drafted cards: recurring suggestions and renewal reminders (MAZ-290, 2026-11-26)
 
-Penny spots entries that repeat, like Netflix every month, and offers to make them schedules. These 13 cards draw it, light and dark. Income is suggested too: Tutoring is the income suggestion on the cards. **Approved by the owner (2026-11-26)**, with the decisions below. Nothing is built yet. [Motion](motion.md#recurring-suggestions-and-renewal-reminders-maz-290) covers how each new moment animates.
+Penny spots entries that repeat, like Netflix every month, and offers to make them schedules. These 13 cards draw it, light and dark. Income is suggested too: Tutoring is the income suggestion on the cards. **Approved by the owner (2026-11-26)**, with the decisions below. Phase 1 (suggestions, accepting and dismissing) is built on iOS and the web (2026-11-27): its cards match, except `ipad-recurring-suggested`, whose toolbar lacks the copper Add entry capsule of the iPad Manage pages (a follow-up), and the web's `iphone-schedule-suggested`, which keeps the web schedule dialog's recorded differences. The Renews soon and reminder cards are phase 2, not built yet. [Motion](motion.md#recurring-suggestions-and-renewal-reminders-maz-290) covers how each new moment animates.
 
 | State | Cards |
 | --- | --- |

@@ -196,11 +196,15 @@ public struct Ledger: Hashable, Sendable {
     public var categories: [LedgerCategory]
     public var transactions: [LedgerEntry]
     public var recurring: [RecurringRule]
+    /// Recurring suggestions dismissed on any device, as `{kind}|{key}|{frequency}|{share}`
+    /// (`RecurringSuggestions`), at most 500, merged as a set union (contract 2.3.0). Nil when the
+    /// ledger has none on the wire: absent and empty stay distinct, as the other optional fields do.
+    public var dismissedSuggestions: [String]?
 
     public init(
         currency: Currency = .cad, accounts: [PaymentAccount] = [], trips: [Trip] = [],
         categories: [LedgerCategory] = Ledger.defaultCategories, transactions: [LedgerEntry] = [],
-        recurring: [RecurringRule] = []
+        recurring: [RecurringRule] = [], dismissedSuggestions: [String]? = nil
     ) {
         self.currency = currency
         self.accounts = accounts
@@ -208,6 +212,7 @@ public struct Ledger: Hashable, Sendable {
         self.categories = categories
         self.transactions = transactions
         self.recurring = recurring
+        self.dismissedSuggestions = dismissedSuggestions
     }
 
     /// The default investment category.

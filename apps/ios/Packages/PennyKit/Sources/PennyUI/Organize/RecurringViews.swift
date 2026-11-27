@@ -8,8 +8,15 @@ import SwiftUI
 /// (removal asks first); + adds a schedule. Shared schedules the account is part of (MAZ-198)
 /// sit with the expenses, marked Shared with the household's name and the account's share, and
 /// open their household with their form (MAZ-256: the household page no longer lists them).
+///
+/// Above them, **Suggested** (MAZ-290): personal entries that repeat, computed from the ledger
+/// and today (`RecurringSuggestions`), each with Make it a schedule (the filled-in form) and
+/// Dismiss (at once, with Undo on the toast). On the iPad a suggestion opens beside the list.
+/// With no schedules and nothing to suggest, the empty state (`iphone-recurring-empty`).
 struct RecurringListView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selection: ScheduleSelection?
     @State private var shared: [SharedSchedule] = []
     @State private var removing: RecurringRule?
@@ -18,65 +25,42 @@ struct RecurringListView: View {
     /// A shared schedule being paused or stopped here (MAZ-256).
     @State private var stopping: SharedSchedule?
     @State private var sharedFailure: HouseholdFailure?
+    /// The suggestion whose filled-in form is open (Make it a schedule).
+    @State private var accepting: RecurringSuggestion?
+    /// The suggestion shown beside the list on the iPad (the first one until another is chosen).
+    @State private var selectedSuggestion: String?
 
     var body: some View {
         WorkspaceContent { ledger in
-            List {
-                let items = Self.items(ledger.recurring, shared: shared)
-                if !items.isEmpty {
-                    // The card's subtitle, right under the large title (`.lsub`). A navigation
-                    // subtitle would fold the large title into an inline one.
-                    Section {
-                        Text(Self.subtitle).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+            let suggestions = RecurringSuggestions.suggestions(ledger, today: shell.today)
+            Group {
+                if splitsForSuggestions, let first = suggestions.first {
+                    let current = suggestions.first { $0.id == selectedSuggestion } ?? first
+                    HStack(spacing: 0) {
+                        list(ledger, suggestions: suggestions, selected: current.id)
+                            .frame(maxWidth: .infinity)
+                        Divider().ignoresSafeArea()
+                        SuggestionDetailPane(
+                            suggestion: current, ledger: ledger, today: shell.today,
+                            accept: { accepting = current }, dismiss: { dismiss(current) }
+                        )
+                        .id(current.id)
+                        // Switching suggestions crossfades the pane (`quick`), as entries beside Activity.
+                        .transition(.opacity.animation(Motion.Easing.standard.animation(.quick)))
+                        .frame(maxWidth: .infinity)
                     }
-                    .compactSectionSpacing()
-                }
-                if let failure {
-                    Section {
-                        SaveErrorBanner(failure: failure, retry: nil)
-                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-                    }
-                }
-                if let sharedFailure {
-                    Section {
-                        HouseholdFailureBanner(failure: sharedFailure)
-                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-                    }
-                }
-                let kinds = Self.sectionOrder.filter { kind in items.contains { $0.kind == kind } }
-                ForEach(kinds, id: \.self) { kind in
-                    Section {
-                        ForEach(Self.sorted(items.filter { $0.kind == kind })) { item in
-                            switch item {
-                            case .personal(let rule): row(rule, ledger: ledger)
-                            case .shared(let schedule): sharedRow(schedule)
-                            }
-                        }
-                    } header: {
-                        // The card's group heading (`.gh`): small, semibold, upper case.
-                        Text(Self.sectionTitle(kind)).cardSectionHeader()
-                    } footer: {
-                        if kind == kinds.last { Text(Self.footer(hasShared: !shared.isEmpty)) }
-                    }
-                }
-            }
-            .insetGroupedList()
-            .overlay {
-                if ledger.recurring.isEmpty && shared.isEmpty {
-                    PennyStateView(
-                        .empty, title: "No recurring entries",
-                        message: "Pay, rent and subscriptions you repeat show up here with their next date.",
-                        actionTitle: "Add schedule"
-                    ) { addingSchedule = true }
+                } else {
+                    list(ledger, suggestions: suggestions, selected: nil)
                 }
             }
             .sheet(isPresented: $addingSchedule) {
                 ScheduleFormSheet(today: shell.today, categories: ledger.categories).environment(shell)
             }
+            .sheet(item: $accepting) { ScheduleFormSheet(suggestion: $0).environment(shell) }
         }
         .background(PennyColor.background)
-        .navigationTitle("Recurring")
+        // Beside a suggestion (iPad) the title sits over the list column, as on `ipad-recurring-suggested`.
+        .navigationTitle(splitsForSuggestions ? "" : "Recurring")
         // The card's large title; Settings' sheet root is inline, and a pushed page would inherit it.
         .toolbarTitleDisplayModeLarge()
         .toolbar {
@@ -107,8 +91,139 @@ struct RecurringListView: View {
         } message: { schedule in
             Text("No more expenses are added to \(schedule.household.name) from it. Expenses it already added stay.")
         }
+        // Make it a schedule opens a sheet (light); choosing a suggestion on the iPad (selection).
+        .pennyHaptic(.openClose, trigger: accepting?.id) { _, new in new != nil }
+        .pennyHaptic(.open, trigger: selectedSuggestion) { _, new in new != nil }
         .task { shared = await shell.households.sharedSchedules() }
         .accessibilityIdentifier("screen.recurring")
+    }
+
+    /// The iPad's list and pane: a regular width with something to suggest.
+    private var splitsForSuggestions: Bool {
+        guard sizeClass == .regular, let ledger = shell.workspace.load.ledger else { return false }
+        return !RecurringSuggestions.suggestions(ledger, today: shell.today).isEmpty
+    }
+
+    private func list(_ ledger: Ledger, suggestions: [RecurringSuggestion], selected: String?) -> some View {
+        List {
+            let items = Self.items(ledger.recurring, shared: shared)
+            // The card's subtitle, right under the large title (`.lsub`). A navigation
+            // subtitle would fold the large title into an inline one.
+            Section {
+                if selected != nil {
+                    Text("Recurring").font(.largeTitle.weight(.bold)).foregroundStyle(PennyColor.label)
+                        .accessibilityAddTraits(.isHeader)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+                Text(Self.subtitle).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+            }
+            .compactSectionSpacing()
+            if let failure {
+                Section {
+                    SaveErrorBanner(failure: failure, retry: nil)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                }
+            }
+            if let sharedFailure {
+                Section {
+                    HouseholdFailureBanner(failure: sharedFailure)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                }
+            }
+            if selected != nil {
+                suggestedList(suggestions, ledger: ledger, selected: selected)
+            } else {
+                suggestedCards(suggestions, ledger: ledger)
+            }
+            if items.isEmpty, suggestions.isEmpty {
+                Section {
+                    RecurringEmptyState { addingSchedule = true }
+                        .padding(.top, 72)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                }
+            }
+            let kinds = Self.sectionOrder.filter { kind in items.contains { $0.kind == kind } }
+            ForEach(kinds, id: \.self) { kind in
+                Section {
+                    ForEach(Self.sorted(items.filter { $0.kind == kind })) { item in
+                        switch item {
+                        case .personal(let rule): row(rule, ledger: ledger)
+                        case .shared(let schedule): sharedRow(schedule)
+                        }
+                    }
+                } header: {
+                    // The card's group heading (`.gh`): small, semibold, upper case.
+                    Text(Self.sectionTitle(kind)).cardSectionHeader()
+                } footer: {
+                    if kind == kinds.last { Text(Self.footer(hasShared: !shared.isEmpty)) }
+                }
+            }
+        }
+        .insetGroupedList()
+        // A suggestion arriving, leaving (Dismiss, or made a schedule) or coming back (Undo) moves
+        // the rows as Lists › Insert and Delete do; under Reduce Motion it fades (`quick`).
+        .animation(Motion.animation(.standard, reduceMotion: reduceMotion), value: suggestions.map(\.id))
+        .animation(Motion.animation(.standard, reduceMotion: reduceMotion), value: ledger.recurring.map(\.id))
+    }
+
+    /// The iPhone's Suggested section: one card per suggestion, the header with the count over
+    /// the first and the footer under the last.
+    @ViewBuilder
+    private func suggestedCards(_ suggestions: [RecurringSuggestion], ledger: Ledger) -> some View {
+        ForEach(Array(suggestions.enumerated()), id: \.element.id) { index, suggestion in
+            Section {
+                SuggestionCard(
+                    suggestion: suggestion, ledger: ledger, today: shell.today,
+                    accept: { accepting = suggestion }, dismiss: { dismiss(suggestion) }
+                )
+                .buttonStyle(.pennyPress)
+                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 14, trailing: 16))
+            } header: {
+                if index == 0 { suggestedHeader(suggestions.count) }
+            } footer: {
+                if index == suggestions.count - 1 { Text(SuggestionText.footer) }
+            }
+            .suggestionSpacing(last: index == suggestions.count - 1)
+        }
+    }
+
+    /// The iPad's Suggested section: compact rows; the selected one is open beside the list.
+    @ViewBuilder
+    private func suggestedList(_ suggestions: [RecurringSuggestion], ledger: Ledger, selected: String?) -> some View {
+        Section {
+            ForEach(suggestions) { suggestion in
+                Button {
+                    selectedSuggestion = suggestion.id
+                } label: {
+                    SuggestionSummary(suggestion: suggestion, ledger: ledger)
+                        .contentShape(Rectangle())
+                        .accessibilityElement(children: .combine)
+                }
+                .buttonStyle(.plain)
+                .cardRow()
+                .listRowBackground(suggestion.id == selected ? PaletteToken.tintSoft.value.color : PennyColor.surface)
+                .accessibilityAddTraits(suggestion.id == selected ? .isSelected : [])
+                .accessibilityIdentifier("suggestion.\(SuggestionID.token(suggestion.id))")
+            }
+        } header: {
+            suggestedHeader(suggestions.count)
+        }
+    }
+
+    private func suggestedHeader(_ count: Int) -> some View {
+        HStack {
+            Text(SuggestionText.header).cardSectionHeader()
+            Spacer()
+            Text("\(count)").font(.footnote.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("recurring.suggested")
+    }
+
+    private func dismiss(_ suggestion: RecurringSuggestion) {
+        Task { failure = await SuggestionActions.dismiss(suggestion, shell: shell) }
     }
 
     private func sharedRow(_ schedule: SharedSchedule) -> some View {
@@ -213,6 +328,17 @@ extension View {
     func compactSectionSpacing() -> some View {
         #if os(iOS)
             listSectionSpacing(0)
+        #else
+            self
+        #endif
+    }
+
+    /// The cards' 10-point gap between suggestion cards (`.sug + .sug`); the last one keeps the
+    /// list's gap before the schedules.
+    @ViewBuilder
+    func suggestionSpacing(last: Bool) -> some View {
+        #if os(iOS)
+            if last { self } else { listSectionSpacing(10) }
         #else
             self
         #endif

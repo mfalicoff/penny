@@ -243,6 +243,9 @@ extension LedgerChange {
 @Observable
 final class ScheduleFormModel {
     let original: RecurringRule?
+    /// The suggestion this form accepts (MAZ-290): the form opens filled in from it, and saving adds
+    /// one schedule (`LedgerChange.acceptSuggestion`) that records nothing before its first date.
+    let suggestion: RecurringSuggestion?
     var draft: EntryDraft
     private(set) var failure: SaveFailure?
     private(set) var isSaving = false
@@ -251,6 +254,7 @@ final class ScheduleFormModel {
 
     init(rule: RecurringRule) {
         original = rule
+        suggestion = nil
         draft = EntryDraft(schedule: rule)
         entryID = rule.id
         ruleID = rule.id
@@ -259,8 +263,18 @@ final class ScheduleFormModel {
     init(today: CalendarDate, categories: [LedgerCategory], makeID: () -> String = OrganizeID.make) {
         original = nil
         draft = .newSchedule(today: today, categories: categories)
+        suggestion = nil
         entryID = makeID()
         ruleID = makeID()
+    }
+
+    init(suggestion: RecurringSuggestion, makeID: () -> String = OrganizeID.make) {
+        original = nil
+        self.suggestion = suggestion
+        let id = makeID()
+        draft = EntryDraft(schedule: RecurringSuggestions.rule(for: suggestion, id: id))
+        entryID = id
+        ruleID = id
     }
 
     var isNew: Bool { original == nil }
@@ -292,7 +306,15 @@ final class ScheduleFormModel {
         let change: LedgerChange
         let rule: RecurringRule
         do throws(LedgerRuleError) {
-            if let original {
+            if let suggestion {
+                // The suggested rule is the "original": the form's date is its first date, and a
+                // moved date re-anchors it there (`EntryDraft.buildSchedule`).
+                let suggested = RecurringSuggestions.rule(for: suggestion, id: ruleID)
+                var built = try draft.buildSchedule(categories: categories, original: suggested)
+                built.date = built.nextDate
+                rule = built
+                change = .acceptSuggestion(built)
+            } else if let original {
                 rule = try draft.buildSchedule(categories: categories, original: original)
                 change = .saveSchedule(rule, original: original)
             } else {

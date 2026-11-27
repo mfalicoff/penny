@@ -13,6 +13,8 @@
 ///   (the edit is newer than the delete it never saw).
 /// - Records this device created are appended after the server's, in local order.
 /// - Currency: a local change wins, otherwise the server's.
+/// - Dismissed suggestions (contract 2.3.0): a set union of both sides, less what this device
+///   undid since the base (`RecurringSuggestions.mergeDismissals`).
 ///
 /// Four v2 refinements keep personal recurrence from duplicating, overwriting or resurrecting
 /// rules and occurrences when a device caught a rule up offline (docs/ios/offline-sync.md). An
@@ -58,6 +60,9 @@ public enum LedgerMerge {
         result.transactions = dropConsumedOccurrences(
             items(base.transactions, localEntries, remote.transactions), base: base, local: local, remote: remote,
             mergedRuleIDs: Set(result.recurring.map(\.id)))
+        // Contract 2.3.0: dismissed suggestions are a set union, less what this device undid.
+        result.dismissedSuggestions = RecurringSuggestions.mergeDismissals(
+            base: base.dismissedSuggestions, local: local.dismissedSuggestions, remote: remote.dismissedSuggestions)
         return result
     }
 
