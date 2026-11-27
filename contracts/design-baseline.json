@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "d0a537a0d4cc832804fc8744849712103f63131500c493fba2d2256a298f7e9a"
+      "sha256": "ddebdae0f2128ba7fc7457c0d19b16979f07fe698147de611a73bb71fa27c85a"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "c4e66e294b012ff876daa5e7060eb989afad3d91771b672758e3d59bac4436ef"
+      "sha256": "68ab7501fadd8d4d86d111b7c0fa5bb3fc7151bbc66c2c07cf04cd699bf6ff9a"
     }
   ],
   "tokens": {
@@ -2053,7 +2053,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/currency.html",
-      "sha256": "969ee7970deee83f2c637c8004dc1daf93db5c62d3185d86f5d8f976ed55bc1e",
+      "sha256": "f7726586e5a1f8e01825252cf31b7347bc09103fbfa6e6766a72de9bd94dc404",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
@@ -4037,7 +4037,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/currency.html",
-      "sha256": "78713625f602cf908a3a798ae3e5ab32102249ed23eb5d645994f14840195ecd",
+      "sha256": "af821c19fb0657a9a1940973f340a657fd61cb105e136aee04b4ef9803690e90",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
