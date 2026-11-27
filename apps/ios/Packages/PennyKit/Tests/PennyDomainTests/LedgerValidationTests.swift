@@ -184,4 +184,27 @@ struct LedgerValidationTests {
         ledger.recurring[0].participants = nil
         #expect(ledger.violations == [.invalidParticipants("e")])
     }
+
+    @Test("whenDismissedSuggestionsBreakTheLimits_Violations_ShouldNameThem")
+    func dismissedSuggestions() {
+        var ledger = Sample.ledger()
+        #expect(ledger.violations.isEmpty)
+        ledger.dismissedSuggestions = []
+        #expect(ledger.violations.isEmpty)
+        ledger.dismissedSuggestions = (0..<500).map { "expense|item \($0)|monthly|100" }
+        #expect(ledger.violations.isEmpty)
+        ledger.dismissedSuggestions?.append("one more")
+        #expect(ledger.violations == [.tooMany("dismissedSuggestions")])
+        ledger.dismissedSuggestions = [String(repeating: "a", count: 200)]
+        #expect(ledger.violations.isEmpty)
+        for bad in ["", String(repeating: "a", count: 201), "a\u{0}b"] {
+            ledger.dismissedSuggestions = [bad]
+            #expect(ledger.violations == [.invalidText("dismissedSuggestions")])
+        }
+        ledger.dismissedSuggestions = ["expense|gym|monthly|4500", "expense|gym|monthly|4500"]
+        #expect(ledger.violations == [.duplicateID("dismissedSuggestions")])
+        // Compared as UTF-16 code units, as on the server: a composed and a decomposed "é" differ.
+        ledger.dismissedSuggestions = ["expense|caf\u{E9}|monthly|1", "expense|cafe\u{301}|monthly|1"]
+        #expect(ledger.violations.isEmpty)
+    }
 }

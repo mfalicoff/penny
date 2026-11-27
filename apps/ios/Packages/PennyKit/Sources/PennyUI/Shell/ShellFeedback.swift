@@ -134,12 +134,17 @@ struct ToastOverlay: ViewModifier {
     @Environment(ShellModel.self) private var shell
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let bottomPadding: Double
+    /// False under a sheet that shows its own toast (the iPhone Settings sheet, where Recurring's
+    /// Dismiss and saves happen, MAZ-290), so the toast shows once, on top.
+    var showsToast = true
+    /// False for that sheet's copy: the shell's own overlay already plays every haptic once.
+    var playsHaptics = true
     @State private var undoFailure: String?
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottom) {
-                if let toast = shell.toast {
+                if showsToast, let toast = shell.toast {
                     SaveToast(
                         title: toast.summary.title, detail: toast.detail, leading: leading(toast.summary),
                         undo: toast.canUndo ? { Task { undoFailure = await shell.undoToast()?.message } } : nil
@@ -152,21 +157,7 @@ struct ToastOverlay: ViewModifier {
                 }
             }
             .animation(Motion.animation(.standard, reduceMotion: reduceMotion), value: shell.toast?.id)
-            // One haptic per action the person takes (docs/design/motion.md#haptics-ios).
-            .pennyHaptic(.save, trigger: shell.savedCount)
-            .pennyHaptic(.failed, trigger: shell.failedCount)
-            .pennyHaptic(.undo, trigger: shell.undoCount)
-            .pennyHaptic(.delete, trigger: shell.deletedCount)
-            .pennyHaptic(.syncSucceeded, trigger: shell.syncSucceededCount)
-            .pennyHaptic(.syncFailed, trigger: shell.syncFailedCount)
-            .pennyHaptic(.stepPeriod, trigger: shell.month)
-            // The recap (MAZ-292), opened from its banner or Insights' Recap button.
-            .pennyHaptic(.openRecap, trigger: shell.recapOpenedCount)
-            // Add entry opening or closing.
-            .pennyHaptic(.openClose, trigger: shell.route.isAddEntryPresented)
-            // An entry opened in the iPad detail column beside Activity.
-            .pennyHaptic(.open, trigger: shell.activitySelection) { _, new in new != nil }
-            .onChange(of: shell.workspace.sync) { _, status in shell.syncChanged(to: status) }
+            .modifier(ShellHaptics(shell: shell, enabled: playsHaptics))
             .alert(
                 "Couldn't undo",
                 isPresented: Binding(get: { undoFailure != nil }, set: { if !$0 { undoFailure = nil } })
@@ -216,5 +207,35 @@ struct SaveErrorBanner: View {
             if let retry { InlineActionButton("Try again", action: retry) }
         }
         .accessibilityIdentifier("banner.saveError")
+    }
+}
+
+/// The shell's haptics, one per action the person takes (docs/design/motion.md#haptics-ios), and
+/// the sync status they follow. Attached once: `enabled` is false on a second toast overlay.
+private struct ShellHaptics: ViewModifier {
+    let shell: ShellModel
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .pennyHaptic(.save, trigger: shell.savedCount)
+                .pennyHaptic(.failed, trigger: shell.failedCount)
+                .pennyHaptic(.undo, trigger: shell.undoCount)
+                .pennyHaptic(.delete, trigger: shell.deletedCount)
+                .pennyHaptic(.dismissSuggestion, trigger: shell.dismissedSuggestionCount)
+                .pennyHaptic(.syncSucceeded, trigger: shell.syncSucceededCount)
+                .pennyHaptic(.syncFailed, trigger: shell.syncFailedCount)
+                .pennyHaptic(.stepPeriod, trigger: shell.month)
+                // The recap (MAZ-292), opened from its banner or Insights' Recap button.
+                .pennyHaptic(.openRecap, trigger: shell.recapOpenedCount)
+                // Add entry opening or closing.
+                .pennyHaptic(.openClose, trigger: shell.route.isAddEntryPresented)
+                // An entry opened in the iPad detail column beside Activity.
+                .pennyHaptic(.open, trigger: shell.activitySelection) { _, new in new != nil }
+                .onChange(of: shell.workspace.sync) { _, status in shell.syncChanged(to: status) }
+        } else {
+            content
+        }
     }
 }

@@ -1,4 +1,4 @@
-/// The wire ledger, version 4 (`accounts` and `trips` may be absent).
+/// The wire ledger, version 4 (`accounts`, `trips` and `dismissedSuggestions` may be absent).
 public struct Ledger: Codable, Equatable, Sendable {
     public var version: Int
     public var currency: String
@@ -7,6 +7,8 @@ public struct Ledger: Codable, Equatable, Sendable {
     public var trips: [Trip]?
     public var transactions: [Entry]
     public var recurring: [Recurring]
+    /// Contract 2.3.0: dismissed recurring suggestions, `{kind}|{key}|{frequency}|{share}`. Optional.
+    public var dismissedSuggestions: [String]?
 
     public struct Category: Codable, Equatable, Sendable {
         public var id: String

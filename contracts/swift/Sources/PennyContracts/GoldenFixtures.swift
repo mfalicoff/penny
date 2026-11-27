@@ -77,6 +77,48 @@ public struct MergeFixture: Codable, Equatable, Sendable {
     }
 }
 
+/// recurring-suggestions.json (MAZ-290): the normalised title key of each title, and for each
+/// ledger and day, the suggestions Penny offers. Money is integer cents; optional members are
+/// absent, never null.
+public struct RecurringSuggestionsFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    public var keys: [KeyCase]
+    public var cases: [Case]
+
+    public struct KeyCase: Codable, Equatable, Sendable {
+        public var title: String
+        public var key: String
+    }
+
+    public struct Case: Codable, Equatable, Sendable {
+        public var name: String
+        public var today: String
+        public var ledger: Ledger
+        public var expected: [Suggestion]
+    }
+
+    public struct Suggestion: Codable, Equatable, Sendable {
+        public var id: String
+        public var kind: String
+        public var key: String
+        public var frequency: String
+        public var title: String
+        public var total: Int64
+        public var share: Int64
+        public var participants: Int?
+        public var categoryId: String
+        public var accountId: String?
+        public var previousShare: Int64?
+        public var anchorDay: Int
+        public var nextDate: String
+        public var count: Int
+        public var firstDate: String
+        public var lastDate: String
+        public var entryIds: [String]
+    }
+}
+
 /// month-totals.json (MAZ-136): Left to spend versus Projected around today.
 public struct MonthTotalsFixture: Codable, Equatable, Sendable {
     public var generator: String

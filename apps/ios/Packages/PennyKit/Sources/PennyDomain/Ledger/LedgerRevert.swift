@@ -31,6 +31,23 @@ extension LedgerChange {
             next.recurring = try restore(
                 ledger.recurring, before: before.recurring, after: after.recurring,
                 stale: .scheduleChangedOnAnotherDevice)
+            // Dismissed suggestions (contract 2.3.0): take back what the change dismissed and
+            // dismiss again what it took back; other devices' dismissals stay.
+            if before.dismissedSuggestions != after.dismissedSuggestions {
+                let old = before.dismissedSuggestions ?? []
+                let new = after.dismissedSuggestions ?? []
+                let added = new.filter { item in !old.contains { RecurringSuggestions.same($0, item) } }
+                let removed = old.filter { item in !new.contains { RecurringSuggestions.same($0, item) } }
+                var list = (ledger.dismissedSuggestions ?? []).filter { item in
+                    !added.contains { RecurringSuggestions.same($0, item) }
+                }
+                for item in removed where !list.contains(where: { RecurringSuggestions.same($0, item) }) {
+                    list = RecurringSuggestions.adding(item, to: list)
+                }
+                next.dismissedSuggestions =
+                    list.isEmpty && before.dismissedSuggestions == nil && ledger.dismissedSuggestions == new
+                    ? nil : list
+            }
             return next
         }
     }

@@ -76,4 +76,21 @@ struct LedgerRevertTests {
         now.transactions.append(Self.lunch)
         #expect(try LedgerChange.revert(ledger, to: ledger).apply(to: now) == now)
     }
+
+    @Test("whenADismissalIsUndone_Revert_ShouldTakeBackOnlyThatDismissal")
+    func dismissals() throws {
+        let netflix = "expense|netflix|monthly|1699"
+        let gym = "expense|gym|monthly|4500"
+        let before = Sample.ledger()
+        var after = before
+        after.dismissedSuggestions = [netflix]
+        // Another device dismissed Gym since.
+        var now = after
+        now.dismissedSuggestions = [netflix, gym]
+        #expect(try LedgerChange.revert(after, to: before).apply(to: now).dismissedSuggestions == [gym])
+        // Nothing else: the field goes back to absent.
+        #expect(try LedgerChange.revert(after, to: before).apply(to: after) == before)
+        // Undoing an Undo dismisses again.
+        #expect(try LedgerChange.revert(before, to: after).apply(to: before).dismissedSuggestions == [netflix])
+    }
 }
