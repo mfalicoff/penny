@@ -243,9 +243,13 @@ details.flow__table[open]::details-content {
 }
 
 /* ---------- Recurring suggestions (MAZ-290) ---------- */
-/* A suggestion that appears (or comes back with Undo) and a new schedule rise in while making room, as Lists › Insert. */
-.suggestion-list[data-animate-inserts] > li,
-.recurring-list[data-animate-inserts] > li {
+/*
+ * A suggestion that appears (or comes back with Undo) and a new schedule rise in while making room,
+ * as Lists › Insert. Only the entering row transitions its height (`data-entering`), so a later
+ * height change, such as a font loading and a title wrapping, doesn't animate.
+ */
+.suggestion-list[data-animate-inserts] > li[data-entering],
+.recurring-list[data-animate-inserts] > li[data-entering] {
   transition:
     opacity var(--pk-dur-standard) var(--pk-ease-standard),
     translate var(--pk-dur-standard) var(--pk-ease-standard),
@@ -253,8 +257,8 @@ details.flow__table[open]::details-content {
 }
 
 @starting-style {
-  .suggestion-list[data-animate-inserts] > li,
-  .recurring-list[data-animate-inserts] > li {
+  .suggestion-list[data-animate-inserts] > li[data-entering],
+  .recurring-list[data-animate-inserts] > li[data-entering] {
     height: 0;
     opacity: 0;
     translate: 0 calc(var(--pk-nudge) * var(--pk-motion));
