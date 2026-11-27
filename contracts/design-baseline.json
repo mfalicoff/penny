@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "60220703fbdd587b136b749df36beb0f70b13fcdb3d6911e14c9c30276171e0d"
+      "sha256": "565cfcfb0126f4882b634995e465cc9c78f34c7c3b7910b483302ed3d0e75230"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "fd5bb7d29025c9e81e809492db6f35469cdc50a0b71b34e328e1f0d3ab263326"
+      "sha256": "d0a537a0d4cc832804fc8744849712103f63131500c493fba2d2256a298f7e9a"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "21ce4a7a8b53c4b611e53252e7ff6dd36a100c4745a6923b777bded0563db431"
+      "sha256": "c4e66e294b012ff876daa5e7060eb989afad3d91771b672758e3d59bac4436ef"
     }
   ],
   "tokens": {
@@ -5333,6 +5333,581 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "entries in any ISO currency at the rate for their date, provisional and edited rates, both amounts in lists, trips converted per member and settled in one currency, rate fetching off"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-inbox-captured",
+      "name": "Inbox · Purchases and receipts",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/inbox-captured.html",
+      "sha256": "ce9301cce3cbe131e998546bd778ef3e454b68b0ed674152d1826a1e8ef99b69",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-inbox-captured-empty",
+      "name": "Inbox · Nothing to review",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/inbox-captured-empty.html",
+      "sha256": "2540fdca3fd5c81b9d86e0440e82b4503b5f8ca77bad68f3bb63405235e70f79",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-add",
+      "name": "Inbox · Add a purchase",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-add.html",
+      "sha256": "0d484c0bede134e85298268623b82f7dcbffeb58397fb7dd7b03fd6e4b6ba0c4",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-split",
+      "name": "Inbox · Split a purchase",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-split.html",
+      "sha256": "6e20208ab17d52ec05437c0c2e63d5c1ecffe32451b82029f775d11e48ca57d8",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-match",
+      "name": "Inbox · Same purchase",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-match.html",
+      "sha256": "b7bb4dfe3b99072b0308c60ed465c2591bf3f02aa0d4ff24c22195c54a6dbda0",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-add-all",
+      "name": "Inbox · Add all",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-add-all.html",
+      "sha256": "61a3146994a189c2b0fa05bfa87af51f4352a17f463266fbedeef7447099ab92",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-discard",
+      "name": "Inbox · Purchase discarded",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-discard.html",
+      "sha256": "60561b327a94b54a170cfd95ba19069217c4aa1c1ba7a18fe83b47bd80304e27",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-home-inbox-badge",
+      "name": "Home · Inbox count",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/home-inbox-badge.html",
+      "sha256": "f7d4e9027ba09370c4e3bf907973048b9bc5f0effe9c2886ac9057c3b53c0911",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-nudge-setting",
+      "name": "Purchases to review setting",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-nudge-setting.html",
+      "sha256": "85fd59f67c728577cd0773efbbf46ce2962c5e031f7167894ea707834e1a7fca",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-capture-nudge-notification",
+      "name": "Purchases to review on the Lock Screen",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/capture-nudge-notification.html",
+      "sha256": "55b4d16934c47d025330d047a5578c488ec859386c40a8537a4738d682b46ec1",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shortcuts-settings",
+      "name": "Settings · Shortcuts",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shortcuts-settings.html",
+      "sha256": "7a563ba7702eadfeaa9f0061522634425f84c677098948ff55b1feb55ecf4806",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shortcuts-card-add",
+      "name": "Shortcuts · Add card",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shortcuts-card-add.html",
+      "sha256": "d469f0b7d12e21ff39b35ab7238bc42bfc34c9847e9504b28285924eef12775d",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shortcuts-card-edit",
+      "name": "Shortcuts · Edit card",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shortcuts-card-edit.html",
+      "sha256": "760fe4985056b793c29e8eb2412bdbc074156cced11b25b3dfb7874f67312e91",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-siri-added",
+      "name": "Siri · Expense added",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/siri-added.html",
+      "sha256": "308a345308bdeab17b2b1bf40dcadc927bca824f2c1c56d3c5236a9b355c3f11",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-siri-refusals",
+      "name": "Siri · Can't add",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/siri-refusals.html",
+      "sha256": "1e3e8b33048d6e373ec2429343933211b3dccb0fc08f5b197fb8f62113b8834d",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-inbox-captured",
+      "name": "Inbox · Purchases and receipts",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/inbox-captured.html",
+      "sha256": "7277d0f6be2cce7f95374fe2886beba566ae58c4059c70a728d86cc169eadb55",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-inbox-captured-empty",
+      "name": "Inbox · Nothing to review",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/inbox-captured-empty.html",
+      "sha256": "c892543747133d618d6e86387e241cfacb0ffc67721d6d24eff97b8568469f2f",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-shortcuts-settings",
+      "name": "Settings · Shortcuts",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/shortcuts-settings.html",
+      "sha256": "f7a0d61b092a059570d99e948c8740e1c01285befa30f3152c4ddaaf80fa933a",
+      "nativeIssue": "MAZ-291",
+      "webIssue": null,
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-inbox-captured",
+      "name": "Inbox · Purchases and receipts",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/inbox-captured.html",
+      "sha256": "cb929174c12f04af7f7b99307177296d5923a6c1bf80321a2fbf1cd57695143e",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-inbox-captured-empty",
+      "name": "Inbox · Nothing to review",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/inbox-captured-empty.html",
+      "sha256": "820119ba8515eae24bb2e6715c7f055aec8a2ba86fb4007b1767b2b12ac2d9fe",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-capture-add",
+      "name": "Inbox · Add a purchase",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/capture-add.html",
+      "sha256": "2975c9903ac8fd2517aad947c7f135ddac770ed5d07ecebb0aa20f499d75170a",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-capture-split",
+      "name": "Inbox · Split a purchase",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/capture-split.html",
+      "sha256": "9339aa9f8af5c2e778698fd71c47a906b95c1568883c5ed47672d465eaba7bba",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-capture-match",
+      "name": "Inbox · Same purchase",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/capture-match.html",
+      "sha256": "3172336637ad1efd3734ff402ad435d67d4aeceff3adf9276d49d78681b84195",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-capture-add-all",
+      "name": "Inbox · Add all",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/capture-add-all.html",
+      "sha256": "2a4503933aeff9f7ab3d487fa12f90ad37a97f94e08ccb38b4fb1e700a00b1a4",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-capture-discard",
+      "name": "Inbox · Purchase discarded",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/capture-discard.html",
+      "sha256": "b40e8702f326149af402823313ab4cf7ae48c8874db9fc7061324327df9079e9",
+      "nativeIssue": "MAZ-291",
+      "webIssue": "MAZ-291",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "captured purchases triaged in the shared Inbox (add, split, match, discard, add all), the Inbox count and evening reminder, card-to-account mapping, Siri results and refusals"
       },
       "status": "planned"
     }
