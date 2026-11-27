@@ -75,7 +75,7 @@ export function RecurringPage() {
     }
   }, [engine, server.data]);
   const ledger: Ledger | null = engine ? (sync?.ledger ?? null) : demoLedger;
-  const shared = useSharedSchedules(email);
+  const { schedules: shared, loading: sharedLoading } = useSharedSchedules(email);
   const waiting = useMemo(() => new Set(sync?.pending.ruleIds ?? []), [sync?.pending.ruleIds]);
   const [view, setView] = useState<ScheduleView | null>(null);
   const newButton = useRef<HTMLButtonElement>(null);
@@ -212,8 +212,8 @@ export function RecurringPage() {
             <span className="group-label__count">{suggestions.length}</span>
           </h2>
           <ul className="group-list group-list--inset suggestion-list" aria-label="Suggested schedules" data-animate-inserts={animateSuggestions ? "" : undefined}>
-            {suggestionRows.map(({ item: suggestion, key, leaving }) => (
-              <li key={leaving ? `${key}:leaving` : key} className="suggestion" data-suggestion={suggestion.id} {...(leaving ? leavingProps : {})}>
+            {suggestionRows.map(({ item: suggestion, key, leaving, entering }) => (
+              <li key={leaving ? `${key}:leaving` : key} className="suggestion" data-suggestion={suggestion.id} data-entering={entering ? "" : undefined} {...(leaving ? leavingProps : {})}>
                 <SuggestionRow
                   suggestion={suggestion}
                   ledger={ledger}
@@ -257,6 +257,7 @@ export function RecurringPage() {
           key={group.kind}
           kind={group.kind}
           items={group.items}
+          loading={sharedLoading}
           ledger={ledger}
           waiting={waiting}
           saved={saved}
@@ -329,6 +330,7 @@ function saveMessage(failure: unknown): string {
 function ScheduleGroup({
   kind,
   items,
+  loading,
   ledger,
   waiting,
   saved,
@@ -337,21 +339,24 @@ function ScheduleGroup({
 }: {
   kind: Kind;
   items: Item[];
+  /** The shared schedules are still loading: rows arriving with them are part of opening the page. */
+  loading: boolean;
   ledger: Ledger;
   waiting: Set<string>;
   saved: string | null;
   unsaving: string | null;
   onOpen: (id: string) => void;
 }) {
-  const { rows, animateInserts } = useListMotion(items, itemKey, kind);
+  // A new context resets the motion, so shared rows that arrive with the households don't play the insert.
+  const { rows, animateInserts } = useListMotion(items, itemKey, `${kind}:${loading ? "loading" : "ready"}`);
   return (
     <section className="recurring-group" aria-labelledby={`recurring-${kind}`}>
       <h2 id={`recurring-${kind}`} className="group-label">
         {KIND_HEADINGS[kind]}
       </h2>
       <ul className="group-list group-list--inset recurring-list" aria-label={`${kindLabels[kind]} schedules`} data-animate-inserts={animateInserts ? "" : undefined}>
-        {rows.map(({ item, key, leaving }) => (
-          <li key={leaving ? `${key}:leaving` : key} {...(leaving ? leavingProps : {})}>
+        {rows.map(({ item, key, leaving, entering }) => (
+          <li key={leaving ? `${key}:leaving` : key} data-entering={entering ? "" : undefined} {...(leaving ? leavingProps : {})}>
             {"personal" in item ? (
               <ScheduleRow
                 rule={item.personal}

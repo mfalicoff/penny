@@ -187,6 +187,12 @@ export interface ListItem<T> {
   key: string;
   /** The row has been removed and is playing its exit; render it inert. */
   leaving: boolean;
+  /**
+   * The row was just inserted into the settled list and is playing its entrance. Lists whose rows
+   * make room with a height transition put that transition on entering rows only (`data-entering`),
+   * so a later height change, such as a font loading and a title wrapping, doesn't animate.
+   */
+  entering: boolean;
 }
 
 /**
@@ -198,7 +204,7 @@ export interface ListItem<T> {
  * `context` holds still.
  */
 export function useListMotion<T>(items: readonly T[], keyOf: (item: T) => string, context: string): { rows: ListItem<T>[]; animateInserts: boolean } {
-  const [tracked, setTracked] = useState<{ items: readonly T[]; context: string; leaving: Leaving<T>[]; settled: boolean }>({ items, context, leaving: [], settled: false });
+  const [tracked, setTracked] = useState<{ items: readonly T[]; context: string; leaving: Leaving<T>[]; settled: boolean; entering: readonly string[] }>({ items, context, leaving: [], settled: false, entering: [] });
   let current = tracked;
   if (tracked.items !== items || tracked.context !== context) {
     // Derived during render (React's pattern for state that follows props), so a removed row never flickers away first.
@@ -213,11 +219,24 @@ export function useListMotion<T>(items: readonly T[], keyOf: (item: T) => string
         else leaving = [...leaving.filter((row) => row.key !== key), { key, item, after }];
       }
     }
-    current = { items, context, leaving, settled: !changed };
+    // Rows new since the last render enter only into a settled list; earlier entrances keep playing.
+    const before = new Set(tracked.items.map(keyOf));
+    const inserted = changed || !tracked.settled ? [] : items.map(keyOf).filter((key) => !before.has(key));
+    const entering = changed ? [] : [...tracked.entering.filter((key) => present.has(key) && !inserted.includes(key)), ...inserted];
+    current = { items, context, leaving, settled: !changed, entering };
     setTracked(current);
   }
 
-  const { leaving } = current;
+  const { leaving, entering } = current;
+  useEffect(() => {
+    if (entering.length === 0) return;
+    const timer = window.setTimeout(() => {
+      setTracked((state) => ({ ...state, entering: state.entering.filter((key) => !entering.includes(key)) }));
+    }, duration("standard") + 50);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [entering]);
   useEffect(() => {
     if (leaving.length === 0) return;
     const timer = window.setTimeout(() => {
@@ -230,15 +249,16 @@ export function useListMotion<T>(items: readonly T[], keyOf: (item: T) => string
 
   const rows: ListItem<T>[] = [];
   const anchored = (after: string | null) => leaving.filter((row) => row.after === after);
-  for (const row of anchored(null)) rows.push({ item: row.item, key: row.key, leaving: true });
+  for (const row of anchored(null)) rows.push({ item: row.item, key: row.key, leaving: true, entering: false });
+  const enteringKeys = new Set(entering);
   for (const item of items) {
     const key = keyOf(item);
-    rows.push({ item, key, leaving: false });
-    for (const row of anchored(key)) rows.push({ item: row.item, key: row.key, leaving: true });
+    rows.push({ item, key, leaving: false, entering: enteringKeys.has(key) });
+    for (const row of anchored(key)) rows.push({ item: row.item, key: row.key, leaving: true, entering: false });
   }
   // A leaving row whose neighbour has gone too goes at the end, so it still finishes its exit.
   const placed = new Set(rows.map((row) => row.key));
-  for (const row of leaving) if (!placed.has(row.key)) rows.push({ item: row.item, key: row.key, leaving: true });
+  for (const row of leaving) if (!placed.has(row.key)) rows.push({ item: row.item, key: row.key, leaving: true, entering: false });
 
   return { rows, animateInserts: current.settled };
 }

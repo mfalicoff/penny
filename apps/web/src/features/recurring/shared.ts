@@ -66,15 +66,21 @@ export function sharedSchedules(
 }
 
 /** Loads the account's households, their members and their rules (the demo's household has none). */
-export function useSharedSchedules(email: string): SharedSchedule[] {
+/**
+ * The shared schedules, and whether their households are still loading. Recurring treats rows that
+ * arrive while `loading` as part of opening the page, so they don't play the insert motion.
+ */
+export function useSharedSchedules(email: string): { schedules: SharedSchedule[]; loading: boolean } {
   const households = useQuery(householdsQuery(email));
   const list = households.data ?? [];
   const details = useQueries({ queries: list.map((household) => householdDetailQuery(email, household.id)) });
   const rules = useQueries({ queries: list.map((household) => recurringQuery(email, household.id)) });
-  return sharedSchedules(
+  const schedules = sharedSchedules(
     list,
     details.map((query) => query.data),
     rules.map((query) => query.data),
     email,
   );
+  const loading = households.isPending || details.some((query) => query.isPending) || rules.some((query) => query.isPending);
+  return { schedules, loading };
 }
