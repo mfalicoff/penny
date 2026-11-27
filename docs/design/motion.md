@@ -195,6 +195,27 @@ Haptics (iOS), one per action, from the [Haptics](#haptics-ios) table:
 
 Haptics stay under Reduce Motion, as everywhere else.
 
+## Apple Pay purchases in the Inbox (MAZ-291)
+
+The [MAZ-291 cards](visual-acceptance.md#drafted-cards-apple-pay-purchases-in-the-inbox-and-siri-maz-291-2026-11-27) add the moments below. Each one reuses a moment above, with the same tokens; nothing gets its own timing. Capture itself has no Penny motion at all: the Shortcuts automation runs in the background and the only thing on screen is the system's own Shortcuts banner.
+
+| What | Motion | Token | Reduced | Haptic (iOS) |
+| --- | --- | --- | --- | --- |
+| **A capture arrives in the Inbox** (the Inbox is open when a capture is saved on this iPhone, or a sync brings one from another device or an emailed receipt) | As Lists › Insert, at the top of its section (Purchases or Emailed receipts), with no highlight, because the person didn't add it from here. A first item makes its section header arrive with it; the empty state crossfades to the list. When the Inbox opens with items already there, they're part of the view and don't animate. | `standard`; empty state `quick` | Rows make room at once and the item fades in (`quick`). | None: it arrives on its own. |
+| **Not synced yet → synced** (the draft uploads) | The tag fades out; the row keeps its height while the tag's line closes with the Disclosures height motion. | `quick`; height `standard` | The tag fades (`quick`); the line closes at once. | None. |
+| **Open a purchase** (tap a row; Review on the web) | iOS: the system sheet. iPad: the detail pane crossfades its content, as selecting a suggestion on Recurring. Web: the dialog's motion (Sheets › Web dialog). | system; iPad `quick`; web in `standard`, out `quick` + `exit` | System sheet; iPad and web fade (`quick`). | `.impact(weight: .light)`, as opening any sheet; `.selection` on the iPad |
+| **Triage: Add** (Add expense, or Add to a household or trip) | The sheet or dialog closes as any. The purchase leaves the Inbox with Lists › Delete; the new entry plays Saving (its row, the saved toast with Undo, the totals). When it was the last purchase, the Purchases header collapses with it. | leave `standard` + `exit`; Saving's tokens | As Delete and Saving reduced. | `.success`, as any save |
+| **Split chosen** (Just me, a household or a trip) | iOS: the row's checkmark moves and the "In Apartment" section opens with the Disclosures height motion; the button's label crossfades. Web: Web menus and popovers, then the same. | `quick`; height `standard` | Checkmark and section at once; label crossfade (`quick`). | `.selection` |
+| **Discard** (the sheet's button, a swipe, or the web row action) | The row leaves with Lists › Delete and the toast rises as Saving › Saved toast, with Undo. No confirmation. Undo brings it back with Lists › Undo. A full swipe is the system's own. | row `standard` + `exit`; toast in `standard`, out `quick` + `exit` | The row fades out (`quick`); the space closes at once; the toast fades. | `.impact(weight: .light)`; Undo `.impact(weight: .light)` |
+| **Match: Attach to this** | The sheet closes. The purchase leaves with Lists › Delete; a receipt it was attached to leaves Emailed receipts the same way, together, no stagger. Attaching to a receipt saves an entry (Saving, with the toast "Added with the receipt"); attaching to an existing entry saves nothing new: the toast "Attached to Coffee" with Undo, and the entry, if visible in a list, plays Edited row without the highlight. | `standard` + `exit`; toast as Saving | As Delete and Saving reduced. | `.success` |
+| **Add all** | The confirmation opens as any sheet or dialog. On Add, every added purchase leaves at once with Lists › Bulk actions (all together, no stagger), the matched ones stay where they are, and one saved toast says "3 expenses added" with Undo, which restores them all. Totals count once. | `standard`; totals `emphasized` | As Bulk actions reduced. | One `.success`, however many |
+| **The count changes** (Home's Inbox row, the iPad and web sidebar item; the app icon is the system's) | The number crossfades to the new value, tabular figures so the badge's width changes only when the digit count does; the capsule resizes with it. The Home row appears or leaves with Lists › Insert and Delete when the count goes from 0 or to 0. It never bounces or pulses: a waiting purchase isn't urgent. | `quick`; row `standard` | Crossfade (`quick`); the row appears and goes at once. | None: the count follows another action, or changes on its own. |
+| **Settings › Shortcuts and the card list** (add, edit, remove a card) | Settings navigation is the system's push. Adding a card inserts its row with Saving's New row motion (with the highlight); a removed card leaves with Lists › Delete after its sheet closes. A "Set up" row that becomes a mapped card moves into place in the same list (Insert and Delete together). | as Saving and Lists | As their reduced motion. | `.success` on save; `.impact(weight: .medium)` on remove |
+| **Reminder switches** (Purchases to review, Show merchants and amounts) | The system's own switch. Turning on the reminder the first time shows the system's notification permission alert; Show merchants and amounts appears below it with the Disclosures height motion. | system; height `standard` | System; the row appears at once. | The system switch's own |
+| **Siri's snippet** (added, or refused) | The system's Siri and App Intents presentation. Undo in the snippet removes the entry with no motion of Penny's (the app may not be on screen). | system | System. | System |
+
+The reminder is a system notification, so iOS animates it. The cards' renderer turns animation off, so the cards show where each moment ends.
+
 ## Haptics (iOS)
 
 On iOS, **every action the person takes that animates also plays a haptic**, so it's felt as well as seen. The rule:
@@ -213,6 +234,8 @@ On iOS, **every action the person takes that animates also plays a haptic**, so 
 | Undo (from the saved toast or after a delete) | `.impact(weight: .light)` |
 | Dismiss a schedule suggestion on Recurring (MAZ-290) | `.impact(weight: .light)` |
 | Pick a currency, or accept or reset an edited exchange rate (MAZ-151) | `.selection` |
+| Discard a captured purchase from the Inbox (MAZ-291) | `.impact(weight: .light)` |
+| Add a captured purchase, attach it to its match, or Add all (MAZ-291) | One `.success` |
 | **Month and period:** step to another month or period, pick one in the calendar | `.selection` |
 | Focus a chart element (a Sankey band or label, a category in Insights) | `.selection` |
 | **Lists:** delete an entry (after its confirmation, or a full swipe) | `.impact(weight: .medium)`; the system's own on a full swipe |

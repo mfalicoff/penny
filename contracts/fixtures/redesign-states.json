@@ -2547,6 +2547,281 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "web currency settings on a server with rate fetching turned off"
+    },
+    {
+      "specimen": "iphone-inbox-captured",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "inbox: purchases (Mill St. Coffee matching a receipt, Esso not synced yet with an unmapped card, Metro, Steam in US dollars) above emailed receipts, Add all"
+    },
+    {
+      "specimen": "iphone-inbox-captured-empty",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "inbox with nothing to review: set up Apple Pay capture, receipt email address"
+    },
+    {
+      "specimen": "iphone-capture-add",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "triage sheet for Steam: US$34.99 \u2248 $48.08 CAD, Fun suggested, Amex from the card, the ECB rate, Add expense and Discard"
+    },
+    {
+      "specimen": "iphone-capture-split",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "triage sheet for Metro split with Apartment: paid by you, equally, your share $27.09"
+    },
+    {
+      "specimen": "iphone-capture-match",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "triage sheet for Mill St. Coffee: attach to the emailed receipt or to the Coffee entry, add as new, discard"
+    },
+    {
+      "specimen": "iphone-capture-add-all",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "add all: Esso, Metro and Steam with their suggested categories, $164.56; Mill St. Coffee stays because it matches a receipt"
+    },
+    {
+      "specimen": "iphone-capture-discard",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "inbox after discarding Metro, with the Undo toast"
+    },
+    {
+      "specimen": "iphone-home-inbox-badge",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home with the Inbox row: 4 purchases and 2 receipts to review, count 6"
+    },
+    {
+      "specimen": "iphone-capture-nudge-setting",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "settings sheet: Shortcuts under Manage, the Purchases to review reminder on and Show merchants and amounts off"
+    },
+    {
+      "specimen": "iphone-capture-nudge-notification",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "lock screen on Sunday, November 8 at 8 PM: 3 purchases to review"
+    },
+    {
+      "specimen": "iphone-shortcuts-settings",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "settings \u203a shortcuts: Wallet Transaction automation steps, cards (Visa, Amex, Mastercard to set up), default category"
+    },
+    {
+      "specimen": "iphone-shortcuts-card-add",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "add card: Mastercard \u00b7\u00b77781 seen in a purchase, mapped to Mastercard"
+    },
+    {
+      "specimen": "iphone-shortcuts-card-edit",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "edit card Visa \u00b7\u00b74412 mapped to Visa, Remove card"
+    },
+    {
+      "specimen": "iphone-siri-added",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "siri adds Coffee, $6.75, Food & drinks, Visa, with Undo and Open in Penny"
+    },
+    {
+      "specimen": "iphone-siri-refusals",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "siri refusals: signed out, demo, locked storage, duplicate and zero or negative amount"
+    },
+    {
+      "specimen": "ipad-inbox-captured",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad inbox with the sidebar count, Steam selected and its triage in the detail pane"
+    },
+    {
+      "specimen": "ipad-inbox-captured-empty",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad inbox with nothing to review"
+    },
+    {
+      "specimen": "ipad-shortcuts-settings",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad settings with Shortcuts open: automation steps, cards, default category"
+    },
+    {
+      "specimen": "web-inbox-captured",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web inbox with the sidebar count: Mill St. Coffee, Metro (hovered, Discard and Review) and Steam above emailed receipts"
+    },
+    {
+      "specimen": "web-inbox-captured-empty",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web inbox with nothing to review"
+    },
+    {
+      "specimen": "web-capture-add",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web triage dialog for Steam: US$34.99 \u2248 $48.08 CAD, Fun suggested, Amex from the card"
+    },
+    {
+      "specimen": "web-capture-split",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web triage dialog for Metro with the split menu open on Apartment"
+    },
+    {
+      "specimen": "web-capture-match",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web match dialog for Mill St. Coffee: attach to the receipt or the Coffee entry"
+    },
+    {
+      "specimen": "web-capture-add-all",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web add all: Metro and Steam, Mill St. Coffee stays"
+    },
+    {
+      "specimen": "web-capture-discard",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web inbox after discarding Metro, with the Undo toast"
     }
   ]
 }

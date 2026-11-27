@@ -1,0 +1,57 @@
+<!-- @dsCard group="iPhone" name="Siri · Can't add" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Siri refusals</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"tray":"<path d=\"M384 80H128L64 272v128a32 32 0 0032 32h320a32 32 0 0032-32V272z\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M64 272h112a80 80 0 00160 0h112\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","link":"<path d=\"M208 352h-64a96 96 0 010-192h64M304 160h64a96 96 0 010 192h-64M163.29 256h187.42\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,36px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","mic":"<rect x=\"192\" y=\"48\" width=\"128\" height=\"256\" rx=\"64\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M400 240a144 144 0 01-288 0M256 384v80M192 464h128\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","layers":"<path d=\"M256 64L48 176l208 112 208-112zM48 256l208 112 208-112M48 336l208 112 208-112\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","swap-horizontal":"<path d=\"M304 48l112 112-112 112M398.87 160H96M208 464L96 352l112-112M114 352h302\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .wall { position: absolute; inset: 0; background: linear-gradient(170deg, #2B2A3A 0%, #4A3B4F 55%, #7A4E45 100%); }
+  .grid { position: absolute; top: 80px; left: 28px; right: 28px; display: grid; grid-template-columns: repeat(4, 1fr); row-gap: 30px; justify-items: center; filter: blur(6px); opacity: .55; }
+  .grid i { width: 62px; height: 62px; border-radius: 16px; background: rgba(255,255,255,.35); }
+  .edge { position: absolute; inset: 0; border-radius: 56px; box-shadow: inset 0 0 18px 6px rgba(255,140,90,.55), inset 0 0 50px 10px rgba(120,120,255,.35); z-index: 4; pointer-events: none; }
+  .snip { position: absolute; left: 12px; right: 12px; z-index: 5; border-radius: 26px; padding: 14px 16px; background: rgba(245,243,240,.82); backdrop-filter: blur(24px) saturate(180%); color: #16120F; }
+  .dark .snip { background: rgba(40,38,36,.82); color: #F6F4F1; }
+  .snip .hd { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; opacity: .7; }
+  .snip .hd .app { width: 20px; height: 20px; border-radius: 6px; background: var(--tint); color: #fff; display: grid; place-items: center; }
+  .snip .hd .app [data-i] { width: 12px; height: 12px; --sw: 48px; }
+  .snip .msg { font-size: 17px; font-weight: 600; margin-top: 8px; line-height: 1.3; }
+  .snip .msg small { display: block; font-size: 15px; font-weight: 400; opacity: .7; margin-top: 2px; }
+  .snip .row { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.6); min-height: 0; }
+  .dark .snip .row { background: rgba(255,255,255,.08); }
+  .snip .row .cic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; flex: none; }
+  .snip .row .cic [data-i] { width: 19px; height: 19px; --sw: 40px; }
+  .snip .row .t { flex: 1; } .snip .row b { display: block; font-size: 16px; } .snip .row span { font-size: 13px; opacity: .65; }
+  .snip .row .am { font-size: 16px; font-weight: 600; }
+  .snip .btns { display: flex; gap: 8px; margin-top: 10px; }
+  .snip .btns div { flex: 1; height: 40px; border-radius: 20px; background: rgba(120,113,108,.18); display: grid; place-items: center; font-size: 15px; font-weight: 600; }
+  .said { position: absolute; left: 24px; right: 24px; z-index: 5; color: #fff; font-size: 20px; font-weight: 600; text-shadow: 0 1px 6px rgba(0,0,0,.3); }
+  .orb { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #FFB38A, #E4572E 45%, #6C5CE7); z-index: 5; filter: blur(.5px); }
+  .home-ind { display: none; }
+  .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.85); position: absolute; left: 28px; z-index: 6; }
+  .snip { padding: 10px 14px; border-radius: 20px; }
+  .snip .msg { margin-top: 4px; font-size: 15px; }
+  .snip .msg small { font-size: 13px; }
+  .snip .row { margin-top: 6px; padding: 6px 10px; }
+  .snip .row .cic { width: 28px; height: 28px; border-radius: 8px; } .snip .row .cic [data-i] { width: 15px; height: 15px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="wall"></div>
+  <div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="edge"></div>
+  <div class="lbl" style="top:62px">Signed out</div>
+  <div class="snip" style="top:78px"><div class="hd"><span class="app"><i data-i="leaf"></i></span>Penny</div><div class="msg">Sign in to Penny to add expenses.<small>Nothing was added.</small></div></div>
+  <div class="lbl" style="top:192px">Demo</div>
+  <div class="snip" style="top:208px"><div class="hd"><span class="app"><i data-i="leaf"></i></span>Penny</div><div class="msg">Penny is showing sample data.<small>Sign in to add your own expenses. Nothing was added.</small></div></div>
+  <div class="lbl" style="top:340px">Locked storage</div>
+  <div class="snip" style="top:356px"><div class="hd"><span class="app"><i data-i="leaf"></i></span>Penny</div><div class="msg">Unlock your iPhone once, then try again.<small>Penny can't open your entries until then. Nothing was added.</small></div></div>
+  <div class="lbl" style="top:488px">Duplicate</div>
+  <div class="snip" style="top:504px"><div class="hd"><span class="app"><i data-i="leaf"></i></span>Penny</div><div class="msg">You added this a minute ago.<small>Penny kept the first one.</small></div>
+    <div class="row"><div class="cic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Coffee</b><span>Today · Visa</span></div><div class="am num">−$6.75</div></div></div>
+  <div class="lbl" style="top:672px">Zero or negative</div>
+  <div class="snip" style="top:688px"><div class="hd"><span class="app"><i data-i="leaf"></i></span>Penny</div><div class="msg">Say an amount above $0.<small>Refunds can't be added with Siri. Nothing was added.</small></div></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

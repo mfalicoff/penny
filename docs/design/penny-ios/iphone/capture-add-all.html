@@ -1,0 +1,85 @@
+<!-- @dsCard group="iPhone" name="Inbox · Add all" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Add all purchases</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"tray":"<path d=\"M384 80H128L64 272v128a32 32 0 0032 32h320a32 32 0 0032-32V272z\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M64 272h112a80 80 0 00160 0h112\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","link":"<path d=\"M208 352h-64a96 96 0 010-192h64M304 160h64a96 96 0 010 192h-64M163.29 256h187.42\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,36px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","mic":"<rect x=\"192\" y=\"48\" width=\"128\" height=\"256\" rx=\"64\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M400 240a144 144 0 01-288 0M256 384v80M192 464h128\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","layers":"<path d=\"M256 64L48 176l208 112 208-112zM48 256l208 112 208-112M48 336l208 112 208-112\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","swap-horizontal":"<path d=\"M304 48l112 112-112 112M398.87 160H96M208 464L96 352l112-112M114 352h302\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .behind { position: absolute; inset: 0; background: var(--bg); }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 62px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; height: 56px; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .bar .side { width: 96px; display: flex; gap: 8px; } .bar .side.r { justify-content: flex-end; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .gh { padding: 18px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 8px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 58px; right: 0; border-top: .5px solid var(--separator); }
+  .sr.noi + .sr::before, .sr.noi::before { left: 16px; }
+  .si { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; color: var(--label); flex: none; }
+  .si [data-i] { width: 18px; height: 18px; --sw: 40px; }
+  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .sr .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; font-size: 16px; white-space: nowrap; text-align: right; }
+  .sr .v.col { flex-direction: column; align-items: flex-end; gap: 0; } .sr .v.col b { font-weight: 500; color: var(--label); font-size: 16px; } .sr .v.col small { font-size: 12px; }
+  .sw { width: 51px; height: 31px; border-radius: 16px; background: var(--fill); position: relative; flex: none; margin-left: auto; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .sw.on { background: var(--tint); } .sw.on::after { left: 22px; }
+  .check { color: var(--tint); margin-left: auto; } .check[data-i] { width: 20px; height: 20px; --sw: 48px; }
+  .danger { color: var(--danger); }
+  .pb { height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .pb [data-i] { width: 19px; height: 19px; --sw: 44px; }
+  .pb.primary { background: var(--tint); color: #fff; }
+  .pb.danger { background: transparent; color: var(--danger); }
+  .acts { display: flex; flex-direction: column; gap: 8px; margin: 18px 16px 0; }
+  .ph { text-align: center; padding: 6px 20px 0; }
+  .ph .m { font-size: 15px; font-weight: 600; color: var(--label-2); }
+  .ph .v { font-size: 48px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.1; margin-top: 2px; }
+  .ph .v .cur { opacity: .4; }
+  .ph .conv { font-size: 15px; font-weight: 600; color: var(--label-2); margin-top: 2px; }
+  .cap { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--label-2); margin-top: 8px; }
+  .cap [data-i] { width: 14px; height: 14px; }
+  .cats { display: flex; gap: 8px; margin: 0 16px; overflow: hidden; }
+  .sug { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; opacity: .8; }
+  .tg { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--fill); color: var(--label-2); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tg [data-i] { width: 13px; height: 13px; --sw: 48px; }
+  .tg.match { background: var(--tint-soft); color: var(--tint-text); }
+  .cic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; flex: none; }
+  .cic [data-i] { width: 19px; height: 19px; --sw: 40px; }
+  .arow { display: flex; align-items: center; gap: 12px; padding: 10px 16px; position: relative; }
+  .arow + .arow::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; border-top: .5px solid var(--separator); }
+  .arow .t { flex: 1; min-width: 0; } .arow b { display: block; font-size: 17px; font-weight: 600; } .arow span { display: block; font-size: 14px; color: var(--label-2); margin-top: 1px; }
+  .arow .am { text-align: right; font-size: 17px; font-weight: 600; } .arow .am small { display: block; font-size: 12px; font-weight: 500; color: var(--label-2); }
+  .tot { display: flex; justify-content: space-between; margin: 12px 32px 0; font-size: 15px; color: var(--label-2); }
+  .tot b { color: var(--label); }
+  .lede { padding: 4px 24px 0; font-size: 15px; color: var(--label-2); line-height: 1.4; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="behind"></div>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar"><div class="side"><div class="gbtn plain"><i data-i="close"></i></div></div><h2>Add all</h2><div class="side r"></div></div>
+    <div class="lede">Each purchase is added as an expense with its suggested category and its card's account. You can still edit them in Activity.</div>
+    <div class="gh">3 purchases</div>
+    <div class="glist">
+      <div class="arow"><div class="cic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Esso</b><span>Transport · No account · Today</span></div><div class="am num">−$62.30</div></div>
+      <div class="arow"><div class="cic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t"><b>Metro</b><span>Groceries · Visa · Yesterday</span></div><div class="am num">−$54.18</div></div>
+      <div class="arow"><div class="cic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div class="t"><b>Steam</b><span>Fun · Amex · Sun, Nov 8</span></div><div class="am num">−$48.08<small>US$34.99</small></div></div>
+    </div>
+    <div class="tot"><span>Total</span><b class="num">$164.56</b></div>
+    <div class="gh">Stays in the Inbox</div>
+    <div class="glist">
+      <div class="arow"><div class="cic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Mill St. Coffee</b><span>Matches a receipt: review it first</span></div><div class="am num">−$6.75</div></div>
+    </div>
+    <div class="gf">Emailed receipts aren't expenses, so Add all leaves them for you to attach.</div>
+    <div class="acts"><div class="pb primary"><i data-i="checkmark"></i>Add 3 expenses</div></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
