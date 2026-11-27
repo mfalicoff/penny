@@ -84,7 +84,7 @@ async function mockApi(context: BrowserContext, ledger: Ledger = emptyLedger(), 
 const synced = (page: Page) => expect(page.getByText(/changes? waiting/)).toHaveCount(0);
 
 async function addSchedule(page: Page, values: { kind?: string; amount: string; name: string; frequency: string; date: string }) {
-  await page.getByRole("button", { name: "New schedule" }).click();
+  await page.getByRole("button", { name: "New schedule" }).first().click();
   const dialog = page.getByRole("dialog", { name: "New schedule" });
   if (values.kind) await dialog.getByRole("radio", { name: values.kind }).check();
   await dialog.getByLabel("Amount (CAD)").fill(values.amount);
@@ -98,7 +98,7 @@ test("creates every frequency, follows anchor days through short months, edits, 
   const server = await mockApi(context);
   await page.clock.setFixedTime(new Date("2026-11-10T12:00:00"));
   await page.goto("/recurring");
-  await expect(page.getByRole("heading", { name: "Rent, payday, the usuals." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No schedules yet" })).toBeVisible();
 
   // Monthly on the 31st: November and February fall back to their last day.
   let dialog = await addSchedule(page, { amount: "1450", name: "Rent", frequency: "Monthly", date: "2026-12-31" });
@@ -150,7 +150,7 @@ test("creates every frequency, follows anchor days through short months, edits, 
   const confirm = page.getByRole("dialog", { name: "Remove TFSA contribution?" });
   await expect(confirm).toContainText("Entries it already recorded stay in your activity");
   await confirm.getByRole("button", { name: "Remove schedule" }).click();
-  await expect(page.getByRole("button", { name: "New schedule" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "New schedule" }).first()).toBeFocused();
   await synced(page);
   await expect.poll(() => server.ledger.recurring.map((rule) => rule.title).sort()).toEqual(["Domain renewal", "Payday", "Rent"]);
   expect(server.ledger.transactions).toHaveLength(2);
@@ -163,7 +163,7 @@ test("keeps a schedule saved offline through a reload and syncs it once, without
   const server = await mockApi(context);
   await page.clock.setFixedTime(new Date("2026-11-10T12:00:00"));
   await page.goto("/recurring");
-  await expect(page.getByRole("heading", { name: "Rent, payday, the usuals." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No schedules yet" })).toBeVisible();
   server.down = true;
 
   const dialog = await addSchedule(page, { amount: "65", name: "Internet", frequency: "Monthly", date: "2026-11-10" });
@@ -214,14 +214,14 @@ test("doesn't bring back a schedule deleted on another device after an offline c
 
   server.down = false;
   await page.getByRole("button", { name: "Retry" }).click();
-  await expect(page.getByRole("heading", { name: "Rent, payday, the usuals." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No schedules yet" })).toBeVisible();
   await synced(page);
   await expect.poll(() => server.ledger.recurring).toEqual([]);
   expect(server.ledger.transactions).toEqual([]);
 
   // It stays gone after another reload.
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Rent, payday, the usuals." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No schedules yet" })).toBeVisible();
   expect(server.ledger.recurring).toEqual([]);
 });
 
@@ -270,4 +270,69 @@ test("keeps each row's title left and amount right from 320px, with shared sched
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   }
+});
+
+test("suggests repeating entries: accepting saves one schedule without duplicate entries, a dismissal has Undo and survives a reload (MAZ-290)", async ({ context, page }) => {
+  const entry = (id: string, title: string, kind: string, share: number, date: string, categoryId: string) => ({ id, title, kind, total: share, share, categoryId, accountId: "visa", date, note: "" });
+  const ledger = emptyLedger();
+  ledger.transactions = [
+    entry("n1", "Netflix", "expense", 1549, "2026-08-03", "home"),
+    entry("n2", "Netflix", "expense", 1549, "2026-09-03", "home"),
+    entry("n3", "Netflix", "expense", 1699, "2026-10-03", "home"),
+    entry("n4", "Netflix", "expense", 1699, "2026-11-03", "home"),
+    ...["2026-10-07", "2026-10-14", "2026-10-21", "2026-10-28", "2026-11-04"].map((date, index) => entry(`t${String(index)}`, "Tutoring", "income", 6000, date, "salary")),
+  ];
+  const server = await mockApi(context, ledger);
+  await page.clock.setFixedTime(new Date("2026-11-10T12:00:00"));
+  await page.goto("/recurring");
+  const suggested = page.getByRole("list", { name: "Suggested schedules" });
+  const netflix = suggested.getByRole("listitem").filter({ hasText: /^Netflix/ });
+  const tutoring = suggested.getByRole("listitem").filter({ hasText: /^Tutoring/ });
+  await expect(netflix).toContainText("Every month, around the 3rd");
+  await expect(netflix).toContainText("Seen 4 times since Aug 3");
+  await expect(netflix).toContainText("was $15.49");
+  await expect(tutoring).toContainText("Every week, on Wednesdays");
+  await synced(page);
+  const before = server.puts;
+
+  // Dismiss acts at once; Undo brings it back.
+  await netflix.getByRole("button", { name: "Dismiss" }).click();
+  await expect(netflix).toHaveCount(0);
+  await expect(tutoring.getByRole("button", { name: "Make it a schedule" })).toBeFocused();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(netflix).toHaveCount(1);
+  await expect(netflix.getByRole("button", { name: "Make it a schedule" })).toBeFocused();
+
+  // Dismissed again, the dismissal syncs and stays through a reload.
+  await page.mouse.move(0, 0);
+  await netflix.getByRole("button", { name: "Dismiss" }).click();
+  await expect(netflix).toHaveCount(0);
+  await synced(page);
+  await expect.poll(() => (server.ledger as Ledger & { dismissedSuggestions?: string[] }).dismissedSuggestions).toEqual(["expense|netflix|monthly|1699"]);
+  expect(server.puts).toBeGreaterThan(before);
+  await page.reload();
+  await expect(tutoring).toHaveCount(1);
+  await expect(netflix).toHaveCount(0);
+
+  // Make it a schedule: the form is filled in, with the matched entries; saving adds one schedule and no entry.
+  await tutoring.getByRole("button", { name: "Make it a schedule" }).click();
+  const dialog = page.getByRole("dialog", { name: "New schedule" });
+  await expect(dialog).toContainText("Filled in from 5 Tutoring entries. Check it, then add it.");
+  await expect(dialog.getByLabel("First date")).toHaveValue("2026-11-11");
+  await expect(dialog.getByRole("region", { name: /^Already in your activity/ }).getByRole("listitem")).toHaveCount(5);
+  await dialog.getByRole("button", { name: "Add schedule" }).click();
+  await expect(page.getByText("Tutoring added")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Tutoring.*next Nov 11/ })).toBeFocused();
+  await expect(page.getByRole("heading", { name: "No schedules yet" })).toHaveCount(0);
+  await expect(suggested).toHaveCount(0);
+  await synced(page);
+  await expect.poll(() => server.ledger.recurring.map((rule) => [rule.title, rule.frequency, rule.nextDate, rule.share])).toEqual([["Tutoring", "weekly", "2026-11-11", 6000]]);
+  expect(server.ledger.transactions).toHaveLength(9);
+
+  // A reload records nothing twice and suggests nothing new.
+  await page.reload();
+  await expect(page.getByRole("button", { name: /^Tutoring/ })).toBeVisible();
+  await synced(page);
+  expect(server.ledger.transactions).toHaveLength(9);
+  await expect(suggested).toHaveCount(0);
 });

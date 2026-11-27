@@ -158,6 +158,11 @@ export interface ToastInput {
   title: string;
   detail?: string;
   tone?: "success" | "error";
+  /**
+   * `neutral` draws the check in the secondary label color, for a change that isn't a save of money
+   * (card `web-suggestion-dismissed-toast`: a dismissed suggestion).
+   */
+  icon?: "neutral";
   /** Shows an Undo button that calls this, then dismisses. */
   onUndo?: () => void;
   /** Another action before Undo (e.g. View entry). It calls `onClick`, then dismisses. */
@@ -287,14 +292,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <ToastEntryContext value={toast?.entryId ?? null}>{children}</ToastEntryContext>
       <div className="toast-region" aria-live="polite" aria-atomic="true">
         {leaving && !toast ? (
-          <div key={leaving.id} className={cx("pk-toast", "glass", "pk-toast--leaving", leaving.tone === "error" && "pk-toast--error", Boolean(leaving.action) && "pk-toast--stacked")} inert aria-hidden="true">
+          <div key={leaving.id} className={cx("pk-toast", "glass", "pk-toast--leaving", leaving.tone === "error" && "pk-toast--error", leaving.icon === "neutral" && "pk-toast--neutral", Boolean(leaving.action) && "pk-toast--stacked")} inert aria-hidden="true">
             <ToastContent toast={leaving} onDismiss={() => undefined} />
           </div>
         ) : null}
         {toast ? (
           <div
             key={toast.id}
-            className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error", Boolean(toast.action) && "pk-toast--stacked")}
+            className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error", toast.icon === "neutral" && "pk-toast--neutral", Boolean(toast.action) && "pk-toast--stacked")}
             onPointerEnter={(event) => {
               if (pointerCanPause(event.pointerType)) setHovered(true);
             }}

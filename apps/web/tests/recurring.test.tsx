@@ -70,6 +70,8 @@ afterEach(() => {
   onlineManager.setOnline(true);
 });
 
+/** The toolbar's New schedule (the empty state has another one). */
+const newSchedule = () => screen.getAllByRole("button", { name: "New schedule" })[0] as HTMLElement;
 const rules = (server: ReturnType<typeof ledgerServer>) => server.state.ledger.recurring as ReturnType<typeof rule>[];
 const entries = (server: ReturnType<typeof ledgerServer>) => server.state.ledger.transactions as { id: string; title: string; total: number }[];
 
@@ -145,8 +147,8 @@ describe("recurring schedules", () => {
     const server = ledgerServer();
     const user = userEvent.setup();
     renderApp("/recurring");
-    expect(await screen.findByRole("heading", { name: "Rent, payday, the usuals." })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "New schedule" }));
+    expect(await screen.findByRole("heading", { name: "No schedules yet" })).toBeInTheDocument();
+    await user.click(newSchedule());
     const dialog = screen.getByRole("dialog", { name: "New schedule" });
     expect(within(dialog).getByLabelText("Amount (CAD)")).toHaveFocus();
 
@@ -228,7 +230,7 @@ describe("recurring schedules", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     // Focus recovers to New schedule, since the row is gone.
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "New schedule" })).toHaveFocus();
+      expect(screen.getAllByRole("button", { name: "New schedule" })[0]).toHaveFocus();
     });
     await waitFor(() => {
       expect(rules(server)).toEqual([]);
@@ -240,11 +242,11 @@ describe("recurring schedules", () => {
     const server = ledgerServer();
     const user = userEvent.setup();
     renderApp("/recurring");
-    await screen.findByRole("heading", { name: "Rent, payday, the usuals." });
+    await screen.findByRole("heading", { name: "No schedules yet" });
     server.state.down = true;
     setOnline(false);
 
-    await user.click(screen.getByRole("button", { name: "New schedule" }));
+    await user.click(newSchedule());
     const dialog = screen.getByRole("dialog", { name: "New schedule" });
     await user.click(within(dialog).getByRole("radio", { name: "Income" }));
     await user.type(within(dialog).getByLabelText("Amount (CAD)"), "2250");
@@ -314,7 +316,8 @@ describe("recurring schedules", () => {
     ledgerServer();
     const user = userEvent.setup();
     renderApp("/recurring");
-    await user.click(await screen.findByRole("button", { name: "New schedule" }));
+    await screen.findByRole("heading", { name: "No schedules yet" });
+    await user.click(newSchedule());
     const dialog = screen.getByRole("dialog", { name: "New schedule" });
     await user.type(within(dialog).getByLabelText("Amount (CAD)"), "18.99");
     await user.type(within(dialog).getByLabelText("Name"), "Streaming");
@@ -324,5 +327,112 @@ describe("recurring schedules", () => {
     expect(alert).toHaveTextContent("Your changes are still here.");
     expect(within(dialog).getByLabelText("Name")).toHaveValue("Streaming");
     expect(within(dialog).getByLabelText("Amount (CAD)")).toHaveValue("18.99");
+  });
+});
+
+describe("recurring suggestions (MAZ-290)", () => {
+  const entry = (id: string, title: string, kind: string, share: number, date: string, categoryId = "home") => ({ id, title, kind, total: share, share, categoryId, accountId: "visa", date, note: "" });
+  const repeating = () => [
+    entry("n1", "Netflix", "expense", 1549, "2026-08-03"),
+    entry("n2", "Netflix", "expense", 1549, "2026-09-03"),
+    entry("n3", "Netflix", "expense", 1699, "2026-10-03"),
+    entry("n4", "Netflix", "expense", 1699, "2026-11-03"),
+    ...["2026-10-07", "2026-10-14", "2026-10-21", "2026-10-28", "2026-11-04"].map((date, index) => entry(`t${String(index)}`, "Tutoring", "income", 6000, date, "salary")),
+  ];
+  const suggestionRow = async (title: string) => {
+    const list = await screen.findByRole("list", { name: "Suggested schedules" });
+    const row = within(list)
+      .getAllByRole("listitem")
+      .find((item) => item.textContent.startsWith(title));
+    if (!row) throw new Error(`no ${title} suggestion`);
+    return row;
+  };
+
+  it("offers repeating entries above the schedules, and makes one a schedule from the filled-in form", async () => {
+    const server = ledgerServer({ recurring: [rule("net", "Internet", { accountId: "visa" })], transactions: repeating() });
+    const user = userEvent.setup();
+    renderApp("/recurring");
+    expect(await screen.findByRole("heading", { level: 2, name: /^Suggested,\s*2$/ })).toBeInTheDocument();
+    const netflix = await suggestionRow("Netflix");
+    expect(netflix).toHaveTextContent(/^NetflixExpenseEvery month, around the 3rdSeen 4 times since Aug 3−\$16\.99was \$15\.49Make it a scheduleDismiss$/);
+    expect(await suggestionRow("Tutoring")).toHaveTextContent(/TutoringIncomeEvery week, on WednesdaysSeen 5 times since Oct 7\+\$60\.00 income/);
+    expect(screen.getByText(/Penny found these repeating in your activity\. A schedule counts them in Projected; your past entries stay as they are\./)).toBeInTheDocument();
+
+    // Cancel keeps the suggestion, and focus returns to its button.
+    const make = within(netflix).getByRole("button", { name: "Make it a schedule" });
+    expect(make).toHaveAccessibleDescription("Netflix");
+    await user.click(make);
+    let dialog = screen.getByRole("dialog", { name: "New schedule" });
+    expect(dialog).toHaveTextContent("Filled in from 4 Netflix entries. Check it, then add it.");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(make).toHaveFocus();
+    expect(await suggestionRow("Netflix")).toBeInTheDocument();
+
+    await user.click(make);
+    dialog = screen.getByRole("dialog", { name: "New schedule" });
+    expect(within(dialog).getByLabelText("Name")).toHaveValue("Netflix");
+    expect(within(dialog).getByLabelText("Amount (CAD)")).toHaveValue("16.99");
+    expect(within(dialog).getByLabelText("First date")).toHaveValue("2026-12-03");
+    expect(within(dialog).getByRole("radio", { name: "Monthly" })).toBeChecked();
+    expect(within(dialog).getByRole("status")).toHaveTextContent("First on Dec 3, then monthly on the 3rd.");
+    const matched = within(dialog).getByRole("region", { name: /^Already in your activity,\s*4 entries$/ });
+    expect(within(matched).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Nov 3−$16.99", "Oct 3−$16.99", "Sep 3−$15.49", "Aug 3−$15.49"]);
+    expect(matched).toHaveTextContent("These entries stay as they are. The first date is the next one after the latest, so nothing is recorded twice.");
+    await user.click(within(dialog).getByRole("button", { name: "Add schedule" }));
+
+    expect(await screen.findByText("Netflix added")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(rules(server)).toHaveLength(2);
+    });
+    expect(rules(server)[1]).toMatchObject({ title: "Netflix", kind: "expense", total: 1699, share: 1699, categoryId: "home", accountId: "visa", frequency: "monthly", nextDate: "2026-12-03", anchorDay: 3 });
+    // Past entries stay as they are, and nothing is recorded for a date already in the activity.
+    expect(entries(server)).toEqual(repeating());
+    // The suggestion is gone; focus continues on the new schedule's row.
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /^Netflix.*next Dec 3/ })).toHaveFocus();
+    });
+    expect(screen.getByRole("heading", { level: 2, name: /^Suggested,\s*1$/ })).toBeInTheDocument();
+  });
+
+  it("dismisses at once with Undo on the toast, syncs the dismissal and moves focus sensibly", async () => {
+    const server = ledgerServer({ transactions: repeating() });
+    const user = userEvent.setup();
+    renderApp("/recurring");
+    const netflix = await suggestionRow("Netflix");
+    await user.click(within(netflix).getByRole("button", { name: "Dismiss" }));
+    // jsdom is phone width: the toast follows `iphone-suggestion-dismissed-toast` (the card captures in e2e/cards.real.spec.ts cover the desktop copy).
+    expect(await screen.findByText("Suggestion dismissed")).toBeInTheDocument();
+    expect(screen.getByText("Netflix · about $16.99 every month")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /^Suggested,\s*1$/ })).toBeInTheDocument();
+    // Focus continues on the next suggestion.
+    const tutoring = await suggestionRow("Tutoring");
+    await waitFor(() => {
+      expect(within(tutoring).getByRole("button", { name: "Make it a schedule" })).toHaveFocus();
+    });
+    await waitFor(() => {
+      expect(server.state.ledger).toMatchObject({ dismissedSuggestions: ["expense|netflix|monthly|1699"] });
+    });
+
+    // Undo brings it back at its place, with focus on it.
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 2, name: /^Suggested,\s*2$/ })).toBeInTheDocument();
+    });
+    await waitFor(async () => {
+      expect(within(await suggestionRow("Netflix")).getByRole("button", { name: "Make it a schedule" })).toHaveFocus();
+    });
+    await waitFor(() => {
+      expect(server.state.ledger).toMatchObject({ dismissedSuggestions: [] });
+    });
+
+    // Dismissing the last one leaves the empty state, and focus on New schedule.
+    await user.click(within(await suggestionRow("Netflix")).getByRole("button", { name: "Dismiss" }));
+    await user.click(within(await suggestionRow("Tutoring")).getByRole("button", { name: "Dismiss" }));
+    expect(await screen.findByRole("heading", { name: "No schedules yet" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "New schedule" })[0]).toHaveFocus();
+    });
+    expect(screen.getByText(/Penny suggests it here\./)).toBeInTheDocument();
   });
 });

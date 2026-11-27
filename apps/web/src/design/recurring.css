@@ -413,3 +413,291 @@
 .schedule-dialog .schedule-preview > .icon {
   color: var(--pk-label-2);
 }
+
+/*
+ * Suggested (MAZ-290; cards `web-recurring-suggested`, `iphone-recurring-suggested`): the count
+ * beside the section label, and each suggestion as a row with its actions. From 768px the rows
+ * are one solid group: tile, name with its kind tag, cadence and "Seen …", the amount (with "was
+ * …") in a 110px column, then Make it a schedule and Dismiss. On phones each suggestion is its own
+ * card, with "Seen …" and the actions under the row.
+ */
+.group-label__count {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.suggestion__row {
+  display: grid;
+  grid-template-areas:
+    "tile title amount"
+    "tile cadence amount"
+    ". seen seen"
+    ". actions actions";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1px 12px;
+  padding: 11px 16px 14px;
+}
+
+.suggestion__tile {
+  grid-area: tile;
+}
+
+.suggestion__title {
+  grid-area: title;
+}
+
+.suggestion__title .pk-badge {
+  margin-inline-start: 2px;
+  color: var(--pk-label-2);
+}
+
+.suggestion__cadence {
+  grid-area: cadence;
+}
+
+.suggestion__seen {
+  grid-area: seen;
+}
+
+.suggestion__amount {
+  grid-area: amount;
+}
+
+.suggestion__actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: actions;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@media (max-width: 767.98px) {
+  .group-list.suggestion-list {
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    background: none;
+    box-shadow: none;
+  }
+
+  .suggestion-list > li {
+    border-radius: 22px;
+    background: var(--pk-surface);
+  }
+
+  .group-list.group-list--inset.suggestion-list > li + li::before {
+    content: none;
+  }
+
+  /* `iphone-recurring-suggested`: capsule actions, Dismiss a filled one without a border. */
+  .suggestion__actions .wbtn {
+    border-radius: 999px;
+    font-size: 0.9375rem;
+  }
+
+  .suggestion__actions .wbtn--secondary,
+  .suggestion__actions .wbtn--secondary:hover {
+    background: var(--pk-fill);
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .suggestion__row {
+    grid-template-areas:
+      "tile title amount actions"
+      "tile cadence amount actions"
+      "tile seen amount actions";
+    grid-template-columns: auto minmax(0, 1fr) 110px auto;
+    min-height: 66px;
+    padding: 10px 18px;
+  }
+
+  .suggestion__actions {
+    flex-wrap: nowrap;
+    margin: 0 0 0 14px;
+  }
+}
+
+/* The schedule a suggestion just became: tinted while its toast shows, then the tint fades (motion.md, Saving). */
+.schedule-row.schedule-row--saved,
+.schedule-row.schedule-row--saved:hover {
+  background: var(--pk-tint-soft);
+}
+
+.schedule-row--unsaving {
+  transition: background-color var(--pk-dur-linger) linear;
+}
+
+/*
+ * No schedules and nothing to suggest (cards `web-recurring-empty`, `iphone-recurring-empty`): the
+ * copper repeat tile, "No schedules yet", New schedule, and a note that Penny suggests what repeats.
+ * The web card has no lead line above it.
+ */
+.recurring-empty {
+  display: grid;
+  justify-items: center;
+  padding: 32px 0 0;
+  text-align: center;
+}
+
+.recurring-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--pk-fill);
+  color: var(--pk-tint);
+}
+
+.recurring-empty__title {
+  margin: 16px 0 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.recurring-empty__body {
+  max-width: 440px;
+  margin: 8px auto 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.recurring-empty__add {
+  margin-top: 20px;
+}
+
+.recurring-empty__hint {
+  display: flex;
+  gap: 10px;
+  max-width: 480px;
+  margin: 32px auto 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-align: start;
+}
+
+.recurring-empty__hint > .icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* `iphone-recurring-empty`: inset 40px from the sheet's edges, a capsule New schedule, a 16px hint. */
+@media (max-width: 767.98px) {
+  .recurring-empty {
+    padding: 64px 30px 0;
+  }
+
+  .recurring-empty__add {
+    margin-top: 22px;
+    padding: 0 20px;
+    border-radius: 999px;
+    font-size: 1.0625rem;
+  }
+
+  .recurring-empty__hint {
+    margin-top: 30px;
+    border-radius: 16px;
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .recurring--empty .recurring__lead {
+    display: none;
+  }
+
+  .recurring-empty {
+    padding: 72px 60px 0;
+  }
+}
+
+/*
+ * "Already in your activity" (card `web-schedule-suggested`): under both panes of the filled-in
+ * form, the matched entries read-only (four across), then why nothing is recorded twice.
+ */
+.schedule-matched {
+  padding: 14px 18px 16px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.schedule-matched__label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.schedule-matched__count {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.schedule-matched__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule-matched__entry {
+  display: grid;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  font-size: 0.84375rem;
+}
+
+.schedule-matched__entry time {
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+}
+
+.schedule-matched__entry .money {
+  margin-top: 1px;
+  font-weight: 600;
+}
+
+.schedule-matched__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.schedule-matched__note > .icon {
+  flex: none;
+}
+
+@media (min-width: 768px) {
+  .schedule-matched__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* The suggestion's two detail lines sit close, as on the cards (13px on 17px lines). */
+.suggestion__cadence,
+.suggestion__seen {
+  line-height: 1.3;
+}

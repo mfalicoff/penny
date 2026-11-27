@@ -2,19 +2,24 @@
 import { describe, expect, it } from "vitest";
 import { removeSchedule, saveSchedule, setScheduleActive } from "@domain/commands.ts";
 import { materialize, type Ledger, type Recurring } from "@domain/ledger.ts";
+import { recurringSuggestions } from "@domain/suggestions.ts";
 import {
+  acceptedRule,
   addSchedule,
   cadenceLabel,
   checkDraft,
   datesDueBy,
   draftFromRule,
+  draftFromSuggestion,
   editedRule,
   emptyDraft,
   newRule,
   relativeDay,
   resumeDate,
   rowAmount,
+  seenLabel,
   sortSchedules,
+  suggestionCadence,
   upcomingDates,
   type ScheduleDraft,
 } from "../src/features/recurring/model";
@@ -190,5 +195,41 @@ describe("rowAmount", () => {
     expect(rowAmount("expense", 6500)).toEqual({ cents: -6500, signed: true });
     expect(rowAmount("income", 225000)).toEqual({ cents: 225000, signed: true });
     expect(rowAmount("investment", 20000)).toEqual({ cents: 20000 });
+  });
+});
+
+describe("suggestions (MAZ-290)", () => {
+  const entry = (id: string, title: string, kind: "expense" | "income", share: number, date: string, categoryId = "home") => ({ id, title, kind, total: share, share, categoryId, accountId: "visa", date, note: "" });
+  const book = ledger({
+    transactions: [
+      entry("n1", "Netflix", "expense", 1549, "2026-07-31"),
+      entry("n2", "Netflix", "expense", 1549, "2026-08-31"),
+      entry("n3", "Netflix", "expense", 1699, "2026-09-30"),
+      entry("n4", "Netflix", "expense", 1699, "2026-10-31"),
+      ...["2026-10-07", "2026-10-14", "2026-10-21", "2026-10-28", "2026-11-04"].map((date, index) => entry(`t${String(index)}`, "Tutoring", "income", 6000, date, "salary")),
+    ],
+  });
+  const suggestions = recurringSuggestions(book, TODAY);
+  const netflix = suggestions.find((item) => item.kind === "expense");
+  const tutoring = suggestions.find((item) => item.kind === "income");
+
+  it("words the cadence and how often it was seen as the cards do", () => {
+    expect(netflix && suggestionCadence(netflix)).toBe("Every month, around the 31st");
+    expect(tutoring && suggestionCadence(tutoring)).toBe("Every week, on Wednesdays");
+    expect(suggestionCadence({ frequency: "yearly", nextDate: "2027-03-18", anchorDay: 18 })).toBe("Every year, around Mar 18");
+    expect(netflix && seenLabel(netflix, TODAY)).toBe("Seen 4 times since Jul 31");
+    expect(seenLabel({ count: 3, firstDate: "2025-12-03" }, TODAY)).toBe("Seen 3 times since Dec 3, 2025");
+  });
+
+  it("fills in the form from a suggestion and saves a rule that keeps its anchor day", () => {
+    if (!netflix) throw new Error("no Netflix suggestion");
+    const draft = draftFromSuggestion(netflix);
+    expect(draft).toMatchObject({ kind: "expense", title: "Netflix", amount: "16.99", date: "2026-11-30", frequency: "monthly", categoryId: "home", accountId: "visa", split: "full" });
+    const { built } = checkDraft(draft, book, TODAY);
+    if (!built) throw new Error("draft refused");
+    // Nov 30 is the last day of November: the schedule stays on the 31st.
+    expect(acceptedRule(netflix, draft, built, "r1")).toMatchObject({ id: "r1", nextDate: "2026-11-30", date: "2026-11-30", anchorDay: 31, total: 1699, share: 1699 });
+    // A date moved in the form anchors on the new day, as any new schedule.
+    expect(acceptedRule(netflix, { ...draft, date: "2026-12-05" }, built, "r2")).toMatchObject({ nextDate: "2026-12-05", anchorDay: 5 });
   });
 });

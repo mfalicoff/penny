@@ -72,6 +72,8 @@ interface EntryDialogProps {
   /** Two panes from the tablet width: the amount, title and categories, then the details. */
   main: ReactNode;
   details: ReactNode;
+  /** Under both panes, across the dialog (the matched entries of `web-schedule-suggested`). */
+  below?: ReactNode;
   /** Above both panes: banners and notes. */
   notices?: ReactNode;
   /** The form: the whole dialog, so the kind control and the footer buttons belong to it (id, submit, label). */
@@ -104,6 +106,7 @@ export function EntryDialog({
   primary,
   main,
   details,
+  below,
   notices,
   form,
   onKeyDown,
@@ -172,6 +175,7 @@ export function EntryDialog({
           <div className="entry-dialog__main">{main}</div>
           <div className="entry-dialog__details">{details}</div>
         </div>
+        {below}
         <div className="pk-dialog__foot entry-dialog__foot">
           {hint !== undefined && layout !== "phone" ? (
             hint

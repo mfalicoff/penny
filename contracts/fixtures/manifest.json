@@ -128,7 +128,7 @@
     },
     {
       "file": "recurring-suggestions.json",
-      "sha256": "12b3cd7c7a50bb9c4d8baddc092ef5184a05cf68f2b4339c72bdca6b2abf0fbd",
+      "sha256": "78d6436fc85a04f6fc8bedadb0d2826c57ed47428d4edea4d3f6c58dabc9d29c",
       "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
@@ -145,7 +145,7 @@
     },
     {
       "file": "redesign-states.json",
-      "sha256": "d56e5e78cc7e73cec363349c8523a4859623406cc0bc1344f94b6d0bbd104e15",
+      "sha256": "785ea777f2f778a357dc3e82d807c03f3e5c39ec2365913bdad24d42411e87fd",
       "generatedBy": null,
       "consumers": {
         "typescript": [

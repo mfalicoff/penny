@@ -241,3 +241,22 @@ details.flow__table[open]::details-content {
     translate: calc(var(--pk-shift) * var(--pk-motion) * -1) 0;
   }
 }
+
+/* ---------- Recurring suggestions (MAZ-290) ---------- */
+/* A suggestion that appears (or comes back with Undo) and a new schedule rise in while making room, as Lists › Insert. */
+.suggestion-list[data-animate-inserts] > li,
+.recurring-list[data-animate-inserts] > li {
+  transition:
+    opacity var(--pk-dur-standard) var(--pk-ease-standard),
+    translate var(--pk-dur-standard) var(--pk-ease-standard),
+    height calc(var(--pk-dur-standard) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+@starting-style {
+  .suggestion-list[data-animate-inserts] > li,
+  .recurring-list[data-animate-inserts] > li {
+    height: 0;
+    opacity: 0;
+    translate: 0 calc(var(--pk-nudge) * var(--pk-motion));
+  }
+}

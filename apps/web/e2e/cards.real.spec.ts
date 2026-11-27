@@ -480,6 +480,74 @@ async function newSchedule(p: Page) {
   await dialog.getByLabel("Amount (CAD)").fill("75.00");
 }
 
+interface WireLedger {
+  categories: { id: string; name: string; kind: string }[];
+  accounts: { id: string; name: string }[];
+  transactions: object[];
+}
+
+/**
+ * MAZ-290: alex's entries repeat like the cards' — Netflix monthly on the 3rd at $15.49, then
+ * $16.99 (so "was $15.49"), and Tutoring income weekly on Wednesdays — written through the
+ * revision-checked ledger API before the page opens. Made-up amounts.
+ */
+async function repeatingEntries(p: Page) {
+  const read = await p.request.get("/api/ledger");
+  expect(read.status(), "read the ledger").toBe(200);
+  const { revision, ledger } = (await read.json()) as { revision: number; ledger: WireLedger };
+  const expense = ledger.categories.find((category) => category.kind === "expense" && /fun|entertain|stream/i.test(category.name)) ?? ledger.categories.find((category) => category.kind === "expense");
+  const income = ledger.categories.find((category) => category.kind === "income");
+  const visa = ledger.accounts.find((account) => /visa/i.test(account.name)) ?? ledger.accounts[0];
+  if (!expense || !income) throw new Error("alex has no expense or income category");
+  const entry = (id: string, title: string, kind: string, share: number, date: string, categoryId: string) => ({
+    id, title, kind, total: share, share, categoryId, ...(visa ? { accountId: visa.id } : {}), date, note: "",
+  });
+  const added = [
+    entry("card-netflix-1", "Netflix", "expense", 1549, "2026-07-03", expense.id),
+    entry("card-netflix-2", "Netflix", "expense", 1549, "2026-08-03", expense.id),
+    entry("card-netflix-3", "Netflix", "expense", 1699, "2026-09-03", expense.id),
+    entry("card-netflix-4", "Netflix", "expense", 1699, "2026-10-03", expense.id),
+    ...["2026-09-09", "2026-09-16", "2026-09-23", "2026-09-30", "2026-10-07", "2026-10-14"].map((date, index) => entry(`card-tutoring-${String(index)}`, "Tutoring", "income", 6000, date, income.id)),
+  ];
+  const written = await p.request.put("/api/ledger", { data: { revision, ledger: { ...ledger, transactions: [...ledger.transactions, ...added] } } });
+  expect(written.status(), "write the repeating entries").toBe(200);
+}
+
+/** Recurring with the two suggestions (card `web-recurring-suggested`). */
+async function suggested(p: Page) {
+  await repeatingEntries(p);
+  await page(p, "/recurring", "Recurring");
+  const list = p.getByRole("list", { name: "Suggested schedules" });
+  await expect(list.getByRole("listitem")).toHaveCount(2);
+  return list;
+}
+
+async function suggestedCard(p: Page) {
+  await suggested(p);
+}
+
+/** No schedules and nothing to suggest: solo in the empty scenario. */
+async function emptyCard(p: Page) {
+  await page(p, "/recurring", "Recurring");
+  await expect(p.getByRole("heading", { name: "No schedules yet" })).toBeVisible();
+}
+
+/** Make it a schedule on Netflix: the filled-in form with its four entries. */
+async function suggestionFormCard(p: Page) {
+  const list = await suggested(p);
+  await list.getByRole("listitem").filter({ hasText: /^Netflix/ }).getByRole("button", { name: "Make it a schedule" }).click();
+  await expect(p.getByRole("dialog", { name: "New schedule" }).getByRole("region", { name: /^Already in your activity/ })).toBeVisible();
+}
+
+/** Netflix dismissed: one suggestion left and the toast with Undo. */
+async function dismissedCard(p: Page) {
+  const list = await suggested(p);
+  await list.getByRole("listitem").filter({ hasText: /^Netflix/ }).getByRole("button", { name: "Dismiss" }).click();
+  await expect(p.getByText(/^(Netflix suggestion dismissed|Suggestion dismissed)$/)).toBeVisible();
+  await expect(list.getByRole("listitem")).toHaveCount(1);
+  await p.mouse.move(0, 0);
+}
+
 /** Home after the server stops taking ledger syncs, with the scenario's pending create waiting. */
 async function syncFailed(run: Run) {
   const p = run.page;
@@ -934,10 +1002,11 @@ const cards: Record<string, Card> = {
   },
   "iphone-schedule-form": { open: ({ page: p }) => newSchedule(p) },
   // Recurring suggestions and renewal reminders, approved (MAZ-290); not built yet.
-  "iphone-recurring-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "iphone-recurring-empty": { skip: { status: "not-built", note: "The web's Recurring has no empty state that mentions suggestions yet (MAZ-290)." } },
-  "iphone-schedule-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "iphone-suggestion-dismissed-toast": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
+  // MAZ-290: the same states as the web cards, in the phone layout.
+  "iphone-recurring-suggested": { fresh: true, open: ({ page: p }) => suggestedCard(p), note: "Suggestions are ordered by their latest entry, so Tutoring (weekly) comes before Netflix." },
+  "iphone-recurring-empty": { open: ({ page: p }) => emptyCard(p), note: "solo in the empty scenario: no schedules and no entries." },
+  "iphone-schedule-suggested": { fresh: true, open: ({ page: p }) => suggestionFormCard(p) },
+  "iphone-suggestion-dismissed-toast": { fresh: true, open: ({ page: p }) => dismissedCard(p) },
   "iphone-recurring-renews-soon": { skip: { status: "not-built", note: "The web's Recurring rows have no Renews soon badge yet (MAZ-290)." } },
   "iphone-schedule-reminder": { skip: { status: "not-built", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
   "iphone-renewal-notification": { skip: { status: "not-built", note: "Renewal reminders are iOS local notifications; the web has none (MAZ-290)." } },
@@ -1057,10 +1126,10 @@ const cards: Record<string, Card> = {
   },
   "web-currency": { open: ({ page: p }) => page(p, "/settings/currency", /Currency|Settings/) },
   "web-schedule-form": { open: ({ page: p }) => newSchedule(p) },
-  "web-recurring-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "web-recurring-empty": { skip: { status: "not-built", note: "The web's Recurring has no empty state that mentions suggestions yet (MAZ-290)." } },
-  "web-schedule-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "web-suggestion-dismissed-toast": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
+  "web-recurring-suggested": { fresh: true, open: ({ page: p }) => suggestedCard(p), note: "Suggestions are ordered by their latest entry, so Tutoring (weekly) comes before Netflix." },
+  "web-recurring-empty": { open: ({ page: p }) => emptyCard(p), note: "solo in the empty scenario: no schedules and no entries." },
+  "web-schedule-suggested": { fresh: true, open: ({ page: p }) => suggestionFormCard(p) },
+  "web-suggestion-dismissed-toast": { fresh: true, open: ({ page: p }) => dismissedCard(p) },
   "web-recurring-renews-soon": { skip: { status: "not-built", note: "The web's Recurring rows have no Renews soon badge yet (MAZ-290)." } },
   "web-edit-entry": { open: ({ page: p }) => editEntry(p) },
   "web-join-code": { open: ({ page: p }) => joinWithCode(p) },
