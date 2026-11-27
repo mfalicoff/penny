@@ -4,7 +4,9 @@ import { type Category, type Ledger, type Transaction } from "@domain/ledger.ts"
 import { buildMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
 import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.ts";
 import { sharedCategoryId } from "@domain/householdProjection.ts";
+import type { ExpensePayer } from "../../api/schemas";
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
+import { percentOf } from "@domain/monthReview.ts";
 import type { SharedRow } from "../../api/projection";
 import type { WeekStart } from "../../app/preferences";
 import type { IconName } from "../../design/Icon";
@@ -54,8 +56,12 @@ export type InsightsSearch = z.infer<typeof insightsSearchSchema>;
 
 /* ---------- the ledger view ---------- */
 
-/** A shared share in the ledger view. `householdId` lets the domain match a recorded row with its preview. */
-export type SharedEntry = OverviewEntry & { householdId: string; householdExpenseId: string; householdName?: string | undefined };
+/**
+ * A shared share in the ledger view. `householdId` lets the domain match a recorded row with its
+ * preview; `payer` and `paidByYou` (MAZ-275) let the recap say who paid its top
+ * shared expense (MAZ-292).
+ */
+export type SharedEntry = OverviewEntry & { householdId: string; householdExpenseId: string; householdName?: string | undefined; payer?: ExpensePayer; paidByYou?: boolean };
 
 export const isSharedEntry = (entry: Transaction): entry is SharedEntry => "householdExpenseId" in entry;
 
@@ -83,6 +89,8 @@ export function ledgerWithShared(ledger: Ledger, rows: readonly SharedRow[], sch
       householdId: row.householdId,
       householdExpenseId: row.id,
       householdName: row.householdName,
+      payer: row.payer,
+      paidByYou: row.paidByYou,
       kind: "expense",
       title: row.title,
       date: row.date,
@@ -186,8 +194,6 @@ export function groupSmall(spending: readonly (Category & { amount: number })[],
   };
 }
 
-/** Whole percent of `part` in `whole` (0 when there is no whole). */
-export const percentOf = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
 /* ---------- calendar ---------- */
 
@@ -238,48 +244,8 @@ export function calendarDays(
 
 /* ---------- Insights ---------- */
 
-export interface CategoryChange {
-  key: string;
-  name: string;
-  icon: string;
-  color: string;
-  current: number;
-  previous: number;
-  /** current − previous */
-  change: number;
-  /** Whole percent of this month's spending. */
-  share: number;
-}
-
-/**
- * This month's spending by category next to last month's. Categories match by name (shared
- * categories travel by value, and the same name is the same category to the person); small ones
- * beyond `limit` are summed into "N more".
- */
-export function categoryComparison(current: readonly (Category & { amount: number })[], previous: readonly (Category & { amount: number })[], limit = 8): CategoryChange[] {
-  const rows = new Map<string, CategoryChange>();
-  const keyOf = (name: string) => name.trim().toLowerCase();
-  for (const [list, field] of [
-    [current, "current"],
-    [previous, "previous"],
-  ] as const) {
-    for (const category of list) {
-      const key = keyOf(category.name);
-      const row = rows.get(key) ?? { key, name: category.name, icon: category.icon, color: category.color, current: 0, previous: 0, change: 0, share: 0 };
-      row[field] += category.amount;
-      rows.set(key, row);
-    }
-  }
-  const total = current.reduce((sum, category) => sum + category.amount, 0);
-  const sorted = [...rows.values()]
-    .map((row) => ({ ...row, change: row.current - row.previous, share: percentOf(row.current, total) }))
-    .sort((a, b) => b.current - a.current || b.previous - a.previous || a.key.localeCompare(b.key));
-  if (sorted.length <= limit + 1) return sorted;
-  const rest = sorted.slice(limit);
-  const sum = (field: "current" | "previous") => rest.reduce((value, row) => value + row[field], 0);
-  const more = { key: "more", name: `${String(rest.length)} more`, icon: "ellipsis-horizontal", color: "", current: sum("current"), previous: sum("previous"), change: 0, share: 0 };
-  return [...sorted.slice(0, limit), { ...more, change: more.current - more.previous, share: percentOf(more.current, total) }];
-}
+// The category comparison and the month-over-month sentence are shared rules (MAZ-292).
+export { categoryComparison, percentOf, spendingChange, type CategoryChange } from "@domain/monthReview.ts";
 
 /* ---------- money flow ---------- */
 
@@ -333,22 +299,6 @@ export function flowLabel(node: FlowNode): string {
 export function shortLabel(label: string, max = 18): string {
   const chars = Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(label), (part) => part.segment);
   return chars.length <= max ? label : `${chars.slice(0, max - 1).join("").trimEnd()}…`;
-}
-
-/**
- * Insights' month-over-month sentence (card `iphone-insights`): the change in recorded spending
- * from last month, and the (at most two) categories that moved most in that direction ("Mostly
- * Food & drinks and Shopping."). The grouped "N more" row is never named.
- */
-export function spendingChange(current: number, previous: number, comparison: readonly CategoryChange[]): { delta: number; drivers: string[] } {
-  const delta = current - previous;
-  if (delta === 0) return { delta, drivers: [] };
-  const drivers = comparison
-    .filter((row) => row.key !== "more" && Math.sign(row.change) === Math.sign(delta))
-    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
-    .slice(0, 2)
-    .map((row) => row.name);
-  return { delta, drivers };
 }
 
 /** The months ending with `month`, oldest first (Insights' six-month chart). */

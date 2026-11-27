@@ -244,6 +244,7 @@ struct DetailPage: View {
         case .insights: InsightsView()
         case .categorySpending(let ids, let title): CategorySpendingView(categoryIds: ids, title: title)
         case .receiptInbox(let item): ReceiptInboxView(openItemID: item)
+        case .recap(let month): RecapView(month: month)
         }
     }
 }
@@ -602,10 +603,11 @@ private struct SplitStyle: ViewModifier {
 extension DetailRoute {
     /// An entry, a household or a trip (with their pages): opening one plays the selection
     /// haptic (docs/design/motion.md#haptics-ios). Home's analysis pages and the inbox don't.
+    /// The recap plays its own (`ShellModel.openRecap`).
     static func opensItem(_ route: DetailRoute) -> Bool {
         switch route {
         case .entry, .household, .householdExpense, .trip: true
-        case .householdHistory, .moneyFlow, .insights, .categorySpending, .receiptInbox: false
+        case .householdHistory, .moneyFlow, .insights, .categorySpending, .receiptInbox, .recap: false
         }
     }
 }

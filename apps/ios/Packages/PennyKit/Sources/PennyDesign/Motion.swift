@@ -172,13 +172,17 @@ extension Motion {
         case sidebar
         /// Open an entry, a household or a trip.
         case open
+        /// Dismiss the recap banner (MAZ-292).
+        case dismissRecap
+        /// Open the recap: the banner, Insights' Recap button (MAZ-292).
+        case openRecap
 
         public var feedback: SensoryFeedback {
             switch self {
             case .save, .syncSucceeded: .success
             case .refused, .failed, .syncFailed: .error
-            case .undo, .openClose, .sidebar: .impact(weight: .light)
-            case .stepPeriod, .focusChart, .select, .disclosure, .toggle, .open: .selection
+            case .undo, .openClose, .sidebar, .dismissRecap: .impact(weight: .light)
+            case .stepPeriod, .focusChart, .select, .disclosure, .toggle, .open, .openRecap: .selection
             case .delete, .bulkChange: .impact(weight: .medium)
             case .destructiveConfirmation: .warning
             }

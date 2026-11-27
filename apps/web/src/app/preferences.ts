@@ -10,6 +10,8 @@ import { z } from "zod";
  *   (`prefers-reduced-transparency`) applies too, in CSS, whatever this says.
  * - `showCents`: the Home hero's Left to spend shows cents (default) or whole units (MAZ-140).
  * - `weekStartsOn`: the first column of the Home calendar, Monday (default) or Sunday (MAZ-140).
+ * - `recapDismissed`: the month (`YYYY-MM`) whose recap banner was dismissed on this device
+ *   (MAZ-292). The banner covers one month at a time, so the latest is all it needs.
  */
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
@@ -22,12 +24,17 @@ const preferencesSchema = z.object({
   // Added later: a value saved before these fields existed still parses, with their defaults.
   showCents: z.boolean().catch(true),
   weekStartsOn: z.enum(WEEK_STARTS).catch("monday"),
+  recapDismissed: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .nullable()
+    .catch(null),
 });
 
 export type Preferences = z.infer<typeof preferencesSchema>;
 
 export const STORAGE_KEY = "penny.preferences";
-const DEFAULTS: Preferences = { theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday" };
+const DEFAULTS: Preferences = { theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday", recapDismissed: null };
 
 function read(): Preferences {
   try {

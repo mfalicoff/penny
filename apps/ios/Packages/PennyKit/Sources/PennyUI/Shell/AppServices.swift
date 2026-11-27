@@ -26,6 +26,9 @@ public struct AppServices {
     public var systemColorScheme: ColorScheme?
     /// Opt-in crash and performance reports (MAZ-129). Disabled outside `live()`.
     public var telemetry: ClientTelemetry = .disabled()
+    /// The monthly recap's dismissed banners and its notification (MAZ-292). In memory, with no
+    /// notification, outside `live()`.
+    public var recap = MonthlyRecap(defaults: nil, center: nil)
 
     public init(
         preferences: any DevicePreferences, lock: AppLockController,
@@ -56,6 +59,9 @@ public struct AppServices {
             preferences: preferences,
             lock: AppLockController(store: KeychainAppLockSettingStore(), preferences: preferences))
         services.widgets = WidgetPublisher.live()
+        #if canImport(UserNotifications)
+            services.recap = .live()
+        #endif
         let recorder = TelemetryRecorder(resource: .current(), pending: .standard())
         services.telemetry = ClientTelemetry(store: UserDefaultsTelemetryChoiceStore(), recorder: recorder)
         #if os(iOS)

@@ -128,10 +128,14 @@ class CardTestCase: PennyUITestCase {
     /// setting; `standInFaceID` answers Face ID with the Debug stand-in, so the lock can be on.
     /// `portrait` captures an iPad card upright, for the cards drawn in portrait (`ipad-home-portrait`).
     /// `defaults` adds preferences to the launch, such as the crash report choices (MAZ-129).
+    /// `today` moves the app's day (the recap cards are drawn in the first days of November,
+    /// MAZ-292), and `notification` opens a notification payload as if tapped, the first time Penny
+    /// returns from the background (so sign-in finishes on Home first).
     @MainActor
     func card(
         _ id: String, freshSeedPerAppearance: Bool = false, followsSystem: Bool = false,
         standInFaceID: Bool = false, portrait: Bool = false, note: String? = nil, defaults: [String: Any] = [:],
+        today: String? = nil, notification: String? = nil,
         open: (CardContext) async throws -> Void
     ) async throws {
         let state = try CardState.load(id)
@@ -157,6 +161,8 @@ class CardTestCase: PennyUITestCase {
             options.seed = ContainerSeed(
                 standardDefaults: defaults.merging(["penny.appearance": followsSystem ? "system" : appearance]) { $1 })
             options.standInFaceID = standInFaceID
+            if let today { options.today = today }
+            options.notificationOnResume = notification
             // A card that shows System selected is drawn in each appearance: System shows it.
             if followsSystem { options.systemAppearance = appearance }
             options.resetsState = state.signedOut || signsIn

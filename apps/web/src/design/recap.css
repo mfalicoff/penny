@@ -1,0 +1,670 @@
+/*
+ * The monthly recap (MAZ-292): cards `web-recap`, `web-recap-empty`, and the "recap is ready"
+ * banner of `web-home-recap` and `web-insights-recap`. Every value comes from the --pk-* tokens.
+ * Phones and narrow windows stack the panels; from 1100px the card's two rows.
+ */
+
+.recap {
+  gap: 18px;
+}
+
+.recap__body {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.recap__hero,
+.recap__low {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.recap__side {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+
+@media (min-width: 1100px) {
+  .recap__hero {
+    grid-template-columns: 420px minmax(0, 1fr);
+  }
+
+  .recap__low {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .recap-changes {
+    align-self: stretch;
+  }
+}
+
+.recap-panel {
+  align-content: start;
+  gap: 0;
+  padding: 20px;
+}
+
+.recap-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 12px;
+}
+
+.recap-panel__head--eyebrow {
+  margin-bottom: 0;
+}
+
+.recap-panel__head .panel__title {
+  font-size: 1rem;
+}
+
+.recap-panel__note {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.recap-panel__note strong {
+  color: var(--pk-label);
+  font-weight: 600;
+}
+
+.recap-eyebrow {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------- spent, with this month, the month before and last year ---------- */
+.card .recap-spent__amount {
+  margin: 8px 0 0;
+  font-size: clamp(2.5rem, 9vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.card .recap-spent__sentence {
+  margin: 10px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.recap-spent__sentence strong {
+  color: var(--pk-label);
+  font-weight: 600;
+}
+
+.recap-compare {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+
+.recap-compare__row {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.recap-compare__row dd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+}
+
+.recap-compare__track {
+  flex: 1;
+  min-width: 0;
+}
+
+.recap-compare__track i {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--pk-label);
+  opacity: 0.3;
+  transform-origin: 0 50%;
+  transition: width calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+.recap-compare__row--current .recap-compare__track i {
+  opacity: 0.82;
+}
+
+.recap-compare__value {
+  flex: none;
+  min-width: 4.5em;
+  color: var(--pk-label);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: end;
+}
+
+.recap-compare__missing {
+  font-style: normal;
+}
+
+/* ---------- money in and out ---------- */
+.recap-flow__bar {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.recap-flow__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transform-origin: 0 50%;
+  transition: width calc(var(--pk-dur-emphasized) * var(--pk-motion)) var(--pk-ease-standard);
+}
+
+.recap-flow__spent {
+  background: var(--pk-label);
+  opacity: 0.82;
+}
+
+.recap-flow__invested {
+  background: var(--pk-invest);
+}
+
+.recap-flow__left {
+  background: var(--pk-income);
+}
+
+.recap-flow__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.recap-stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--pk-surface-2);
+}
+
+.recap-stat dt {
+  display: flex;
+  align-items: center;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.recap-stat dd {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+/* Phones: the three totals stay on one row, smaller (iphone-recap draws them as one line). */
+@media (max-width: 767.98px) {
+  .recap-flow__stats {
+    gap: 8px;
+  }
+
+  .recap-stat {
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .recap-stat dd {
+    font-size: 1rem;
+  }
+}
+
+.recap-stat__left {
+  color: var(--pk-income);
+}
+
+.recap-stat__over {
+  color: var(--pk-danger);
+}
+
+/* ---------- biggest changes ---------- */
+.recap-changes {
+  padding: 14px 8px;
+}
+
+.recap-changes > .recap-panel__head,
+.recap-changes__empty {
+  padding: 0 12px;
+}
+
+.recap-changes .table-scroll th,
+.recap-changes .table-scroll td {
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+
+.recap-changes .table-scroll thead th {
+  padding-top: 0;
+  font-size: 0.71875rem;
+}
+
+.recap-changes .table-scroll tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.recap-changes .category-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.recap-changes .money:not(.pk-money--muted) {
+  font-weight: 600;
+}
+
+.recap-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.recap-chip--new {
+  background: var(--pk-tint-soft);
+  color: var(--pk-tint-text);
+}
+
+/* ---------- rows: biggest changes on phones, shared, highlights ---------- */
+.recap-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recap-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 0;
+}
+
+.recap-row + .recap-row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.recap-row .category-dot,
+.recap-row__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.recap-row__icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.recap-row__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.recap-row__text strong {
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.recap-row__text span {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.recap-row__value {
+  display: grid;
+  flex: none;
+  justify-items: end;
+  gap: 2px;
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.recap-row__of {
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  font-weight: 500;
+}
+
+/* ---------- nothing to recap (web-recap-empty) ---------- */
+.recap-empty {
+  justify-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 560px;
+  margin: 70px auto 0;
+  padding: 44px 40px 36px;
+  text-align: center;
+}
+
+@media (max-width: 767.98px) {
+  .recap-empty {
+    margin-top: 8px;
+    padding: 32px 20px 24px;
+  }
+
+  .recap-empty__actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .recap-empty__actions .wbtn--primary {
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 22px;
+    font-size: 1rem;
+  }
+}
+
+.recap-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.recap-empty__title {
+  margin: 18px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.card .recap-empty__text {
+  margin: 8px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.recap-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* ---------- the "recap is ready" banner ---------- */
+.recap-banner {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 14px 14px 16px;
+}
+
+/*
+ * Below 768px (iphone-home-recap, iphone-insights-recap): the whole row opens the recap, with a
+ * chevron after the text, and a small round close button at the top end, above the row's link.
+ */
+.recap-banner--row {
+  position: relative;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 14px;
+}
+
+.recap-banner__row-link {
+  display: grid;
+  place-items: center;
+  color: var(--pk-label-2);
+  text-decoration: none;
+}
+
+.recap-banner__row-link::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+}
+
+.recap-banner__row-link:focus-visible {
+  outline: none;
+}
+
+.recap-banner__row-link:focus-visible::after {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.recap-banner--row .recap-banner__close {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  border-radius: 50%;
+  background: var(--pk-fill);
+  box-shadow: none;
+  color: var(--pk-label-2);
+}
+
+/* Touch screens keep a 44px target; the visible circle stays the card's size. */
+@media (pointer: coarse) {
+  .recap-banner--row .recap-banner__close {
+    width: 44px;
+    height: 44px;
+    margin: -7px -7px -7px 0;
+    border: 7px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+.home-recap {
+  grid-column: 1 / -1;
+}
+
+.recap-banner__tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--pk-tint-soft);
+  color: var(--pk-tint);
+}
+
+.recap-banner__text {
+  min-width: 0;
+}
+
+.recap-banner__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.card .recap-banner__message {
+  margin: 2px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.recap-banner__open:focus-visible,
+.recap-button:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+/* Insights' Recap button: the sparkles in copper, as on `web-insights-recap`. */
+.recap-button .icon {
+  color: var(--pk-tint);
+}
+
+/* iphone-insights-recap: the round glass button draws the sparkles in the label color. */
+.glass-button.recap-button .icon {
+  color: var(--pk-label);
+}
+
+/*
+ * Below 768px (card `iphone-recap`): "Spent" (the subtitle says "your share"), the bars before the
+ * sentence, Came in leading Money in and out with a one-line legend under the bar, and Biggest
+ * changes, Shared and Highlights as section headings over solid list cards.
+ */
+@media (max-width: 767.98px) {
+  .recap-spent__share {
+    display: none;
+  }
+
+  .recap-spent .recap-compare {
+    order: 1;
+  }
+
+  .card .recap-spent__sentence {
+    order: 2;
+    margin-top: 16px;
+  }
+
+  .recap-flow > .recap-panel__head .panel__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .recap-flow > .recap-panel__head .recap-panel__note {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    color: var(--pk-label-2);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .recap-flow .recap-flow__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-top: 14px;
+  }
+
+  .recap-flow .recap-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .recap-flow .recap-stat dt {
+    font-size: 0.9375rem;
+  }
+
+  .recap-flow .recap-stat dd {
+    font-size: 0.9375rem;
+    letter-spacing: 0;
+  }
+
+  .recap-changes,
+  .recap-shared,
+  .recap-highlights {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .recap-changes > .recap-panel__head,
+  .recap-shared > .recap-panel__head,
+  .recap-highlights > .recap-panel__head {
+    margin: 8px 0 10px;
+    padding: 0 4px;
+  }
+
+  .recap-changes .panel__title,
+  .recap-shared .panel__title,
+  .recap-highlights .panel__title {
+    font-size: 1.375rem;
+    letter-spacing: -0.02em;
+  }
+
+  .recap-changes .recap-panel__note,
+  .recap-shared .recap-panel__note {
+    display: none;
+  }
+
+  .recap-changes .recap-list,
+  .recap-shared .recap-list,
+  .recap-highlights .recap-list,
+  .recap-changes__empty {
+    padding: 4px 16px;
+    border-radius: var(--pk-r-card);
+    background: var(--pk-surface);
+    box-shadow: 0 0 0 0.5px var(--pk-separator);
+  }
+
+  .recap-changes__empty {
+    padding: 16px;
+  }
+
+  .recap-list .recap-row {
+    padding: 12px 0;
+  }
+
+  .recap-list .recap-row .category-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+}
+
+/* iphone-recap: the legend's Spent has no amount on screen (it leads the recap); screen readers still hear it. */
+@media (max-width: 767.98px) {
+  .recap-flow .recap-stat__spent {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

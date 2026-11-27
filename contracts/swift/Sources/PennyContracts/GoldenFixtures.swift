@@ -164,6 +164,123 @@ public struct SharedCategoriesFixture: Codable, Equatable, Sendable {
     }
 }
 
+/// month-review.json (MAZ-292): the monthly recap and the month its banner shows.
+public struct MonthReviewFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    public var ledgers: [String: Ledger]
+    /// Named household projections (the server's personal projection rows).
+    public var projections: [String: [ProjectedExpense]]
+    public var cases: [Case]
+    public var banner: [Banner]
+
+    /// Who paid a shared expense. `deleted`: shown as "Former member", never the email.
+    public struct Payer: Codable, Equatable, Sendable {
+        public var email: String
+        public var displayName: String?
+        public var deleted: Bool?
+    }
+
+    public struct ProjectedExpense: Codable, Equatable, Sendable {
+        public var id: String
+        public var householdId: String
+        public var householdName: String
+        public var householdCurrency: String
+        public var title: String
+        public var date: String
+        public var totalCents: Int64
+        public var shareCents: Int64
+        public var category: SharedCategoriesFixture.SharedCategory
+        public var note: String
+        public var payerUserId: String
+        public var payer: Payer?
+        public var paidByYou: Bool?
+        public var scheduled: Bool?
+        public var recurringId: String?
+    }
+
+    public struct Case: Codable, Equatable, Sendable {
+        public var name: String
+        /// A key of `ledgers`.
+        public var ledger: String
+        /// A key of `projections`.
+        public var projection: String
+        public var month: String
+        /// The person's local date.
+        public var today: String
+        public var expected: Review
+    }
+
+    public struct ComparedMonth: Codable, Equatable, Sendable {
+        public var month: String
+        public var spent: Int64?
+        public var change: Int?
+    }
+
+    public struct BiggestChange: Codable, Equatable, Sendable {
+        public var key: String
+        public var name: String
+        public var icon: String
+        public var color: String
+        public var current: Int64
+        public var previous: Int64
+        public var change: Int64
+        public var percent: Int?
+    }
+
+    public struct TopShared: Codable, Equatable, Sendable {
+        public var id: String
+        public var title: String
+        public var categoryId: String
+        public var date: String
+        public var share: Int64
+        public var total: Int64
+        public var paidByYou: Bool?
+        public var payer: Payer?
+    }
+
+    public struct Shared: Codable, Equatable, Sendable {
+        public var count: Int
+        public var spent: Int64
+        public var top: TopShared?
+    }
+
+    public struct Split: Codable, Equatable, Sendable {
+        public var count: Int
+        public var total: Int64
+        public var share: Int64
+        public var othersPaid: Int64
+    }
+
+    public struct Run: Codable, Equatable, Sendable {
+        public var start: String
+        public var end: String
+        public var days: Int
+    }
+
+    public struct Review: Codable, Equatable, Sendable {
+        public var month: String
+        public var empty: Bool
+        public var spent: Int64
+        public var cameIn: Int64
+        public var invested: Int64
+        public var leftOver: Int64
+        public var previous: ComparedMonth
+        public var lastYear: ComparedMonth
+        public var biggestChanges: [BiggestChange]
+        public var shared: Shared
+        public var split: Split
+        public var daysWithoutSpending: Int
+        public var longestRun: Run?
+    }
+
+    /// The local date and the month whose recap banner shows then (nil: none).
+    public struct Banner: Codable, Equatable, Sendable {
+        public var today: String
+        public var month: String?
+    }
+}
+
 /// shared-splits.json
 public struct SharedSplitsFixture: Codable, Equatable, Sendable {
     public var description: String

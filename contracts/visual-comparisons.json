@@ -2619,74 +2619,104 @@
       "id": "iphone-recap",
       "view": "October recap from Insights: spent compared with September and last October, money in and out, biggest category changes, shared and highlights",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured on November 3 with alex's seed: October 2025 has nothing recorded, so its row reads \"No Oct 2025 to compare with\", and the income-free month ends in Overspent."
       }
     },
     {
       "id": "iphone-recap-empty",
       "view": "recap of a month with no recorded entries",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "iphone-home-recap",
       "view": "home in the first days of November with the October recap banner",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the browser's clock on November 3, so the banner offers October."
       }
     },
     {
       "id": "iphone-insights-recap",
       "view": "insights in the first days of November with the October recap banner and the recap button",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the browser's clock on November 3, so the banner offers October."
       }
     },
     {
       "id": "iphone-recap-setting",
       "view": "settings sheet with the monthly recap notification switch off",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-applicable",
@@ -2698,10 +2728,9 @@
       "id": "iphone-recap-notification",
       "view": "lock screen on November 1 with the generic recap notification",
       "native": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "note": "Built (Settings › Monthly recap schedules a local notification at 9 AM on the 1st), but the Lock Screen is system chrome XCUITest can't show. Its text (\"Your October recap is ready.\", no title, amounts or names) and trigger are unit-tested (RecapTests); its look is checked on a device (docs/ios/qa.md)."
       },
       "web": {
         "status": "not-applicable",
@@ -4535,10 +4564,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured on November 3 with alex's seed: September has a little spending and October 2025 none, so the last bar reads \"No Oct 2025 to compare with\", and October's income-free month shows Overspent in place of Left over."
       }
     },
     {
@@ -4550,10 +4583,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -4565,10 +4601,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the browser's clock on November 3, so the banner offers October."
       }
     },
     {
@@ -4580,10 +4620,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the browser's clock on November 3, so the banner offers October."
       }
     },
     {

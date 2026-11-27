@@ -31,6 +31,9 @@ public enum DetailRoute: Hashable, Sendable {
     case categorySpending(categoryIds: [String], title: String)
     /// The receipt inbox (MAZ-184), opened on one item when `itemID` is set (a notification).
     case receiptInbox(itemID: String?)
+    /// A month's recap (MAZ-292), from Insights' Recap button, the recap banner or its notification.
+    /// It keeps its own month (any past month), apart from the shell's.
+    case recap(month: MonthKey)
 }
 
 /// Pages inside Settings. The first three are the old More tab's "Manage" pages, which the
@@ -196,6 +199,7 @@ public struct ShellRoute: Equatable, Sendable {
             if let expense { path.append(.householdExpense(householdID: household, expenseID: expense)) }
             show(.shared, path)
         case .receiptInbox(let item): show(.home, [.receiptInbox(itemID: item)])
+        case .recap(let month): show(.home, [.recap(month: month)])
         case .trips: show(.trips, [])
         case .trip(let id): show(.trips, [.trip(id: id)])
         case .join(let code, let server):

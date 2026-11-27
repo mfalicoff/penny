@@ -62,45 +62,19 @@ enum OverviewText {
         return difference < 0 ? "\(amount) less than \(name)" : "\(amount) more than \(name)"
     }
 
-    /// The categories behind the month-over-month change (`iphone-insights` card, and the web's
-    /// `spendingChange`): "Mostly Food & drinks and Shopping." Categories match last month's by
-    /// name, and the (at most two) that moved most in the same direction as the total are
-    /// named. Nothing when the total didn't change or no category moved that way. As on the
-    /// web, past nine categories only the eight largest are named (the rest are its "N more").
+    /// The categories behind the month-over-month change (`iphone-insights` card): "Mostly Food &
+    /// drinks and Shopping." The shared rule (`CategoryChange.compare` and `SpendingChange`, the
+    /// web's `categoryComparison` and `spendingChange`) matches categories by name and names the
+    /// (at most two) that moved most in the same direction as the total; past nine categories only
+    /// the eight largest can be named (the rest are its "N more"). Nothing when the total didn't
+    /// change or no category moved that way.
     static func changeDrivers(current: CategoryBreakdown, previous: CategoryBreakdown?) -> String? {
         guard let previous else { return nil }
-        let difference = current.total - previous.total
-        guard difference != 0 else { return nil }
-        struct Change {
-            let key: String
-            let name: String
-            var current: Int64 = 0
-            var previous: Int64 = 0
-            var change: Int64 { current - previous }
+        let spending = { (breakdown: CategoryBreakdown) in
+            breakdown.rows.map { CategorySpending($0.category, amount: $0.amount) }
         }
-        var changes: [String: Change] = [:]
-        let key = { (name: String) in name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-        for row in current.rows {
-            changes[key(row.category.name), default: Change(key: key(row.category.name), name: row.category.name)]
-                .current += row.amount
-        }
-        for row in previous.rows {
-            changes[key(row.category.name), default: Change(key: key(row.category.name), name: row.category.name)]
-                .previous += row.amount
-        }
-        var sorted = changes.values.sorted {
-            if $0.current != $1.current { return $0.current > $1.current }
-            if $0.previous != $1.previous { return $0.previous > $1.previous }
-            return $0.key < $1.key
-        }
-        if sorted.count > 9 { sorted = Array(sorted.prefix(8)) }
-        let names = sorted.enumerated()
-            .filter { $0.element.change != 0 && ($0.element.change > 0) == (difference > 0) }
-            .sorted {
-                abs($0.element.change) != abs($1.element.change)
-                    ? abs($0.element.change) > abs($1.element.change) : $0.offset < $1.offset
-            }
-            .prefix(2).map(\.element.name)
+        let comparison = CategoryChange.compare(current: spending(current), previous: spending(previous))
+        let names = SpendingChange(current: current.total, previous: previous.total, comparison: comparison).drivers
         switch names.count {
         case 0: return nil
         case 1: return "Mostly \(names[0])."

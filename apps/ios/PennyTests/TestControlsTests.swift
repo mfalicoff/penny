@@ -96,7 +96,13 @@ struct UITestLaunchControlsTests {
             "PENNY_TEST_NOTIFICATION": payload, "PENNY_TEST_NOTIFICATION_ON_RESUME": #"{"householdId":"h1"}"#,
         ])
         let atLaunch = try #require(controls.notificationAtLaunch.flatMap(TestNotificationInjection.notification))
-        #expect(atLaunch == HouseholdNotification(householdID: "h1", month: "2026-09", expenseID: "e2"))
+        #expect(
+            atLaunch
+                == .household(try #require(HouseholdNotification(householdID: "h1", month: "2026-09", expenseID: "e2")))
+        )
+        // The monthly recap's local notification (MAZ-292) is injected the same way.
+        let recap = try #require(TestNotificationInjection.notification(#"{"recapMonth":"2026-10"}"#))
+        #expect(recap.deepLink == .recap(month: try #require(MonthKey("2026-10"))))
         // A malformed payload is injected as one: nil, which opens nothing.
         #expect(controls.notificationOnResume.flatMap(TestNotificationInjection.notification) == nil)
         #expect(TestNotificationInjection.notification("not json") == nil)

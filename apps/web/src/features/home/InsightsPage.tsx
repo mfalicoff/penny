@@ -1,7 +1,7 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useMemo, useRef } from "react";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
-import { Icon } from "../../design/Icon";
+import { Icon, SparklesIcon } from "../../design/Icon";
 import { categoryTint, tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
 import { LoadingState } from "../../design/states";
@@ -13,6 +13,9 @@ import { MonthBar, Panel } from "./parts";
 import { usePeriodSlide } from "../../design/motion";
 import { useMonthReport } from "./useMonthReport";
 import { useMonthTotals } from "./useMonthTotals";
+import { useToday } from "../../app/useToday";
+import { RecapBanner } from "../recap/RecapBanner";
+import { recapMonth } from "../recap/model";
 
 const SIX = 6;
 
@@ -33,6 +36,7 @@ const monthName = (month: string) => monthLabel(month).split(" ")[0] ?? month;
 export function InsightsPage({ search }: { search: InsightsSearch }) {
   const navigateTo = useNavigate({ from: "/insights" });
   const month = search.month ?? currentMonth();
+  const today = useToday();
   // docs/design/motion.md, Month and period changes.
   const content = useRef<HTMLDivElement>(null);
   usePeriodSlide(content, month);
@@ -51,7 +55,16 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
         onChange={(next) => {
           void navigateTo({ search: next ? { month: next } : {} });
         }}
+        calendar={
+          // web-insights-recap: the recap of the month shown once it's over, else of last month.
+          // Below 768px, iphone-insights-recap draws it as a round glass button.
+          <Link to="/insights/recap" search={{ month: recapMonth(month, today) }} className={wide ? "wbtn wbtn--secondary recap-button" : "glass glass-button recap-button"}>
+            <SparklesIcon size={wide ? 16 : 20} />
+            <span className={wide ? undefined : "visually-hidden"}>Recap</span>
+          </Link>
+        }
       />
+      {wide ? <RecapBanner /> : null}
       {!report ? (
         <LoadingState label="Loading your month…" />
       ) : wide ? (
@@ -91,6 +104,7 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
         <>
           {/* iphone-insights: the subtitle under the title says what the screen counts. */}
           <p className="page__subtitle">Spending · your share</p>
+          <RecapBanner />
           <SpendingSummary report={report} previous={previous} comparison={comparison} previousMonth={previousMonth} currency={currency} />
           <CategoryList report={report} currency={currency} />
         </>

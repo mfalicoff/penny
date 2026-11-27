@@ -166,23 +166,26 @@
         func body(content: Content) -> some View {
             content
                 .task {
-                    if let json = controls.notificationAtLaunch { notifications.didOpen(Self.notification(json)) }
+                    if let json = controls.notificationAtLaunch {
+                        notifications.didOpen(target: Self.notification(json))
+                    }
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .background { wasInBackground = true }
                     guard phase == .active, wasInBackground, !resumed, let json = controls.notificationOnResume
                     else { return }
                     resumed = true
-                    notifications.didOpen(Self.notification(json))
+                    notifications.didOpen(target: Self.notification(json))
                 }
         }
 
-        /// The payload as `userInfo`; nil (a malformed notification) for anything else.
-        static func notification(_ json: String) -> HouseholdNotification? {
+        /// The payload as `userInfo`: a household, receipt or recap (MAZ-292) target; nil (a
+        /// malformed notification) for anything else.
+        static func notification(_ json: String) -> NotificationTarget? {
             guard let object = try? JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any] else {
                 return nil
             }
-            return HouseholdNotification(userInfo: object as [AnyHashable: Any])
+            return NotificationTarget(userInfo: object as [AnyHashable: Any])
         }
     }
 

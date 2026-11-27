@@ -53,6 +53,10 @@ struct SettingsView: View {
                 if shell.account != nil, let push {
                     NotificationSettingsRow(push: push).cardSettingsRow()
                 }
+                // MAZ-292: the monthly recap's local notification, right under Notifications.
+                if shell.account != nil, shell.recap.offersNotification {
+                    RecapSettingRow(recap: shell.recap, now: shell.now)
+                }
                 // MAZ-129: crash and performance reports, while the account's server takes them.
                 if shell.account != nil, shell.auth?.server?.nativeTelemetry == true {
                     row(.privacy, symbol: "hand.raised", value: nil)
@@ -67,7 +71,13 @@ struct SettingsView: View {
                 // The iPad card has no footnote here (the web's tablet layout leaves it out too).
                 let currencyNote =
                     currencyLocked && !shell.route.settingsIsColumn ? CurrencyPolicy.settingsFootnote : nil
-                let notes = [currencyNote, notificationProblem].compactMap { $0 }
+                // The card's one paragraph: the currency note, then what Monthly recap does.
+                let recapNote =
+                    shell.account != nil && shell.recap.offersNotification
+                    ? RecapSettingText.footer(device: RecapSettingText.device) : nil
+                let about = [currencyNote, recapNote].compactMap { $0 }.joined(separator: " ")
+                let recapProblem = shell.recap.permissionDenied ? RecapSettingText.denied : nil
+                let notes = [about.isEmpty ? nil : about, notificationProblem, recapProblem].compactMap { $0 }
                 if !notes.isEmpty { Text(notes.joined(separator: "\n\n")) }
             }
             if let account = shell.account {

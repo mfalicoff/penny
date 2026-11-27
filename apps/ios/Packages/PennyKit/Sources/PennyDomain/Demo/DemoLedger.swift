@@ -1,6 +1,8 @@
 /// The sample ledger behind "Try with sample data". It is made up,
 /// built fresh for each demo and dated around `today`, so the demo always shows a current
-/// month. Ids start with `demo-`, so a demo record is recognizable if one ever leaked.
+/// month. Last month has a few entries too, so the demo has a monthly recap (MAZ-292) and
+/// Insights has a month to compare with. Ids start with `demo-`, so a demo record is
+/// recognizable if one ever leaked.
 ///
 /// The demo is temporary and isolated: it never touches an account's data, never reaches a
 /// server and is gone when the demo ends (docs/ios/shell.md, "Demo").
@@ -22,6 +24,30 @@ public enum DemoLedger {
                 participants: participants,
                 categoryId: category, accountId: account, tripId: trip, date: day(daysAgo))
         }
+        // Last month, on fixed days: a recap with category changes, a split and quiet days.
+        var lastCount = 0
+        func previous(
+            _ title: String, _ cents: Int64, _ category: String, day: Int, share: Int64? = nil,
+            kind: EntryKind = .expense, account: String = "demo-chequing", participants: Int? = nil
+        ) -> LedgerEntry? {
+            guard let last = month.shifted(by: -1) else { return nil }
+            lastCount += 1
+            return LedgerEntry(
+                id: "\(idPrefix)last-\(lastCount)", title: title, kind: kind, total: cents, share: share ?? cents,
+                participants: participants, categoryId: category, accountId: account,
+                date: last.first.adding(days: day - 1))
+        }
+        let lastMonth = [
+            previous("Monthly salary", 480_000, "salary", day: 1, kind: .income),
+            previous("Rent", 145_000, "home", day: 1),
+            previous("Monthly transit pass", 15_600, "transport", day: 2),
+            previous("Music streaming", 1_299, "fun", day: 3, account: "demo-visa"),
+            previous("Weekly groceries", 9_120, "groceries", day: 4),
+            previous("Dinner out", 11_200, "food", day: 9, share: 5_600, account: "demo-visa", participants: 2),
+            previous("Index fund", 20_000, "investments", day: 15, kind: .investment),
+            previous("Weekend groceries", 6_830, "groceries", day: 18),
+            previous("New shoes", 8_999, "shopping", day: 24, account: "demo-visa"),
+        ].compactMap { $0 }
         let nextMonth = month.shifted(by: 1)?.first ?? month.last
         let tripStart = month.first
         return Ledger(
@@ -48,7 +74,7 @@ public enum DemoLedger {
                 entry("Design project", 65_000, "freelance", daysAgo: 8, kind: .income),
                 entry("Index fund", 20_000, "investments", daysAgo: 3, kind: .investment),
                 entry("Music streaming", 1_299, "fun", daysAgo: 3, account: "demo-visa"),
-            ],
+            ] + lastMonth,
             recurring: [
                 RecurringRule(
                     id: "demo-rule-salary", title: "Monthly salary", kind: .income, total: 480_000, share: 480_000,

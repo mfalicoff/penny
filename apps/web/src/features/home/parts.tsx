@@ -53,11 +53,11 @@ export function Panel({ title, level = 2, action, className, list, children }: {
  * on `ipad-home` and `web-home`, and at the end of the phone row, beside `actions` (Settings).
  * It is one button at every width, so the calendar sheet always returns focus to it.
  */
-export function MonthBar({ month, onChange, calendar, actions }: { month: string; onChange: (month: string | undefined) => void; calendar?: ReactNode; actions?: ReactNode }) {
+export function MonthBar({ month, onChange, calendar, actions, max }: { month: string; onChange: (month: string | undefined) => void; calendar?: ReactNode; actions?: ReactNode; max?: string }) {
   const slot = useTopbarSlot();
   const bar = (
     <>
-      <MonthBarControls month={month} onChange={onChange} />
+      <MonthBarControls month={month} onChange={onChange} {...(max ? { max } : {})} />
       {calendar}
       {actions ? <div className="topbar__actions">{actions}</div> : null}
     </>
@@ -65,15 +65,19 @@ export function MonthBar({ month, onChange, calendar, actions }: { month: string
   return slot ? createPortal(bar, slot) : <div className="month-bar__inline">{bar}</div>;
 }
 
-/** Months the pill offers: two years back to a year ahead, plus the one shown if it's outside. */
-function pickableMonths(month: string, now: string): string[] {
+/** Months the pill offers: two years back to a year ahead (`max` at most), plus the one shown if it's outside. */
+function pickableMonths(month: string, now: string, max: string): string[] {
   const months: string[] = [];
-  for (let delta = 12; delta >= -24; delta -= 1) months.push(shiftMonth(now, delta));
+  for (let delta = 12; delta >= -24; delta -= 1) {
+    const value = shiftMonth(now, delta);
+    if (value <= max) months.push(value);
+  }
   if (!months.includes(month)) months.push(month);
   return months.sort().reverse();
 }
 
-export function MonthBarControls({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
+/** `max`: the latest month offered (the recap offers past months only, MAZ-292). */
+export function MonthBarControls({ month, onChange, max = "2100-12" }: { month: string; onChange: (month: string | undefined) => void; max?: string }) {
   const now = currentMonth();
   const id = useId();
   const label = monthLabel(month);
@@ -114,7 +118,7 @@ export function MonthBarControls({ month, onChange }: { month: string; onChange:
               onChange(next === now ? undefined : next);
             }}
           >
-            {pickableMonths(month, now).map((value) => (
+            {pickableMonths(month, now, max).map((value) => (
               <option key={value} value={value}>
                 {monthLabel(value)}
               </option>
@@ -127,7 +131,7 @@ export function MonthBarControls({ month, onChange }: { month: string; onChange:
           variant="quiet"
           className="month-nav__step"
           aria-label="Next month"
-          disabled={month >= "2100-12"}
+          disabled={month >= max}
           onClick={() => {
             onChange(shiftMonth(month, 1));
           }}

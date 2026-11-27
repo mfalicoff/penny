@@ -25,17 +25,22 @@ public struct ReceiptInboxNotification: Equatable, Hashable, Sendable {
     public var deepLink: DeepLink { .receiptInbox(itemID: inboxItemID) }
 }
 
-/// Every notification Penny opens: a household month or expense (MAZ-79) or a receipt inbox
-/// item (MAZ-184). Anything else (a mixture of both shapes, a missing or mistyped key) is no
-/// target, and the app just opens.
+/// Every notification Penny opens: a household month or expense (MAZ-79), a receipt inbox
+/// item (MAZ-184) or a monthly recap (MAZ-292). Anything else (a mixture of shapes, a missing or
+/// mistyped key) is no target, and the app just opens.
 public enum NotificationTarget: Equatable, Hashable, Sendable {
     case household(HouseholdNotification)
     case receiptInbox(ReceiptInboxNotification)
+    /// A monthly recap is ready (MAZ-292): a local notification Penny scheduled itself.
+    case recap(RecapNotification)
 
     static let householdKeys = ["householdId", "month", "expenseId"]
 
     public init?(userInfo: [AnyHashable: Any]) {
-        if userInfo[ReceiptInboxNotification.key] != nil {
+        if userInfo[RecapNotification.key] != nil {
+            guard let recap = RecapNotification(userInfo: userInfo) else { return nil }
+            self = .recap(recap)
+        } else if userInfo[ReceiptInboxNotification.key] != nil {
             guard let receipt = ReceiptInboxNotification(userInfo: userInfo) else { return nil }
             self = .receiptInbox(receipt)
         } else if let household = HouseholdNotification(userInfo: userInfo) {
@@ -49,6 +54,7 @@ public enum NotificationTarget: Equatable, Hashable, Sendable {
         switch self {
         case .household(let notification): notification.deepLink
         case .receiptInbox(let notification): notification.deepLink
+        case .recap(let notification): notification.deepLink
         }
     }
 }

@@ -101,9 +101,10 @@ export function useMotionMode(): MotionMode {
  * or with motion off, it shows the new value at once. Returns the value to draw and whether it is
  * counting, so the caller can hide the in-between numbers from assistive technology.
  */
-export function useCountUp(target: number): { value: number; counting: boolean } {
-  const [tween, setTween] = useState({ target, value: target });
-  const shown = useRef(target);
+export function useCountUp(target: number, from: number = target): { value: number; counting: boolean } {
+  // `from`: where the first count starts (the recap counts up from 0 the first time it appears, MAZ-292).
+  const [tween, setTween] = useState({ target, value: from });
+  const shown = useRef(from);
   const moving = motionMode() === "full" && duration("emphasized") > 0;
 
   useEffect(() => {
@@ -133,8 +134,8 @@ export function useCountUp(target: number): { value: number; counting: boolean }
   return { value, counting: value !== target };
 }
 
-/** Children of a period container that stay put: the month control itself, and the page's glow. */
-const STAYS = ".month-bar__inline, .glow, .group-tools";
+/** Children of a period container that stay put: the month control itself, the page's glow and the recap banner (MAZ-292). */
+const STAYS = ".month-bar__inline, .glow, .group-tools, .recap-banner";
 
 /**
  * Month and period changes: when `period` changes, the content of the container behind `ref` (its

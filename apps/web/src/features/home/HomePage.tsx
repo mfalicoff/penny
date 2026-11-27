@@ -22,6 +22,7 @@ import { DailySpending } from "./DailySpending";
 import { MoneyFlowChart } from "./MoneyFlowChart";
 import { CategoryBreakdown, EntryRows, MonthBar, Panel } from "./parts";
 import { useMonthReport } from "./useMonthReport";
+import { RecapBanner } from "../recap/RecapBanner";
 
 type Navigate = (update: (previous: HomeSearch) => HomeSearch) => void;
 type Opened = { entry: Transaction; opener: HTMLElement } | null;
@@ -89,8 +90,11 @@ export function HomePage({ search }: { search: HomeSearch }) {
         <FirstEntry currency={ledger.currency} />
       ) : (
         <div className={cx("home-top", wide && "home-top--wide")}>
+          {/* web-home-recap puts the banner above the hero; iphone-home-recap under it. */}
+          {wide ? <RecapBanner className="home-recap" /> : null}
           <SharedMissing shared={shared} />
           <Hero report={report} currency={ledger.currency} wide={wide} tablet={tablet} />
+          {wide ? null : <RecapBanner className="home-recap" />}
           {wide ? (
             <>
               <ComingUp report={report} ledger={view} currency={ledger.currency} />

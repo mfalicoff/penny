@@ -40,3 +40,17 @@ export function MailIcon({ size = 20 }: { size?: number }) {
     </span>
   );
 }
+
+/**
+ * The recap's sparkles (MAZ-292 cards `web-recap`, `web-home-recap`). The kit's Ionicons set has no
+ * sparkles glyph, so the cards draw it inline; this is the same drawing.
+ */
+export function SparklesIcon({ size = 20 }: { size?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        <path d="M224 48c16 110 58 152 168 168-110 16-152 58-168 168-16-110-58-152-168-168 110-16 152-58 168-168zM400 336c6 40 24 58 64 64-40 6-58 24-64 64-6-40-24-58-64-64 40-6 58-24 64-64z" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}

@@ -50,6 +50,33 @@ interface Card {
 
 // ---- Navigation through the app's own UI ----
 
+// MAZ-292: the recap cards are drawn in the first days of November, so the banner offers October.
+const NOVEMBER_3 = "2026-11-03T12:00:00Z";
+
+async function recapCard({ page: p }: Run) {
+  await p.clock.setFixedTime(NOVEMBER_3);
+  await page(p, "/insights/recap?month=2026-10", "October recap");
+  await expect(p.getByRole("region", { name: "Money in and out" })).toBeVisible();
+}
+
+async function recapEmptyCard({ page: p }: Run) {
+  await p.clock.setFixedTime(NOVEMBER_3);
+  await page(p, "/insights/recap?month=2026-10", "October recap");
+  await expect(p.getByRole("heading", { name: "Nothing to recap yet" })).toBeVisible();
+}
+
+async function homeRecapCard({ page: p }: Run) {
+  await p.clock.setFixedTime(NOVEMBER_3);
+  await home(p);
+  await expect(p.getByRole("region", { name: "Your October recap is ready" })).toBeVisible();
+}
+
+async function insightsRecapCard({ page: p }: Run) {
+  await p.clock.setFixedTime(NOVEMBER_3);
+  await page(p, "/insights", "Insights");
+  await expect(p.getByRole("region", { name: "Your October recap is ready" })).toBeVisible();
+}
+
 async function profilePane(p: Page) {
   await p.goto("/settings/profile");
   await expect(p.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Alex Martin");
@@ -1175,10 +1202,10 @@ const cards: Record<string, Card> = {
   "iphone-currency-rates": { skip: { status: "not-built", note: "Approved card (MAZ-270): the web records each entry in one currency today (MAZ-151)." } },
   "iphone-currency-rates-off": { skip: { status: "not-built", note: "Approved card (MAZ-270): the web records each entry in one currency today (MAZ-151)." } },
   "ipad-recurring-suggested": { skip: { status: "not-built", note: "The web doesn't suggest schedules from repeating entries yet (MAZ-290)." } },
-  "iphone-recap": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "iphone-recap-empty": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "iphone-home-recap": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "iphone-insights-recap": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
+  "iphone-recap": { open: recapCard },
+  "iphone-recap-empty": { open: recapEmptyCard },
+  "iphone-home-recap": { open: homeRecapCard },
+  "iphone-insights-recap": { open: insightsRecapCard },
   "iphone-recap-setting": { skip: { status: "not-applicable", note: "The web has no notifications: it shows the recap banner only. The card has no web owner." } },
   "iphone-recap-notification": { skip: { status: "not-applicable", note: "The web has no notifications: it shows the recap banner only. The card has no web owner." } },
   "iphone-year-review": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
@@ -1295,10 +1322,10 @@ const cards: Record<string, Card> = {
   },
   "web-privacy": { open: ({ page: p }) => privacyPane(p, true) },
   "web-monitoring-prompt": { open: ({ page: p }) => monitoringPrompt(p) },
-  "web-recap": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "web-recap-empty": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "web-home-recap": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "web-insights-recap": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
+  "web-recap": { open: recapCard },
+  "web-recap-empty": { open: recapEmptyCard },
+  "web-home-recap": { open: homeRecapCard },
+  "web-insights-recap": { open: insightsRecapCard },
   "web-year-review": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
   "web-year-review-share": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
   "web-year-review-share-amounts": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },

@@ -206,18 +206,42 @@ struct DeepLinkInboxTests {
 struct DemoLedgerTests {
     private let today = CalendarDate(year: 2026, month: 11, day: 9) ?? .earliest
 
+    /// The entries dated this month (the rest are last month's, for the recap).
+    static func thisMonth(_ ledger: Ledger, _ today: CalendarDate) -> [LedgerEntry] {
+        ledger.transactions.filter { !$0.id.hasPrefix("demo-last-") }
+    }
+
     @Test("whenBuilt_DemoLedger_ShouldBeValidAndDatedInTheCurrentMonth")
-    func valid() {
+    func valid() throws {
         let ledger = DemoLedger.make(today: today)
         #expect(ledger.violations.isEmpty)
-        #expect(!ledger.transactions.isEmpty)
-        #expect(ledger.transactions.allSatisfy { MonthKey(today).contains($0.date) && $0.date <= today })
+        let current = Self.thisMonth(ledger, today)
+        #expect(!current.isEmpty)
+        #expect(current.allSatisfy { MonthKey(today).contains($0.date) && $0.date <= today })
+        let last = try #require(MonthKey(today).shifted(by: -1))
+        let earlier = ledger.transactions.filter { $0.id.hasPrefix("demo-last-") }
+        #expect(!earlier.isEmpty)
+        #expect(earlier.allSatisfy { last.contains($0.date) }, "last month's entries stay in last month")
     }
 
     @Test("whenBuiltOnTheFirstOfTheMonth_DemoLedger_ShouldNotReachIntoTheLastMonth")
     func firstOfMonth() throws {
         let first = try #require(CalendarDate(year: 2026, month: 3, day: 1))
-        #expect(DemoLedger.make(today: first).transactions.allSatisfy { $0.date == first })
+        #expect(Self.thisMonth(DemoLedger.make(today: first), first).allSatisfy { $0.date == first })
+    }
+
+    @Test("whenBuilt_DemoLedger_ShouldHaveARecapOfLastMonth")
+    func recap() throws {
+        let ledger = DemoLedger.make(today: today)
+        let last = try #require(MonthKey(today).shifted(by: -1))
+        let review = LedgerReport(ledger: ledger).review(last, today: today)
+        #expect(!review.isEmpty)
+        #expect(review.split.count == 1)
+        #expect(review.daysWithoutSpending > 0)
+        // Insights compares this month with last month's spending.
+        let now = LedgerReport(ledger: ledger).review(MonthKey(today), today: today)
+        #expect(now.previous.spent == review.spent)
+        #expect(!now.biggestChanges.isEmpty)
     }
 
     @Test("whenBuilt_DemoLedger_ShouldMarkEveryIdAsDemo")

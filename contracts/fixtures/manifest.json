@@ -65,6 +65,21 @@
       }
     },
     {
+      "file": "month-review.json",
+      "sha256": "39b6e7ced3c9eb6410c338377f5f0ece917165468f073dc5574d540c67253c3d",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "apps/web/tests/domain/golden-fixtures.test.ts"
+        ],
+        "csharp": "not applicable: client calculation; the recap is computed on the device",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/MonthReviewTests.swift"
+        ]
+      }
+    },
+    {
       "file": "month-totals.json",
       "sha256": "92acc116477daeda86bc1f5873271e3d2ec4333003776c8d9c70b2c2dc66da6a",
       "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",

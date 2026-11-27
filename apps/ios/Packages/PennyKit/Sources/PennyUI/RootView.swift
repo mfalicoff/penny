@@ -57,6 +57,9 @@ public struct RootView: View {
         .onChange(of: scenePhase, initial: true) { _, phase in
             Self.forward(phase, to: services.lock)
             if phase == .active, let notifications { Task { await notifications.becameActive() } }
+            // The monthly recap's notifications name their month, so the next ones are scheduled
+            // again each time Penny becomes active (MAZ-292).
+            if phase == .active { Task { await services.recap.reschedule(now: services.now()) } }
         }
         .onOpenURL { url in
             // Unknown penny:// routes open Home. Single sign-on callbacks return through the

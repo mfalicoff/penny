@@ -19,6 +19,9 @@ public enum DeepLink: Equatable, Sendable {
     /// The receipt inbox (MAZ-184), optionally opened on one item: what a "New receipt"
     /// notification opens (`ReceiptInboxNotification`). Not a URL route.
     case receiptInbox(itemID: String?)
+    /// A month's recap (MAZ-292): what a "recap is ready" notification opens. Not a URL route, so
+    /// the URL scheme and its routes stay as they are.
+    case recap(month: MonthKey)
     case trips
     case trip(id: String)
     /// A household invite (MAZ-75): `penny://join?code=<CODE>&server=<server URL>`, from a QR

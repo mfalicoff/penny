@@ -101,6 +101,74 @@ final class CardCaptureTests: CardTestCase {
         try await card("iphone-empty-home") { card in try card.penny.wait(for: AccessibilityID.Home.empty) }
     }
 
+    // MARK: iPhone monthly recap (MAZ-292)
+
+    /// The recap cards are drawn in the first days of November, about October.
+    private static let recapToday = "2026-11-03"
+
+    @MainActor
+    func test_whenSeeded_IphoneRecap_ShouldBeCaptured() async throws {
+        try await card("iphone-recap", today: Self.recapToday) { card in
+            // From Insights' Recap button: the month on screen is November, so it opens October.
+            try card.penny.openInsights()
+            try card.penny.tap(AccessibilityID.Recap.insightsButton)
+            try card.penny.wait(for: AccessibilityID.Recap.screen)
+            try card.penny.wait(for: AccessibilityID.Recap.spent)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneRecapEmpty_ShouldBeCaptured() async throws {
+        // An empty ledger has no Insights and no banner: the recap opens from its notification.
+        try await card(
+            "iphone-recap-empty", today: Self.recapToday, notification: #"{"recapMonth":"2026-10"}"#
+        ) { card in
+            // Out to the Home Screen and back: Penny opens the notification as if it was tapped.
+            XCUIDevice.shared.press(.home)
+            card.app.activate()
+            try card.penny.wait(for: AccessibilityID.Recap.screen, timeout: 30)
+            try card.penny.wait(for: AccessibilityID.Recap.empty)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneHomeRecap_ShouldBeCaptured() async throws {
+        try await card("iphone-home-recap", today: Self.recapToday) { card in
+            try card.penny.wait(for: AccessibilityID.Home.hero)
+            try card.penny.wait(for: AccessibilityID.Recap.banner)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneInsightsRecap_ShouldBeCaptured() async throws {
+        try await card("iphone-insights-recap", today: Self.recapToday) { card in
+            try card.penny.openInsights()
+            try card.penny.wait(for: AccessibilityID.Recap.banner)
+            try card.penny.wait(for: AccessibilityID.Recap.insightsButton)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneRecapSetting_ShouldBeCaptured() async throws {
+        // As `iphone-settings`: Appearance on System and the Face ID lock on.
+        try await card("iphone-recap-setting", freshSeedPerAppearance: true, followsSystem: true, standInFaceID: true) {
+            card in
+            try card.penny.turnOnAppLock()
+            try card.penny.openSettings()
+            try card.penny.reveal(AccessibilityID.Recap.setting, above: card.app.frame.height - 40)
+        }
+    }
+
+    @MainActor
+    func test_whenOnTheLockScreen_IphoneRecapNotification_ShouldBeRecorded() async throws {
+        try blocked(
+            "iphone-recap-notification",
+            note:
+                "The Lock Screen is system chrome XCUITest can't show. The notification's text (\"Your October "
+                + "recap is ready.\", no title, amounts or names) and its 9 AM trigger are unit-tested "
+                + "(RecapTests); its look is checked on a device (docs/ios/qa.md).")
+    }
+
     // MARK: iPhone activity and entries
 
     @MainActor

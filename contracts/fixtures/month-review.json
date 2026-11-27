@@ -1,0 +1,1282 @@
+{
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
+  "description": "The monthly recap (MAZ-292, `monthReview` in apps/web/src/domain/monthReview.ts). Recorded entries only, never scheduled previews; shared expenses count at your share through the household projection, and shared rows in another currency are left out. Spending is compared with the month before and the same month last year; a month is null (\"No September to compare with\") when nothing is recorded in or before it. Percentages are whole numbers rounded half away from zero, null when there is nothing to compare with; a category with nothing the month before has a null percent (\"New\"). Split expenses are recorded expenses whose total is above your share; othersPaid is total minus share. Days without spending count the month's days up to today with no recorded expense; the longest run is the earliest on a tie. The banner shows last month's recap during the first 7 days of a month.",
+  "ledgers": {
+    "alex": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [
+        {
+          "id": "gym",
+          "title": "gym",
+          "kind": "expense",
+          "total": 4000,
+          "share": 4000,
+          "categoryId": "transport",
+          "date": "2026-09-01",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2026-10-28",
+          "anchorDay": 28,
+          "active": true
+        }
+      ],
+      "categories": [
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "groceries-2025",
+          "title": "groceries-2025",
+          "kind": "expense",
+          "total": 214000,
+          "share": 214000,
+          "categoryId": "groceries",
+          "date": "2025-10-12",
+          "note": ""
+        },
+        {
+          "id": "groceries-sep",
+          "title": "groceries-sep",
+          "kind": "expense",
+          "total": 25620,
+          "share": 25620,
+          "categoryId": "groceries",
+          "date": "2026-09-05",
+          "note": ""
+        },
+        {
+          "id": "food-sep",
+          "title": "food-sep",
+          "kind": "expense",
+          "total": 28045,
+          "share": 28045,
+          "categoryId": "food",
+          "date": "2026-09-12",
+          "note": ""
+        },
+        {
+          "id": "transport-sep",
+          "title": "transport-sep",
+          "kind": "expense",
+          "total": 6000,
+          "share": 6000,
+          "categoryId": "transport",
+          "date": "2026-09-20",
+          "note": ""
+        },
+        {
+          "id": "salary-sep",
+          "title": "salary-sep",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-09-30",
+          "note": ""
+        },
+        {
+          "id": "salary-oct",
+          "title": "salary-oct",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "groceries-oct",
+          "title": "groceries-oct",
+          "kind": "expense",
+          "total": 30240,
+          "share": 30240,
+          "categoryId": "groceries",
+          "date": "2026-10-02",
+          "note": ""
+        },
+        {
+          "id": "dinner",
+          "title": "dinner",
+          "kind": "expense",
+          "total": 49360,
+          "share": 24680,
+          "categoryId": "food",
+          "date": "2026-10-09",
+          "note": ""
+        },
+        {
+          "id": "concert",
+          "title": "concert",
+          "kind": "expense",
+          "total": 5350,
+          "share": 5350,
+          "categoryId": "fun",
+          "date": "2026-10-18",
+          "note": ""
+        },
+        {
+          "id": "tfsa",
+          "title": "tfsa",
+          "kind": "investment",
+          "total": 20000,
+          "share": 20000,
+          "categoryId": "savings",
+          "date": "2026-10-25",
+          "note": ""
+        },
+        {
+          "id": "refund",
+          "title": "refund",
+          "kind": "income",
+          "total": 2500,
+          "share": 2500,
+          "categoryId": "salary",
+          "date": "2026-10-28",
+          "note": ""
+        }
+      ]
+    },
+    "previews-only": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [
+        {
+          "id": "gym",
+          "title": "gym",
+          "kind": "expense",
+          "total": 4000,
+          "share": 4000,
+          "categoryId": "transport",
+          "date": "2026-09-01",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2026-11-28",
+          "anchorDay": 28,
+          "active": true
+        }
+      ],
+      "categories": [
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "groceries-2025",
+          "title": "groceries-2025",
+          "kind": "expense",
+          "total": 214000,
+          "share": 214000,
+          "categoryId": "groceries",
+          "date": "2025-10-12",
+          "note": ""
+        },
+        {
+          "id": "groceries-sep",
+          "title": "groceries-sep",
+          "kind": "expense",
+          "total": 25620,
+          "share": 25620,
+          "categoryId": "groceries",
+          "date": "2026-09-05",
+          "note": ""
+        },
+        {
+          "id": "food-sep",
+          "title": "food-sep",
+          "kind": "expense",
+          "total": 28045,
+          "share": 28045,
+          "categoryId": "food",
+          "date": "2026-09-12",
+          "note": ""
+        },
+        {
+          "id": "transport-sep",
+          "title": "transport-sep",
+          "kind": "expense",
+          "total": 6000,
+          "share": 6000,
+          "categoryId": "transport",
+          "date": "2026-09-20",
+          "note": ""
+        },
+        {
+          "id": "salary-sep",
+          "title": "salary-sep",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-09-30",
+          "note": ""
+        }
+      ]
+    },
+    "first-month": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [],
+      "categories": [
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "salary-oct",
+          "title": "salary-oct",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "groceries-oct",
+          "title": "groceries-oct",
+          "kind": "expense",
+          "total": 30240,
+          "share": 30240,
+          "categoryId": "groceries",
+          "date": "2026-10-02",
+          "note": ""
+        },
+        {
+          "id": "dinner",
+          "title": "dinner",
+          "kind": "expense",
+          "total": 49360,
+          "share": 24680,
+          "categoryId": "food",
+          "date": "2026-10-09",
+          "note": ""
+        },
+        {
+          "id": "concert",
+          "title": "concert",
+          "kind": "expense",
+          "total": 5350,
+          "share": 5350,
+          "categoryId": "fun",
+          "date": "2026-10-18",
+          "note": ""
+        },
+        {
+          "id": "tfsa",
+          "title": "tfsa",
+          "kind": "investment",
+          "total": 20000,
+          "share": 20000,
+          "categoryId": "savings",
+          "date": "2026-10-25",
+          "note": ""
+        },
+        {
+          "id": "refund",
+          "title": "refund",
+          "kind": "income",
+          "total": 2500,
+          "share": 2500,
+          "categoryId": "salary",
+          "date": "2026-10-28",
+          "note": ""
+        }
+      ]
+    },
+    "first-year": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [],
+      "categories": [
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "groceries-sep",
+          "title": "groceries-sep",
+          "kind": "expense",
+          "total": 25620,
+          "share": 25620,
+          "categoryId": "groceries",
+          "date": "2026-09-05",
+          "note": ""
+        },
+        {
+          "id": "food-sep",
+          "title": "food-sep",
+          "kind": "expense",
+          "total": 28045,
+          "share": 28045,
+          "categoryId": "food",
+          "date": "2026-09-12",
+          "note": ""
+        },
+        {
+          "id": "transport-sep",
+          "title": "transport-sep",
+          "kind": "expense",
+          "total": 6000,
+          "share": 6000,
+          "categoryId": "transport",
+          "date": "2026-09-20",
+          "note": ""
+        },
+        {
+          "id": "salary-sep",
+          "title": "salary-sep",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-09-30",
+          "note": ""
+        },
+        {
+          "id": "salary-oct",
+          "title": "salary-oct",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "groceries-oct",
+          "title": "groceries-oct",
+          "kind": "expense",
+          "total": 30240,
+          "share": 30240,
+          "categoryId": "groceries",
+          "date": "2026-10-02",
+          "note": ""
+        },
+        {
+          "id": "dinner",
+          "title": "dinner",
+          "kind": "expense",
+          "total": 49360,
+          "share": 24680,
+          "categoryId": "food",
+          "date": "2026-10-09",
+          "note": ""
+        },
+        {
+          "id": "concert",
+          "title": "concert",
+          "kind": "expense",
+          "total": 5350,
+          "share": 5350,
+          "categoryId": "fun",
+          "date": "2026-10-18",
+          "note": ""
+        },
+        {
+          "id": "tfsa",
+          "title": "tfsa",
+          "kind": "investment",
+          "total": 20000,
+          "share": 20000,
+          "categoryId": "savings",
+          "date": "2026-10-25",
+          "note": ""
+        },
+        {
+          "id": "refund",
+          "title": "refund",
+          "kind": "income",
+          "total": 2500,
+          "share": 2500,
+          "categoryId": "salary",
+          "date": "2026-10-28",
+          "note": ""
+        }
+      ]
+    }
+  },
+  "projections": {
+    "none": [],
+    "apartment": [
+      {
+        "id": "costco",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "costco",
+        "date": "2026-10-14",
+        "totalCents": 18420,
+        "shareCents": 6140,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "jo",
+        "payer": {
+          "email": "jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "hydro",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "hydro",
+        "date": "2026-10-20",
+        "totalCents": 8000,
+        "shareCents": 4000,
+        "category": {
+          "name": "Utilities",
+          "icon": "flash-outline",
+          "color": "#3B82F6"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "pharmacy",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "pharmacy",
+        "date": "2026-10-22",
+        "totalCents": 2400,
+        "shareCents": 1200,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "jo",
+        "payer": {
+          "email": "gone@example.test",
+          "deleted": true
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "lisbon-dinner",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "lisbon-dinner",
+        "date": "2026-10-16",
+        "totalCents": 18000,
+        "shareCents": 9000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "jo",
+        "payer": {
+          "email": "jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "internet",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "internet",
+        "date": "2026-10-29",
+        "totalCents": 6000,
+        "shareCents": 3000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true,
+        "scheduled": true,
+        "recurringId": "internet-rule"
+      },
+      {
+        "id": "costco-sep",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "costco-sep",
+        "date": "2026-09-18",
+        "totalCents": 10000,
+        "shareCents": 5000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "jo",
+        "payer": {
+          "email": "jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "October, with September and October last year to compare with",
+      "ledger": "alex",
+      "projection": "apartment",
+      "month": "2026-10",
+      "today": "2026-11-03",
+      "expected": {
+        "month": "2026-10",
+        "empty": false,
+        "spent": 71610,
+        "cameIn": 322500,
+        "invested": 20000,
+        "leftOver": 230890,
+        "previous": {
+          "month": "2026-09",
+          "spent": 64665,
+          "change": 11
+        },
+        "lastYear": {
+          "month": "2025-10",
+          "spent": 214000,
+          "change": -67
+        },
+        "biggestChanges": [
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "current": 37580,
+            "previous": 30620,
+            "change": 6960,
+            "percent": 23
+          },
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "current": 0,
+            "previous": 6000,
+            "change": -6000,
+            "percent": -100
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "current": 5350,
+            "previous": 0,
+            "change": 5350,
+            "percent": null
+          }
+        ],
+        "shared": {
+          "count": 3,
+          "spent": 11340,
+          "top": {
+            "id": "household:apartment:costco",
+            "title": "costco",
+            "categoryId": "groceries",
+            "date": "2026-10-14",
+            "share": 6140,
+            "total": 18420,
+            "paidByYou": false,
+            "payer": {
+              "email": "jo@example.test",
+              "displayName": "Jo"
+            }
+          }
+        },
+        "split": {
+          "count": 4,
+          "total": 78180,
+          "share": 36020,
+          "othersPaid": 42160
+        },
+        "daysWithoutSpending": 25,
+        "longestRun": {
+          "start": "2026-10-23",
+          "end": "2026-10-31",
+          "days": 9
+        }
+      }
+    },
+    {
+      "name": "October without shared expenses",
+      "ledger": "alex",
+      "projection": "none",
+      "month": "2026-10",
+      "today": "2026-11-03",
+      "expected": {
+        "month": "2026-10",
+        "empty": false,
+        "spent": 60270,
+        "cameIn": 322500,
+        "invested": 20000,
+        "leftOver": 242230,
+        "previous": {
+          "month": "2026-09",
+          "spent": 59665,
+          "change": 1
+        },
+        "lastYear": {
+          "month": "2025-10",
+          "spent": 214000,
+          "change": -72
+        },
+        "biggestChanges": [
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "current": 0,
+            "previous": 6000,
+            "change": -6000,
+            "percent": -100
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "current": 5350,
+            "previous": 0,
+            "change": 5350,
+            "percent": null
+          },
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "current": 30240,
+            "previous": 25620,
+            "change": 4620,
+            "percent": 18
+          }
+        ],
+        "shared": {
+          "count": 0,
+          "spent": 0,
+          "top": null
+        },
+        "split": {
+          "count": 1,
+          "total": 49360,
+          "share": 24680,
+          "othersPaid": 24680
+        },
+        "daysWithoutSpending": 28,
+        "longestRun": {
+          "start": "2026-10-19",
+          "end": "2026-10-31",
+          "days": 13
+        }
+      }
+    },
+    {
+      "name": "the month still under way: days without spending count up to today, and later income is expected",
+      "ledger": "alex",
+      "projection": "apartment",
+      "month": "2026-10",
+      "today": "2026-10-15",
+      "expected": {
+        "month": "2026-10",
+        "empty": false,
+        "spent": 71610,
+        "cameIn": 320000,
+        "invested": 20000,
+        "leftOver": 228390,
+        "previous": {
+          "month": "2026-09",
+          "spent": 64665,
+          "change": 11
+        },
+        "lastYear": {
+          "month": "2025-10",
+          "spent": 214000,
+          "change": -67
+        },
+        "biggestChanges": [
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "current": 37580,
+            "previous": 30620,
+            "change": 6960,
+            "percent": 23
+          },
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "current": 0,
+            "previous": 6000,
+            "change": -6000,
+            "percent": -100
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "current": 5350,
+            "previous": 0,
+            "change": 5350,
+            "percent": null
+          }
+        ],
+        "shared": {
+          "count": 3,
+          "spent": 11340,
+          "top": {
+            "id": "household:apartment:costco",
+            "title": "costco",
+            "categoryId": "groceries",
+            "date": "2026-10-14",
+            "share": 6140,
+            "total": 18420,
+            "paidByYou": false,
+            "payer": {
+              "email": "jo@example.test",
+              "displayName": "Jo"
+            }
+          }
+        },
+        "split": {
+          "count": 4,
+          "total": 78180,
+          "share": 36020,
+          "othersPaid": 42160
+        },
+        "daysWithoutSpending": 12,
+        "longestRun": {
+          "start": "2026-10-03",
+          "end": "2026-10-08",
+          "days": 6
+        }
+      }
+    },
+    {
+      "name": "a month with no entries",
+      "ledger": "alex",
+      "projection": "none",
+      "month": "2026-08",
+      "today": "2026-11-03",
+      "expected": {
+        "month": "2026-08",
+        "empty": true,
+        "spent": 0,
+        "cameIn": 0,
+        "invested": 0,
+        "leftOver": 0,
+        "previous": {
+          "month": "2026-07",
+          "spent": 0,
+          "change": null
+        },
+        "lastYear": {
+          "month": "2025-08",
+          "spent": null,
+          "change": null
+        },
+        "biggestChanges": [],
+        "shared": {
+          "count": 0,
+          "spent": 0,
+          "top": null
+        },
+        "split": {
+          "count": 0,
+          "total": 0,
+          "share": 0,
+          "othersPaid": 0
+        },
+        "daysWithoutSpending": 31,
+        "longestRun": {
+          "start": "2026-08-01",
+          "end": "2026-08-31",
+          "days": 31
+        }
+      }
+    },
+    {
+      "name": "a month with only previews",
+      "ledger": "previews-only",
+      "projection": "none",
+      "month": "2026-11",
+      "today": "2026-12-02",
+      "expected": {
+        "month": "2026-11",
+        "empty": true,
+        "spent": 0,
+        "cameIn": 0,
+        "invested": 0,
+        "leftOver": 0,
+        "previous": {
+          "month": "2026-10",
+          "spent": 0,
+          "change": null
+        },
+        "lastYear": {
+          "month": "2025-11",
+          "spent": 0,
+          "change": null
+        },
+        "biggestChanges": [],
+        "shared": {
+          "count": 0,
+          "spent": 0,
+          "top": null
+        },
+        "split": {
+          "count": 0,
+          "total": 0,
+          "share": 0,
+          "othersPaid": 0
+        },
+        "daysWithoutSpending": 30,
+        "longestRun": {
+          "start": "2026-11-01",
+          "end": "2026-11-30",
+          "days": 30
+        }
+      }
+    },
+    {
+      "name": "a first month: nothing to compare with, and no category changes",
+      "ledger": "first-month",
+      "projection": "none",
+      "month": "2026-10",
+      "today": "2026-11-03",
+      "expected": {
+        "month": "2026-10",
+        "empty": false,
+        "spent": 60270,
+        "cameIn": 322500,
+        "invested": 20000,
+        "leftOver": 242230,
+        "previous": {
+          "month": "2026-09",
+          "spent": null,
+          "change": null
+        },
+        "lastYear": {
+          "month": "2025-10",
+          "spent": null,
+          "change": null
+        },
+        "biggestChanges": [],
+        "shared": {
+          "count": 0,
+          "spent": 0,
+          "top": null
+        },
+        "split": {
+          "count": 1,
+          "total": 49360,
+          "share": 24680,
+          "othersPaid": 24680
+        },
+        "daysWithoutSpending": 28,
+        "longestRun": {
+          "start": "2026-10-19",
+          "end": "2026-10-31",
+          "days": 13
+        }
+      }
+    },
+    {
+      "name": "a first year: September to compare with, no October last year",
+      "ledger": "first-year",
+      "projection": "none",
+      "month": "2026-10",
+      "today": "2026-11-03",
+      "expected": {
+        "month": "2026-10",
+        "empty": false,
+        "spent": 60270,
+        "cameIn": 322500,
+        "invested": 20000,
+        "leftOver": 242230,
+        "previous": {
+          "month": "2026-09",
+          "spent": 59665,
+          "change": 1
+        },
+        "lastYear": {
+          "month": "2025-10",
+          "spent": null,
+          "change": null
+        },
+        "biggestChanges": [
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "current": 0,
+            "previous": 6000,
+            "change": -6000,
+            "percent": -100
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "current": 5350,
+            "previous": 0,
+            "change": 5350,
+            "percent": null
+          },
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "current": 30240,
+            "previous": 25620,
+            "change": 4620,
+            "percent": 18
+          }
+        ],
+        "shared": {
+          "count": 0,
+          "spent": 0,
+          "top": null
+        },
+        "split": {
+          "count": 1,
+          "total": 49360,
+          "share": 24680,
+          "othersPaid": 24680
+        },
+        "daysWithoutSpending": 28,
+        "longestRun": {
+          "start": "2026-10-19",
+          "end": "2026-10-31",
+          "days": 13
+        }
+      }
+    },
+    {
+      "name": "the month after: categories that stopped are -100%",
+      "ledger": "alex",
+      "projection": "none",
+      "month": "2026-11",
+      "today": "2026-12-02",
+      "expected": {
+        "month": "2026-11",
+        "empty": true,
+        "spent": 0,
+        "cameIn": 0,
+        "invested": 0,
+        "leftOver": 0,
+        "previous": {
+          "month": "2026-10",
+          "spent": 60270,
+          "change": -100
+        },
+        "lastYear": {
+          "month": "2025-11",
+          "spent": 0,
+          "change": null
+        },
+        "biggestChanges": [
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "current": 0,
+            "previous": 30240,
+            "change": -30240,
+            "percent": -100
+          },
+          {
+            "key": "food & drinks",
+            "name": "Food & drinks",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "current": 0,
+            "previous": 24680,
+            "change": -24680,
+            "percent": -100
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "current": 0,
+            "previous": 5350,
+            "change": -5350,
+            "percent": -100
+          }
+        ],
+        "shared": {
+          "count": 0,
+          "spent": 0,
+          "top": null
+        },
+        "split": {
+          "count": 0,
+          "total": 0,
+          "share": 0,
+          "othersPaid": 0
+        },
+        "daysWithoutSpending": 30,
+        "longestRun": {
+          "start": "2026-11-01",
+          "end": "2026-11-30",
+          "days": 30
+        }
+      }
+    }
+  ],
+  "banner": [
+    {
+      "today": "2026-11-01",
+      "month": "2026-10"
+    },
+    {
+      "today": "2026-11-07",
+      "month": "2026-10"
+    },
+    {
+      "today": "2026-11-08",
+      "month": null
+    },
+    {
+      "today": "2026-11-30",
+      "month": null
+    },
+    {
+      "today": "2027-01-03",
+      "month": "2026-12"
+    },
+    {
+      "today": "2026-03-01",
+      "month": "2026-02"
+    }
+  ]
+}
