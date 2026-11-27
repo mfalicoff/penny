@@ -25,9 +25,9 @@ describe("appearance preferences", () => {
 
   it("reads values saved before Show cents and Week starts on existed, with their defaults", () => {
     stored({ theme: "dark", reduceTransparency: true });
-    expect(current()).toEqual({ theme: "dark", reduceTransparency: true, showCents: true, weekStartsOn: "monday" });
+    expect(current()).toEqual({ theme: "dark", reduceTransparency: true, showCents: true, weekStartsOn: "monday", recapDismissed: null });
     stored({ theme: "dark", reduceTransparency: true, showCents: "no", weekStartsOn: "friday" });
-    expect(current()).toEqual({ theme: "dark", reduceTransparency: true, showCents: true, weekStartsOn: "monday" });
+    expect(current()).toEqual({ theme: "dark", reduceTransparency: true, showCents: true, weekStartsOn: "monday", recapDismissed: null });
     stored({ showCents: false, weekStartsOn: "sunday" });
     expect(current()).toMatchObject({ showCents: false, weekStartsOn: "sunday" });
   });
@@ -41,9 +41,9 @@ describe("appearance preferences", () => {
   });
 
   it("reflects reduce transparency on the root element", () => {
-    applyPreferences({ theme: "system", reduceTransparency: true, showCents: true, weekStartsOn: "monday" });
+    applyPreferences({ theme: "system", reduceTransparency: true, showCents: true, weekStartsOn: "monday", recapDismissed: null });
     expect(document.documentElement).toHaveAttribute("data-transparency", "reduced");
-    applyPreferences({ theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday" });
+    applyPreferences({ theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday", recapDismissed: null });
     expect(document.documentElement).not.toHaveAttribute("data-transparency");
   });
 });

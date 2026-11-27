@@ -4,6 +4,7 @@ import { type Category, type Ledger, type Transaction } from "@domain/ledger.ts"
 import { buildMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
 import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.ts";
 import { sharedCategoryId } from "@domain/householdProjection.ts";
+import type { ExpensePayer } from "../../api/schemas";
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import { percentOf } from "@domain/monthReview.ts";
 import type { SharedRow } from "../../api/projection";
@@ -55,8 +56,12 @@ export type InsightsSearch = z.infer<typeof insightsSearchSchema>;
 
 /* ---------- the ledger view ---------- */
 
-/** A shared share in the ledger view. `householdId` lets the domain match a recorded row with its preview. */
-export type SharedEntry = OverviewEntry & { householdId: string; householdExpenseId: string; householdName?: string | undefined };
+/**
+ * A shared share in the ledger view. `householdId` lets the domain match a recorded row with its
+ * preview; `payer` and `paidByYou` (MAZ-275) let the recap say who paid its top
+ * shared expense (MAZ-292).
+ */
+export type SharedEntry = OverviewEntry & { householdId: string; householdExpenseId: string; householdName?: string | undefined; payer?: ExpensePayer; paidByYou?: boolean };
 
 export const isSharedEntry = (entry: Transaction): entry is SharedEntry => "householdExpenseId" in entry;
 
@@ -84,6 +89,8 @@ export function ledgerWithShared(ledger: Ledger, rows: readonly SharedRow[], sch
       householdId: row.householdId,
       householdExpenseId: row.id,
       householdName: row.householdName,
+      payer: row.payer,
+      paidByYou: row.paidByYou,
       kind: "expense",
       title: row.title,
       date: row.date,

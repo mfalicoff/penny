@@ -308,6 +308,20 @@ Tests: `tests/home-model.test.ts` (empty, income-only, expense-only, overspent a
 
 Not in this issue: the six-month in/spent chart of `web-insights` (it needs six projection reads; a follow-up) and screenshot baselines (MAZ-96).
 
+## Monthly recap (MAZ-292)
+
+Code: `src/features/recap/` (`model.ts` for the URL state and wording, `useMonthReview.ts`, `RecapPage.tsx`, `RecapBanner.tsx`), `src/routes/insights_.recap.tsx` and `src/design/recap.css`. Web cards `web-recap`, `web-recap-empty`, `web-home-recap` and `web-insights-recap`. Every number comes from the shared rule `monthReview` (`src/domain/monthReview.ts`), over the ledger view with the person's recorded shared shares of the recap's year and the year before (`GET /api/households/projection?year=`), so the month before and the same month last year are there too; `ledgerWithShared` carries who paid (`payer`, `paidByYou`) onto each shared row.
+
+| URL | Screen |
+| --- | --- |
+| `/insights/recap?month=YYYY-MM` | **"October recap"**, any past month (last month by default; a current or future month opens last month). Spent · your share with bars for the month, the month before and the same month last year ("No September to compare with" in place of a month with nothing recorded before it), and the sentence "4% more than September, and 7% more than October last year."; **Money in and out** (came in, spent, invested, left over or overspent); **Biggest changes** against the month before ("New" for a category with nothing then, never ±∞; a list below 768px); **Shared** (the top shared expense, its household and who paid, and "Others paid $X of your $Y in split expenses"); **Highlights** (days without spending and the longest run). A month with no recorded entry (scheduled ones don't count) says **Nothing to recap yet**, with Add an entry and Choose another month. |
+
+**The banner.** "Your October recap is ready" shows on Home and Insights during the first 7 days of a month (`reviewBannerMonth`), for last month, when its recap isn't empty. See recap opens it; the close button dismisses it for that month on this device (`recapDismissed` in `localStorage["penny.preferences"]`). Insights also has a **Recap** button beside the month: the shown month's recap once it's over, else last month's. The web has no recap notification.
+
+**Motion** (docs/design/motion.md §7): the banner is part of the screen when it's known on arrival and makes room and slides in when it's known later; dismissing fades it out and closes its space. The totals count up from 0 the first time a recap appears (assistive technology reads only the final value) and from the old value on a month change; the bars grow together, with no stagger. Reduced motion shows final values at once and fades only.
+
+Tests: `tests/recap-model.test.ts` (months, the banner window, the sentence, the bars, "New", the flow bar, highlights, who paid) and `e2e/recap.spec.ts` (the demo on November 3: the banner, the recap, a first month, an empty month, dismissal kept after a reload, the Recap button, motion and reduced motion). The demo has the two months before the current one, so it has a recap.
+
 ## Receipts (MAZ-94)
 
 Code: `src/api/receipts.ts` (the server's type, signature and 10 MiB checks, upload over `XMLHttpRequest` for progress, download), `src/features/receipts/` (`ReceiptField` in the personal and shared expense forms, `ReceiptPreviewDialog`, `ReceiptLink` in the details, `pdf.ts`) and `src/design/receipts.css`. Specimens `entry-extras`, `receipt-upload`, `receipt` and `save-error`. Full behaviour, deployment and troubleshooting: [browser receipts](../../docs/web/receipts.md).
@@ -332,7 +346,7 @@ The native-only settings (app lock, server picker, notifications) are omitted. E
 
 ## Temporary demo
 
-"Take a look around with sample data" on the sign-in screen runs Penny on sample data without an account (`src/demo/`). It replaces `apiFetch`'s transport with an in-memory stand-in for the endpoints the web uses (session, ledger read and revision-checked write, search with cursor paging); other endpoints answer 404, so a screen that needs a real server says so. It is isolated and temporary: no request reaches the API (Playwright checks this), it runs as `demo@penny.invalid` so its cache keys can't match a real account, nothing is stored, and Leave demo or a reload ends it and drops its cache. It can't be started while signed in. Limitations: it only covers search, Activity, Home, Insights, currency and personal trips (one sample trip; not shared households or shared trips), and Add entry says the demo doesn't save entries (it has no offline store to save them to); the sample data is made up and fixed to the current month, with the default categories and two schedules on the month's last day (MAZ-92), which it previews and never records.
+"Take a look around with sample data" on the sign-in screen runs Penny on sample data without an account (`src/demo/`). It replaces `apiFetch`'s transport with an in-memory stand-in for the endpoints the web uses (session, ledger read and revision-checked write, search with cursor paging); other endpoints answer 404, so a screen that needs a real server says so. It is isolated and temporary: no request reaches the API (Playwright checks this), it runs as `demo@penny.invalid` so its cache keys can't match a real account, nothing is stored, and Leave demo or a reload ends it and drops its cache. It can't be started while signed in. Limitations: it only covers search, Activity, Home, Insights, currency and personal trips (one sample trip; not shared households or shared trips), and Add entry says the demo doesn't save entries (it has no offline store to save them to); the sample data is made up and fixed to the current month and the two before it (so it has a monthly recap, MAZ-292), with the default categories and two schedules on the month's last day (MAZ-92), which it previews and never records.
 
 ## Route conventions
 

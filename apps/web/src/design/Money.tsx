@@ -35,10 +35,23 @@ function formatter(currency: string | undefined, signed: boolean | undefined, di
  * dimmed after the whole units ("$1,116" + ".65"). `showCents: false` shows whole units only.
  * The text reads the same as `formatCents`, so a screen reader hears one number.
  */
-export function HeroMoney({ cents, currency, showCents = true, className }: { cents: number; currency?: string | undefined; showCents?: boolean; className?: string }) {
+export function HeroMoney({
+  cents,
+  currency,
+  showCents = true,
+  className,
+  countFrom,
+}: {
+  cents: number;
+  currency?: string | undefined;
+  showCents?: boolean;
+  className?: string;
+  /** Where the first count starts (the recap counts up from 0 when it first appears, MAZ-292). */
+  countFrom?: number;
+}) {
   // Saving and month changes: the number counts to its new value (docs/design/motion.md). While it
   // counts, assistive technology reads only the final value.
-  const { value, counting } = useCountUp(cents);
+  const { value, counting } = useCountUp(cents, countFrom);
   if (counting) {
     return (
       <span className={cx("pk-num", "money", "hero-money", className)}>
@@ -81,18 +94,20 @@ interface MoneyProps {
   className?: string;
   /** A total that counts to its new value when it changes (docs/design/motion.md), e.g. a day's total. */
   count?: boolean;
+  /** With `count`: the value the first count starts from (the recap counts up from 0, MAZ-292). */
+  countFrom?: number;
 }
 
 /**
  * An aligned money value (tabular figures). Tone adds a color and, for screen readers, the word
  * it stands for, so meaning never rests on color alone.
  */
-export function Money({ count, ...props }: MoneyProps) {
-  return count ? <CountingMoney {...props} /> : <StaticMoney {...props} />;
+export function Money({ count, countFrom, ...props }: MoneyProps) {
+  return count ? <CountingMoney {...props} {...(countFrom === undefined ? {} : { countFrom })} /> : <StaticMoney {...props} />;
 }
 
-function CountingMoney(props: Omit<MoneyProps, "count">) {
-  const { value, counting } = useCountUp(props.cents);
+function CountingMoney({ countFrom, ...props }: Omit<MoneyProps, "count">) {
+  const { value, counting } = useCountUp(props.cents, countFrom);
   if (!counting) return <StaticMoney {...props} />;
   return (
     <span className="money--counting">

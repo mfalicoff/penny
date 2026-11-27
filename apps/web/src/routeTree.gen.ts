@@ -25,6 +25,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as EntriesNewRouteImport } from './routes/entries/new'
 import { Route as HouseholdsIndexRouteImport } from './routes/households/index'
+import { Route as InsightsRecapRouteImport } from './routes/insights_.recap'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsCurrencyRouteImport } from './routes/settings/currency'
@@ -118,6 +119,11 @@ const HouseholdsIndexRoute = HouseholdsIndexRouteImport.update({
   path: '/households/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsRecapRoute = InsightsRecapRouteImport.update({
+  id: '/insights_/recap',
+  path: '/insights/recap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
+  '/insights/recap': typeof InsightsRecapRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
+  '/insights/recap': typeof InsightsRecapRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
+  '/insights_/recap': typeof InsightsRecapRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/auth/callback'
     | '/entries/new'
+    | '/insights/recap'
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/auth/callback'
     | '/entries/new'
+    | '/insights/recap'
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/auth/callback'
     | '/entries/new'
+    | '/insights_/recap'
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
@@ -378,6 +390,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   EntriesNewRoute: typeof EntriesNewRoute
+  InsightsRecapRoute: typeof InsightsRecapRoute
   TripsIdRoute: typeof TripsIdRoute
   HouseholdsIndexRoute: typeof HouseholdsIndexRoute
   TripsIndexRoute: typeof TripsIndexRoute
@@ -497,6 +510,13 @@ declare module '@tanstack/react-router' {
       path: '/households'
       fullPath: '/households/'
       preLoaderRoute: typeof HouseholdsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights_/recap': {
+      id: '/insights_/recap'
+      path: '/insights/recap'
+      fullPath: '/insights/recap'
+      preLoaderRoute: typeof InsightsRecapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/': {
@@ -628,6 +648,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   EntriesNewRoute: EntriesNewRoute,
+  InsightsRecapRoute: InsightsRecapRoute,
   TripsIdRoute: TripsIdRoute,
   HouseholdsIndexRoute: HouseholdsIndexRoute,
   TripsIndexRoute: TripsIndexRoute,

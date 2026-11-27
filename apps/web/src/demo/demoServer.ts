@@ -42,8 +42,8 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
     ["Index fund", 20000, "investments", 10, 20000, "investment"],
     ["Music streaming", 1299, "fun", 3],
   ];
-  return rows.map(([title, total, categoryId, offset, share = total, kind = "expense"], index) => ({
-    id: `demo-${String(index + 1)}`,
+  const entry = ([title, total, categoryId, share = total, kind = "expense"]: [string, number, string, (number | undefined)?, (Kind | undefined)?], id: string, date: string): DemoEntry => ({
+    id,
     title,
     kind,
     total,
@@ -51,9 +51,52 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
     // Half of the total: split equally between two people, so Recent says "split 2 ways" (MAZ-272).
     ...(kind === "expense" && share * 2 === total ? { participants: 2 } : {}),
     categoryId,
-    date: on(offset),
+    date,
     note: "",
-  }));
+  });
+  const month = rows.map(([title, total, categoryId, offset, share, kind], index) => entry([title, total, categoryId, share, kind], `demo-${String(index + 1)}`, on(offset)));
+  const history = sampleHistory().flatMap(({ monthsAgo, rows: past }) =>
+    past.map(([day, ...rest], index) => entry(rest, `demo-m${String(monthsAgo)}-${String(index + 1)}`, dateKey(new Date(today.getFullYear(), today.getMonth() - monthsAgo, day)))),
+  );
+  return [...month, ...history];
+}
+
+/**
+ * The two months before this one (MAZ-292), so the demo has a monthly recap to show: last month
+ * compared with the month before. Made-up amounts; each row is [day, title, total, category,
+ * share, kind].
+ */
+function sampleHistory(): { monthsAgo: number; rows: [number, string, number, string, number?, Kind?][] }[] {
+  return [
+    {
+      monthsAgo: 1,
+      rows: [
+        [15, "Paycheque", 480000, "salary", 480000, "income"],
+        [1, "Apartment rent", 145000, "home"],
+        [2, "Transit pass", 15600, "transport"],
+        [3, "Streaming plan", 1299, "fun"],
+        [4, "Grocery run", 9120, "groceries"],
+        [9, "Dinner with friends", 13200, "food", 6600],
+        [10, "Index fund top-up", 20000, "investments", 20000, "investment"],
+        [18, "Farmers’ market", 6840, "groceries"],
+        [22, "Concert tickets", 8900, "fun", 4450],
+        [25, "A warm jacket", 7400, "shopping"],
+      ],
+    },
+    {
+      monthsAgo: 2,
+      rows: [
+        [15, "Paycheque", 480000, "salary", 480000, "income"],
+        [1, "Apartment rent", 145000, "home"],
+        [2, "Transit pass", 15600, "transport"],
+        [3, "Streaming plan", 1299, "fun"],
+        [6, "Grocery run", 10450, "groceries"],
+        [10, "Index fund top-up", 20000, "investments", 20000, "investment"],
+        [12, "Lunch with a colleague", 9800, "food", 4900],
+        [20, "Farmers’ market", 7310, "groceries"],
+      ],
+    },
+  ];
 }
 
 /** A made-up personal trip (MAZ-93) starting in 12 days. The demo has no shared trips. */
