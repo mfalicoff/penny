@@ -1,20 +1,23 @@
 import { useId, useMemo, useRef, useState, type SyntheticEvent } from "react";
-import { saveSchedule } from "@domain/commands.ts";
+import { acceptSuggestion, saveSchedule } from "@domain/commands.ts";
+import type { RecurringSuggestion } from "@domain/suggestions.ts";
 import { dateKey, parseDate, type Frequency, type Kind, type Ledger, type Recurring } from "@domain/ledger.ts";
 import { Button, ChoiceGroup, Kbd } from "../../design/controls";
 import { tileStyle } from "../../design/categoryTint";
 import { Icon } from "../../design/Icon";
 import { AmountHero, DateRowInput, DetailList, DetailRow, EntryDialog, isMac } from "../entries/EntryParts";
 import { categoryIcon } from "../entries/model";
-import { formatCents } from "../../design/Money";
+import { formatCents, Money } from "../../design/Money";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import {
+  acceptedRule,
   addSchedule,
   checkDraft,
   datesDueBy,
   dayLabel,
   draftFromRule,
+  draftFromSuggestion,
   editedRule,
   emptyDraft,
   MAX_NOTE,
@@ -22,7 +25,9 @@ import {
   newRule,
   ordinal,
   resumeDate,
+  rowAmount,
   shortDay,
+  TONE,
   type DraftErrors,
   type DraftField,
   type ScheduleDraft,
@@ -37,10 +42,15 @@ interface Props {
   ledger: Ledger;
   /** The rule being edited; absent for a new schedule. */
   original?: Recurring;
+  /** A new schedule filled in from this suggestion (MAZ-290, card `web-schedule-suggested`). */
+  suggestion?: RecurringSuggestion;
   onClose: () => void;
-  /** After a successful save (defaults to `onClose`). */
-  onSaved?: () => void;
+  /** After a successful save, with the saved rule's id (defaults to `onClose`). */
+  onSaved?: (ruleId: string) => void;
 }
+
+/** How many matched entries "Already in your activity" shows; its label counts them all. */
+const MATCHED_SHOWN = 8;
 
 /**
  * New and edit schedule (specimens `schedule`, `edit-schedule`): weekly, monthly or yearly income,
@@ -49,12 +59,12 @@ interface Props {
  * kept on this device and syncs later. If the schedule changes in another tab or on another device
  * while it is open, the person chooses between their draft and the latest version.
  */
-export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved = onClose }: Props) {
+export function ScheduleFormDialog({ ledger, original: opened, suggestion, onClose, onSaved = onClose }: Props) {
   const toast = useToast();
   const layout = useMediaQuery(TABLET) ? "desktop" : "phone";
   const today = dateKey();
   const [original, setOriginal] = useState(opened);
-  const [draft, setDraft] = useState<ScheduleDraft>(() => (opened ? draftFromRule(opened) : emptyDraft(ledger, today)));
+  const [draft, setDraft] = useState<ScheduleDraft>(() => (opened ? draftFromRule(opened) : suggestion ? draftFromSuggestion(suggestion) : emptyDraft(ledger, today)));
   const [errors, setErrors] = useState<DraftErrors>({});
   const { save, saving, error, clearError } = useScheduleSave();
   const amountRef = useRef<HTMLInputElement>(null);
@@ -71,7 +81,7 @@ export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved 
   const categories = ledger.categories.filter((category) => category.kind === draft.kind);
   const accounts = ledger.accounts;
 
-  const preview = useMemo(() => describePreview(draft, ledger, today, original), [draft, ledger, today, original]);
+  const preview = useMemo(() => describePreview(draft, ledger, today, original, suggestion), [draft, ledger, today, original, suggestion]);
 
   async function submit() {
     const result = checkDraft(draft, ledger, today, original);
@@ -81,17 +91,22 @@ export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved 
       if (first) document.getElementById(id(first))?.focus();
       return;
     }
-    const receipt = original
-      ? await save(saveSchedule(editedRule(original, draft, result.built), original))
-      : await save(addSchedule(newRule(draft, result.built)));
+    const rule = original ? editedRule(original, draft, result.built) : suggestion ? acceptedRule(suggestion, draft, result.built) : newRule(draft, result.built);
+    // Accepting a suggestion saves one normal schedule; the entries it matched stay as they are.
+    const receipt = await save(original ? saveSchedule(rule, original) : suggestion ? acceptSuggestion(rule) : addSchedule(rule));
     if (!receipt) return;
     const title = result.built.title;
     toast.show(
       original
         ? { title: "Schedule updated", detail: savedDetail(receipt, "Future dates use the changes. Recorded entries keep their details.") }
-        : { title: `${title} added`, detail: savedDetail(receipt, draft.date <= today ? "Penny recorded the dates up to today." : `First on ${dayLabel(draft.date)}.`) },
+        : {
+            title: `${title} added`,
+            detail: savedDetail(receipt, draft.date <= today ? "Penny recorded the dates up to today." : `First on ${dayLabel(draft.date)}.`),
+            // A schedule made from a suggestion is highlighted in its group while this shows (docs/design/motion.md, MAZ-290).
+            ...(suggestion ? { entryId: rule.id } : {}),
+          },
     );
-    onSaved();
+    onSaved(rule.id);
   }
 
   function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
@@ -290,7 +305,13 @@ export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved 
       layout={layout}
       className="schedule-dialog"
       title={title}
-      subtitle={original ? "Changes apply to future dates. Entries already recorded keep their details." : "Penny records each entry on its date, in this browser's calendar."}
+      subtitle={
+        original
+          ? "Changes apply to future dates. Entries already recorded keep their details."
+          : suggestion
+            ? `Filled in from ${String(suggestion.count)} ${suggestion.title} entries. Check it, then add it.`
+            : "Penny records each entry on its date, in this browser's calendar."
+      }
       onClose={onClose}
       initialFocus={amountRef}
       form={{ id: id("form"), onSubmit, "aria-label": title }}
@@ -318,6 +339,7 @@ export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved 
       }
       main={main}
       details={details}
+      {...(suggestion ? { below: <MatchedEntries suggestion={suggestion} ledger={ledger} today={today} /> } : {})}
     />
   );
 }
@@ -331,10 +353,15 @@ function fullDay(date: string): string {
  * What saving will do with the dates, shown live under the form so the anchor-day and catch-up
  * rules are visible: "First on Nov 18, then monthly on the 18th." (card `web-schedule-form`).
  */
-function describePreview(draft: ScheduleDraft, ledger: Ledger, today: string, original: Recurring | undefined): string {
+function describePreview(draft: ScheduleDraft, ledger: Ledger, today: string, original: Recurring | undefined, suggestion?: RecurringSuggestion): string {
   const { errors } = checkDraft({ ...draft, title: draft.title || "x", amount: draft.amount || "1" }, ledger, today, original);
   if (errors.date) return "Choose a date to see the next dates.";
-  const anchorDay = original && draft.date === original.nextDate ? original.anchorDay : parseDate(draft.date).getDate();
+  const anchorDay =
+    original && draft.date === original.nextDate
+      ? original.anchorDay
+      : suggestion && draft.date === suggestion.nextDate && draft.frequency === suggestion.frequency
+        ? suggestion.anchorDay
+        : parseDate(draft.date).getDate();
   const rule = { frequency: draft.frequency, nextDate: draft.date, anchorDay };
   const short = anchorDay > 28 && draft.frequency !== "weekly" ? ` In months without a ${ordinal(anchorDay)}, it uses the last day.` : "";
   const cadence = cadencePhrase(draft.frequency, draft.date, anchorDay);
@@ -354,4 +381,38 @@ function cadencePhrase(frequency: Frequency, date: string, anchorDay: number): s
   if (frequency === "weekly") return `weekly on ${parseDate(date).toLocaleDateString("en-CA", { weekday: "long" })}s`;
   if (frequency === "monthly") return `monthly on the ${ordinal(anchorDay)}`;
   return `yearly on ${shortDay(date)}`;
+}
+
+/**
+ * "Already in your activity" (card `web-schedule-suggested`): the entries the suggestion matched,
+ * newest first and read-only, and why nothing is recorded twice.
+ */
+function MatchedEntries({ suggestion, ledger, today }: { suggestion: RecurringSuggestion; ledger: Ledger; today: string }) {
+  const headingId = useId();
+  const byId = new Map(ledger.transactions.map((entry) => [entry.id, entry]));
+  const entries = suggestion.entryIds.flatMap((entryId) => byId.get(entryId) ?? []).slice(0, MATCHED_SHOWN);
+  const count = suggestion.entryIds.length;
+  const day = (date: string) => (date.slice(0, 4) === today.slice(0, 4) ? shortDay(date) : `${shortDay(date)}, ${date.slice(0, 4)}`);
+  return (
+    <section className="schedule-matched" aria-labelledby={headingId}>
+      <h3 id={headingId} className="schedule-matched__label">
+        <span>
+          Already in your activity<span className="visually-hidden">, </span>
+        </span>
+        <span className="schedule-matched__count">{count === 1 ? "1 entry" : `${String(count)} entries`}</span>
+      </h3>
+      <ul className="schedule-matched__list">
+        {entries.map((entry) => (
+          <li key={entry.id} className="schedule-matched__entry">
+            <time dateTime={entry.date}>{day(entry.date)}</time>
+            <Money {...rowAmount(entry.kind, entry.share)} currency={ledger.currency} tone={TONE[entry.kind]} />
+          </li>
+        ))}
+      </ul>
+      <p className="schedule-matched__note">
+        <Icon name="lock-closed" size={14} />
+        These entries stay as they are. The first date is the next one after the latest, so nothing is recorded twice.
+      </p>
+    </section>
+  );
 }

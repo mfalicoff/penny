@@ -713,6 +713,10 @@
   color: var(--pk-income);
 }
 
+.pk-toast--neutral > .icon {
+  color: var(--pk-label-2);
+}
+
 .pk-toast:has(.pk-toast__tile) {
   gap: 12px;
   padding-inline-start: 10px;

@@ -6,7 +6,7 @@ import type { Ledger } from "@domain/ledger.ts";
  * disagree with the ledgers themselves (the same rule as the native `PendingChanges`).
  */
 export interface PendingSummary {
-  /** Records created, edited or deleted, plus one for a currency change. */
+  /** Records created, edited or deleted, plus one for a currency change and one per suggestion dismissed or brought back. */
   count: number;
   /** Entries created or edited here and not synced ("Waiting to sync" rows). */
   entryIds: string[];
@@ -38,5 +38,10 @@ export function pendingChanges(base: Ledger, local: Ledger): PendingSummary {
   count += rules.changed.length + rules.deleted.length;
   const entries = diff(base.transactions, local.transactions);
   count += entries.changed.length + entries.deleted.length;
+  // A dismissed suggestion, or an Undo, is a change to sync too (MAZ-290).
+  const dismissedBefore = new Set(base.dismissedSuggestions ?? []);
+  const dismissedNow = new Set(local.dismissedSuggestions ?? []);
+  for (const item of dismissedNow) if (!dismissedBefore.has(item)) count += 1;
+  for (const item of dismissedBefore) if (!dismissedNow.has(item)) count += 1;
   return count === 0 ? NOTHING_PENDING : { count, entryIds: entries.changed, deletedEntryIds: entries.deleted, ruleIds: rules.changed };
 }

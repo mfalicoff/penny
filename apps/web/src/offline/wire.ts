@@ -32,6 +32,8 @@ const lists = {
   categories: z.array(z.looseObject({ id, name: z.string(), kind })),
   transactions: z.array(entry),
   recurring: z.array(rule),
+  /** Recurring suggestions dismissed on any device (contract 2.3.0, MAZ-290): `{id}|{share}`. Merged by the shared `mergeLedger`. */
+  dismissedSuggestions: z.array(z.string()).optional(),
 };
 const ledgerV4 = z.looseObject({ version: z.literal(4), accounts: z.array(z.looseObject({ id, name: z.string() })), trips: z.array(record), ...lists });
 

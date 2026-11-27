@@ -853,8 +853,8 @@
         "light",
         "dark"
       ],
-      "scenario": "searchable-household",
-      "as": "alex",
+      "scenario": "empty",
+      "as": "solo",
       "view": "recurring with no schedules and nothing to suggest"
     },
     {
@@ -1932,8 +1932,8 @@
         "light",
         "dark"
       ],
-      "scenario": "searchable-household",
-      "as": "alex",
+      "scenario": "empty",
+      "as": "solo",
       "view": "web recurring with no schedules and nothing to suggest"
     },
     {

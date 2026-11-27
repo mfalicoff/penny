@@ -1,4 +1,5 @@
 import type { LedgerChange } from "@domain/commands.ts";
+import { suggestedRule, type RecurringSuggestion } from "@domain/suggestions.ts";
 import { cents, dateKey, nextOccurrence, parseDate, personalShare, recordedSplit, splitParticipants, uid, validDate, type Category, type Frequency, type Kind, type Ledger, type PaymentAccount, type Recurring } from "@domain/ledger.ts";
 import type { CSSProperties } from "react";
 import { tileStyle } from "../../design/categoryTint";
@@ -34,7 +35,12 @@ export function rowAmount(kind: Kind, cents: number): { cents: number; signed?: 
 }
 
 /** Which recurring dialog is open. One at a time, so focus returns to the row (or New schedule) when it closes. */
-export type ScheduleView = { kind: "new" } | { kind: "detail"; id: string } | { kind: "edit"; rule: Recurring } | { kind: "remove"; rule: Recurring };
+export type ScheduleView =
+  | { kind: "new" }
+  | { kind: "suggestion"; suggestion: RecurringSuggestion }
+  | { kind: "detail"; id: string }
+  | { kind: "edit"; rule: Recurring }
+  | { kind: "remove"; rule: Recurring };
 
 /** Parses a ledger date at local noon and formats it, e.g. "Tue, Nov 18" (with the year: "Tue, Nov 18, 2026"). */
 export function dayLabel(date: string, withYear = false): string {
@@ -287,4 +293,39 @@ export function scheduleTile(kind: Kind, category: { id?: string; icon?: string;
   if (kind === "income") return { icon: "arrow-down", style };
   if (kind === "investment") return { icon: "trending-up", style };
   return { icon: categoryIcon(category?.icon ?? ""), style };
+}
+
+/* ---------- suggestions (MAZ-290) ---------- */
+
+/**
+ * A suggestion's cadence, as the cards word it (`web-recurring-suggested`): "Every month, around
+ * the 3rd", "Every week, on Wednesdays", "Every year, around Mar 18". "Around", because the
+ * entries Penny matched weren't all on the same day.
+ */
+export function suggestionCadence(suggestion: Pick<RecurringSuggestion, "frequency" | "nextDate" | "anchorDay">): string {
+  if (suggestion.frequency === "weekly") return `Every week, on ${parseDate(suggestion.nextDate).toLocaleDateString("en-CA", { weekday: "long" })}s`;
+  if (suggestion.frequency === "monthly") return `Every month, around the ${ordinal(suggestion.anchorDay)}`;
+  return `Every year, around ${parseDate(suggestion.nextDate).toLocaleDateString("en-CA", { month: "short" })} ${String(suggestion.anchorDay)}`;
+}
+
+/** "Seen 4 times since Aug 3" (with the year when the first entry is from another year than `today`). */
+export function seenLabel(suggestion: Pick<RecurringSuggestion, "count" | "firstDate">, today = dateKey()): string {
+  const since = suggestion.firstDate.slice(0, 4) === today.slice(0, 4) ? shortDay(suggestion.firstDate) : `${shortDay(suggestion.firstDate)}, ${suggestion.firstDate.slice(0, 4)}`;
+  return `Seen ${String(suggestion.count)} times since ${since}`;
+}
+
+/** The schedule form, filled in from a suggestion (`web-schedule-suggested`): the rule `suggestedRule` would save. */
+export function draftFromSuggestion(suggestion: RecurringSuggestion): ScheduleDraft {
+  return draftFromRule(suggestedRule(suggestion, "suggested"));
+}
+
+/**
+ * The rule accepting a suggestion saves from its checked draft. It keeps the suggestion's anchor
+ * day while the date and cadence are the suggested ones (a schedule around the 31st stays on the
+ * 31st after a short month); a date or cadence changed in the form anchors on the new date, as a
+ * new schedule does.
+ */
+export function acceptedRule(suggestion: RecurringSuggestion, draft: ScheduleDraft, built: Built, id = uid()): Recurring {
+  const rule = newRule(draft, built, id);
+  return draft.date === suggestion.nextDate && draft.frequency === suggestion.frequency ? { ...rule, anchorDay: suggestion.anchorDay } : rule;
 }

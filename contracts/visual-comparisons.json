@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-23",
+  "reviewedAt": "2026-11-26",
   "cards": [
     {
       "id": "system-foundations",
@@ -1905,10 +1905,13 @@
         "followUp": "MAZ-290"
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -1921,10 +1924,13 @@
         "followUp": "MAZ-290"
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
-        "followUp": "MAZ-290"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -1937,10 +1943,35 @@
         "followUp": "MAZ-290"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A centred dialog with a close button, not a sheet with the close button, centred title and copper check",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The web dialog's order (Type, Amount, Name, Repeats, then the First date, Category, Account and Your share rows and Note), not the card's Name, Amount and Your share group followed by the Schedule and Note sections",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Repeats is a segmented control, not a Repeats row with a Monthly menu",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The intro “Penny records each entry on its date…” replaces the card's two helps (“Reports count only your share.” and the first-date note)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
       }
     },
     {
@@ -1953,10 +1984,13 @@
         "followUp": "MAZ-290"
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3861,10 +3895,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3876,10 +3913,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring has no empty state that mentions suggestions yet.",
-        "followUp": "MAZ-290"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3891,10 +3931,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -3906,10 +3949,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The web doesn't suggest schedules yet.",
-        "followUp": "MAZ-290"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

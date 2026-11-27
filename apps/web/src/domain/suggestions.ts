@@ -187,7 +187,7 @@ function suggest(kind: Kind, key: string, entries: Transaction[], today: string)
   };
 }
 
-/** Every suggestion the ledger has today, dismissed ones left out: newest latest entry first, then by id. */
+/** Every suggestion the ledger has today, dismissed ones left out: the longest-running first (earliest first entry), then by id. */
 export function recurringSuggestions(ledger: Ledger, today: string): RecurringSuggestion[] {
   const covered = new Set(ledger.recurring.map((rule: Recurring) => `${rule.kind}|${suggestionKey(rule.title)}`));
   const groups = new Map<string, { kind: Kind; key: string; entries: Transaction[] }>();
@@ -208,7 +208,7 @@ export function recurringSuggestions(ledger: Ledger, today: string): RecurringSu
     const suggestion = suggest(kind, key, entries, today);
     if (suggestion && !isDismissed(suggestion, dismissed)) result.push(suggestion);
   }
-  return result.sort((a, b) => a.lastDate !== b.lastDate ? (a.lastDate > b.lastDate ? -1 : 1) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  return result.sort((a, b) => a.firstDate !== b.firstDate ? (a.firstDate < b.firstDate ? -1 : 1) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
 /** The schedule accepting `suggestion` saves (the form opens with it filled in). Past entries aren't linked. */

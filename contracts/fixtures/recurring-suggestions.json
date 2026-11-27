@@ -2317,27 +2317,6 @@
       },
       "expected": [
         {
-          "id": "income|book club|monthly",
-          "kind": "income",
-          "key": "book club",
-          "frequency": "monthly",
-          "title": "Book club",
-          "total": 3000,
-          "share": 3000,
-          "categoryId": "salary",
-          "accountId": "chq",
-          "anchorDay": 10,
-          "nextDate": "2026-12-10",
-          "count": 3,
-          "firstDate": "2026-09-10",
-          "lastDate": "2026-11-10",
-          "entryIds": [
-            "club-in-3",
-            "club-in-2",
-            "club-in-1"
-          ]
-        },
-        {
           "id": "expense|book club|monthly",
           "kind": "expense",
           "key": "book club",
@@ -2356,6 +2335,27 @@
             "club-out-3",
             "club-out-2",
             "club-out-1"
+          ]
+        },
+        {
+          "id": "income|book club|monthly",
+          "kind": "income",
+          "key": "book club",
+          "frequency": "monthly",
+          "title": "Book club",
+          "total": 3000,
+          "share": 3000,
+          "categoryId": "salary",
+          "accountId": "chq",
+          "anchorDay": 10,
+          "nextDate": "2026-12-10",
+          "count": 3,
+          "firstDate": "2026-09-10",
+          "lastDate": "2026-11-10",
+          "entryIds": [
+            "club-in-3",
+            "club-in-2",
+            "club-in-1"
           ]
         }
       ]
