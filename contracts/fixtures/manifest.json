@@ -4,7 +4,7 @@
   "fixtures": [
     {
       "file": "currency.json",
-      "sha256": "302762fe0b1d57760e3f06cc4193127426477e869a3db7de8ddd85923c16c2d0",
+      "sha256": "c9ef4949b5f83659c3a00ddb1ebef8cbb5dff996bf3dbd200e33d9f48c5f54d1",
       "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
@@ -216,6 +216,22 @@
         "swift": [
           "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
           "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "shared-currency.json",
+      "sha256": "116225cedafe925b68b667b473dc7447a7728c9428dd7c0677d477b5aed0c251",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "apps/web/tests/domain/golden-fixtures.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Contracts/SharedCurrencyFixtureTests.cs"
+        ],
+        "swift": [
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/SharedCurrencyTests.swift"
         ]
       }
     },

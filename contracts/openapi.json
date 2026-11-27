@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny API",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "description": "The HTTP API that the .NET backend serves and the iOS and web apps call. See docs/reference/.",
     "license": {
       "name": "MIT",
@@ -8514,6 +8514,14 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "currency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0 (MAZ-151 phase 2). A personal trip's currency: the default for new entries on the trip. Optional; a shared trip uses its household's currency. Servers before 2.6.0 reject a ledger that carries it, and clients before 2.6.0 drop it when they save."
           }
         },
         "required": [
@@ -8944,13 +8952,12 @@
             "maxLength": 80
           },
           "currency": {
-            "type": "string",
-            "enum": [
-              "CAD",
-              "USD",
-              "EUR",
-              "GBP"
-            ]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0 (MAZ-151 phase 2): any circulating ISO 4217 currency (CurrencyCode); before 2.6.0, CAD, USD, EUR or GBP. Balances and settle-up use it; members may keep their ledgers in other currencies."
           },
           "timezoneOffsetMinutes": {
             "type": "integer",
@@ -8972,13 +8979,12 @@
             "maxLength": 80
           },
           "currency": {
-            "type": "string",
-            "enum": [
-              "CAD",
-              "USD",
-              "EUR",
-              "GBP"
-            ]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "The trip's currency: the default for new trip expenses and the currency of its balances and suggested payments. Contract 2.6.0 (MAZ-151 phase 2): any circulating ISO 4217 currency (CurrencyCode); before 2.6.0, CAD, USD, EUR or GBP. Balances and settle-up use it; members may keep their ledgers in other currencies."
           },
           "startDate": {
             "type": "string",
@@ -9044,13 +9050,12 @@
             "type": "string"
           },
           "currency": {
-            "type": "string",
-            "enum": [
-              "CAD",
-              "USD",
-              "EUR",
-              "GBP"
-            ]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "The household's or shared trip's currency. Contract 2.6.0 (MAZ-151 phase 2): any circulating ISO 4217 currency (CurrencyCode); before 2.6.0, CAD, USD, EUR or GBP. Balances and settle-up use it; members may keep their ledgers in other currencies."
           },
           "creatorId": {
             "type": "string",
@@ -9133,6 +9138,14 @@
             "type": "boolean",
             "const": true,
             "description": "MAZ-152. Present (true) when the person deleted their account: show \"Former member\" and never the email, which is a placeholder address. Their expenses, splits and payments stay, so balances don't change. Omitted otherwise."
+          },
+          "currency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0 (MAZ-151 phase 2). The member's home (ledger) currency, so a balance can also show in it. Omitted for former members and members with no ledger yet."
           }
         },
         "required": [
@@ -9313,6 +9326,43 @@
             "type": "integer",
             "minimum": -840,
             "maximum": 720
+          },
+          "originalAmount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999,
+            "description": "Contract 2.6.0 (MAZ-151 phase 2). The amount paid, in integer minor units of originalCurrency, when the expense was paid in another currency than the household's. originalAmount, originalCurrency, rate and rateStatus come together or not at all; totalCents and the splits stay in the household's currency, and totalCents must equal originalAmount converted at rate, rounded once, half up, to the household currency's minor units. Expenses only (shared recurring rules stay in the household's currency). Servers before 2.6.0 ignore it."
+          },
+          "originalCurrency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0. The currency the expense was paid in; never the household's."
+          },
+          "rate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              }
+            ],
+            "description": "Contract 2.6.0. Household units per unit of originalCurrency, for the expense's date."
+          },
+          "rateStatus": {
+            "type": "string",
+            "enum": [
+              "published",
+              "provisional",
+              "edited"
+            ],
+            "description": "Contract 2.6.0. As on a personal entry: published, provisional or edited."
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Contract 2.6.0. The publication date of a published or provisional rate; absent when the rate is edited."
           }
         },
         "required": [
@@ -9454,6 +9504,43 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "originalAmount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999,
+            "description": "Contract 2.6.0 (MAZ-151 phase 2). The amount paid, in integer minor units of originalCurrency, when the expense was paid in another currency than the household's. originalAmount, originalCurrency, rate and rateStatus come together or not at all; totalCents and the splits stay in the household's currency, and totalCents must equal originalAmount converted at rate, rounded once, half up, to the household currency's minor units. Expenses only (shared recurring rules stay in the household's currency). Servers before 2.6.0 ignore it."
+          },
+          "originalCurrency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0. The currency the expense was paid in; never the household's."
+          },
+          "rate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              }
+            ],
+            "description": "Contract 2.6.0. Household units per unit of originalCurrency, for the expense's date."
+          },
+          "rateStatus": {
+            "type": "string",
+            "enum": [
+              "published",
+              "provisional",
+              "edited"
+            ],
+            "description": "Contract 2.6.0. As on a personal entry: published, provisional or edited."
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Contract 2.6.0. The publication date of a published or provisional rate; absent when the rate is edited."
           }
         },
         "required": [
@@ -9657,6 +9744,46 @@
           },
           "paymentsClosed": {
             "type": "boolean"
+          },
+          "originalAmount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999,
+            "description": "Contract 2.6.0 (MAZ-151 phase 2). The amount paid, in integer minor units of originalCurrency, when the expense was paid in another currency than the household's. originalAmount, originalCurrency, rate and rateStatus come together or not at all; totalCents and the splits stay in the household's currency, and totalCents must equal originalAmount converted at rate, rounded once, half up, to the household currency's minor units. Expenses only (shared recurring rules stay in the household's currency). Servers before 2.6.0 ignore it."
+          },
+          "originalCurrency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0. The currency the expense was paid in; never the household's."
+          },
+          "rate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              }
+            ],
+            "description": "Contract 2.6.0. Household units per unit of originalCurrency, for the expense's date."
+          },
+          "rateStatus": {
+            "type": "string",
+            "enum": [
+              "published",
+              "provisional",
+              "edited"
+            ],
+            "description": "Contract 2.6.0. As on a personal entry: published, provisional or edited."
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Contract 2.6.0. The publication date of a published or provisional rate; absent when the rate is edited."
+          },
+          "home": {
+            "$ref": "#/components/schemas/MemberHomeAmounts"
           }
         },
         "required": [
@@ -9949,13 +10076,12 @@
             "type": "string"
           },
           "householdCurrency": {
-            "type": "string",
-            "enum": [
-              "CAD",
-              "USD",
-              "EUR",
-              "GBP"
-            ]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0: any CurrencyCode. totalCents and shareCents are in this currency."
           },
           "title": {
             "type": "string"
@@ -10036,6 +10162,46 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "originalAmount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999,
+            "description": "Contract 2.6.0 (MAZ-151 phase 2). The amount paid, in integer minor units of originalCurrency, when the expense was paid in another currency than the household's. originalAmount, originalCurrency, rate and rateStatus come together or not at all; totalCents and the splits stay in the household's currency, and totalCents must equal originalAmount converted at rate, rounded once, half up, to the household currency's minor units. Expenses only (shared recurring rules stay in the household's currency). Servers before 2.6.0 ignore it."
+          },
+          "originalCurrency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.6.0. The currency the expense was paid in; never the household's."
+          },
+          "rate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              }
+            ],
+            "description": "Contract 2.6.0. Household units per unit of originalCurrency, for the expense's date."
+          },
+          "rateStatus": {
+            "type": "string",
+            "enum": [
+              "published",
+              "provisional",
+              "edited"
+            ],
+            "description": "Contract 2.6.0. As on a personal entry: published, provisional or edited."
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Contract 2.6.0. The publication date of a published or provisional rate; absent when the rate is edited."
+          },
+          "home": {
+            "$ref": "#/components/schemas/MemberHomeAmounts"
           }
         },
         "required": [
@@ -11816,6 +11982,59 @@
         },
         "required": [
           "cards"
+        ]
+      },
+      "MemberHomeAmounts": {
+        "type": "object",
+        "description": "Contract 2.6.0 (MAZ-151 phase 2). The viewer's amounts of a shared expense in their own home currency (their ledger currency), when it isn't the household's: converted from what was paid (originalAmount, or totalCents when paid in the household's currency) at the rate for the expense's date, rounded once, half up; the share keeps its proportion of the total, half up (memberAmounts in apps/web/src/domain/households.ts, contracts/fixtures/shared-currency.json). Omitted when the household is in the viewer's currency, or when no rate is known (exchange-rate fetching off with no cached rates): clients then leave the row out of home totals.",
+        "properties": {
+          "currency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "The viewer's home currency."
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999,
+            "description": "The expense total, in minor units of currency."
+          },
+          "shareCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999,
+            "description": "The viewer's share, in minor units of currency."
+          },
+          "rate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              }
+            ],
+            "description": "Home units per unit of what was paid. Absent when it was paid in the home currency (the amount is exact)."
+          },
+          "rateStatus": {
+            "type": "string",
+            "enum": [
+              "published",
+              "provisional"
+            ],
+            "description": "provisional: the expense is dated after the latest publication; the amounts follow the published rate once it exists."
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "The publication the rate comes from."
+          }
+        },
+        "required": [
+          "currency",
+          "totalCents",
+          "shareCents"
         ]
       }
     }

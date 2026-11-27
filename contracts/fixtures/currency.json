@@ -2250,6 +2250,151 @@
         ]
       },
       "valid": false
+    },
+    {
+      "name": "trip in euros",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "trips": [
+          {
+            "id": "lisbon",
+            "name": "Lisbon",
+            "startDate": "2026-11-12",
+            "endDate": "2026-11-19",
+            "currency": "EUR"
+          }
+        ],
+        "transactions": [],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "trip in the home currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "trips": [
+          {
+            "id": "lisbon",
+            "name": "Lisbon",
+            "startDate": "2026-11-12",
+            "endDate": "2026-11-19",
+            "currency": "CAD"
+          }
+        ],
+        "transactions": [],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "trip in yen",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "trips": [
+          {
+            "id": "lisbon",
+            "name": "Lisbon",
+            "startDate": "2026-11-12",
+            "endDate": "2026-11-19",
+            "currency": "JPY"
+          }
+        ],
+        "transactions": [],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "trip with an unknown currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "trips": [
+          {
+            "id": "lisbon",
+            "name": "Lisbon",
+            "startDate": "2026-11-12",
+            "endDate": "2026-11-19",
+            "currency": "XXX"
+          }
+        ],
+        "transactions": [],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "trip with a lower-case currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "trips": [
+          {
+            "id": "lisbon",
+            "name": "Lisbon",
+            "startDate": "2026-11-12",
+            "endDate": "2026-11-19",
+            "currency": "eur"
+          }
+        ],
+        "transactions": [],
+        "recurring": []
+      },
+      "valid": false
     }
   ]
 }

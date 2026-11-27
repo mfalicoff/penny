@@ -33,7 +33,9 @@ const ledgerSchema = z
     version: z.literal(4),
     currency: z.enum(homeCurrencies),
     accounts: z.array(z.object({ id, name: z.string().trim().min(1).max(50), type: z.enum(accountTypes) })).max(300),
-    trips: z.array(z.object({ id, name: z.string().trim().min(1).max(80), startDate: date, endDate: date, sharedHouseholdId: id.optional() })).max(300),
+    trips: z.array(z.object({ id, name: z.string().trim().min(1).max(80), startDate: date, endDate: date, sharedHouseholdId: id.optional(),
+      // Contract 2.5.0 (MAZ-151 phase 2): a personal trip's currency, the default for its new entries.
+      currency: z.string().refine(isCurrency, "Invalid currency").optional() })).max(300),
     categories: z
       .array(
         z.object({

@@ -1,4 +1,5 @@
 import type { Category, Ledger, Receipt, Transaction } from "./ledger.ts";
+import type { ForeignAmount } from "./currency.ts";
 
 // The household projection the API returns (GET /api/households/projection), joined into a
 // read-only personal ledger view. Kept with the merge rule as the reference for the fixture tests.
@@ -10,6 +11,20 @@ export type ProjectedExpense = {
   scheduled?: boolean; recurringId?: string;
   // MAZ-275: who paid, as the household sees them, and whether it was you. Optional, so older rows stay valid.
   payer?: ExpensePayer; paidByYou?: boolean;
+} & Partial<ForeignAmount> & {
+  // MAZ-151 phase 2 (contract 2.5.0). `originalAmount`…`rateDate` above: what was paid, when the
+  // expense was paid in another currency than the household's (rate in household units). `home`:
+  // the viewer's amounts in their home currency, when it isn't the household's and a rate is known.
+  home?: ProjectedHome;
+};
+/**
+ * The viewer's amounts of a shared expense in their home currency (`memberAmounts`). `rate` (home
+ * units per unit of what was paid, at the expense date's rate) is absent when it was paid in the home
+ * currency.
+ */
+export type ProjectedHome = {
+  currency: string; totalCents: number; shareCents: number;
+  rate?: string; rateStatus?: "published" | "provisional"; rateDate?: string;
 };
 /** Who paid a shared expense (MAZ-275). `deleted`: show "Former member", never the email. */
 export type ExpensePayer = { email: string; displayName?: string; deleted?: true };
@@ -35,8 +50,9 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
   const categories: Category[] = [...ledger.categories];
   const transactions: Transaction[] = [...ledger.transactions];
   for (const item of projection) {
-    // A household's currency matches its members' ledgers; a row in another currency is left out.
-    if (item.householdCurrency !== ledger.currency) continue;
+    // A row in another currency counts at the viewer's home amounts; without them it's left out.
+    const amounts = sharedAmounts(item, ledger.currency);
+    if (!amounts) continue;
     const categoryId = sharedCategoryId(ledger.categories, item.category);
     if (!categories.some((category) => category.id === categoryId)) {
       categories.push({ id: categoryId, kind: "expense", ...item.category });
@@ -46,7 +62,7 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
       householdId: item.householdId,
       householdExpenseId: item.id,
       kind: "expense", title: item.title, date: item.date,
-      total: item.totalCents, share: item.shareCents,
+      ...amounts,
       categoryId, note: item.note,
       ...(item.accountId !== undefined && { accountId: item.accountId }),
       ...(item.receipt !== undefined && { receipt: item.receipt }),
@@ -58,6 +74,30 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
     transactions.push(shared);
   }
   return { ...ledger, categories, transactions };
+}
+
+/**
+ * A shared row's amounts in the personal view (MAZ-151 phase 2): home amounts in `total` and
+ * `share`, plus what was paid when that isn't the home currency, so lists lead with the original
+ * amount. Null when the row's household is in another currency and no home amounts came with it.
+ */
+export function sharedAmounts(item: ProjectedExpense, home: string): Pick<Transaction, "total" | "share"> & Partial<ForeignAmount> | null {
+  if (item.householdCurrency === home) {
+    const foreign = item.originalCurrency !== undefined && item.originalAmount !== undefined && item.rate !== undefined && item.rateStatus !== undefined
+      ? { originalAmount: item.originalAmount, originalCurrency: item.originalCurrency, rate: item.rate, rateStatus: item.rateStatus, ...(item.rateDate !== undefined && { rateDate: item.rateDate }) }
+      : {};
+    return { total: item.totalCents, share: item.shareCents, ...foreign };
+  }
+  if (item.home?.currency !== home) return null;
+  const amounts = { total: item.home.totalCents, share: item.home.shareCents };
+  const paidIn = item.originalCurrency ?? item.householdCurrency;
+  if (paidIn === home || item.home.rate === undefined || item.home.rateStatus === undefined) return amounts;
+  return {
+    ...amounts,
+    originalAmount: item.originalAmount ?? item.totalCents, originalCurrency: paidIn,
+    rate: item.home.rate, rateStatus: item.home.rateStatus,
+    ...(item.home.rateDate !== undefined && { rateDate: item.home.rateDate }),
+  };
 }
 
 export function isHouseholdTransaction(value: Transaction): value is HouseholdTransaction {

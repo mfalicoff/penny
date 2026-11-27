@@ -257,6 +257,17 @@ const pow10 = (n: number) => 10n ** BigInt(n);
 const divideHalfUp = (numerator: bigint, denominator: bigint) => (numerator * 2n + denominator) / (denominator * 2n);
 
 /**
+ * `part` of `whole` applied to `of`, rounded half up: part * of / whole. The share of a converted
+ * total keeps the share's proportion of the original total (MAZ-151 phase 2). `part` ≤ `whole`.
+ */
+export function proportionHalfUp(part: number, whole: number, of: number): number {
+  for (const value of [part, whole, of]) if (!Number.isSafeInteger(value) || value < 0) throw new Error("Amounts are whole minor units.");
+  if (whole === 0 || part > whole) throw new Error("A share cannot exceed its total.");
+  if (part === whole) return of;
+  return Number(divideHalfUp(BigInt(part) * BigInt(of), BigInt(whole)));
+}
+
+/**
  * The home amount of `amount` (minor units of `from`) at `rate` (home units per unit of `from`),
  * rounded once, half up, to the home currency's minor units.
  */

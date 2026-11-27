@@ -1,6 +1,14 @@
 import type { Frequency } from "./ledger.ts";
+import { convertAmount, foreignAmountProblem, proportionHalfUp, type ForeignAmount } from "./currency.ts";
 
-// Shared records live outside the private Ledger snapshot. All amounts are integer cents.
+// Shared records live outside the private Ledger snapshot. All amounts are integers in the
+// household's currency minor units ("cents" for short; a yen trip has none).
+//
+// Several currencies (MAZ-151 phase 2, contract 2.5.0): a household's (or shared trip's) currency is
+// the one its balances and settle-up use. A shared expense paid in another currency also carries the
+// amount paid, that currency and the rate used (household units per unit), and its `totalCents` and
+// splits are that amount converted at the expense date's rate, so balances never move later. Each
+// member sees the expense in their own home currency too (`memberAmounts`).
 export type Household = {
   id: string;
   name: string;
@@ -51,7 +59,7 @@ export type SharedExpense = {
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string;
-};
+} & Partial<ForeignAmount>;
 
 export type HouseholdRecurring = {
   id: string;
@@ -264,6 +272,67 @@ export function suggestReimbursements(balances: HouseholdBalance[]): SuggestedRe
     if (creditor.cents === 0) creditorIndex++;
   }
   return suggestions;
+}
+
+/**
+ * Why the foreign-amount fields of a shared expense are invalid, or null when they're fine: the
+ * personal entry rules, with the household's currency in place of the home currency.
+ */
+export function sharedExpenseCurrencyProblem(
+  expense: { totalCents: number } & Partial<Record<keyof ForeignAmount, unknown>>,
+  householdCurrency: string,
+): string | null {
+  const { totalCents, ...fields } = expense;
+  return foreignAmountProblem({ ...fields, total: totalCents }, householdCurrency);
+}
+
+/**
+ * A member's view of a shared expense in their home currency. The expense converts from what was
+ * paid (its original amount, or its total when it was paid in the household's currency) at
+ * `rate`, the home units per unit of that currency for the expense's date, rounded once, half up.
+ * Paid in the home currency, the amount is exact and no rate is needed. The share keeps its
+ * proportion of the total (half up), so a whole share stays whole. Null when a rate is needed and
+ * none is known: clients then leave the row out of home totals.
+ */
+export function memberAmounts(
+  expense: { totalCents: number; originalAmount?: number | undefined; originalCurrency?: string | undefined },
+  shareCents: number,
+  householdCurrency: string,
+  home: string,
+  rate: string | null,
+): { totalCents: number; shareCents: number } | null {
+  const source = expense.originalCurrency ?? householdCurrency;
+  const amount = expense.originalAmount ?? expense.totalCents;
+  let totalCents: number;
+  if (householdCurrency === home) totalCents = expense.totalCents;
+  else if (source === home) totalCents = amount;
+  else if (rate === null) return null;
+  else totalCents = convertAmount(amount, source, rate, home);
+  return { totalCents, shareCents: proportionHalfUp(shareCents, expense.totalCents, totalCents) };
+}
+
+/**
+ * Balances and suggested payments shown in another currency ("Settle in"), at one rate (`to` units
+ * per unit of `from`, today's). Payments are suggested in the household's currency first, then each
+ * figure is converted on its own, half up, keeping its sign. Recording a payment still records the
+ * household-currency amount.
+ */
+export function settleIn(
+  balances: HouseholdBalance[],
+  from: string,
+  to: string,
+  rate: string,
+): { balances: HouseholdBalance[]; suggestions: SuggestedReimbursement[] } {
+  const suggestions = suggestReimbursements(balances);
+  const convert = (value: number) => {
+    if (from === to) return value;
+    const converted = convertAmount(Math.abs(value), from, rate, to);
+    return value < 0 ? -converted : converted;
+  };
+  return {
+    balances: balances.map((item) => ({ userId: item.userId, balanceCents: convert(item.balanceCents) })),
+    suggestions: suggestions.map((item) => ({ ...item, amountCents: convert(item.amountCents) })),
+  };
 }
 
 export function monthIsOverdue(month: string, today: string, balances: HouseholdBalance[]): boolean {

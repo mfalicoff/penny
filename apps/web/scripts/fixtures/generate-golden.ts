@@ -14,6 +14,7 @@ import { mergeLedger } from "../../src/domain/merge.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
 import { ledgerWithHouseholds, type ProjectedExpense } from "../../src/domain/householdProjection.ts";
+import { memberAmounts, settleIn, sharedExpenseCurrencyProblem } from "../../src/domain/households.ts";
 import { monthReview, reviewBannerMonth } from "../../src/domain/monthReview.ts";
 import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
 import { yearReviews } from "./year-review.ts";
@@ -253,7 +254,7 @@ function currency() {
     return { name, ledger: value, valid: result.success };
   };
   const { rateDate: _date, ...noDate } = eur;
-  const ledgers = [
+  const ledgers: { name: string; ledger: object; valid: boolean }[] = [
     ledgerCase("home entry", { ...base }),
     ledgerCase("euro entry at the published rate", { ...base, ...eur }),
     ledgerCase("provisional rate", { ...base, ...eur, rateStatus: "provisional", rateDate: "2026-11-02" }),
@@ -276,12 +277,117 @@ function currency() {
     ledgerCase("home currency outside the home list", { ...base }, "transaction", "JPY"),
     ledgerCase("recurring rule in another currency", { ...base, ...eur }, "recurring"),
   ];
+  // Contract 2.5.0: a personal trip may carry its currency.
+  const tripCase = (name: string, trip: object) => {
+    const value = {
+      version: 4, currency: "CAD", accounts: [], categories: [{ id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" }],
+      trips: [{ id: "lisbon", name: "Lisbon", startDate: "2026-11-12", endDate: "2026-11-19", ...trip }], transactions: [], recurring: [],
+    };
+    return { name, ledger: value, valid: ledgerWriteSchema.safeParse({ revision: 0, ledger: value }).success };
+  };
+  ledgers.push(
+    tripCase("trip in euros", { currency: "EUR" }),
+    tripCase("trip in the home currency", { currency: "CAD" }),
+    tripCase("trip in yen", { currency: "JPY" }),
+    tripCase("trip with an unknown currency", { currency: "XXX" }),
+    tripCase("trip with a lower-case currency", { currency: "eur" }),
+  );
   return {
     generator,
     description: "MAZ-151: entries in several currencies. currencies is every ISO 4217 currency an entry may use with its minor units (homeCurrencies the ones a ledger may use); amounts are integers in minor units; a rate is a canonical decimal string of home units per unit; conversion rounds once, half up, to the home currency's minor units; cross rates round half up to 6 significant digits (at most 8 fraction digits); a date uses the latest publication on or before it, and one after every publication uses the latest provisionally.",
     currencies: currencies.map(({ code, name, minorUnits }) => ({ code, name, minorUnits })),
     homeCurrencies,
     parse, rates, conversions, crossRates, rateDates, entryAmounts: entryCases, reconversions, ledgers,
+  };
+}
+
+// MAZ-151 phase 2: shared expenses in several currencies. The Lisbon trip of the trip-currencies
+// cards: a euro trip with expenses paid in EUR, USD and CAD, seen by a member whose home is CAD.
+function sharedCurrency() {
+  const lisbon = [
+    { id: "fado", title: "Fado tickets", totalCents: 12000, shareCents: 3000 },
+    { id: "insurance", title: "Travel insurance", totalCents: 1526, shareCents: 763, originalAmount: 2230, originalCurrency: "CAD" },
+    { id: "apartment", title: "Apartment", totalCents: 25600, shareCents: 6400 },
+    { id: "flights", title: "Flights", totalCents: 56400, shareCents: 14100, originalAmount: 60000, originalCurrency: "USD" },
+  ];
+  const memberCase = ({ totalCents, originalAmount, originalCurrency }: { totalCents: number; originalAmount?: number; originalCurrency?: string }, shareCents: number, household: string, home: string, rate: string | null, name: string) => {
+    const expense = { totalCents, ...(originalAmount !== undefined && { originalAmount }), ...(originalCurrency !== undefined && { originalCurrency }) };
+    const result = attempt(() => memberAmounts(expense, shareCents, household, home, rate));
+    return { name, expense, shareCents, householdCurrency: household, home, rate, ...("value" in result ? { expected: result.value } : { error: result.error }) };
+  };
+  const members = [
+    memberCase(lisbon[0], 3000, "EUR", "CAD", "1.463", "euro expense in a euro trip, CAD home"),
+    memberCase(lisbon[1], 763, "EUR", "CAD", null, "paid in the home currency needs no rate"),
+    memberCase(lisbon[1], 763, "EUR", "CAD", "1.461", "paid in the home currency ignores a rate"),
+    memberCase(lisbon[2], 6400, "EUR", "CAD", "1.458", "share keeps its proportion, half up"),
+    memberCase(lisbon[3], 14100, "EUR", "CAD", "1.373", "converts from what was paid, not the trip amount"),
+    memberCase(lisbon[3], 0, "EUR", "CAD", "1.373", "zero share"),
+    memberCase(lisbon[3], 56400, "EUR", "CAD", "1.373", "whole share stays whole"),
+    memberCase(lisbon[0], 3000, "EUR", "CAD", null, "no rate known"),
+    memberCase(lisbon[0], 3000, "EUR", "EUR", null, "household in the home currency"),
+    memberCase(lisbon[3], 14100, "EUR", "EUR", null, "household in the home currency keeps the trip amount"),
+    memberCase({ totalCents: 1001 }, 334, "CAD", "JPY", "109.5", "yen home has no minor units"),
+    memberCase({ totalCents: 120000 }, 40000, "JPY", "KWD", "0.00203", "yen trip, dinar home"),
+    memberCase({ totalCents: 1001 }, 1002, "CAD", "EUR", "0.68", "share above the total"),
+  ];
+  // Trip-wide balances of the Lisbon trip, in euros.
+  const balances = [
+    { userId: "jo", balanceCents: -11500 }, { userId: "mira", balanceCents: -22737 }, { userId: "sam", balanceCents: 32900 }, { userId: "you", balanceCents: 1337 },
+  ];
+  const settleCase = (name: string, input: typeof balances, from: string, to: string, rate: string) => {
+    const result = attempt(() => settleIn(input, from, to, rate));
+    return { name, balances: input, from, to, rate, ...("value" in result ? { expected: result.value } : { error: result.error }) };
+  };
+  const settles = [
+    settleCase("in the trip's currency", balances, "EUR", "EUR", "1"),
+    settleCase("in Canadian dollars at today's rate", balances, "EUR", "CAD", "1.463"),
+    settleCase("in US dollars", balances, "EUR", "USD", "1.0631"),
+    settleCase("in yen, no minor units", balances, "EUR", "JPY", "161.23"),
+    settleCase("each figure rounds on its own", [{ userId: "a", balanceCents: -5 }, { userId: "b", balanceCents: -5 }, { userId: "c", balanceCents: 10 }], "EUR", "CAD", "1.5"),
+    settleCase("balances that don't net to zero", [{ userId: "a", balanceCents: -5 }, { userId: "b", balanceCents: 6 }], "EUR", "CAD", "1.5"),
+  ];
+  const categories: Ledger["categories"] = [{ id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" }];
+  const base = ledger([], { categories });
+  const travel = { name: "Travel", icon: "airplane-outline", color: "#5B7DB1" };
+  const row = (item: Partial<ProjectedExpense> & { id: string; totalCents: number; shareCents: number }): ProjectedExpense => ({
+    householdId: "lisbon", householdName: "Lisbon", householdCurrency: "EUR", title: item.id, date: "2026-11-03",
+    category: travel, note: "", payerUserId: "sam", ...item,
+  });
+  const projection = [
+    row({ id: "fado", totalCents: 12000, shareCents: 3000, date: "2026-11-27", home: { currency: "CAD", totalCents: 17556, shareCents: 4389, rate: "1.463", rateStatus: "provisional", rateDate: "2026-11-26" } }),
+    row({ id: "insurance", totalCents: 1526, shareCents: 763, originalAmount: 2230, originalCurrency: "CAD", rate: "0.6843", rateStatus: "published", rateDate: "2026-11-03", home: { currency: "CAD", totalCents: 2230, shareCents: 1115 } }),
+    row({ id: "flights", totalCents: 56400, shareCents: 14100, date: "2026-10-02", originalAmount: 60000, originalCurrency: "USD", rate: "0.94", rateStatus: "published", rateDate: "2026-10-02", home: { currency: "CAD", totalCents: 82380, shareCents: 20595, rate: "1.373", rateStatus: "published", rateDate: "2026-10-02" } }),
+    // No rate was known for the viewer's home currency: left out.
+    row({ id: "no-rate", totalCents: 5000, shareCents: 2500 }),
+    // Home amounts for another currency than the ledger's: left out.
+    row({ id: "other-home", totalCents: 5000, shareCents: 2500, home: { currency: "USD", totalCents: 5316, shareCents: 2658, rate: "1.0631", rateStatus: "published", rateDate: "2026-11-03" } }),
+    // A Canadian-dollar household: its own amounts, and what was paid when that was another currency.
+    row({ id: "maison-tapas", householdId: "maison", householdName: "Maison", householdCurrency: "CAD", totalCents: 12420, shareCents: 6210, originalAmount: 8500, originalCurrency: "EUR", rate: "1.4612", rateStatus: "published", rateDate: "2026-11-03" }),
+    row({ id: "maison-hydro", householdId: "maison", householdName: "Maison", householdCurrency: "CAD", totalCents: 9000, shareCents: 4500 }),
+  ];
+  const view = ledgerWithHouseholds(base, projection);
+  const pick = ["id", "total", "share", "originalAmount", "originalCurrency", "rate", "rateStatus", "rateDate"] as const;
+  const joined = view.transactions.map((entry) => Object.fromEntries(pick.filter((key) => (entry as Record<string, unknown>)[key] !== undefined).map((key) => [key, (entry as Record<string, unknown>)[key]])));
+  const expense = { totalCents: 56400, originalAmount: 60000, originalCurrency: "USD", rate: "0.94", rateStatus: "published", rateDate: "2026-10-02" };
+  const { rateDate: _date, ...undated } = expense;
+  const expenseCase = (name: string, value: object, household = "EUR") => ({ name, householdCurrency: household, expense: value, problem: sharedExpenseCurrencyProblem(value as { totalCents: number }, household) });
+  const expenses = [
+    expenseCase("paid in the trip's currency", { totalCents: 12000 }),
+    expenseCase("paid in US dollars", expense),
+    expenseCase("total that doesn't match the conversion", { ...expense, totalCents: 56401 }),
+    expenseCase("paid in the trip's own currency", { ...expense, originalCurrency: "EUR", rate: "1", totalCents: 60000 }),
+    expenseCase("edited rate", { ...undated, rateStatus: "edited" }),
+    expenseCase("published rate without its date", undated),
+    expenseCase("original amount without a rate", { totalCents: 56400, originalAmount: 60000, originalCurrency: "USD" }),
+    expenseCase("yen trip with a dollar expense", { totalCents: 9674, originalAmount: 6000, originalCurrency: "USD", rate: "161.23", rateStatus: "provisional", rateDate: "2026-11-26" }, "JPY"),
+  ];
+  return {
+    generator,
+    description: "MAZ-151 phase 2: shared expenses in several currencies. A household's (shared trip's) currency is the one its balances and settle-up use; a shared expense paid in another currency stores what was paid, that currency and the rate (household units per unit), with totalCents and splits converted at its date's rate (the personal entry rules, with the household's currency as home: expenses). memberAmounts is a member's view in their home currency: converted from what was paid at the home rate for the expense date, half up (exact when paid in the home currency, the household's own amounts when it is the home currency, null when a rate is needed and none is known); the share keeps its proportion of the total, half up. settleIn shows balances and suggested payments in another currency at one rate: payments are suggested in the household's currency, then each figure converts on its own, half up, keeping its sign. projection is joined into the personal view (ledgerWithHouseholds): a row counts at its home amounts with what was paid when that isn't the home currency, a row in another currency without home amounts for the ledger's currency is left out.",
+    memberAmounts: members,
+    settleIn: settles,
+    expenses,
+    projection: { ledger: base, rows: projection, expected: joined },
   };
 }
 
@@ -568,6 +674,7 @@ const consumers: Record<string, Record<string, string[] | string>> = {
   "year-review.json": { typescript: ["apps/web/tests/domain/year-review.test.ts"], csharp: "not applicable: client calculation; the year in review is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/YearReviewTests.swift"] },
   "shared-categories.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: shared expenses join the personal view on the client", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "currency.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/CurrencyFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/CurrencyTests.swift"] },
+  "shared-currency.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/SharedCurrencyFixtureTests.cs"], swift: ["apps/ios/Packages/PennyKit/Tests/PennyDomainTests/SharedCurrencyTests.swift"] },
   "parity-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "settlement.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
@@ -590,6 +697,7 @@ export function generated(): Record<string, string> {
   return {
     "money.json": serialize(money()),
     "currency.json": serialize(currency()),
+    "shared-currency.json": serialize(sharedCurrency()),
     "recurrence.json": serialize(recurrence()),
     "merge-conflicts.json": serialize(merge()),
     "month-totals.json": serialize(monthTotals()),
