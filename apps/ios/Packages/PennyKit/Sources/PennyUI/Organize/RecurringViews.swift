@@ -15,6 +15,7 @@ import SwiftUI
 /// With no schedules and nothing to suggest, the empty state (`iphone-recurring-empty`).
 struct RecurringListView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.showsManageAddEntry) private var showsManageAddEntry
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selection: ScheduleSelection?
@@ -70,6 +71,7 @@ struct RecurringListView: View {
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("recurring.add")
             }
+            ManageAddEntryItems(shown: showsManageAddEntry)
         }
         .navigationDestination(item: $selection) { ScheduleDetailView(id: $0.id) }
         .confirmationDialog(

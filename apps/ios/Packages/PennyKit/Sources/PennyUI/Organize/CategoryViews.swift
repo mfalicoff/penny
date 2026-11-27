@@ -7,6 +7,7 @@ import SwiftUI
 /// Tapping a row edits it; + adds one of the kind shown.
 struct CategoriesListView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.showsManageAddEntry) private var showsManageAddEntry
     @State private var kind: EntryKind = .expense
     @State private var form: CategoryFormRequest?
 
@@ -65,6 +66,7 @@ struct CategoriesListView: View {
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("categories.add")
             }
+            ManageAddEntryItems(shown: showsManageAddEntry)
         }
         .sheet(item: $form) { request in
             CategoryFormSheet(category: request.category, kind: request.kind).environment(shell)

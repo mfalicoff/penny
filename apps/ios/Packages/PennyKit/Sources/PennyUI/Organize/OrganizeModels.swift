@@ -443,7 +443,7 @@ enum ScheduleText {
             let day = "Every month on the \(ordinal(rule.anchorDay))"
             return rule.anchorDay > 28 ? "\(day), or the last day of shorter months" : day
         case .yearly:
-            let day = "Every year on \(monthName(rule.nextDate.month)) \(rule.anchorDay)"
+            let day = "Every year on \(monthName(rule.nextDate.month).prefix(3)) \(rule.anchorDay)"
             return rule.anchorDay > 28 ? "\(day), or the month's last day" : day
         }
     }

@@ -76,12 +76,6 @@ final class RenewalReminderTests: PennyUITestCase {
         XCTAssertFalse(penny.element(AccessibilityID.Organize.schedule("internet")).label.contains("Renews soon"))
         XCTAssertFalse(penny.element(AccessibilityID.Organize.schedule("domain")).label.contains("Renews soon"))
 
-        try penny.tap(AccessibilityID.Organize.schedule("internet"), opening: AccessibilityID.Screen.schedule)
-        XCTAssertFalse(
-            penny.element(AccessibilityID.Organize.scheduleReminder).waitForExistence(timeout: 2),
-            "monthly schedules have no reminder")
-        penny.app.navigationBars.buttons.element(boundBy: 0).tap()
-
         try penny.tap(AccessibilityID.Organize.schedule("prime"), opening: AccessibilityID.Screen.schedule)
         XCTAssertTrue(
             penny.app.staticTexts["Renews in 3 days"].waitForExistence(timeout: Penny.timeout)
@@ -100,6 +94,16 @@ final class RenewalReminderTests: PennyUITestCase {
         let reminder = toggle(again, AccessibilityID.Organize.scheduleReminder)
         XCTAssertTrue(reminder.waitForExistence(timeout: Penny.timeout))
         XCTAssertEqual(reminder.value as? String, "1", "kept on this device")
+
+        // A monthly schedule's page has no Reminder section.
+        app.terminate()
+        let third = try await launch(options)
+        try third.waitForShell()
+        try third.openSettingsPage("recurring", screen: AccessibilityID.Screen.recurring)
+        try third.tap(AccessibilityID.Organize.schedule("internet"), opening: AccessibilityID.Screen.schedule)
+        XCTAssertFalse(
+            toggle(third, AccessibilityID.Organize.scheduleReminder).waitForExistence(timeout: 3),
+            "monthly schedules have no reminder")
     }
 
     /// iPad: Recurring, Accounts and Categories carry the copper Add entry capsule after their +,
@@ -129,21 +133,39 @@ final class RenewalReminderTests: PennyUITestCase {
     @MainActor
     private func turnOnReminder(_ penny: Penny) throws {
         let reminder = toggle(penny, AccessibilityID.Organize.scheduleReminder)
-        for _ in 0..<4 where !reminder.isHittable { penny.element(AccessibilityID.Screen.schedule).swipeUp() }
+        // The schedule page's list (its screen identifier isn't always queryable once the page is up).
+        let list = penny.app.collectionViews.firstMatch
+        var scrolled = 0
+        while !reminder.isHittable, scrolled < 4 {
+            list.swipeUp()
+            scrolled += 1
+        }
         XCTAssertEqual(reminder.value as? String, "0", "off until turned on")
         // The switch's own control, not the row's label, so the tap lands on it.
-        let control = reminder.switches.firstMatch
-        if control.exists {
-            control.tap()
-        } else {
-            reminder.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        func flip() {
+            let control = reminder.switches.firstMatch
+            if control.exists {
+                control.tap()
+            } else {
+                reminder.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+            }
         }
-        penny.acceptSystemAlert("Allow", timeout: 5)
-        let on = NSPredicate(format: "value == '1'")
-        expectation(for: on, evaluatedWith: reminder)
-        waitForExpectations(timeout: 10)
+        flip()
+        // The system's prompt comes the first time, after Penny asks (it may take a few seconds);
+        // the switch turns on once it is answered. A tap that landed while the page was still
+        // settling is tried once more.
+        let deadline = Date().addingTimeInterval(25)
+        var retried = false
+        while reminder.value as? String != "1", Date() < deadline {
+            if penny.acceptSystemAlert("Allow", timeout: 1) { continue }
+            if !retried, Date() > deadline.addingTimeInterval(-15), !Penny.springboard.alerts.firstMatch.exists {
+                retried = true
+                flip()
+            }
+        }
+        XCTAssertEqual(reminder.value as? String, "1", "the reminder turned on")
         // Back to the top, where the card's capture starts.
-        for _ in 0..<2 { penny.element(AccessibilityID.Screen.schedule).swipeDown() }
+        for _ in 0..<scrolled { list.swipeDown() }
     }
 
     // MARK: The cards' sample
