@@ -56,10 +56,8 @@ public static class LedgerReader
         );
         // Recurring suggestions dismissed on any device (contract 2.3.0), in the order sent.
         var dismissedSuggestions = ledger.TryGetValue("dismissedSuggestions", out var dismissed)
-            ? List(
-                dismissed,
-                LedgerLimits.MaxDismissedSuggestions,
-                item => Text(item, 1, LedgerLimits.DismissedSuggestionLength)
+            ? List(dismissed, LedgerLimits.MaxDismissedSuggestions, item =>
+                Text(item, 1, LedgerLimits.DismissedSuggestionLength)
             )
             : [];
 
@@ -110,7 +108,15 @@ public static class LedgerReader
         Require(revision < LedgerLimits.MaxSafeInteger);
         return new(
             revision,
-            new(currency, accounts, trips, categories, transactions, recurring, dismissedSuggestions)
+            new(
+                currency,
+                accounts,
+                trips,
+                categories,
+                transactions,
+                recurring,
+                dismissedSuggestions
+            )
         );
     }
 
