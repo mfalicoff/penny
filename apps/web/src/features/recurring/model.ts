@@ -89,6 +89,20 @@ export function daysUntil(date: string, today = dateKey()): number {
   return Math.round((parseDate(date).getTime() - parseDate(today).getTime()) / 86_400_000);
 }
 
+/** "Renews soon" shows from this many days before a yearly schedule's next date, through the day itself (MAZ-290). */
+export const RENEWS_SOON_DAYS = 7;
+
+/**
+ * Days until an active yearly schedule renews, while that is within the Renews soon window (0 on
+ * the day); null for any other schedule or date. Monthly and weekly schedules never renew soon, and
+ * a paused one doesn't until it is resumed. The native app's `Renewal.daysUntil` is the same rule.
+ */
+export function renewsSoonIn(rule: Pick<Recurring, "active" | "frequency" | "nextDate">, today = dateKey()): number | null {
+  if (!rule.active || rule.frequency !== "yearly") return null;
+  const days = daysUntil(rule.nextDate, today);
+  return days >= 0 && days <= RENEWS_SOON_DAYS ? days : null;
+}
+
 export function relativeDay(date: string, today = dateKey()): string {
   const days = daysUntil(date, today);
   if (days === 0) return "today";

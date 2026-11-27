@@ -701,3 +701,26 @@
 .suggestion__seen {
   line-height: 1.3;
 }
+
+/*
+ * Renews soon (`web-recurring-renews-soon`, MAZ-290): the tag beside a yearly schedule's name fades
+ * in (`quick`) when it enters its 7-day window. A fade is a change of state, so it stays under
+ * reduced motion; nothing moves and the row keeps its height.
+ */
+.renews-soon {
+  display: inline-flex;
+}
+
+.renews-soon--entering {
+  animation: renews-soon-fade var(--pk-dur-quick) var(--pk-ease-standard) both;
+}
+
+.renews-soon--leaving {
+  animation: renews-soon-fade var(--pk-dur-quick) var(--pk-ease-exit) reverse forwards;
+}
+
+@keyframes renews-soon-fade {
+  from {
+    opacity: 0;
+  }
+}

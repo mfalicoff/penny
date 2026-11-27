@@ -21,9 +21,11 @@ import { parseLedger } from "../../offline/wire";
 import {
   accountOf,
   categoryOf,
+  dayLabel,
   FREQUENCY_LABELS,
   KIND_HEADINGS,
   KIND_ORDER,
+  renewsSoonIn,
   rowAmount,
   scheduleTile,
   seenLabel,
@@ -429,8 +431,11 @@ function SuggestionRow({
   );
 }
 
-/** "Monthly · next Nov 18", or "Paused · monthly" as a tag while paused (the card's Gym row). */
-function Timing({ rule }: { rule: { active: boolean; frequency: keyof typeof FREQUENCY_LABELS; nextDate: string } }) {
+/**
+ * "Monthly · next Nov 18", or "Paused · monthly" as a tag while paused (the card's Gym row). A yearly
+ * schedule that renews soon says "Yearly · renews Thu, Nov 12" (`web-recurring-renews-soon`, MAZ-290).
+ */
+function Timing({ rule, renewsSoon = false }: { rule: { active: boolean; frequency: keyof typeof FREQUENCY_LABELS; nextDate: string }; renewsSoon?: boolean }) {
   if (!rule.active) {
     return (
       <span className="schedule-row__line">
@@ -440,12 +445,39 @@ function Timing({ rule }: { rule: { active: boolean; frequency: keyof typeof FRE
   }
   return (
     <span>
-      {FREQUENCY_LABELS[rule.frequency]} · next <time dateTime={rule.nextDate}>{shortDay(rule.nextDate)}</time>
+      {FREQUENCY_LABELS[rule.frequency]} · {renewsSoon ? "renews" : "next"} <time dateTime={rule.nextDate}>{renewsSoon ? dayLabel(rule.nextDate) : shortDay(rule.nextDate)}</time>
     </span>
   );
 }
 
+/**
+ * Whether a row's Renews soon tag shows (MAZ-290, docs/design/motion.md): present when the page opens
+ * with no animation; "entering" when the schedule enters its window while the page is open (the tag
+ * fades in), "leaving" for the `quick` fade out when the date passes, then hidden.
+ */
+function useRenewsSoonTag(soon: boolean): "shown" | "entering" | "leaving" | "hidden" {
+  const [state, setState] = useState<"shown" | "entering" | "leaving" | "hidden">(soon ? "shown" : "hidden");
+  const [previous, setPrevious] = useState(soon);
+  if (soon !== previous) {
+    // A change while the page is open: adjust during render (React's "storing information from previous renders").
+    setPrevious(soon);
+    setState(soon ? "entering" : "leaving");
+  }
+  useEffect(() => {
+    if (state !== "leaving") return undefined;
+    const timer = window.setTimeout(() => {
+      setState("hidden");
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [state]);
+  return state;
+}
+
 function ScheduleRow({ rule, ledger, waiting, highlight = null, onOpen }: { rule: Recurring; ledger: Ledger; waiting: boolean; highlight?: "saved" | "fading" | null; onOpen: () => void }) {
+  const today = useToday();
+  const soon = useRenewsSoonTag(renewsSoonIn(rule, today) !== null);
   const account = accountOf(ledger, rule.accountId);
   const tile = scheduleTile(rule.kind, categoryOf(ledger, rule.categoryId));
   return (
@@ -460,11 +492,21 @@ function ScheduleRow({ rule, ledger, waiting, highlight = null, onOpen }: { rule
         <Icon name={tile.icon} size={19} weight={40} />
       </span>
       <span className="schedule-row__text">
-        <span className="schedule-row__title">{rule.title}</span>
+        <span className="schedule-row__title">
+          {rule.title}
+          {/* Amber, beside the name, for a yearly schedule renewing within 7 days (MAZ-290). It fades in and out; the row keeps its height. */}
+          {soon !== "hidden" ? (
+            <span className={cx("renews-soon", soon === "entering" && "renews-soon--entering", soon === "leaving" && "renews-soon--leaving")} data-renews-soon={rule.id}>
+              <Badge tone="renewal" icon="time">
+                Renews soon
+              </Badge>
+            </span>
+          ) : null}
+        </span>
         {/* The account follows the timing, or takes its own line when both don't fit (no stranded "·"). */}
         <span className="schedule-row__meta inline-list">
           <span className="inline-list__items">
-            <Timing rule={rule} />
+            <Timing rule={rule} renewsSoon={soon === "shown" || soon === "entering"} />
             {account ? (
               <span className="schedule-row__inline-account">
                 <span className="visually-hidden"> · </span>

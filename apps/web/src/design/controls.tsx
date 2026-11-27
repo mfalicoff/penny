@@ -159,7 +159,7 @@ export function ChoiceGroup<T extends string>({ legend, hideLegend, name, value,
   );
 }
 
-type Tone = "neutral" | "income" | "investment" | "pending" | "danger";
+type Tone = "neutral" | "income" | "investment" | "pending" | "danger" | "renewal";
 
 /** Small status label. Always text, so meaning never rests on color alone. */
 export function Badge({ tone = "neutral", icon, children }: { tone?: Tone; icon?: IconName; children: ReactNode }) {

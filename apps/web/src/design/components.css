@@ -513,6 +513,12 @@
   color: var(--pk-danger);
 }
 
+/* Renews soon (MAZ-290): the pending amber at 16%, its words mixed toward the label so they read on it. */
+.pk-badge--renewal {
+  background: color-mix(in srgb, var(--pk-pending) 16%, transparent);
+  color: color-mix(in srgb, var(--pk-pending) 72%, var(--pk-label));
+}
+
 .pk-avatar {
   display: grid;
   flex: none;
