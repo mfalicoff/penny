@@ -86,7 +86,7 @@ export function compareBars(review: MonthReview): CompareBar[] {
   const rows: Omit<CompareBar, "width">[] = [
     { key: "current", label: monthName(review.month), spent: review.spent, missing: "" },
     { key: "previous", label: monthName(review.previous.month), spent: review.previous.spent, missing: `No ${monthName(review.previous.month)} to compare with` },
-    { key: "lastYear", label: shortMonthYear(review.lastYear.month), spent: review.lastYear.spent, missing: `No ${shortMonthYear(review.lastYear.month)} to compare with` },
+    { key: "lastYear", label: shortMonthYear(review.lastYear.month), spent: review.lastYear.spent, missing: `No ${monthLabel(review.lastYear.month)} to compare with` },
   ];
   const longest = Math.max(1, ...rows.map((row) => row.spent ?? 0));
   return rows.map((row) => ({ ...row, width: row.spent === null ? 0 : (row.spent / longest) * 100 }));

@@ -265,8 +265,8 @@ struct RecapMoneyCard: View {
             dot: PennyColor.invest, value: scaled(review.invested))
         if review.leftOver < 0 {
             LegendItem(
-                title: "Over", amount: MoneyFormat.whole(scaled(-review.leftOver), currency: currency),
-                dot: FlowSummaryCard.spentColor, value: scaled(-review.leftOver))
+                title: "Overspent", amount: MoneyFormat.whole(scaled(-review.leftOver), currency: currency),
+                dot: PennyColor.danger, value: scaled(-review.leftOver))
         } else {
             HStack(spacing: 6) {
                 Circle().fill(PennyColor.income).frame(width: 8, height: 8)

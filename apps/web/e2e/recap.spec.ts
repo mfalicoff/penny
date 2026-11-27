@@ -47,7 +47,7 @@ test("the banner opens October's recap: spent with the months it's compared with
   // Assistive technology hears the final value only, even while it counts.
   await expect(spent).toContainText("$1,963.09");
   await expect(spent).toContainText("6% more than September.");
-  await expect(spent.getByRole("definition")).toHaveText(["$1,963", "$1,846", "No Oct 2025 to compare with"]);
+  await expect(spent.getByRole("definition")).toHaveText(["$1,963", "$1,846", "No October 2025 to compare with"]);
 
   const flow = page.getByRole("region", { name: "Money in and out" });
   await expect(flow).toContainText("Came in $4,800.00");

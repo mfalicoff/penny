@@ -107,7 +107,7 @@ describe("recap wording", () => {
     const { review: recap } = review(ledger([entry("oct", { share: 5000, total: 5000 })]));
     const bars = compareBars(recap);
     expect(bars[1]).toMatchObject({ spent: null, width: 0, missing: "No September to compare with" });
-    expect(bars[2]).toMatchObject({ spent: null, missing: "No Oct 2025 to compare with" });
+    expect(bars[2]).toMatchObject({ spent: null, missing: "No October 2025 to compare with" });
     expect(spentSentence(recap)).toBeNull();
   });
 
