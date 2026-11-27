@@ -1,0 +1,2397 @@
+{
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
+  "description": "The year in review (MAZ-292, `yearReview` in apps/web/src/domain/yearReview.ts), from the year's 12 months computed as the monthly recap's: recorded entries only, never scheduled previews; shared expenses at your share through the household projection, shared rows in another currency left out. Days count from January 1, or from the first recorded entry in a first year, up to today. Percentages are whole numbers rounded half away from zero. Categories match by name. Trips are shared trips (households with a travel range) and personal trips not linked to a shared trip you can see, with their days in the year and your share; days away count each day once. Shared expenses are counted by who paid (a row with no payer only in the total); a deleted payer keeps `deleted` and shows as \"Former member\". Weekdays are ISO (1 Monday). The year in review is offered from December 26 (the year under way) to January 31 (the year just over); the banner shows in January.",
+  "households": [
+    {
+      "id": "apartment",
+      "name": "Apartment",
+      "memberCount": 2
+    },
+    {
+      "id": "lisbon",
+      "name": "Lisbon",
+      "memberCount": 4,
+      "trip": {
+        "startDate": "2026-11-12",
+        "endDate": "2026-11-19"
+      }
+    },
+    {
+      "id": "porto",
+      "name": "Porto",
+      "memberCount": 2,
+      "trip": {
+        "startDate": "2026-11-19",
+        "endDate": "2026-11-21"
+      }
+    }
+  ],
+  "ledgers": {
+    "alex": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [
+        {
+          "id": "ski",
+          "name": "Ski week",
+          "startDate": "2026-02-14",
+          "endDate": "2026-02-16"
+        },
+        {
+          "id": "lisbon-personal",
+          "name": "Lisbon",
+          "startDate": "2026-11-12",
+          "endDate": "2026-11-19",
+          "sharedHouseholdId": "lisbon"
+        },
+        {
+          "id": "cottage-personal",
+          "name": "Cottage weekend",
+          "startDate": "2026-08-22",
+          "endDate": "2026-08-24",
+          "sharedHouseholdId": "gone"
+        },
+        {
+          "id": "spring",
+          "name": "Spring break",
+          "startDate": "2027-03-10",
+          "endDate": "2027-03-14"
+        }
+      ],
+      "recurring": [
+        {
+          "id": "gym",
+          "title": "gym",
+          "kind": "expense",
+          "total": 4000,
+          "share": 4000,
+          "categoryId": "transport",
+          "date": "2026-01-28",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2027-01-28",
+          "anchorDay": 28,
+          "active": true
+        }
+      ],
+      "categories": [
+        {
+          "id": "home",
+          "name": "Home",
+          "icon": "home-outline",
+          "color": "#C6953A",
+          "kind": "expense"
+        },
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "shopping",
+          "name": "Shopping",
+          "icon": "bag-handle-outline",
+          "color": "#C8798D",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "rent-1",
+          "title": "rent-1",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-01-01",
+          "note": ""
+        },
+        {
+          "id": "rent-2",
+          "title": "rent-2",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-02-01",
+          "note": ""
+        },
+        {
+          "id": "rent-3",
+          "title": "rent-3",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-03-01",
+          "note": ""
+        },
+        {
+          "id": "rent-4",
+          "title": "rent-4",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-04-01",
+          "note": ""
+        },
+        {
+          "id": "rent-5",
+          "title": "rent-5",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-05-01",
+          "note": ""
+        },
+        {
+          "id": "rent-6",
+          "title": "rent-6",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-06-01",
+          "note": ""
+        },
+        {
+          "id": "rent-7",
+          "title": "rent-7",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-07-01",
+          "note": ""
+        },
+        {
+          "id": "rent-8",
+          "title": "rent-8",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-08-01",
+          "note": ""
+        },
+        {
+          "id": "rent-9",
+          "title": "rent-9",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-09-01",
+          "note": ""
+        },
+        {
+          "id": "rent-10",
+          "title": "rent-10",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "rent-11",
+          "title": "rent-11",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-11-01",
+          "note": ""
+        },
+        {
+          "id": "rent-12",
+          "title": "rent-12",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-12-01",
+          "note": ""
+        },
+        {
+          "id": "pay-1",
+          "title": "pay-1",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-01-15",
+          "note": ""
+        },
+        {
+          "id": "pay-2",
+          "title": "pay-2",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-02-15",
+          "note": ""
+        },
+        {
+          "id": "pay-3",
+          "title": "pay-3",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-03-15",
+          "note": ""
+        },
+        {
+          "id": "pay-4",
+          "title": "pay-4",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-04-15",
+          "note": ""
+        },
+        {
+          "id": "pay-5",
+          "title": "pay-5",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-05-15",
+          "note": ""
+        },
+        {
+          "id": "pay-6",
+          "title": "pay-6",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-06-15",
+          "note": ""
+        },
+        {
+          "id": "pay-7",
+          "title": "pay-7",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-07-15",
+          "note": ""
+        },
+        {
+          "id": "pay-8",
+          "title": "pay-8",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-08-15",
+          "note": ""
+        },
+        {
+          "id": "pay-9",
+          "title": "pay-9",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-09-15",
+          "note": ""
+        },
+        {
+          "id": "pay-10",
+          "title": "pay-10",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-10-15",
+          "note": ""
+        },
+        {
+          "id": "pay-11",
+          "title": "pay-11",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-11-15",
+          "note": ""
+        },
+        {
+          "id": "pay-12",
+          "title": "pay-12",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-12-15",
+          "note": ""
+        },
+        {
+          "id": "groceries-jan",
+          "title": "groceries-jan",
+          "kind": "expense",
+          "total": 21000,
+          "share": 21000,
+          "categoryId": "groceries",
+          "date": "2026-01-10",
+          "note": ""
+        },
+        {
+          "id": "groceries-may",
+          "title": "groceries-may",
+          "kind": "expense",
+          "total": 18500,
+          "share": 18500,
+          "categoryId": "groceries",
+          "date": "2026-05-09",
+          "note": ""
+        },
+        {
+          "id": "groceries-dec",
+          "title": "groceries-dec",
+          "kind": "expense",
+          "total": 35620,
+          "share": 35620,
+          "categoryId": "groceries",
+          "date": "2026-12-05",
+          "note": ""
+        },
+        {
+          "id": "coffee-mar",
+          "title": "coffee-mar",
+          "kind": "expense",
+          "total": 650,
+          "share": 650,
+          "categoryId": "food",
+          "date": "2026-03-07",
+          "note": ""
+        },
+        {
+          "id": "coffee-jun",
+          "title": "coffee-jun",
+          "kind": "expense",
+          "total": 700,
+          "share": 700,
+          "categoryId": "food",
+          "date": "2026-06-13",
+          "note": ""
+        },
+        {
+          "id": "dinner-dec",
+          "title": "dinner-dec",
+          "kind": "expense",
+          "total": 49360,
+          "share": 24680,
+          "categoryId": "food",
+          "date": "2026-12-12",
+          "note": ""
+        },
+        {
+          "id": "bus-pass",
+          "title": "bus-pass",
+          "kind": "expense",
+          "total": 15600,
+          "share": 15600,
+          "categoryId": "transport",
+          "date": "2026-09-02",
+          "note": ""
+        },
+        {
+          "id": "boots",
+          "title": "boots",
+          "kind": "expense",
+          "total": 31840,
+          "share": 31840,
+          "categoryId": "shopping",
+          "date": "2026-12-19",
+          "note": ""
+        },
+        {
+          "id": "tfsa",
+          "title": "tfsa",
+          "kind": "investment",
+          "total": 50000,
+          "share": 50000,
+          "categoryId": "savings",
+          "date": "2026-06-30",
+          "note": ""
+        },
+        {
+          "id": "ski-lodge",
+          "title": "ski-lodge",
+          "kind": "expense",
+          "total": 86000,
+          "share": 86000,
+          "categoryId": "fun",
+          "date": "2026-02-14",
+          "note": "",
+          "tripId": "ski"
+        },
+        {
+          "id": "lisbon-flight",
+          "title": "lisbon-flight",
+          "kind": "expense",
+          "total": 64000,
+          "share": 64000,
+          "categoryId": "transport",
+          "date": "2026-11-12",
+          "note": "",
+          "tripId": "lisbon-personal"
+        },
+        {
+          "id": "concert-dec",
+          "title": "concert-dec",
+          "kind": "expense",
+          "total": 5350,
+          "share": 5350,
+          "categoryId": "fun",
+          "date": "2026-12-30",
+          "note": ""
+        },
+        {
+          "id": "bonus",
+          "title": "bonus",
+          "kind": "income",
+          "total": 100000,
+          "share": 100000,
+          "categoryId": "salary",
+          "date": "2026-12-31",
+          "note": ""
+        }
+      ]
+    },
+    "first-year": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [
+        {
+          "id": "ski",
+          "name": "Ski week",
+          "startDate": "2026-02-14",
+          "endDate": "2026-02-16"
+        },
+        {
+          "id": "lisbon-personal",
+          "name": "Lisbon",
+          "startDate": "2026-11-12",
+          "endDate": "2026-11-19",
+          "sharedHouseholdId": "lisbon"
+        },
+        {
+          "id": "cottage-personal",
+          "name": "Cottage weekend",
+          "startDate": "2026-08-22",
+          "endDate": "2026-08-24",
+          "sharedHouseholdId": "gone"
+        },
+        {
+          "id": "spring",
+          "name": "Spring break",
+          "startDate": "2027-03-10",
+          "endDate": "2027-03-14"
+        }
+      ],
+      "recurring": [],
+      "categories": [
+        {
+          "id": "home",
+          "name": "Home",
+          "icon": "home-outline",
+          "color": "#C6953A",
+          "kind": "expense"
+        },
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "shopping",
+          "name": "Shopping",
+          "icon": "bag-handle-outline",
+          "color": "#C8798D",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "rent-10",
+          "title": "rent-10",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "rent-11",
+          "title": "rent-11",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-11-01",
+          "note": ""
+        },
+        {
+          "id": "rent-12",
+          "title": "rent-12",
+          "kind": "expense",
+          "total": 145000,
+          "share": 145000,
+          "categoryId": "home",
+          "date": "2026-12-01",
+          "note": ""
+        },
+        {
+          "id": "pay-9",
+          "title": "pay-9",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-09-15",
+          "note": ""
+        },
+        {
+          "id": "pay-10",
+          "title": "pay-10",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-10-15",
+          "note": ""
+        },
+        {
+          "id": "pay-11",
+          "title": "pay-11",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-11-15",
+          "note": ""
+        },
+        {
+          "id": "pay-12",
+          "title": "pay-12",
+          "kind": "income",
+          "total": 320000,
+          "share": 320000,
+          "categoryId": "salary",
+          "date": "2026-12-15",
+          "note": ""
+        },
+        {
+          "id": "groceries-dec",
+          "title": "groceries-dec",
+          "kind": "expense",
+          "total": 35620,
+          "share": 35620,
+          "categoryId": "groceries",
+          "date": "2026-12-05",
+          "note": ""
+        },
+        {
+          "id": "dinner-dec",
+          "title": "dinner-dec",
+          "kind": "expense",
+          "total": 49360,
+          "share": 24680,
+          "categoryId": "food",
+          "date": "2026-12-12",
+          "note": ""
+        },
+        {
+          "id": "boots",
+          "title": "boots",
+          "kind": "expense",
+          "total": 31840,
+          "share": 31840,
+          "categoryId": "shopping",
+          "date": "2026-12-19",
+          "note": ""
+        },
+        {
+          "id": "lisbon-flight",
+          "title": "lisbon-flight",
+          "kind": "expense",
+          "total": 64000,
+          "share": 64000,
+          "categoryId": "transport",
+          "date": "2026-11-12",
+          "note": "",
+          "tripId": "lisbon-personal"
+        },
+        {
+          "id": "concert-dec",
+          "title": "concert-dec",
+          "kind": "expense",
+          "total": 5350,
+          "share": 5350,
+          "categoryId": "fun",
+          "date": "2026-12-30",
+          "note": ""
+        },
+        {
+          "id": "bonus",
+          "title": "bonus",
+          "kind": "income",
+          "total": 100000,
+          "share": 100000,
+          "categoryId": "salary",
+          "date": "2026-12-31",
+          "note": ""
+        }
+      ]
+    },
+    "previews-only": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [
+        {
+          "id": "gym",
+          "title": "gym",
+          "kind": "expense",
+          "total": 4000,
+          "share": 4000,
+          "categoryId": "transport",
+          "date": "2026-01-28",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2027-01-28",
+          "anchorDay": 28,
+          "active": true
+        }
+      ],
+      "categories": [
+        {
+          "id": "home",
+          "name": "Home",
+          "icon": "home-outline",
+          "color": "#C6953A",
+          "kind": "expense"
+        },
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "shopping",
+          "name": "Shopping",
+          "icon": "bag-handle-outline",
+          "color": "#C8798D",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": []
+    },
+    "empty": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [],
+      "categories": [
+        {
+          "id": "home",
+          "name": "Home",
+          "icon": "home-outline",
+          "color": "#C6953A",
+          "kind": "expense"
+        },
+        {
+          "id": "groceries",
+          "name": "Groceries",
+          "icon": "basket-outline",
+          "color": "#2F9E6B",
+          "kind": "expense"
+        },
+        {
+          "id": "food",
+          "name": "Food & drinks",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "transport",
+          "name": "Transport",
+          "icon": "bus-outline",
+          "color": "#3B82F6",
+          "kind": "expense"
+        },
+        {
+          "id": "shopping",
+          "name": "Shopping",
+          "icon": "bag-handle-outline",
+          "color": "#C8798D",
+          "kind": "expense"
+        },
+        {
+          "id": "fun",
+          "name": "Entertainment",
+          "icon": "musical-notes-outline",
+          "color": "#8E5BB1",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "savings",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": []
+    }
+  },
+  "projections": {
+    "none": [],
+    "households": [
+      {
+        "id": "costco-mar",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "costco-mar",
+        "date": "2026-03-14",
+        "totalCents": 12280,
+        "shareCents": 6140,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "Jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "costco-jul",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "costco-jul",
+        "date": "2026-07-18",
+        "totalCents": 10000,
+        "shareCents": 5000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "hydro-oct",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "hydro-oct",
+        "date": "2026-10-20",
+        "totalCents": 8000,
+        "shareCents": 4000,
+        "category": {
+          "name": "Utilities",
+          "icon": "flash-outline",
+          "color": "#3B82F6"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "lisbon-hotel",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "CAD",
+        "title": "lisbon-hotel",
+        "date": "2026-11-13",
+        "totalCents": 208000,
+        "shareCents": 52000,
+        "category": {
+          "name": "Home",
+          "icon": "bed-outline",
+          "color": "#C6953A"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "Jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "lisbon-dinner",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "CAD",
+        "title": "lisbon-dinner",
+        "date": "2026-11-15",
+        "totalCents": 32000,
+        "shareCents": 8000,
+        "category": {
+          "name": "Food & drinks",
+          "icon": "restaurant-outline",
+          "color": "#E47850"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "mira@example.test",
+          "displayName": "Mira"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "lisbon-museum",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "CAD",
+        "title": "lisbon-museum",
+        "date": "2026-11-16",
+        "totalCents": 8000,
+        "shareCents": 2000,
+        "category": {
+          "name": "Entertainment",
+          "icon": "ticket-outline",
+          "color": "#8E5BB1"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "pharmacy",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "pharmacy",
+        "date": "2026-04-22",
+        "totalCents": 2400,
+        "shareCents": 1200,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "gone@example.test",
+          "deleted": true
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "old-row",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "old-row",
+        "date": "2026-01-20",
+        "totalCents": 1800,
+        "shareCents": 900,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "other"
+      },
+      {
+        "id": "porto-train",
+        "householdId": "porto",
+        "householdName": "Porto",
+        "householdCurrency": "CAD",
+        "title": "porto-train",
+        "date": "2026-11-20",
+        "totalCents": 6000,
+        "shareCents": 3000,
+        "category": {
+          "name": "Transport",
+          "icon": "train-outline",
+          "color": "#3B82F6"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "lisbon-taxi",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "lisbon-taxi",
+        "date": "2026-11-14",
+        "totalCents": 36000,
+        "shareCents": 9000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "Jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "internet",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "internet",
+        "date": "2026-12-29",
+        "totalCents": 6000,
+        "shareCents": 3000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true,
+        "scheduled": true,
+        "recurringId": "internet-rule"
+      },
+      {
+        "id": "costco-2025",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "costco-2025",
+        "date": "2025-12-20",
+        "totalCents": 10000,
+        "shareCents": 5000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "Jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      }
+    ],
+    "from-september": [
+      {
+        "id": "hydro-oct",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "hydro-oct",
+        "date": "2026-10-20",
+        "totalCents": 8000,
+        "shareCents": 4000,
+        "category": {
+          "name": "Utilities",
+          "icon": "flash-outline",
+          "color": "#3B82F6"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "lisbon-hotel",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "CAD",
+        "title": "lisbon-hotel",
+        "date": "2026-11-13",
+        "totalCents": 208000,
+        "shareCents": 52000,
+        "category": {
+          "name": "Home",
+          "icon": "bed-outline",
+          "color": "#C6953A"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "Jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "lisbon-dinner",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "CAD",
+        "title": "lisbon-dinner",
+        "date": "2026-11-15",
+        "totalCents": 32000,
+        "shareCents": 8000,
+        "category": {
+          "name": "Food & drinks",
+          "icon": "restaurant-outline",
+          "color": "#E47850"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "mira@example.test",
+          "displayName": "Mira"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "lisbon-museum",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "CAD",
+        "title": "lisbon-museum",
+        "date": "2026-11-16",
+        "totalCents": 8000,
+        "shareCents": 2000,
+        "category": {
+          "name": "Entertainment",
+          "icon": "ticket-outline",
+          "color": "#8E5BB1"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "porto-train",
+        "householdId": "porto",
+        "householdName": "Porto",
+        "householdCurrency": "CAD",
+        "title": "porto-train",
+        "date": "2026-11-20",
+        "totalCents": 6000,
+        "shareCents": 3000,
+        "category": {
+          "name": "Transport",
+          "icon": "train-outline",
+          "color": "#3B82F6"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true
+      },
+      {
+        "id": "lisbon-taxi",
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "lisbon-taxi",
+        "date": "2026-11-14",
+        "totalCents": 36000,
+        "shareCents": 9000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "other",
+        "payer": {
+          "email": "Jo@example.test",
+          "displayName": "Jo"
+        },
+        "paidByYou": false
+      },
+      {
+        "id": "internet",
+        "householdId": "apartment",
+        "householdName": "Apartment",
+        "householdCurrency": "CAD",
+        "title": "internet",
+        "date": "2026-12-29",
+        "totalCents": 6000,
+        "shareCents": 3000,
+        "category": {
+          "name": "groceries",
+          "icon": "basket-outline",
+          "color": "#0FA3A3"
+        },
+        "note": "",
+        "payerUserId": "me",
+        "payer": {
+          "email": "me@example.test",
+          "displayName": "Alex"
+        },
+        "paidByYou": true,
+        "scheduled": true,
+        "recurringId": "internet-rule"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "a whole year, with trips, shared expenses and who paid them",
+      "ledger": "alex",
+      "projection": "households",
+      "year": "2026",
+      "today": "2027-01-05",
+      "expected": {
+        "year": "2026",
+        "empty": false,
+        "from": "2026-01-01",
+        "to": "2026-12-31",
+        "spent": 2126180,
+        "months": [
+          {
+            "month": "2026-01",
+            "spent": 166900
+          },
+          {
+            "month": "2026-02",
+            "spent": 231000
+          },
+          {
+            "month": "2026-03",
+            "spent": 151790
+          },
+          {
+            "month": "2026-04",
+            "spent": 146200
+          },
+          {
+            "month": "2026-05",
+            "spent": 163500
+          },
+          {
+            "month": "2026-06",
+            "spent": 145700
+          },
+          {
+            "month": "2026-07",
+            "spent": 150000
+          },
+          {
+            "month": "2026-08",
+            "spent": 145000
+          },
+          {
+            "month": "2026-09",
+            "spent": 160600
+          },
+          {
+            "month": "2026-10",
+            "spent": 149000
+          },
+          {
+            "month": "2026-11",
+            "spent": 274000
+          },
+          {
+            "month": "2026-12",
+            "spent": 242490
+          }
+        ],
+        "busiestMonth": {
+          "month": "2026-11",
+          "spent": 274000
+        },
+        "monthlyAverage": 177182,
+        "topCategories": [
+          {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "amount": 1792000,
+            "share": 84
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "amount": 93350,
+            "share": 4
+          },
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "amount": 88360,
+            "share": 4
+          },
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "amount": 82600,
+            "share": 4
+          },
+          {
+            "key": "food & drinks",
+            "name": "Food & drinks",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "amount": 34030,
+            "share": 2
+          }
+        ],
+        "trips": {
+          "list": [
+            {
+              "id": "lisbon",
+              "kind": "shared",
+              "startDate": "2026-11-12",
+              "endDate": "2026-11-19",
+              "days": 8,
+              "share": 126000,
+              "sharedWith": 3
+            },
+            {
+              "id": "ski",
+              "kind": "personal",
+              "startDate": "2026-02-14",
+              "endDate": "2026-02-16",
+              "days": 3,
+              "share": 86000,
+              "sharedWith": 0
+            },
+            {
+              "id": "porto",
+              "kind": "shared",
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-21",
+              "days": 3,
+              "share": 3000,
+              "sharedWith": 1
+            },
+            {
+              "id": "cottage-personal",
+              "kind": "personal",
+              "startDate": "2026-08-22",
+              "endDate": "2026-08-24",
+              "days": 3,
+              "share": 0,
+              "sharedWith": 0
+            }
+          ],
+          "daysAway": 16,
+          "share": 215000,
+          "longestId": "lisbon",
+          "costliestId": "lisbon"
+        },
+        "shared": {
+          "count": 9,
+          "paidByYouPercent": 44,
+          "payers": [
+            {
+              "key": "you",
+              "you": true,
+              "payer": null,
+              "count": 4,
+              "householdIds": [
+                "apartment",
+                "lisbon",
+                "porto"
+              ]
+            },
+            {
+              "key": "jo@example.test",
+              "you": false,
+              "payer": {
+                "email": "Jo@example.test",
+                "displayName": "Jo"
+              },
+              "count": 2,
+              "householdIds": [
+                "apartment",
+                "lisbon"
+              ]
+            },
+            {
+              "key": "gone@example.test",
+              "you": false,
+              "payer": {
+                "email": "gone@example.test",
+                "deleted": true
+              },
+              "count": 1,
+              "householdIds": [
+                "apartment"
+              ]
+            },
+            {
+              "key": "mira@example.test",
+              "you": false,
+              "payer": {
+                "email": "mira@example.test",
+                "displayName": "Mira"
+              },
+              "count": 1,
+              "householdIds": [
+                "lisbon"
+              ]
+            }
+          ],
+          "householdIds": [
+            "apartment",
+            "lisbon",
+            "porto"
+          ],
+          "othersPaid": 230920
+        },
+        "facts": {
+          "daysWithoutSpending": 333,
+          "longestRun": {
+            "start": "2026-08-02",
+            "end": "2026-08-31",
+            "days": 30
+          },
+          "expensesRecorded": 32,
+          "perWeek": 1,
+          "busiestWeekday": 7,
+          "mostFrequentCategory": {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "count": 13
+          }
+        }
+      }
+    },
+    {
+      "name": "the year under way: days count up to today, and later income is expected",
+      "ledger": "alex",
+      "projection": "households",
+      "year": "2026",
+      "today": "2026-12-27",
+      "expected": {
+        "year": "2026",
+        "empty": false,
+        "from": "2026-01-01",
+        "to": "2026-12-27",
+        "spent": 2126180,
+        "months": [
+          {
+            "month": "2026-01",
+            "spent": 166900
+          },
+          {
+            "month": "2026-02",
+            "spent": 231000
+          },
+          {
+            "month": "2026-03",
+            "spent": 151790
+          },
+          {
+            "month": "2026-04",
+            "spent": 146200
+          },
+          {
+            "month": "2026-05",
+            "spent": 163500
+          },
+          {
+            "month": "2026-06",
+            "spent": 145700
+          },
+          {
+            "month": "2026-07",
+            "spent": 150000
+          },
+          {
+            "month": "2026-08",
+            "spent": 145000
+          },
+          {
+            "month": "2026-09",
+            "spent": 160600
+          },
+          {
+            "month": "2026-10",
+            "spent": 149000
+          },
+          {
+            "month": "2026-11",
+            "spent": 274000
+          },
+          {
+            "month": "2026-12",
+            "spent": 242490
+          }
+        ],
+        "busiestMonth": {
+          "month": "2026-11",
+          "spent": 274000
+        },
+        "monthlyAverage": 177182,
+        "topCategories": [
+          {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "amount": 1792000,
+            "share": 84
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "amount": 93350,
+            "share": 4
+          },
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "amount": 88360,
+            "share": 4
+          },
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "amount": 82600,
+            "share": 4
+          },
+          {
+            "key": "food & drinks",
+            "name": "Food & drinks",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "amount": 34030,
+            "share": 2
+          }
+        ],
+        "trips": {
+          "list": [
+            {
+              "id": "lisbon",
+              "kind": "shared",
+              "startDate": "2026-11-12",
+              "endDate": "2026-11-19",
+              "days": 8,
+              "share": 126000,
+              "sharedWith": 3
+            },
+            {
+              "id": "ski",
+              "kind": "personal",
+              "startDate": "2026-02-14",
+              "endDate": "2026-02-16",
+              "days": 3,
+              "share": 86000,
+              "sharedWith": 0
+            },
+            {
+              "id": "porto",
+              "kind": "shared",
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-21",
+              "days": 3,
+              "share": 3000,
+              "sharedWith": 1
+            },
+            {
+              "id": "cottage-personal",
+              "kind": "personal",
+              "startDate": "2026-08-22",
+              "endDate": "2026-08-24",
+              "days": 3,
+              "share": 0,
+              "sharedWith": 0
+            }
+          ],
+          "daysAway": 16,
+          "share": 215000,
+          "longestId": "lisbon",
+          "costliestId": "lisbon"
+        },
+        "shared": {
+          "count": 9,
+          "paidByYouPercent": 44,
+          "payers": [
+            {
+              "key": "you",
+              "you": true,
+              "payer": null,
+              "count": 4,
+              "householdIds": [
+                "apartment",
+                "lisbon",
+                "porto"
+              ]
+            },
+            {
+              "key": "jo@example.test",
+              "you": false,
+              "payer": {
+                "email": "Jo@example.test",
+                "displayName": "Jo"
+              },
+              "count": 2,
+              "householdIds": [
+                "apartment",
+                "lisbon"
+              ]
+            },
+            {
+              "key": "gone@example.test",
+              "you": false,
+              "payer": {
+                "email": "gone@example.test",
+                "deleted": true
+              },
+              "count": 1,
+              "householdIds": [
+                "apartment"
+              ]
+            },
+            {
+              "key": "mira@example.test",
+              "you": false,
+              "payer": {
+                "email": "mira@example.test",
+                "displayName": "Mira"
+              },
+              "count": 1,
+              "householdIds": [
+                "lisbon"
+              ]
+            }
+          ],
+          "householdIds": [
+            "apartment",
+            "lisbon",
+            "porto"
+          ],
+          "othersPaid": 230920
+        },
+        "facts": {
+          "daysWithoutSpending": 330,
+          "longestRun": {
+            "start": "2026-08-02",
+            "end": "2026-08-31",
+            "days": 30
+          },
+          "expensesRecorded": 32,
+          "perWeek": 1,
+          "busiestWeekday": 7,
+          "mostFrequentCategory": {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "count": 13
+          }
+        }
+      }
+    },
+    {
+      "name": "a year without shared expenses",
+      "ledger": "alex",
+      "projection": "none",
+      "year": "2026",
+      "today": "2027-01-05",
+      "expected": {
+        "year": "2026",
+        "empty": false,
+        "from": "2026-01-01",
+        "to": "2026-12-31",
+        "spent": 2043940,
+        "months": [
+          {
+            "month": "2026-01",
+            "spent": 166000
+          },
+          {
+            "month": "2026-02",
+            "spent": 231000
+          },
+          {
+            "month": "2026-03",
+            "spent": 145650
+          },
+          {
+            "month": "2026-04",
+            "spent": 145000
+          },
+          {
+            "month": "2026-05",
+            "spent": 163500
+          },
+          {
+            "month": "2026-06",
+            "spent": 145700
+          },
+          {
+            "month": "2026-07",
+            "spent": 145000
+          },
+          {
+            "month": "2026-08",
+            "spent": 145000
+          },
+          {
+            "month": "2026-09",
+            "spent": 160600
+          },
+          {
+            "month": "2026-10",
+            "spent": 145000
+          },
+          {
+            "month": "2026-11",
+            "spent": 209000
+          },
+          {
+            "month": "2026-12",
+            "spent": 242490
+          }
+        ],
+        "busiestMonth": {
+          "month": "2026-12",
+          "spent": 242490
+        },
+        "monthlyAverage": 170328,
+        "topCategories": [
+          {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "amount": 1740000,
+            "share": 85
+          },
+          {
+            "key": "entertainment",
+            "name": "Entertainment",
+            "icon": "musical-notes-outline",
+            "color": "#8E5BB1",
+            "amount": 91350,
+            "share": 4
+          },
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "amount": 79600,
+            "share": 4
+          },
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "amount": 75120,
+            "share": 4
+          },
+          {
+            "key": "shopping",
+            "name": "Shopping",
+            "icon": "bag-handle-outline",
+            "color": "#C8798D",
+            "amount": 31840,
+            "share": 2
+          }
+        ],
+        "trips": {
+          "list": [
+            {
+              "id": "ski",
+              "kind": "personal",
+              "startDate": "2026-02-14",
+              "endDate": "2026-02-16",
+              "days": 3,
+              "share": 86000,
+              "sharedWith": 0
+            },
+            {
+              "id": "lisbon",
+              "kind": "shared",
+              "startDate": "2026-11-12",
+              "endDate": "2026-11-19",
+              "days": 8,
+              "share": 64000,
+              "sharedWith": 3
+            },
+            {
+              "id": "cottage-personal",
+              "kind": "personal",
+              "startDate": "2026-08-22",
+              "endDate": "2026-08-24",
+              "days": 3,
+              "share": 0,
+              "sharedWith": 0
+            },
+            {
+              "id": "porto",
+              "kind": "shared",
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-21",
+              "days": 3,
+              "share": 0,
+              "sharedWith": 1
+            }
+          ],
+          "daysAway": 16,
+          "share": 150000,
+          "longestId": "lisbon",
+          "costliestId": "ski"
+        },
+        "shared": {
+          "count": 0,
+          "paidByYouPercent": 0,
+          "payers": [],
+          "householdIds": [],
+          "othersPaid": 24680
+        },
+        "facts": {
+          "daysWithoutSpending": 342,
+          "longestRun": {
+            "start": "2026-07-02",
+            "end": "2026-07-31",
+            "days": 30
+          },
+          "expensesRecorded": 23,
+          "perWeek": 0,
+          "busiestWeekday": 7,
+          "mostFrequentCategory": {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "count": 12
+          }
+        }
+      }
+    },
+    {
+      "name": "a first year: nothing before the first recorded entry counts",
+      "ledger": "first-year",
+      "projection": "from-september",
+      "year": "2026",
+      "today": "2027-01-05",
+      "expected": {
+        "year": "2026",
+        "empty": false,
+        "from": "2026-09-15",
+        "to": "2026-12-31",
+        "spent": 665490,
+        "months": [
+          {
+            "month": "2026-01",
+            "spent": 0
+          },
+          {
+            "month": "2026-02",
+            "spent": 0
+          },
+          {
+            "month": "2026-03",
+            "spent": 0
+          },
+          {
+            "month": "2026-04",
+            "spent": 0
+          },
+          {
+            "month": "2026-05",
+            "spent": 0
+          },
+          {
+            "month": "2026-06",
+            "spent": 0
+          },
+          {
+            "month": "2026-07",
+            "spent": 0
+          },
+          {
+            "month": "2026-08",
+            "spent": 0
+          },
+          {
+            "month": "2026-09",
+            "spent": 0
+          },
+          {
+            "month": "2026-10",
+            "spent": 149000
+          },
+          {
+            "month": "2026-11",
+            "spent": 274000
+          },
+          {
+            "month": "2026-12",
+            "spent": 242490
+          }
+        ],
+        "busiestMonth": {
+          "month": "2026-11",
+          "spent": 274000
+        },
+        "monthlyAverage": 166373,
+        "topCategories": [
+          {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "amount": 487000,
+            "share": 73
+          },
+          {
+            "key": "transport",
+            "name": "Transport",
+            "icon": "bus-outline",
+            "color": "#3B82F6",
+            "amount": 67000,
+            "share": 10
+          },
+          {
+            "key": "groceries",
+            "name": "Groceries",
+            "icon": "basket-outline",
+            "color": "#2F9E6B",
+            "amount": 35620,
+            "share": 5
+          },
+          {
+            "key": "food & drinks",
+            "name": "Food & drinks",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "amount": 32680,
+            "share": 5
+          },
+          {
+            "key": "shopping",
+            "name": "Shopping",
+            "icon": "bag-handle-outline",
+            "color": "#C8798D",
+            "amount": 31840,
+            "share": 5
+          }
+        ],
+        "trips": {
+          "list": [
+            {
+              "id": "lisbon",
+              "kind": "shared",
+              "startDate": "2026-11-12",
+              "endDate": "2026-11-19",
+              "days": 8,
+              "share": 126000,
+              "sharedWith": 3
+            },
+            {
+              "id": "porto",
+              "kind": "shared",
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-21",
+              "days": 3,
+              "share": 3000,
+              "sharedWith": 1
+            }
+          ],
+          "daysAway": 10,
+          "share": 129000,
+          "longestId": "lisbon",
+          "costliestId": "lisbon"
+        },
+        "shared": {
+          "count": 5,
+          "paidByYouPercent": 60,
+          "payers": [
+            {
+              "key": "you",
+              "you": true,
+              "payer": null,
+              "count": 3,
+              "householdIds": [
+                "apartment",
+                "lisbon",
+                "porto"
+              ]
+            },
+            {
+              "key": "jo@example.test",
+              "you": false,
+              "payer": {
+                "email": "Jo@example.test",
+                "displayName": "Jo"
+              },
+              "count": 1,
+              "householdIds": [
+                "lisbon"
+              ]
+            },
+            {
+              "key": "mira@example.test",
+              "you": false,
+              "payer": {
+                "email": "mira@example.test",
+                "displayName": "Mira"
+              },
+              "count": 1,
+              "householdIds": [
+                "lisbon"
+              ]
+            }
+          ],
+          "householdIds": [
+            "lisbon",
+            "apartment",
+            "porto"
+          ],
+          "othersPaid": 217680
+        },
+        "facts": {
+          "daysWithoutSpending": 95,
+          "longestRun": {
+            "start": "2026-10-02",
+            "end": "2026-10-19",
+            "days": 18
+          },
+          "expensesRecorded": 13,
+          "perWeek": 1,
+          "busiestWeekday": 4,
+          "mostFrequentCategory": {
+            "key": "home",
+            "name": "Home",
+            "icon": "home-outline",
+            "color": "#C6953A",
+            "count": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "a year with only previews",
+      "ledger": "previews-only",
+      "projection": "none",
+      "year": "2027",
+      "today": "2027-01-10",
+      "expected": {
+        "year": "2027",
+        "empty": true,
+        "from": null,
+        "to": "2027-01-10",
+        "spent": 0,
+        "months": [
+          {
+            "month": "2027-01",
+            "spent": 0
+          },
+          {
+            "month": "2027-02",
+            "spent": 0
+          },
+          {
+            "month": "2027-03",
+            "spent": 0
+          },
+          {
+            "month": "2027-04",
+            "spent": 0
+          },
+          {
+            "month": "2027-05",
+            "spent": 0
+          },
+          {
+            "month": "2027-06",
+            "spent": 0
+          },
+          {
+            "month": "2027-07",
+            "spent": 0
+          },
+          {
+            "month": "2027-08",
+            "spent": 0
+          },
+          {
+            "month": "2027-09",
+            "spent": 0
+          },
+          {
+            "month": "2027-10",
+            "spent": 0
+          },
+          {
+            "month": "2027-11",
+            "spent": 0
+          },
+          {
+            "month": "2027-12",
+            "spent": 0
+          }
+        ],
+        "busiestMonth": null,
+        "monthlyAverage": 0,
+        "topCategories": [],
+        "trips": {
+          "list": [],
+          "daysAway": 0,
+          "share": 0,
+          "longestId": null,
+          "costliestId": null
+        },
+        "shared": {
+          "count": 0,
+          "paidByYouPercent": 0,
+          "payers": [],
+          "householdIds": [],
+          "othersPaid": 0
+        },
+        "facts": {
+          "daysWithoutSpending": 0,
+          "longestRun": null,
+          "expensesRecorded": 0,
+          "perWeek": 0,
+          "busiestWeekday": null,
+          "mostFrequentCategory": null
+        }
+      }
+    },
+    {
+      "name": "a year with no entries",
+      "ledger": "empty",
+      "projection": "none",
+      "year": "2026",
+      "today": "2027-01-05",
+      "expected": {
+        "year": "2026",
+        "empty": true,
+        "from": null,
+        "to": "2026-12-31",
+        "spent": 0,
+        "months": [
+          {
+            "month": "2026-01",
+            "spent": 0
+          },
+          {
+            "month": "2026-02",
+            "spent": 0
+          },
+          {
+            "month": "2026-03",
+            "spent": 0
+          },
+          {
+            "month": "2026-04",
+            "spent": 0
+          },
+          {
+            "month": "2026-05",
+            "spent": 0
+          },
+          {
+            "month": "2026-06",
+            "spent": 0
+          },
+          {
+            "month": "2026-07",
+            "spent": 0
+          },
+          {
+            "month": "2026-08",
+            "spent": 0
+          },
+          {
+            "month": "2026-09",
+            "spent": 0
+          },
+          {
+            "month": "2026-10",
+            "spent": 0
+          },
+          {
+            "month": "2026-11",
+            "spent": 0
+          },
+          {
+            "month": "2026-12",
+            "spent": 0
+          }
+        ],
+        "busiestMonth": null,
+        "monthlyAverage": 0,
+        "topCategories": [],
+        "trips": {
+          "list": [],
+          "daysAway": 0,
+          "share": 0,
+          "longestId": null,
+          "costliestId": null
+        },
+        "shared": {
+          "count": 0,
+          "paidByYouPercent": 0,
+          "payers": [],
+          "householdIds": [],
+          "othersPaid": 0
+        },
+        "facts": {
+          "daysWithoutSpending": 0,
+          "longestRun": null,
+          "expensesRecorded": 0,
+          "perWeek": 0,
+          "busiestWeekday": null,
+          "mostFrequentCategory": null
+        }
+      }
+    }
+  ],
+  "window": [
+    {
+      "today": "2026-12-25",
+      "year": null,
+      "banner": null
+    },
+    {
+      "today": "2026-12-26",
+      "year": "2026",
+      "banner": null
+    },
+    {
+      "today": "2026-12-31",
+      "year": "2026",
+      "banner": null
+    },
+    {
+      "today": "2027-01-01",
+      "year": "2026",
+      "banner": "2026"
+    },
+    {
+      "today": "2027-01-31",
+      "year": "2026",
+      "banner": "2026"
+    },
+    {
+      "today": "2027-02-01",
+      "year": null,
+      "banner": null
+    },
+    {
+      "today": "2026-06-15",
+      "year": null,
+      "banner": null
+    }
+  ]
+}

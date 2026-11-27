@@ -28,13 +28,14 @@ public enum DemoLedger {
         var lastCount = 0
         func previous(
             _ title: String, _ cents: Int64, _ category: String, day: Int, share: Int64? = nil,
-            kind: EntryKind = .expense, account: String = "demo-chequing", participants: Int? = nil
+            kind: EntryKind = .expense, account: String = "demo-chequing", participants: Int? = nil,
+            trip: String? = nil
         ) -> LedgerEntry? {
             guard let last = month.shifted(by: -1) else { return nil }
             lastCount += 1
             return LedgerEntry(
                 id: "\(idPrefix)last-\(lastCount)", title: title, kind: kind, total: cents, share: share ?? cents,
-                participants: participants, categoryId: category, accountId: account,
+                participants: participants, categoryId: category, accountId: account, tripId: trip,
                 date: last.first.adding(days: day - 1))
         }
         let lastMonth = [
@@ -43,13 +44,17 @@ public enum DemoLedger {
             previous("Monthly transit pass", 15_600, "transport", day: 2),
             previous("Music streaming", 1_299, "fun", day: 3, account: "demo-visa"),
             previous("Weekly groceries", 9_120, "groceries", day: 4),
-            previous("Dinner out", 11_200, "food", day: 9, share: 5_600, account: "demo-visa", participants: 2),
+            previous(
+                "Dinner out", 11_200, "food", day: 9, share: 5_600, account: "demo-visa", participants: 2,
+                trip: "demo-trip-city"),
             previous("Index fund", 20_000, "investments", day: 15, kind: .investment),
             previous("Weekend groceries", 6_830, "groceries", day: 18),
             previous("New shoes", 8_999, "shopping", day: 24, account: "demo-visa"),
         ].compactMap { $0 }
         let nextMonth = month.shifted(by: 1)?.first ?? month.last
         let tripStart = month.first
+        // Last month's city break, so the year in review (MAZ-292) has two trips to compare.
+        let cityBreak = month.shifted(by: -1)?.first.adding(days: 7)
         return Ledger(
             currency: .cad,
             accounts: [
@@ -58,7 +63,10 @@ public enum DemoLedger {
             ],
             trips: [
                 Trip(id: "demo-trip", name: "Weekend away", startDate: tripStart, endDate: tripStart.adding(days: 2))
-            ],
+            ]
+                + (cityBreak.map {
+                    [Trip(id: "demo-trip-city", name: "City break", startDate: $0, endDate: $0.adding(days: 3))]
+                } ?? []),
             categories: Ledger.defaultCategories,
             transactions: [
                 entry("Monthly salary", 480_000, "salary", daysAgo: 20, kind: .income),

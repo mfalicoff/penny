@@ -12,6 +12,8 @@ import { z } from "zod";
  * - `weekStartsOn`: the first column of the Home calendar, Monday (default) or Sunday (MAZ-140).
  * - `recapDismissed`: the month (`YYYY-MM`) whose recap banner was dismissed on this device
  *   (MAZ-292). The banner covers one month at a time, so the latest is all it needs.
+ * - `yearReviewDismissed`: the year (`YYYY`) whose January "in review is ready" banner was
+ *   dismissed on this device (MAZ-292 phase 2). One year at a time, as for the recap.
  */
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
@@ -29,12 +31,17 @@ const preferencesSchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
     .nullable()
     .catch(null),
+  yearReviewDismissed: z
+    .string()
+    .regex(/^\d{4}$/)
+    .nullable()
+    .catch(null),
 });
 
 export type Preferences = z.infer<typeof preferencesSchema>;
 
 export const STORAGE_KEY = "penny.preferences";
-const DEFAULTS: Preferences = { theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday", recapDismissed: null };
+const DEFAULTS: Preferences = { theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday", recapDismissed: null, yearReviewDismissed: null };
 
 function read(): Preferences {
   try {

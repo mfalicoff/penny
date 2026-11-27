@@ -120,4 +120,18 @@ nonisolated public struct GlowBlob: Equatable, Sendable {
                 light: RGBA(red: 255, green: 140, blue: 120, alpha: 0.22),
                 dark: RGBA(red: 255, green: 140, blue: 120, alpha: 0.22))),
     ]
+    /// The year in review's share image (`.img .g` in the `iphone-year-review-share` cards): copper and
+    /// amber, the same in light and dark, because the image is always light (MAZ-292).
+    public static let shareImage: [GlowBlob] = [
+        GlowBlob(
+            x: 0.30, y: 0.45, radiusX: 0.40, radiusY: 0.45,
+            color: AdaptiveColor(
+                light: RGBA(red: 255, green: 138, blue: 76, alpha: 0.55),
+                dark: RGBA(red: 255, green: 138, blue: 76, alpha: 0.55))),
+        GlowBlob(
+            x: 0.75, y: 0.35, radiusX: 0.35, radiusY: 0.40,
+            color: AdaptiveColor(
+                light: RGBA(red: 255, green: 196, blue: 120, alpha: 0.45),
+                dark: RGBA(red: 255, green: 196, blue: 120, alpha: 0.45))),
+    ]
 }

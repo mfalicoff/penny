@@ -26,6 +26,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as EntriesNewRouteImport } from './routes/entries/new'
 import { Route as HouseholdsIndexRouteImport } from './routes/households/index'
 import { Route as InsightsRecapRouteImport } from './routes/insights_.recap'
+import { Route as InsightsYearReviewRouteImport } from './routes/insights_.year-review'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsCurrencyRouteImport } from './routes/settings/currency'
@@ -124,6 +125,11 @@ const InsightsRecapRoute = InsightsRecapRouteImport.update({
   path: '/insights/recap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsYearReviewRoute = InsightsYearReviewRouteImport.update({
+  id: '/insights_/year-review',
+  path: '/insights/year-review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/insights/recap': typeof InsightsRecapRoute
+  '/insights/year-review': typeof InsightsYearReviewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/insights/recap': typeof InsightsRecapRoute
+  '/insights/year-review': typeof InsightsYearReviewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/insights_/recap': typeof InsightsRecapRoute
+  '/insights_/year-review': typeof InsightsYearReviewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
   '/settings/export': typeof SettingsExportRoute
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/entries/new'
     | '/insights/recap'
+    | '/insights/year-review'
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/entries/new'
     | '/insights/recap'
+    | '/insights/year-review'
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/entries/new'
     | '/insights_/recap'
+    | '/insights_/year-review'
     | '/settings/appearance'
     | '/settings/currency'
     | '/settings/export'
@@ -391,6 +403,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   EntriesNewRoute: typeof EntriesNewRoute
   InsightsRecapRoute: typeof InsightsRecapRoute
+  InsightsYearReviewRoute: typeof InsightsYearReviewRoute
   TripsIdRoute: typeof TripsIdRoute
   HouseholdsIndexRoute: typeof HouseholdsIndexRoute
   TripsIndexRoute: typeof TripsIndexRoute
@@ -517,6 +530,13 @@ declare module '@tanstack/react-router' {
       path: '/insights/recap'
       fullPath: '/insights/recap'
       preLoaderRoute: typeof InsightsRecapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights_/year-review': {
+      id: '/insights_/year-review'
+      path: '/insights/year-review'
+      fullPath: '/insights/year-review'
+      preLoaderRoute: typeof InsightsYearReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/': {
@@ -649,6 +669,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   EntriesNewRoute: EntriesNewRoute,
   InsightsRecapRoute: InsightsRecapRoute,
+  InsightsYearReviewRoute: InsightsYearReviewRoute,
   TripsIdRoute: TripsIdRoute,
   HouseholdsIndexRoute: HouseholdsIndexRoute,
   TripsIndexRoute: TripsIndexRoute,

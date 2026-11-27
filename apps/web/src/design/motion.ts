@@ -135,7 +135,7 @@ export function useCountUp(target: number, from: number = target): { value: numb
 }
 
 /** Children of a period container that stay put: the month control itself, the page's glow and the recap banner (MAZ-292). */
-const STAYS = ".month-bar__inline, .glow, .group-tools, .recap-banner";
+const STAYS = ".month-bar__inline, .glow, .group-tools, .recap-banner, .year-card";
 
 /**
  * Month and period changes: when `period` changes, the content of the container behind `ref` (its

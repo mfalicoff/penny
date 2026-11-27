@@ -27,12 +27,13 @@ function usePageMeta() {
       return {
         title: data.title,
         search: data.search !== false,
+        add: data.add !== false,
         back: data.back,
         backLabel: data.backLabel ?? "Back to Home",
         backWide: data.backWide === true,
       };
   }
-  return { title: "Penny", search: true, back: undefined, backLabel: "Back to Home", backWide: false };
+  return { title: "Penny", search: true, add: true, back: undefined, backLabel: "Back to Home", backWide: false };
 }
 
 const HomePage = lazy(() => import("../../features/home/HomePage").then((module) => ({ default: module.HomePage })));
@@ -153,18 +154,20 @@ export function AppShell() {
           <div className="topbar__spacer" />
           {search ? <TopSearch inputRef={searchRef} /> : null}
           {search ? <SearchButton /> : null}
-          <Button
-            variant="primary"
-            icon="add"
-            shortcut="N"
-            className="topbar__add"
-            aria-keyshortcuts="N"
-            onClick={() => {
-              setAdding(true);
-            }}
-          >
-            <span className="topbar__add-label">Add entry</span>
-          </Button>
+          {meta.add ? (
+            <Button
+              variant="primary"
+              icon="add"
+              shortcut="N"
+              className="topbar__add"
+              aria-keyshortcuts="N"
+              onClick={() => {
+                setAdding(true);
+              }}
+            >
+              <span className="topbar__add-label">Add entry</span>
+            </Button>
+          ) : null}
         </header>
         {demo ? <DemoBanner /> : null}
         <SyncStatusBanner />

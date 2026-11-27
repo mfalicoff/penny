@@ -188,6 +188,49 @@ final class ShellModel {
         recap.dismiss(month)
     }
 
+    // MARK: Year in review (MAZ-292, phase 2)
+
+    /// The year in review on show in its full-screen cover; nil when closed.
+    var yearReview: YearReviewRequest?
+    /// Opens a year's review over the screen (the Insights card, the January banner).
+    func openYearReview(_ year: Int) {
+        recapOpenedCount += 1
+        yearReview = YearReviewRequest(year: year)
+    }
+
+    /// The January banner's close button: that year's banner doesn't come back on this device.
+    func dismissYearReviewBanner(_ year: Int) {
+        recap.dismiss(year: year)
+    }
+
+    /// The months a year in review reads: all twelve, so shared expenses count in each, and the
+    /// households, for the shared trips' and households' names.
+    func refreshYear(_ year: Int) async {
+        await withTaskGroup(of: Void.self) { group in
+            for index in 1...12 {
+                guard let month = MonthKey(year: year, month: index) else { continue }
+                group.addTask { await self.shared.refresh(month) }
+            }
+            if households.isAvailable, households.load != .loading {
+                group.addTask { await self.households.refresh() }
+            }
+        }
+    }
+
+    /// The person's households as the year in review reads them: shared trips with their range.
+    var yearReviewHouseholds: [YearReview.Household] {
+        households.households.map { household in
+            YearReview.Household(
+                id: household.id, memberCount: household.memberCount,
+                trip: household.trip.flatMap { trip in
+                    guard let start = CalendarDate(trip.startDate), let end = CalendarDate(trip.endDate) else {
+                        return nil
+                    }
+                    return TripRange(start: start, end: end)
+                })
+        }
+    }
+
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     static let toastDuration: Duration = .seconds(4)
 
@@ -453,4 +496,10 @@ struct InboxEntryPrefill: Equatable {
     var title: String
     var date: CalendarDate
     var receipt: ReceiptReference
+}
+
+/// The year in review shown in its full-screen cover (MAZ-292, phase 2).
+struct YearReviewRequest: Identifiable, Hashable {
+    let year: Int
+    var id: Int { year }
 }

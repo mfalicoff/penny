@@ -54,3 +54,27 @@ export function SparklesIcon({ size = 20 }: { size?: number }) {
     </span>
   );
 }
+
+/**
+ * Glyphs the year in review's cards draw inline (MAZ-292: `web-year-review`,
+ * `web-year-review-share`), which the kit's Ionicons set doesn't have: share, eye, eye-off and
+ * download. The same drawings, stroked in the current color.
+ */
+const CARD_GLYPHS = {
+  share: ["M336 192h40a40 40 0 0140 40v192a40 40 0 01-40 40H136a40 40 0 01-40-40V232a40 40 0 0140-40h40M336 128l-80-80-80 80M256 321V48"],
+  eye: ["M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z", "M336 256a80 80 0 11-160 0 80 80 0 01160 0z"],
+  "eye-off": ["M432 448L80 64M255.66 112c-77.94 0-157.89 45.11-220.83 135.33a16 16 0 00-.27 17.77C82.92 340.8 161.8 400 255.66 400c92.84 0 173.34-59.38 221.79-135.25a16.14 16.14 0 000-17.47C428.89 172.28 347.8 112 255.66 112z"],
+  download: ["M256 80v256M160 240l96 96 96-96M96 416h320"],
+} as const;
+
+export function CardGlyph({ name, size = 18, weight = 32 }: { name: keyof typeof CARD_GLYPHS; size?: number; weight?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size, ["--sw" as string]: `${String(weight)}px` }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        {CARD_GLYPHS[name].map((d) => (
+          <path key={d} d={d} style={{ fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "var(--sw,32px)" }} />
+        ))}
+      </svg>
+    </span>
+  );
+}

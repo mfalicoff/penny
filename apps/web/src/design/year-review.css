@@ -1,0 +1,626 @@
+/*
+ * The year in review (MAZ-292 phase 2): cards `web-year-review`, `web-insights-year-review`,
+ * `web-year-review-share` and `web-year-review-share-amounts`. Every value comes from the --pk-*
+ * tokens, except the share image's preview frame, which is always light like the image itself.
+ * Panels reuse the recap's (`.recap-panel`). Phones and narrow windows stack the panels; from
+ * 1100px the card's grid.
+ */
+
+/* ---------- the year control and Share your year, in the top bar ---------- */
+.year-bar {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.year-nav {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 36px;
+  padding: 0 2px;
+  border: 1px solid var(--pk-separator);
+  border-radius: 10px;
+  background: var(--pk-surface);
+}
+
+.year-nav .year-nav__step {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+  color: var(--pk-label);
+}
+
+.year-nav__label {
+  min-width: 4.5em;
+  padding-inline: 6px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.year-bar__share {
+  margin-inline-start: auto;
+}
+
+.year-bar__share .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Narrow phones: the year control and the share button don't both fit with its label (WebKit's
+   Inter is a few pixels wider), so the button shows its icon only, keeping its accessible name. */
+@media (max-width: 479px) {
+  .year-bar__share {
+    flex: none;
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .year-bar__share-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Phones and touch: 44px targets. */
+@media (pointer: coarse) {
+  .year-nav {
+    height: 44px;
+    border-radius: 22px;
+  }
+
+  .year-nav .year-nav__step {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 20px;
+  }
+
+  .year-bar__share {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 768px) {
+  .topbar__tools:has(.year-bar) {
+    flex: 1;
+    margin-inline-end: 0;
+  }
+
+  .topbar__tools:has(.year-bar) + .topbar__spacer {
+    display: none;
+  }
+}
+
+/* ---------- the page ---------- */
+.year-review__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (min-width: 1100px) {
+  .year-review__grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .year-months {
+    grid-column: span 2;
+  }
+}
+
+.year-panel {
+  align-content: start;
+}
+
+.year-lead__title {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.card .year-lead__text {
+  margin: 6px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.90625rem;
+}
+
+.year-lead__text strong {
+  color: var(--pk-label);
+  font-weight: 700;
+}
+
+/* Ranked rows: the top categories and Who paid. */
+.year-rank {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.year-lead .year-rank {
+  margin-top: 12px;
+}
+
+.year-rank__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+
+.year-rank__n {
+  width: 16px;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.year-rank .category-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.year-rank__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.year-bar-track {
+  display: block;
+  height: 5px;
+  margin-top: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--pk-fill);
+}
+
+.year-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--tile, var(--pk-label));
+  transform-origin: 0 50%;
+}
+
+.year-paid .year-bar-track i {
+  background: var(--pk-label);
+  opacity: 0.55;
+}
+
+.year-paid .year-bar-track--you i {
+  background: var(--pk-tint);
+  opacity: 1;
+}
+
+.year-rank__value {
+  min-width: 64px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: end;
+}
+
+.year-rank__value > span {
+  display: block;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.year-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.year-avatar .pk-avatar {
+  font-size: 11px !important;
+}
+
+.year-avatar--you .pk-avatar {
+  background: var(--pk-tint);
+}
+
+.year-avatar--gone {
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+/* The busiest month: 12 columns, the busiest in copper. */
+.year-columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 168px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.year-columns__month {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  min-width: 0;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.year-columns__track {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+}
+
+.year-columns__track i {
+  display: block;
+  width: 100%;
+  max-width: 34px;
+  border-radius: 5px 5px 2px 2px;
+  background: var(--pk-label);
+  opacity: 0.22;
+  transform-origin: 50% 100%;
+}
+
+.year-columns__month--busiest {
+  color: var(--pk-tint-text);
+  font-weight: 600;
+}
+
+.year-columns__month--busiest .year-columns__track i {
+  background: var(--pk-tint);
+  opacity: 1;
+}
+
+@media (max-width: 559.98px) {
+  .year-columns {
+    gap: 4px;
+    height: 140px;
+  }
+
+  .year-columns__month {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Trips. */
+.year-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.year-list__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.year-list__row + .year-list__row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.year-list__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.year-list__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.year-list__text strong {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.year-list__text span {
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+}
+
+.year-list__value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: end;
+}
+
+.year-list__value span {
+  display: block;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.card .year-foot {
+  margin: 8px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  line-height: 1.4;
+}
+
+.year-foot strong {
+  color: var(--pk-label);
+  font-weight: 700;
+}
+
+/* A few things about your year. */
+.year-facts__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.year-fact {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  line-height: 1.3;
+}
+
+.year-fact strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--pk-label);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Insights: the year's card ---------- */
+.year-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  padding: 16px 16px 16px 18px;
+}
+
+.year-card > * {
+  position: relative;
+}
+
+.year-card > .year-card__glow {
+  position: absolute;
+  top: -90px;
+  right: -40px;
+  left: -40px;
+  height: 220px;
+  background: var(--pk-glow-copper);
+  filter: blur(34px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.year-card__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.card .year-card__eyebrow {
+  margin: 0;
+  color: var(--pk-tint-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.year-card__title {
+  margin: 3px 0 0;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.card .year-card__message {
+  margin: 3px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.84375rem;
+  line-height: 1.35;
+}
+
+.year-card__open {
+  flex: none;
+}
+
+.year-card__go {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--pk-tint);
+  color: #fff;
+}
+
+/* Below 768px the whole card opens the year (iphone-insights-year-review). */
+.year-card__go::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+}
+
+.year-card--row {
+  position: relative;
+}
+
+.year-card__go:focus-visible,
+.year-card__open:focus-visible,
+.year-bar__share:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .year-card__go {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* ---------- Share your year ---------- */
+.share-year.pk-dialog {
+  width: min(100%, 780px);
+}
+
+.share-year .pk-dialog__body {
+  padding: 22px 24px;
+}
+
+.share-year__body {
+  display: flex;
+  gap: 26px;
+}
+
+.share-year__image {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 270px;
+  height: 480px;
+  overflow: hidden;
+  border-radius: 26px;
+  /* The image is always light, so its frame is too. */
+  background: #fbf7f2;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 14%), 0 0 0 0.5px var(--pk-separator);
+  color: #57524d;
+}
+
+.share-year__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.share-year__failed {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+.share-year__side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.share-year__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+}
+
+.share-year__option-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.share-year__option-text {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.share-year__option-text small {
+  display: block;
+  margin-top: 2px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.share-year__privacy {
+  margin: 14px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.84375rem;
+  line-height: 1.45;
+}
+
+.share-year__rules {
+  margin: 10px 0 0 18px;
+  padding: 0;
+  color: var(--pk-label-2);
+  font-size: 0.84375rem;
+  line-height: 1.6;
+}
+
+.share-year .pk-dialog__foot .wbtn .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Phones: the image above the switch. */
+@media (max-width: 639.98px) {
+  .share-year__body {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .share-year__image {
+    width: min(270px, 100%);
+    height: auto;
+    aspect-ratio: 9 / 16;
+  }
+
+  .share-year__side {
+    width: 100%;
+  }
+}

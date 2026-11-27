@@ -64,6 +64,15 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertTrue(review.cases.contains { $0.expected.previous.spent == nil })
         XCTAssertTrue(review.cases.contains { $0.expected.biggestChanges.contains { $0.percent == nil } })
         XCTAssertFalse(review.banner.isEmpty)
+        let year = try Fixtures.decode(YearReviewFixture.self, from: "year-review.json")
+        XCTAssertTrue(year.cases.allSatisfy { year.ledgers[$0.ledger] != nil && year.projections[$0.projection] != nil })
+        XCTAssertTrue(year.cases.allSatisfy { $0.expected.months.count == 12 })
+        XCTAssertTrue(year.cases.allSatisfy { $0.expected.spent == $0.expected.months.reduce(0) { $0 + $1.spent } })
+        XCTAssertTrue(year.cases.contains { $0.expected.empty && $0.expected.from == nil })
+        XCTAssertTrue(year.cases.contains { $0.expected.shared.payers.contains { $0.payer?.deleted == true } })
+        XCTAssertTrue(year.households.contains { $0.trip != nil })
+        XCTAssertTrue(year.window.contains { $0.year != nil && $0.banner == nil })
+        XCTAssertTrue(year.window.contains { $0.banner != nil })
     }
 
     func testScenarioFixturesDecodeStrictlyAndAgree() throws {

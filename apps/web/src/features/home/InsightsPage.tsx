@@ -16,6 +16,7 @@ import { useMonthTotals } from "./useMonthTotals";
 import { useToday } from "../../app/useToday";
 import { RecapBanner } from "../recap/RecapBanner";
 import { recapMonth } from "../recap/model";
+import { YearReviewCard } from "../year-review/YearReviewCard";
 
 const SIX = 6;
 
@@ -65,6 +66,8 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
         }
       />
       {wide ? <RecapBanner /> : null}
+      {/* web-insights-year-review: the year's card above the month's summary, December 26 to January 31. */}
+      {wide ? <YearReviewCard /> : null}
       {!report ? (
         <LoadingState label="Loading your month…" />
       ) : wide ? (
@@ -105,6 +108,7 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
           {/* iphone-insights: the subtitle under the title says what the screen counts. */}
           <p className="page__subtitle">Spending · your share</p>
           <RecapBanner />
+          <YearReviewCard />
           <SpendingSummary report={report} previous={previous} comparison={comparison} previousMonth={previousMonth} currency={currency} />
           <CategoryList report={report} currency={currency} />
         </>

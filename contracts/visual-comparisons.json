@@ -2788,10 +2788,13 @@
       "id": "iphone-year-review",
       "view": "2026 in review, first page: top categories and the busiest month",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -2804,10 +2807,13 @@
       "id": "iphone-year-review-trips",
       "view": "2026 in review, trips page",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -2820,10 +2826,13 @@
       "id": "iphone-year-review-shared",
       "view": "2026 in review, shared expenses counted by who paid",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -2836,10 +2845,13 @@
       "id": "iphone-year-review-facts",
       "view": "2026 in review, fun facts page",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -2852,10 +2864,13 @@
       "id": "iphone-year-review-share",
       "view": "share your year sheet with amounts and names hidden",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -2868,10 +2883,13 @@
       "id": "iphone-year-review-share-amounts",
       "view": "share your year sheet with amounts and names shown",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-built",
@@ -2884,10 +2902,14 @@
       "id": "iphone-year-review-share-sheet",
       "view": "the system share sheet with the year image",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "The system share sheet is iOS chrome: its header names the file (\"My 2026 in Penny.png\") and its apps and actions are the simulator's."
       },
       "web": {
         "status": "not-applicable",
@@ -2899,10 +2921,14 @@
       "id": "iphone-insights-year-review",
       "view": "insights on December 28 with the 2026 in review entry point",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured on December 28 with alex's seed: December has nothing recorded yet, so the month below the card is the empty state."
       },
       "web": {
         "status": "not-built",
@@ -4707,10 +4733,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured on December 28 with alex: top categories, the busiest month with all 12 columns (months with nothing recorded have no column), two trips, who paid in Maison and the Lisbon trip, and the four fun facts the card draws."
       }
     },
     {
@@ -4722,10 +4752,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured on December 28 with alex: the dialog with the image made in the browser (always light), Show amounts and names off, the privacy copy, Copy image and Download."
       }
     },
     {
@@ -4737,10 +4771,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured on December 28 with alex, Show amounts and names on: the total, category amounts, the busiest month amount and who paid by first name. alex shares with one person, so there is no third payer on the image."
       }
     },
     {
@@ -4752,10 +4790,14 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-292",
-        "note": "Draft card (MAZ-292) for the owner's review. The recap and the year in review aren't built yet.",
-        "followUp": "MAZ-292"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "note": "Captured with the browser clock on December 28, so Insights offers the 2026 in review card above the month summary; alex has no December spending, so the month below differs in values only."
       }
     },
     {

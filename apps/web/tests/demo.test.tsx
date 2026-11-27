@@ -101,11 +101,11 @@ describe("demo server", () => {
   it("pages search results with an opaque cursor, newest first", async () => {
     const server = createDemoServer(new Date(2026, 10, 25));
     const first = await call(server, "POST", "/api/v1/search/transactions", { pageSize: 4 });
-    expect(first.body.totalCount).toBe(sampleEntries().length);
+    expect(first.body.totalCount).toBe(sampleEntries(new Date(2026, 10, 25)).length);
     expect(first.body.nextCursor).toBe("4");
     const dates = (first.body.items as { entry: { date: string } }[]).map((item) => item.entry.date);
     expect(dates).toEqual([...dates].sort().reverse());
-    const last = await call(server, "POST", "/api/v1/search/transactions", { pageSize: 50, cursor: "8" });
+    const last = await call(server, "POST", "/api/v1/search/transactions", { pageSize: 200, cursor: "8" });
     expect(last.body.nextCursor).toBeNull();
   });
 

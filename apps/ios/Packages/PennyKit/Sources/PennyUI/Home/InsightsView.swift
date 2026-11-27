@@ -18,14 +18,18 @@ struct InsightsView: View {
             let summary = report.month(shell.month, today: shell.today)
             let breakdown = CategoryBreakdown(summary)
             let currency = ledger.currency.rawValue
-            let recapMonth = shell.recap.bannerMonth(today: shell.today, report: report)
+            let recapBanner = shell.recap.banner(today: shell.today, report: report)
+            let yearReview = YearReviewText.offeredYear(today: shell.today, report: report)
             ScrollView {
                 // The month's content slides in from the side its month comes from (MAZ-287).
                 ZStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 20) {
                         Text("Spending · your share").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                        // Last month's recap, during the first 7 days of a month (MAZ-292).
-                        RecapBanner(month: recapMonth)
+                        // Last month's recap, during the first 7 days of a month, or in January last
+                        // year's review in its place (MAZ-292).
+                        RecapBanner(item: recapBanner)
+                        // "2026 in review", from December 26 to January 31 (`iphone-insights-year-review`).
+                        YearReviewCard(year: yearReview)
                         if breakdown.isEmpty {
                             PennyStateView(
                                 .empty, title: "No spending in \(MonthPicker.title(shell.month, long: false))",
@@ -42,7 +46,8 @@ struct InsightsView: View {
                     }
                     .pennyMonthContent(shell.month, earlier: shell.monthMovedEarlier)
                 }
-                .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: recapMonth)
+                .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: recapBanner)
+                .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: yearReview)
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 24)
                 .frame(maxWidth: 900)

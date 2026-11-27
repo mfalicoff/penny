@@ -323,6 +323,135 @@ public struct MonthReviewFixture: Codable, Equatable, Sendable {
     }
 }
 
+/// year-review.json (MAZ-292, phase 2): the year in review, and the days it's offered on.
+public struct YearReviewFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    /// The person's households (`GET /api/households`), for shared trips and where shared
+    /// expenses were paid.
+    public var households: [Household]
+    public var ledgers: [String: Ledger]
+    /// Named household projections (the server's personal projection rows).
+    public var projections: [String: [MonthReviewFixture.ProjectedExpense]]
+    public var cases: [Case]
+    public var window: [Window]
+
+    public struct Household: Codable, Equatable, Sendable {
+        public var id: String
+        public var name: String
+        public var memberCount: Int
+        public var trip: Range?
+    }
+
+    public struct Range: Codable, Equatable, Sendable {
+        public var startDate: String
+        public var endDate: String
+    }
+
+    public struct Case: Codable, Equatable, Sendable {
+        public var name: String
+        /// A key of `ledgers`.
+        public var ledger: String
+        /// A key of `projections`.
+        public var projection: String
+        public var year: String
+        /// The person's local date.
+        public var today: String
+        public var expected: Review
+    }
+
+    public struct Month: Codable, Equatable, Sendable {
+        public var month: String
+        public var spent: Int64
+    }
+
+    public struct Category: Codable, Equatable, Sendable {
+        public var key: String
+        public var name: String
+        public var icon: String
+        public var color: String
+        public var amount: Int64
+        public var share: Int
+    }
+
+    public struct Trip: Codable, Equatable, Sendable {
+        public var id: String
+        /// "personal" or "shared".
+        public var kind: String
+        public var startDate: String
+        public var endDate: String
+        public var days: Int
+        public var share: Int64
+        public var sharedWith: Int
+    }
+
+    public struct Trips: Codable, Equatable, Sendable {
+        public var list: [Trip]
+        public var daysAway: Int
+        public var share: Int64
+        public var longestId: String?
+        public var costliestId: String?
+    }
+
+    public struct Payer: Codable, Equatable, Sendable {
+        /// "you", or the payer's email in lower case.
+        public var key: String
+        public var you: Bool
+        public var payer: MonthReviewFixture.Payer?
+        public var count: Int
+        public var householdIds: [String]
+    }
+
+    public struct Shared: Codable, Equatable, Sendable {
+        public var count: Int
+        public var paidByYouPercent: Int
+        public var payers: [Payer]
+        public var householdIds: [String]
+        public var othersPaid: Int64
+    }
+
+    public struct FrequentCategory: Codable, Equatable, Sendable {
+        public var key: String
+        public var name: String
+        public var icon: String
+        public var color: String
+        public var count: Int
+    }
+
+    public struct Facts: Codable, Equatable, Sendable {
+        public var daysWithoutSpending: Int
+        public var longestRun: MonthReviewFixture.Run?
+        public var expensesRecorded: Int
+        public var perWeek: Int
+        /// ISO weekday, 1 Monday … 7 Sunday.
+        public var busiestWeekday: Int?
+        public var mostFrequentCategory: FrequentCategory?
+    }
+
+    public struct Review: Codable, Equatable, Sendable {
+        public var year: String
+        public var empty: Bool
+        public var from: String?
+        public var to: String
+        public var spent: Int64
+        public var months: [Month]
+        public var busiestMonth: Month?
+        public var monthlyAverage: Int64
+        public var topCategories: [Category]
+        public var trips: Trips
+        public var shared: Shared
+        public var facts: Facts
+    }
+
+    /// A local date, the year the year in review is offered for then, and the year of the
+    /// January banner (nil: none).
+    public struct Window: Codable, Equatable, Sendable {
+        public var today: String
+        public var year: String?
+        public var banner: String?
+    }
+}
+
 /// shared-splits.json
 public struct SharedSplitsFixture: Codable, Equatable, Sendable {
     public var description: String
