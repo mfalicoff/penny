@@ -353,7 +353,7 @@ Behavior (approved with the cards):
 
 ## Drafted cards: entries and shared trips in several currencies (MAZ-270, 2026-11-26)
 
-Each entry can be recorded in the currency it was paid in, while the ledger keeps one home currency for its totals (the design is MAZ-151's, confirmed by the owner on 2026-11-26). These 26 cards draw it on iPhone, iPad and the web, light and dark, after the add expense, Recent, Activity, entry detail, trip, trip form and Settings › Currency cards. **Drafted for the owner's review; nothing is built yet.** [Motion](motion.md#entries-in-several-currencies-maz-151) covers how each new moment animates.
+Each entry can be recorded in the currency it was paid in, while the ledger keeps one home currency for its totals (the design is MAZ-151's, confirmed by the owner on 2026-11-26). These 26 cards draw it on iPhone, iPad and the web, light and dark, after the add expense, Recent, Activity, entry detail, trip, trip form and Settings › Currency cards. **Approved by the owner (2026-11-26)** as drawn, with the decisions below. Nothing is built yet. [Motion](motion.md#entries-in-several-currencies-maz-151) covers how each new moment animates.
 
 The sample: Max's home currency is CAD, today is Monday, Nov 9, and the shared Lisbon trip (Nov 12–19, EUR) is booked ahead. Rates are illustrative ECB reference rates: EUR 1.4612 CAD on Nov 3, 1.4630 on Friday Nov 6 (the latest before today's is published), USD 1.3730 on Oct 2.
 
@@ -377,11 +377,11 @@ Behavior the cards assume (from MAZ-151 and the owner's 2026-11-26 rules):
 - **Rounding:** the home amount is rounded once, to the home currency's minor units; split shares come from that rounded total with the existing remainder rule (`$373.25` over 4 is $93.31 for you).
 - **Shared trips:** each member's share is converted into their own home currency; balances and suggested payments use the trip's settle-up currency, each expense at its own date's rate.
 
-Open questions for the owner:
+Owner decisions (2026-11-26):
 
-1. **Which amount leads in lists.** The cards lead with the home amount in Recent and Activity and with the original on the trip and in a trip entry's detail. MAZ-151 says "the original first while on a trip": should Recent and Activity switch to the original first while a trip is under way?
-2. **Settle-up currency.** The cards make the trip's currency both the default for new expenses and the settle-up currency, changed from Balances or the trip form. Should they be two settings?
-3. **Rates off.** The cards require a rate (Save disabled until one is entered) and suggest the last one used. Is a 1:1 fallback, or saving without a rate, wanted instead?
+1. **Which amount leads.** As drawn: the home amount first in Recent and Activity, the original first on trip screens and in a trip entry's detail.
+2. **One trip currency.** It's the default for new expenses and also the settle-up currency, switchable on the settle screen (Settle in EUR).
+3. **Rates off.** A rate is required: Penny suggests the last one used, and Save stays disabled until there's one.
 
 ## Review scenarios
 

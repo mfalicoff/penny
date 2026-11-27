@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "d5edbc188463f17887f2d4fde6405b4be9a46d8cf53aa74125dd634db130e064"
+      "sha256": "60220703fbdd587b136b749df36beb0f70b13fcdb3d6911e14c9c30276171e0d"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "67b003177083c1f491f51b5295d74fc60ee74f2fecf3bce4cbb81643687e809d"
+      "sha256": "fd5bb7d29025c9e81e809492db6f35469cdc50a0b71b34e328e1f0d3ab263326"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "c31b9331f00c453cce9da4caee497517ddcd9b28540dc4ef7874c141cb253ed4"
+      "sha256": "81644ced11f2e7964145a51bfbd6d7c466c64a2f76097753928a74991ede87b8"
     }
   ],
   "tokens": {
