@@ -2083,6 +2083,11 @@
             "summary": "The home currency note adds “Each entry can be in any currency.”, as web-currency draws it, after the footer the iPhone card draws",
             "kind": "follow-up",
             "ref": "MAZ-151"
+          },
+          {
+            "summary": "Each section is a panel with its heading inside, and the exchange-rates explanation is a boxed note with an icon, where the card draws inset lists with headings above and plain footnotes",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
           }
         ]
       }
