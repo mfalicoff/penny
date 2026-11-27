@@ -13,7 +13,7 @@ using Pgvector;
 namespace Penny.Backend.Persistence.Migrations
 {
     [DbContext(typeof(PennyDbContext))]
-    [Migration("20261127122249_AddEntryCurrencies")]
+    [Migration("20261127172724_AddEntryCurrencies")]
     partial class AddEntryCurrencies
     {
         /// <inheritdoc />
@@ -1063,6 +1063,32 @@ namespace Penny.Backend.Persistence.Migrations
                             t.HasCheckConstraint("ck_ledger_categories_kind", "kind IN ('income','expense','investment')");
 
                             t.HasCheckConstraint("ck_ledger_categories_name", "length(name) BETWEEN 0 AND 50");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerDismissedSuggestion", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text")
+                        .HasColumnName("value")
+                        .UseCollation("C");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.HasKey("UserId", "Value");
+
+                    b.ToTable("ledger_dismissed_suggestions", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_ledger_dismissed_suggestions_position", "position BETWEEN 0 AND 499");
+
+                            t.HasCheckConstraint("ck_ledger_dismissed_suggestions_value", "length(value) BETWEEN 1 AND 200");
                         });
                 });
 
@@ -2788,6 +2814,14 @@ namespace Penny.Backend.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerCategory", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.Ledger", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.LedgerDismissedSuggestion", b =>
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.Ledger", null)
                         .WithMany()
