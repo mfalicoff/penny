@@ -45,6 +45,14 @@ public struct Ledger: Codable, Equatable, Sendable {
         public var recurringId: String?
         public var date: String
         public var note: String
+        /// Contract 2.4.0 (MAZ-151): the amount paid in another currency, in its minor units,
+        /// with the rate that converted it to `total`. All four or none.
+        public var originalAmount: Int64?
+        public var originalCurrency: String?
+        public var rate: String?
+        public var rateStatus: String?
+        /// Absent for an edited rate.
+        public var rateDate: String?
     }
 
     public struct Recurring: Codable, Equatable, Sendable {
@@ -61,5 +69,11 @@ public struct Ledger: Codable, Equatable, Sendable {
         public var nextDate: String
         public var anchorDay: Int
         public var active: Bool
+        /// Never valid on a rule (contract 2.4.0); declared so currency.json's invalid ledger decodes.
+        public var originalAmount: Int64?
+        public var originalCurrency: String?
+        public var rate: String?
+        public var rateStatus: String?
+        public var rateDate: String?
     }
 }

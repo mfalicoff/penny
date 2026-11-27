@@ -3023,6 +3023,442 @@
           "expense|gym|monthly|4500"
         ]
       }
+    },
+    {
+      "name": "currency: a local rate edit keeps its whole amount group over a remote amount change",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7022,
+            "share": 7022,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.463",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-06"
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12665,
+            "share": 12665,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.49",
+            "rateStatus": "edited"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7022,
+            "share": 7022,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.463",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-06"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 13151,
+            "share": 13151,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "Remote",
+            "originalAmount": 9000,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7022,
+            "share": 7022,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.463",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-06"
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12665,
+            "share": 12665,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "Remote",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.49",
+            "rateStatus": "edited"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7022,
+            "share": 7022,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.463",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-06"
+          }
+        ]
+      }
+    },
+    {
+      "name": "currency: a provisional rate made final remotely survives a local note edit",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7022,
+            "share": 7022,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.463",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-06"
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7022,
+            "share": 7022,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "Local",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.463",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-06"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7034,
+            "share": 7034,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.4655",
+            "rateStatus": "published",
+            "rateDate": "2026-11-09"
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "cafe",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          },
+          {
+            "id": "museum",
+            "title": "Museum passes",
+            "kind": "expense",
+            "total": 7034,
+            "share": 7034,
+            "categoryId": "food",
+            "date": "2026-11-09",
+            "note": "Local",
+            "originalAmount": 4800,
+            "originalCurrency": "EUR",
+            "rate": "1.4655",
+            "rateStatus": "published",
+            "rateDate": "2026-11-09"
+          }
+        ]
+      }
     }
   ]
 }

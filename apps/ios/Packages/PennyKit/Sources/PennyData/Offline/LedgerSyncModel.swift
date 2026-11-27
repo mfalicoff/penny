@@ -124,6 +124,10 @@ public final class LedgerSyncModel {
     /// returning and the app becoming active wait for it; `syncNow()` does not.
     @ObservationIgnored private var serverWaitUntil: ContinuousClock.Instant?
     @ObservationIgnored private var monitors: [Task<Void, Never>] = []
+    /// Provisional rates (MAZ-151): a replacement pass is running, and when each date was last
+    /// found still provisional on the server, so it isn't asked again on every sync.
+    @ObservationIgnored private var finalizingRates = false
+    @ObservationIgnored private var provisionalCheckedAt: [PennyDomain.CalendarDate: ContinuousClock.Instant] = [:]
 
     public init(
         auth: AuthController, store: OfflineLedgerStore, network: any NetworkMonitoring = SystemNetworkMonitor(),
@@ -298,6 +302,7 @@ public final class LedgerSyncModel {
             // Saves kept arriving while the sync ran (it stops after a few passes): send the
             // rest shortly rather than waiting for the next trigger.
             if engineState?.pending.isEmpty == false { scheduleRetry(after: backoff.initial) }
+            finalizeProvisionalRates(for: account)
         case .sessionExpired:
             auth.sessionDidExpire(for: account)
         case .failed(let issue):
@@ -312,6 +317,34 @@ public final class LedgerSyncModel {
             break
         }
         refreshState()
+    }
+
+    /// After a sync: entries whose provisional rate the server can now make final are converted
+    /// again at the published rate and saved like any change (pending, merged, synced). Edited
+    /// rates are never touched (`ProvisionalRates`).
+    private func finalizeProvisionalRates(for account: SignedInAccount) {
+        guard !finalizingRates, let ledger, let client = auth.client, client.scope == account.scope else { return }
+        let instant = now()
+        let dates = ProvisionalRates.dates(in: ledger).filter { date in
+            provisionalCheckedAt[date].map { instant - $0 > .seconds(3600) } ?? true
+        }
+        guard !dates.isEmpty else { return }
+        finalizingRates = true
+        let current = generation
+        Task {
+            defer { finalizingRates = false }
+            for date in dates {
+                guard current == generation, let home = self.ledger?.currency,
+                    let answer = try? await client.exchangeRates(base: home.rawValue, date: date),
+                    current == generation, let latest = self.ledger
+                else { return }
+                let updates = ProvisionalRates.finalized(latest, date: date, answer: answer)
+                if updates.isEmpty { provisionalCheckedAt[date] = now() }
+                for update in updates {
+                    _ = try? await save(.finalizeRate(update.updated, original: update.original))
+                }
+            }
+        }
     }
 
     private func scheduleRetry(after delay: Duration) {

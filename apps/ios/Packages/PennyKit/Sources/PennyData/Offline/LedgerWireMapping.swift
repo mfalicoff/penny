@@ -49,6 +49,15 @@ extension Ledger {
         var transactions: [LedgerEntry] = []
         transactions.reserveCapacity(wire.transactions.count)
         for entry in wire.transactions {
+            var rateStatus: RateStatus?
+            if let status = entry.rateStatus {
+                guard let known = RateStatus(rawValue: status) else {
+                    throw .invalidValue(field: "transactions.rateStatus", value: status)
+                }
+                rateStatus = known
+            }
+            var rateDate: PennyDomain.CalendarDate?
+            if let text = entry.rateDate { rateDate = try date(text, "transactions.rateDate") }
             transactions.append(
                 LedgerEntry(
                     id: entry.id, title: entry.title, kind: kind(entry.kind), total: entry.total, share: entry.share,
@@ -58,7 +67,9 @@ extension Ledger {
                     receipt: entry.receipt.map {
                         ReceiptReference(id: $0.id, name: $0.name, uri: $0.uri, mime: $0.mime)
                     },
-                    recurringId: entry.recurringId))
+                    recurringId: entry.recurringId, originalAmount: entry.originalAmount,
+                    originalCurrency: entry.originalCurrency, rate: entry.rate, rateStatus: rateStatus,
+                    rateDate: rateDate))
         }
         var recurring: [RecurringRule] = []
         for rule in wire.recurring {
@@ -111,7 +122,9 @@ extension WireLedger {
                     participants: $0.participants,
                     categoryId: $0.categoryId, accountId: $0.accountId, tripId: $0.tripId, recurringId: $0.recurringId,
                     date: $0.date.description, note: $0.note,
-                    receipt: $0.receipt.map { WireReceipt(id: $0.id, name: $0.name, mime: $0.mime, uri: $0.uri) })
+                    receipt: $0.receipt.map { WireReceipt(id: $0.id, name: $0.name, mime: $0.mime, uri: $0.uri) },
+                    originalAmount: $0.originalAmount, originalCurrency: $0.originalCurrency, rate: $0.rate,
+                    rateStatus: $0.rateStatus?.rawValue, rateDate: $0.rateDate?.description)
             },
             recurring: ledger.recurring.map {
                 WireRecurring(

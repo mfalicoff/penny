@@ -9,7 +9,8 @@ namespace Penny.Backend.Application.Exports;
 // full export's `entries.csv`. Personal entries and the person's share of recorded shared
 // expenses, oldest first, in a form spreadsheets open as is: RFC 4180 quoting, CRLF line
 // ends and a UTF-8 byte order mark. Amounts are positive decimals in the ledger's
-// currency (the type says which way the money went). Text a spreadsheet would read as a
+// currency (the type says which way the money went); an entry paid in another currency
+// also has its original amount (in that currency's minor units), currency and rate. Text a spreadsheet would read as a
 // formula starts with an apostrophe, so a title such as "=1+1" stays text.
 public static class EntriesCsv
 {
@@ -26,6 +27,10 @@ public static class EntriesCsv
         "Household",
         "Trip",
         "Note",
+        // Contract 2.4.0: an entry paid in another currency; empty otherwise.
+        "Original amount",
+        "Original currency",
+        "Exchange rate",
     ];
 
     private static readonly Dictionary<string, string> Kinds = new(StringComparer.Ordinal)
@@ -82,6 +87,11 @@ public static class EntriesCsv
                         "",
                         entry.TripId is { } trip ? trips.GetValueOrDefault(trip, "") : "",
                         entry.Note,
+                        entry.Foreign is { } foreign
+                            ? Amount(foreign.OriginalAmount, foreign.OriginalCurrency)
+                            : "",
+                        entry.Foreign?.OriginalCurrency ?? "",
+                        entry.Foreign?.Rate ?? "",
                     ]
                 )
             );
@@ -108,6 +118,9 @@ public static class EntriesCsv
                         expense.HouseholdName,
                         "",
                         expense.Note,
+                        "",
+                        "",
+                        "",
                     ]
                 )
             );
@@ -125,6 +138,20 @@ public static class EntriesCsv
     // "48.90" from 4890 cents.
     public static string Money(long cents) =>
         (cents / 100m).ToString("0.00", CultureInfo.InvariantCulture);
+
+    // "85.00" from 8500 euro cents, "13700" from 13700 yen, "1.234" from 1234 fils.
+    public static string Amount(long minor, string currency)
+    {
+        var units = Currencies.MinorUnits(currency);
+        var divisor = 1m;
+        for (var place = 0; place < units; place++)
+            divisor *= 10;
+        var value = minor / divisor;
+        return value.ToString(
+            units == 0 ? "0" : "0." + new string('0', units),
+            CultureInfo.InvariantCulture
+        );
+    }
 
     public static string Cell(string value)
     {

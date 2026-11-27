@@ -99,6 +99,7 @@ export const ERROR_CODES = [
   "rate_limit.invite",
   "rate_limit.search",
   "rate_limit.telemetry",
+  "rates.invalid_request",
   "receipt.changed",
   "receipt.invalid_name",
   "receipt.not_found",

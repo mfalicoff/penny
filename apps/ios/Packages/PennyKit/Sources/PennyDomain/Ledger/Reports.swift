@@ -137,8 +137,16 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     public var recurringId: String?
     /// Not recorded yet: a preview, never cash.
     public var scheduled: Bool
+    /// A personal entry paid in another currency (MAZ-151): the amount in that currency's minor
+    /// units, the currency and how final its rate is. Nil for a home entry and a shared row.
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rateStatus: RateStatus?
 
     init(personal entry: LedgerEntry, scheduled: Bool) {
+        originalAmount = entry.originalAmount
+        originalCurrency = entry.originalCurrency
+        rateStatus = entry.rateStatus
         id = entry.id
         source = .personal
         kind = entry.kind
@@ -178,6 +186,9 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         payerEmail = item.payerEmail
         recurringId = item.recurringId
         scheduled = item.scheduled
+        originalAmount = nil
+        originalCurrency = nil
+        rateStatus = nil
     }
 
     /// Income dated after `today` (the person's local date): expected, not recorded (MAZ-136).

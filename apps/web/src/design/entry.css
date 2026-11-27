@@ -999,3 +999,410 @@
     border-radius: 22px;
   }
 }
+
+/* ---------- another currency (MAZ-151: web-add-entry-currency, web-entry-rate-*) ---------- */
+.amount-hero__head {
+  display: grid;
+  justify-items: center;
+}
+
+/* The web card: the currency chip sits beside the amount. */
+.entry-dialog--desktop .amount-hero__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.currency-menu-anchor {
+  position: relative;
+  display: inline-flex;
+  margin-top: 6px;
+}
+
+.entry-dialog--desktop .currency-menu-anchor {
+  top: -10px;
+  margin-top: 0;
+}
+
+.currency-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+  font: 600 0.8125rem var(--pk-font);
+  cursor: pointer;
+}
+
+.entry-dialog--desktop .currency-chip {
+  border-radius: 8px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label);
+  font-size: 0.84375rem;
+  font-weight: 700;
+}
+
+.currency-chip .icon {
+  color: var(--pk-label-2);
+}
+
+.currency-chip--open,
+.entry-dialog--desktop .currency-chip--open {
+  box-shadow: inset 0 0 0 1.5px var(--pk-tint);
+}
+
+.currency-chip:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .currency-chip {
+    min-height: 44px;
+  }
+}
+
+.currency-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 30;
+  width: min(300px, calc(100vw - 48px));
+  max-height: min(60vh, 420px);
+  overflow: auto;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--pk-surface);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.22), 0 0 0 0.5px var(--pk-separator);
+  text-align: start;
+  transform: translateX(-50%);
+}
+
+.entry-dialog--desktop .currency-menu {
+  left: 0;
+  transform: none;
+}
+
+.currency-menu__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin-bottom: 4px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.currency-menu__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.84375rem;
+  outline: none;
+}
+
+.currency-menu__search input::placeholder {
+  color: var(--pk-label-2);
+}
+
+.currency-menu__search:focus-within {
+  box-shadow: inset 0 0 0 1.5px var(--pk-tint);
+}
+
+.currency-menu__heading {
+  margin: 0;
+  padding: 8px 8px 4px;
+  color: var(--pk-label-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.currency-menu__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.currency-menu__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--pk-label);
+  font: 400 0.84375rem var(--pk-font);
+  text-align: start;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .currency-menu__option {
+    min-height: 44px;
+  }
+}
+
+.currency-menu__option:hover,
+.currency-menu__option:focus-visible {
+  background: var(--pk-fill);
+  outline: none;
+}
+
+.currency-menu__option:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--pk-tint);
+}
+
+.currency-menu__option--on,
+.currency-menu__option--on:hover {
+  background: var(--pk-tint-soft);
+}
+
+.currency-menu__option[aria-disabled="true"] {
+  color: var(--pk-label-3);
+  cursor: default;
+}
+
+.currency-menu__code {
+  flex: none;
+  width: 36px;
+  font-weight: 700;
+}
+
+.currency-menu__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currency-menu__aside {
+  flex: none;
+  margin-left: auto;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.currency-menu__option .icon {
+  flex: none;
+  color: var(--pk-tint);
+}
+
+.currency-menu__aside + .icon {
+  margin-left: 0;
+}
+
+.currency-menu__name + .icon {
+  margin-left: auto;
+}
+
+.currency-menu__note,
+.currency-menu__empty {
+  display: flex;
+  gap: 6px;
+  margin: 4px 8px 6px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* "≈ $124.20 CAD": tabular figures, so its width doesn't jitter as you type. */
+.amount-hero__conversion {
+  margin: 2px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.entry-rate.entry-row {
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 52px;
+  padding-block: 6px;
+}
+
+.entry-dialog--desktop .entry-rate.entry-row {
+  height: auto;
+  min-height: 52px;
+  padding-block: 6px;
+}
+
+.entry-rate--edited.entry-row,
+.entry-dialog--desktop .entry-rate--edited.entry-row {
+  padding-block: 10px;
+}
+
+.entry-rate .entry-row__value {
+  transition: opacity var(--pk-dur-standard) var(--pk-ease-standard);
+}
+
+/* A new date or currency: the old rate stays, dimmed, until the new one arrives (no spinner). */
+.entry-rate--refreshing .entry-row__value {
+  opacity: 0.5;
+}
+
+.entry-rate__lines {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  text-align: end;
+}
+
+.entry-rate__lines b {
+  color: var(--pk-label);
+  font-weight: 600;
+}
+
+.entry-rate__lines small {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0 6px;
+  font-size: 0.75rem;
+}
+
+.entry-rate__tag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.entry-rate__tag .icon {
+  width: 10px !important;
+  height: 10px !important;
+  color: inherit !important;
+}
+
+.entry-rate__tag--provisional {
+  background: var(--pk-pending-soft);
+  color: var(--pk-pending);
+}
+
+.entry-rate__tag--edited {
+  margin-left: -4px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.entry-rate__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-tint-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entry-rate__link:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.entry-rate__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pk-label-2);
+}
+
+.entry-rate__input {
+  width: 92px;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--pk-surface);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  caret-color: var(--pk-tint);
+}
+
+.entry-rate__input:focus,
+.entry-rate__input:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--pk-tint);
+  outline: 0;
+}
+
+.entry-rate__input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--pk-danger);
+}
+
+.entry-rate__sub {
+  display: flex;
+  flex-basis: 100%;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0 0 30px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.entry-dialog--desktop .entry-rate__sub {
+  padding-left: 27px;
+}
+
+.entry-rate .form-error {
+  flex-basis: 100%;
+  padding-left: 30px;
+}
+
+.entry-rate-note {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  line-height: 17px;
+}
+
+.entry-rate-note > .icon {
+  flex: none;
+  width: 14px !important;
+  height: 14px !important;
+  margin-top: 1px;
+  color: var(--pk-pending);
+}
+
+.entry-rate-note--manual > .icon {
+  color: var(--pk-label-2);
+}
+
+.entry-dialog--desktop .entry-dialog__details > .entry-rate-note {
+  margin-top: -4px;
+}
+
+/* Save looks unavailable until there's a rate; pressing it shakes the Rate row and says why. */
+.wbtn--primary.wbtn--unready {
+  opacity: 0.45;
+}

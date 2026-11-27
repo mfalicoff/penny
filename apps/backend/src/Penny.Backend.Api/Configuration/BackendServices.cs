@@ -14,6 +14,7 @@ using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Api.Mail;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Api.Push;
+using Penny.Backend.Api.Rates;
 using Penny.Backend.Api.Receipts;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Api.Testing;
@@ -31,6 +32,7 @@ using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Application.Mail;
 using Penny.Backend.Application.Profiles;
 using Penny.Backend.Application.Push;
+using Penny.Backend.Application.Rates;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Domain.Errors;
@@ -136,6 +138,7 @@ public static class BackendServices
             builder.Services,
             EmailOptions.Read(configuration, AuthOptions.Read(configuration))
         );
+        AddExchangeRateServices(builder.Services, ExchangeRatesOptions.Read(configuration));
         AddInboundMailServices(
             builder.Services,
             InboundMailOptions.Read(configuration),
@@ -226,6 +229,39 @@ public static class BackendServices
         services.AddSingleton<SharedRecurrenceRunner>();
         if (recurrence.Worker)
             services.AddHostedService<SharedRecurrenceWorker>();
+    }
+
+    // Reference exchange rates (MAZ-151): the cache and GET /api/rates always exist (and
+    // answer `enabled: false` while `ExchangeRates__Enabled` is false); the ECB fetch runs
+    // when enabled, unless `ExchangeRates__Worker=false`. Fetches follow no redirects, are
+    // bounded and are not logged.
+    private static void AddExchangeRateServices(
+        IServiceCollection services,
+        ExchangeRatesOptions rates
+    )
+    {
+        services.AddSingleton(rates);
+        services.AddSingleton(rates.Settings);
+        services.AddSingleton<IExchangeRateRepository, PostgresExchangeRateRepository>();
+        services.AddSingleton<ExchangeRateService>();
+        services
+            .AddHttpClient(ExchangeRateRefresher.HttpClientName, client =>
+                client.Timeout = TimeSpan.FromSeconds(60)
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { AllowAutoRedirect = false }
+            )
+            .RemoveAllLoggers();
+        services.AddSingleton(provider => new ExchangeRateRefresher(
+            provider
+                .GetRequiredService<IHttpClientFactory>()
+                .CreateClient(ExchangeRateRefresher.HttpClientName),
+            provider.GetRequiredService<IExchangeRateRepository>(),
+            rates.Settings,
+            provider.GetRequiredService<TimeProvider>()
+        ));
+        if (rates.Settings.Enabled && rates.Worker)
+            services.AddHostedService<ExchangeRateWorker>();
     }
 
     // Emailed receipts (MAZ-184): the address API and the signed ingress always exist and

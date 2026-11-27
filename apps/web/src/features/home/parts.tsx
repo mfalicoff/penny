@@ -15,6 +15,7 @@ import { useToastEntry } from "../../design/states";
 import { leavingProps, useFadingHighlight, useListMotion } from "../../design/motion";
 import { categoryIcon, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
+import { isProvisional, OriginalAmount } from "../entries/OriginalAmount";
 import { currentMonth, dayLabel, monthLabel, shiftMonth } from "../households/model";
 import { groupSmall, isSharedEntry, percentOf } from "./model";
 
@@ -202,6 +203,13 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
           <>
             <time dateTime={entry.date}>{recentDay(entry.date, today)}</time>
             {recentMeta.length ? ` · ${recentMeta.join(" · ")}` : ""}
+            {/* iphone-home-currencies: an entry converted at a provisional rate says so, in amber with the words. */}
+            {!shared && isProvisional(entry) ? (
+              <>
+                {" · "}
+                <span className="results__provisional">provisional rate</span>
+              </>
+            ) : null}
           </>
         ) : (
           <>
@@ -230,6 +238,8 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
               )}
               {/* iphone-home: a Recent row that says "split N ways" needs no "your share" under its amount. */}
               {shared || (entry.share !== entry.total && !(recentRow && splitWays)) ? <span className="results__sub">your share</span> : null}
+              {/* MAZ-151: the home amount leads, the amount it was paid in under it ("€48.00", "US$34.99"). */}
+              {shared ? null : <OriginalAmount entry={entry} home={currency} marker={!(recent && !entry.scheduled && !expected)} />}
             </span>
           </>
         );

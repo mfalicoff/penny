@@ -87,7 +87,12 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                     row.EntryDate,
                     row.Note,
                     row.ReceiptId,
-                    row.RecurringId
+                    row.RecurringId,
+                    row.OriginalAmount,
+                    row.OriginalCurrency,
+                    row.Rate,
+                    row.RateStatus,
+                    row.RateDate
                 ))
                 .ToListAsync(cancellationToken),
             await context
@@ -235,6 +240,11 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                 Note = entry.Note,
                 ReceiptId = entry.ReceiptId,
                 RecurringId = entry.RecurringId,
+                OriginalAmount = entry.OriginalAmount,
+                OriginalCurrency = entry.OriginalCurrency,
+                Rate = entry.Rate,
+                RateStatus = entry.RateStatus,
+                RateDate = entry.RateDate,
             }),
             row => row.Id,
             cancellationToken,

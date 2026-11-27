@@ -15,6 +15,9 @@
 /// - Currency: a local change wins, otherwise the server's.
 /// - Dismissed suggestions (contract 2.3.0): a set union of both sides, less what this device
 ///   undid since the base (`RecurringSuggestions.mergeDismissals`).
+/// - An entry in another currency (MAZ-151) merges `total`, `share`, `participants` and its
+///   original amount, currency, rate, rate status and rate date as one group: when this device
+///   edited any of them, all of them come from this device (`FieldMerger.takeAmountGroup`).
 ///
 /// Four v2 refinements keep personal recurrence from duplicating, overwriting or resurrecting
 /// rules and occurrences when a device caught a rule up offline (docs/ios/offline-sync.md). An
@@ -199,14 +202,17 @@ public protocol MergeableRecord: Equatable, Sendable {
 
 /// Copies each field this device edited (local differs from the original) over the remote copy.
 public struct FieldMerger<Record> {
-    public private(set) var merged: Record
+    public internal(set) var merged: Record
     let original: Record
     let local: Record
+    /// The server's copy, before any field was taken.
+    let remote: Record
     /// The number of fields visited, for the completeness test.
     public private(set) var fieldCount = 0
 
     public init(merged: Record, original: Record, local: Record) {
         self.merged = merged
+        self.remote = merged
         self.original = original
         self.local = local
     }
@@ -261,6 +267,35 @@ extension LedgerEntry: MergeableRecord {
         // The receipt is one value (id, name, MIME, URI), as its JSON field is.
         merger.take(\.receipt)
         merger.take(\.recurringId)
+        merger.take(\.originalAmount)
+        merger.take(\.originalCurrency)
+        merger.take(\.rate)
+        merger.take(\.rateStatus)
+        merger.take(\.rateDate)
+        merger.takeAmountGroup()
+    }
+}
+
+extension FieldMerger where Record == LedgerEntry {
+    /// An entry in another currency (MAZ-151) merges its amounts as one group, so the home total
+    /// always matches its original amount and rate: when this device changed any of them on an
+    /// entry that has (or had) an original currency on any side, all of them come from this device.
+    mutating func takeAmountGroup() {
+        guard [original, local, remote].contains(where: \.isForeign) else { return }
+        let edited =
+            local.total != original.total || local.share != original.share
+            || local.participants != original.participants || local.originalAmount != original.originalAmount
+            || local.originalCurrency != original.originalCurrency || local.rate != original.rate
+            || local.rateStatus != original.rateStatus || local.rateDate != original.rateDate
+        guard edited else { return }
+        merged.total = local.total
+        merged.share = local.share
+        merged.participants = local.participants
+        merged.originalAmount = local.originalAmount
+        merged.originalCurrency = local.originalCurrency
+        merged.rate = local.rate
+        merged.rateStatus = local.rateStatus
+        merged.rateDate = local.rateDate
     }
 }
 

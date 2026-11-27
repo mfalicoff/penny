@@ -102,6 +102,8 @@ public struct APIErrorCode: RawRepresentable, Hashable, Sendable, Codable, Custo
     public static let profileUnreadablePicture = APIErrorCode(rawValue: "profile.unreadable_picture")
     public static let pushInvalidDevice = APIErrorCode(rawValue: "push.invalid_device")
     public static let rateLimitAuth = APIErrorCode(rawValue: "rate_limit.auth")
+    /// Contract 2.4.0: `GET /api/rates` with an unknown base or a bad date.
+    public static let ratesInvalidRequest = APIErrorCode(rawValue: "rates.invalid_request")
     public static let rateLimitInboundMail = APIErrorCode(rawValue: "rate_limit.inbound_mail")
     public static let rateLimitInvite = APIErrorCode(rawValue: "rate_limit.invite")
     public static let rateLimitSearch = APIErrorCode(rawValue: "rate_limit.search")
@@ -242,6 +244,7 @@ public struct APIErrorCode: RawRepresentable, Hashable, Sendable, Codable, Custo
         .profileUnreadablePicture,
         .pushInvalidDevice,
         .rateLimitAuth,
+        .ratesInvalidRequest,
         .rateLimitInboundMail,
         .rateLimitInvite,
         .rateLimitSearch,

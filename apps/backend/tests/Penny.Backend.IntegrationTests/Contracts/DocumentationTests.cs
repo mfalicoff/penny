@@ -158,6 +158,8 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/account/delete", "post"),
                 ("/api/export", "get"),
                 ("/api/export/entries", "get"),
+                // Reference exchange rates (MAZ-151).
+                ("/api/rates", "get"),
             }
         )
         {

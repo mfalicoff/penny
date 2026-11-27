@@ -8,8 +8,8 @@ Code: `Domain/Ledgers/LedgerReader` (schema and refinements), `Application/Ledge
 
 Both operations return `{revision, ledger}`. `PUT` takes the same envelope: the whole ledger plus the revision it was based on. Both are session-protected (cookie or bearer) and scoped to the session's user.
 
-- **Version.** Responses are always `version: 4` with `currency`, `accounts`, `trips`, `categories`, `transactions` and `recurring`, in that key order. Entry keys follow `id, title, kind, total, share, participants, categoryId, accountId, tripId, date, note, receipt, recurringId`; rules follow `id, title, kind, total, share, participants, categoryId, accountId, date, note, frequency, nextDate, anchorDay, active`.
-- **Optional fields** (`participants`, `accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseholdId`) are omitted when absent. They are never written as JSON `null`, and a request that sends `null` for one is invalid (zod `optional()` semantics).
+- **Version.** Responses are always `version: 4` with `currency`, `accounts`, `trips`, `categories`, `transactions` and `recurring`, in that key order. Entry keys follow `id, title, kind, total, share, participants, categoryId, accountId, tripId, date, note, receipt, recurringId, originalAmount, originalCurrency, rate, rateStatus, rateDate`; rules follow `id, title, kind, total, share, participants, categoryId, accountId, date, note, frequency, nextDate, anchorDay, active`.
+- **Optional fields** (`participants`, `accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseholdId`, and the foreign-amount fields `originalAmount`, `originalCurrency`, `rate`, `rateStatus`, `rateDate`) are omitted when absent. They are never written as JSON `null`, and a request that sends `null` for one is invalid (zod `optional()` semantics).
 - **Money** is integer cents in a JSON number: `total` 1..99,999,999,999, `share` 0..`total`. Any JSON number that is a JavaScript safe integer is accepted (`1200.0` and `1.2e3` are 1200, as with `JSON.parse`); fractions, strings and non-finite values are invalid. No floating-point arithmetic is applied.
 - **Dates** are calendar dates without time zones: strict `YYYY-MM-DD` with ASCII digits, a real day, 2000-01-01 through 2100-12-31. They are stored as PostgreSQL `date` and written back unchanged.
 - **Revision** is a JSON integer, 0..2^53−1 (`Number.MAX_SAFE_INTEGER`). For example 9007199254740990 is read and incremented exactly.
@@ -35,9 +35,29 @@ Errors use the `{error: string}` envelope. All schema/refinement failures share 
 | 6 | A trip's `sharedHouseholdId` names no household | 400 | `Invalid ledger data.` |
 | 7 | The revision is stale | 409 | `Your data changed on another device. Please refresh and try again.` |
 
-Schema and refinements: ids 1–100 characters and unique per list; currency CAD/USD/EUR/GBP; account type bank/credit/cash/other; category name 1–50, icon ≤80, color `#RRGGBB`, kind income/expense/investment; account names 1–50 and trip names 1–80 after trimming; entry title 1–100, note ≤1000; receipt name ≤255, MIME ≤100, URI ≤500; rule frequency weekly/monthly/yearly, anchor day 1–31, `active` boolean; at most 300 accounts, trips and categories, 100,000 transactions and 1,000 rules; `dismissedSuggestions` (contract 2.3.0), when set, at most 500 unique strings of 1–200 characters. Each entry and rule must reference an existing account (when set) and a category of the same kind; `share` ≤ `total`, and income/investment entries cannot be split. `participants` (contract 2.2.0), when set, is an integer 2–100 on an expense entry or rule only. Only expense transactions can have a trip, which must exist; rules cannot have a trip. A trip cannot end before it starts. Other status codes come from the shared boundary: 401 without a session, 403 for an untrusted origin on PUT, 413 above the body limit (20 MiB by default).
+Schema and refinements: ids 1–100 characters and unique per list; currency CAD/USD/EUR/GBP; account type bank/credit/cash/other; category name 1–50, icon ≤80, color `#RRGGBB`, kind income/expense/investment; account names 1–50 and trip names 1–80 after trimming; entry title 1–100, note ≤1000; receipt name ≤255, MIME ≤100, URI ≤500; rule frequency weekly/monthly/yearly, anchor day 1–31, `active` boolean; at most 300 accounts, trips and categories, 100,000 transactions and 1,000 rules; `dismissedSuggestions` (contract 2.3.0), when set, at most 500 unique strings of 1–200 characters. Each entry and rule must reference an existing account (when set) and a category of the same kind; `share` ≤ `total`, and income/investment entries cannot be split. `participants` (contract 2.2.0), when set, is an integer 2–100 on an expense entry or rule only. Only expense transactions can have a trip, which must exist; rules cannot have a trip. An entry paid in another currency (contract 2.4.0, MAZ-151; see [Entries in several currencies](#entries-in-several-currencies)) carries `originalAmount`, `originalCurrency`, `rate` and `rateStatus` together, plus `rateDate` unless the rate is edited; `total` must equal the converted amount; rules cannot carry them. A trip cannot end before it starts. Other status codes come from the shared boundary: 401 without a session, 403 for an untrusted origin on PUT, 413 above the body limit (20 MiB by default).
 
 Checks 3–7 run inside the saving transaction (below), and run even when the revision is stale, so a stale write that also violates a rule reports the rule.
+
+## Entries in several currencies
+
+Contract 2.4.0 (MAZ-151). The ledger's `currency` is the **home currency**: every total (Insights, Left to spend, budgets, recaps) adds up `total` and `share`, which are always home amounts in its minor units. A transaction paid in another currency also stores what was paid and how it was converted:
+
+| Field | Meaning |
+| --- | --- |
+| `originalAmount` | The amount paid, in integer minor units of `originalCurrency` (JPY has none, KWD has three; [currency.json](../../contracts/fixtures/currency.json) lists every currency). |
+| `originalCurrency` | A circulating ISO 4217 code, never the home currency. |
+| `rate` | Home units per one unit of `originalCurrency`, as a canonical decimal string (`"1.4612"`): at most 9 integer and 8 fraction digits, no trailing fraction zeros, greater than zero. |
+| `rateStatus` | `published`: the reference rate for the entry's date. `provisional`: the latest known rate, for an entry dated after the latest publication or made offline. `edited`: a rate the person entered or changed. |
+| `rateDate` | The publication the rate comes from; absent for an edited rate. |
+
+Rules (reference: `apps/web/src/domain/currency.ts`, golden cases in `contracts/fixtures/currency.json`, the same in Swift and C#):
+
+- **Rounding.** `total` is `originalAmount × rate`, rounded once, half up, to the home currency's minor units; the server rejects any other `total`. A split share is computed from that rounded total with the existing rules (`$373.25` over 4 is `$93.31`). A split by amount is typed in the entry's currency and converted at the same rate.
+- **Which rate.** The latest publication on or before the entry's date, so weekends and holidays use the last business day. A date after the latest publication takes the latest rate as `provisional`. The server's rates come from [GET /api/rates](exchange-rates.md).
+- **Provisional rates are replaced** by the clients on a later sync, with the published rate for the entry's date; the total is converted again and the share follows it (a whole share stays whole, an equal split is divided again, any other share keeps its proportion). Changing an entry's date or currency looks the rate up again. An `edited` rate is never replaced.
+- **Merging.** In the three-way offline merge, a foreign entry's amounts (`total`, `share`, `participants` and the five fields above) are one group: when this device changed any of them, all of them come from this device, so the total always matches its rate.
+- **Phase 1 limits.** The home currency is still CAD, USD, EUR or GBP, and recurring rules and shared household expenses stay in the home currency. Older clients see the home amounts and drop the five fields when they save.
 
 ## Atomicity, isolation and conflicts
 

@@ -708,7 +708,12 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                         entry.EntryDate,
                         entry.Note,
                         entry.ReceiptId,
-                        entry.RecurringId
+                        entry.RecurringId,
+                        entry.OriginalAmount,
+                        entry.OriginalCurrency,
+                        entry.Rate,
+                        entry.RateStatus,
+                        entry.RateDate
                     ))
                     .ToDictionaryAsync(
                         entry => entry.Id,
@@ -1344,7 +1349,12 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                 entry.EntryDate,
                 entry.Note,
                 entry.ReceiptId,
-                entry.RecurringId
+                entry.RecurringId,
+                entry.OriginalAmount,
+                entry.OriginalCurrency,
+                entry.Rate,
+                entry.RateStatus,
+                entry.RateDate
             ))
             .ToListAsync(cancellationToken);
         return SearchIndexer.ExpectedPersonal(userId, entries, categories, accounts);

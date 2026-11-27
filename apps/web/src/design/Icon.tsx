@@ -78,3 +78,35 @@ export function CardGlyph({ name, size = 18, weight = 32 }: { name: keyof typeof
     </span>
   );
 }
+
+const strokeStyle = { fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "var(--sw,32px)" } as const;
+
+/**
+ * The Rate row's arrows (MAZ-151 cards `web-add-entry-currency`, `web-entry-rate-*`). The kit's
+ * Ionicons set has no swap glyph, so the cards draw Ionicons' `swap-horizontal-outline` inline;
+ * this is the same drawing.
+ */
+export function SwapIcon({ size = 17, weight = 36 }: { size?: number; weight?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size, ["--sw" as string]: `${String(weight)}px` }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        <polyline points="304 48 416 160 304 272" style={strokeStyle} />
+        <line x1="398.87" y1="160" x2="96" y2="160" style={strokeStyle} />
+        <polyline points="208 464 96 352 208 240" style={strokeStyle} />
+        <line x1="114" y1="352" x2="416" y2="352" style={strokeStyle} />
+      </svg>
+    </span>
+  );
+}
+
+/** "Use it" beside the published rate (`web-entry-rate-edited`): Ionicons' `refresh-outline`, as the card draws it inline. */
+export function RefreshIcon({ size = 12, weight = 40 }: { size?: number; weight?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size, ["--sw" as string]: `${String(weight)}px` }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" style={{ ...strokeStyle, strokeLinejoin: undefined, strokeMiterlimit: 10 }} />
+        <polyline points="256 58 336 138 256 218" style={strokeStyle} />
+      </svg>
+    </span>
+  );
+}

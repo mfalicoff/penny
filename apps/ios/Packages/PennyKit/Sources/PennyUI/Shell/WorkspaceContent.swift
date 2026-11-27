@@ -65,10 +65,17 @@ struct EntryRow: View {
                     Label(Self.waitingText(entry, today: shell.today), systemImage: "clock")
                         .font(.footnote).foregroundStyle(PennyColor.pending)
                 } else {
-                    Text(
+                    // MAZ-151: "provisional rate" in amber until sync brings the day's rate.
+                    let meta = Text(
                         Self.meta(
-                            entry, category: category, report: report, today: shell.today, showsDate: showsDate)
-                    )
+                            entry, category: category, report: report, today: shell.today, showsDate: showsDate))
+                    Group {
+                        if entry.rateStatus == .provisional {
+                            Text("\(meta) · \(Text("provisional rate").foregroundStyle(PennyColor.pending))")
+                        } else {
+                            meta
+                        }
+                    }
                     .font(.footnote)
                     .foregroundStyle(PennyColor.secondaryLabel)
                     .lineLimit(1)
@@ -79,7 +86,14 @@ struct EntryRow: View {
                 MoneyText(
                     entry.share, meaning: Self.meaning(entry, today: shell.today), currency: currency,
                     style: .callout.weight(.semibold))
-                if let note = Self.amountNote(entry, currency: currency, showsDate: showsDate) {
+                if let original = Self.originalAmount(entry, home: currency) {
+                    // MAZ-151: the home amount leads, the amount paid under it ("€48.00", "US$34.99").
+                    Text(original).font(.caption.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .accessibilityLabel("paid \(original)")
+                        .accessibilityIdentifier("currencyRow.original.\(entry.id)")
+                } else if let note = Self.amountNote(entry, currency: currency, showsDate: showsDate) {
                     Text(note).font(.caption.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
                         .lineLimit(1)
                 }
@@ -90,6 +104,12 @@ struct EntryRow: View {
         .frame(minHeight: ControlSize.row)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("entry.\(entry.id)")
+    }
+
+    /// The amount an entry in another currency was paid in, unsigned ("€48.00"); nil for a home entry.
+    static func originalAmount(_ entry: ReportEntry, home: String) -> String? {
+        guard let code = entry.originalCurrency, let amount = entry.originalAmount else { return nil }
+        return CurrencyText.amount(amount, code: code, home: home)
     }
 
     static func meaning(_ entry: ReportEntry, today: CalendarDate? = nil) -> MoneyMeaning {

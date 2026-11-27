@@ -111,7 +111,8 @@ public struct EntryEditor: Hashable, Sendable {
     public mutating func beginSave(in ledger: Ledger, makeID: () -> String) -> EntrySaveStart {
         if isSaving || isSaved { return .alreadySaving }
         do throws(LedgerRuleError) {
-            let (entry, rule) = try draft.build(categories: ledger.categories, editing: original, makeID: makeID)
+            let (entry, rule) = try draft.build(
+                categories: ledger.categories, editing: original, home: ledger.currency, makeID: makeID)
             attempts += 1
             phase = .saving(attempts)
             return .ready(
@@ -205,11 +206,29 @@ extension EntryDraft {
     /// still produce its share) opens as that equal split; any other split entry opens as
     /// "your share is this amount", because a personal entry stores only the two amounts, not
     /// how they were split. The repeat choice is not offered when editing an entry.
+    ///
+    /// An entry in another currency (MAZ-151) opens in that currency with its rate; an amount split
+    /// shows the share in that currency, at the entry's proportion (`build` keeps the stored amounts
+    /// unless one of them is changed).
     public init(editing entry: LedgerEntry) {
         let people = Money.equalSplitPeople(
             kind: entry.kind, total: entry.total, share: entry.share, participants: entry.participants)
         let split = entry.share != entry.total
         let mode: Money.SplitMode = people != nil ? .equal : split ? .amount : .full
+        if let currency = entry.originalCurrency, let original = entry.originalAmount {
+            let units = Currencies.info(currency)?.minorUnits ?? 2
+            var shareInput = people.map(String.init) ?? ""
+            if people == nil, split, entry.total > 0 {
+                let part = Currencies.proportion(entry.share, of: entry.total, applied: original)
+                shareInput = AmountInput.text(minor: part, minorUnits: units)
+            }
+            self.init(
+                kind: entry.kind, title: entry.title, amount: AmountInput.text(minor: original, minorUnits: units),
+                date: entry.date.description, categoryId: entry.categoryId, accountId: entry.accountId,
+                tripId: entry.tripId, note: entry.note, split: mode, shareInput: shareInput, receipt: entry.receipt,
+                currency: currency, rate: entry.rate, rateStatus: entry.rateStatus, rateDate: entry.rateDate)
+            return
+        }
         let shareInput = people.map(String.init) ?? (split ? AmountInput.text(cents: entry.share) : "")
         self.init(
             kind: entry.kind, title: entry.title, amount: AmountInput.text(cents: entry.total),
@@ -217,7 +236,23 @@ extension EntryDraft {
             tripId: entry.tripId, note: entry.note, split: mode, shareInput: shareInput, receipt: entry.receipt)
     }
 
-    /// The share the draft would record now, or nil while the amount or split is incomplete.
+    /// The share the draft would record now, or nil while the amount or split is incomplete. A
+    /// draft in another currency gives its home share, once it has a rate.
+    public func previewShare(home: Currency) -> Int64? {
+        if foreignCurrency(home: home) != nil { return (try? foreignAmounts(home: home))?.share }
+        return previewShare
+    }
+
+    /// The home total a draft in another currency converts to ("≈ $124.20 CAD"), or nil while the
+    /// amount or the rate is missing.
+    public func convertedTotal(home: Currency) -> Int64? {
+        guard let code = foreignCurrency(home: home), let rate,
+            let amount = try? Currencies.parseAmount(amount.isEmpty ? "0" : amount, currency: code)
+        else { return nil }
+        return try? Currencies.convertAmount(amount, from: code, rate: rate, home: home.rawValue)
+    }
+
+    /// The share of a home draft.
     public var previewShare: Int64? {
         guard let total = try? Money.cents(amount) else { return nil }
         return try? Money.personalShare(total: total, mode: kind == .expense ? split : .full, input: shareInput)
@@ -254,8 +289,10 @@ public enum AmountInput {
 
     /// Applies one key. Up to nine whole digits and two decimals; one separator; a leading
     /// zero is replaced by the next digit; a separator on an empty amount starts "0.". Keys
-    /// that would break a rule do nothing.
-    public static func apply(_ key: Key, to text: String) -> String {
+    /// that would break a rule do nothing. `minorUnits` (MAZ-151) is the currency's: no
+    /// separator for a currency without decimals, three decimals for KWD, and 11 digits in all.
+    public static func apply(_ key: Key, to text: String, minorUnits: Int = 2) -> String {
+        let maxWhole = minorUnits == 2 ? 9 : 11 - minorUnits
         let parts = text.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
         let whole = parts.first.map(String.init) ?? ""
         let fraction = parts.count > 1 ? String(parts[1]) : nil
@@ -263,16 +300,35 @@ public enum AmountInput {
         case .delete:
             return String(text.dropLast())
         case .separator:
-            guard fraction == nil else { return text }
+            guard fraction == nil, minorUnits > 0 else { return text }
             return (whole.isEmpty ? "0" : whole) + "."
         case .digit(let digit):
             guard (0...9).contains(digit) else { return text }
             if let fraction {
-                return fraction.count < 2 ? text + String(digit) : text
+                return fraction.count < minorUnits ? text + String(digit) : text
             }
             if whole == "0" { return String(digit) }
-            return whole.count < 9 ? text + String(digit) : text
+            return whole.count < maxWhole ? text + String(digit) : text
         }
+    }
+
+    /// The typed text with the decimals `minorUnits` allows: "85.50" stays for EUR and becomes
+    /// "85" for JPY; "1.234" becomes "1.23" for EUR (MAZ-151: the currency changed).
+    public static func fitting(_ text: String, minorUnits: Int) -> String {
+        guard let dot = text.firstIndex(where: { $0 == "." || $0 == "," }) else { return text }
+        guard minorUnits > 0 else { return String(text[..<dot]) }
+        let fraction = text[text.index(after: dot)...]
+        return String(text[...dot]) + String(fraction.prefix(minorUnits))
+    }
+
+    /// Minor units as the form shows them for editing: "12.30", "1200" (JPY), "1.234" (KWD).
+    public static func text(minor: Int64, minorUnits: Int) -> String {
+        let value = max(minor, 0)
+        guard minorUnits > 0 else { return "\(value)" }
+        var scale: Int64 = 1
+        for _ in 0..<minorUnits { scale *= 10 }
+        let fraction = String(value % scale)
+        return "\(value / scale)." + String(repeating: "0", count: minorUnits - fraction.count) + fraction
     }
 
     /// Cents as the form shows them for editing: "12.30", "0.05".

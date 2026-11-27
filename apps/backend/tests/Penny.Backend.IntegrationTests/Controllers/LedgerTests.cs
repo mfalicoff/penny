@@ -165,6 +165,155 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
         (await GetAsync(token))["revision"]!.GetValue<long>().ShouldBe(0);
     }
 
+    // Contract 2.4.0 (MAZ-151): synthetic entries paid in euros, yen and dinars.
+    private static JsonObject Foreign(
+        JsonObject entry,
+        long amount,
+        string currency,
+        string rate,
+        string status,
+        string? rateDate
+    )
+    {
+        entry["originalAmount"] = amount;
+        entry["originalCurrency"] = currency;
+        entry["rate"] = rate;
+        entry["rateStatus"] = status;
+        if (rateDate is not null)
+            entry["rateDate"] = rateDate;
+        return entry;
+    }
+
+    [Fact]
+    public async Task whenEntriesPaidInOtherCurrencies_LedgerFlow_ShouldStoreAndReturnThemUnchanged()
+    {
+        var token = await RegisterAsync("owner@example.test");
+        var snapshot = await GetAsync(token);
+        var transactions = snapshot["ledger"]!["transactions"]!.AsArray();
+        transactions.Add(
+            Foreign(
+                Entry("class", "food", 12420, 6210),
+                8500,
+                "EUR",
+                "1.4612",
+                "published",
+                "2026-11-03"
+            )
+        );
+        transactions.Add(
+            Foreign(
+                Entry("noodles", "food", 1088, 1088),
+                1200,
+                "JPY",
+                "0.00906283",
+                "provisional",
+                "2026-11-02"
+            )
+        );
+        transactions.Add(
+            Foreign(Entry("tea", "food", 553, 553), 1234, "KWD", "4.48", "edited", null)
+        );
+        transactions.Add(Entry("lunch", "food", 1250, 1250));
+        (await PutAsync(token, snapshot)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var request = Authorized(HttpMethod.Get, "/api/ledger", bearer: token);
+        using var response = await Client.SendAsync(request, Ct);
+        var text = await response.Content.ReadAsStringAsync(Ct);
+        text.ShouldContain(
+            "{\"id\":\"class\",\"title\":\"Synthetic lunch\",\"kind\":\"expense\",\"total\":12420,\"share\":6210,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\",\"originalAmount\":8500,\"originalCurrency\":\"EUR\",\"rate\":\"1.4612\",\"rateStatus\":\"published\",\"rateDate\":\"2026-11-03\"}"
+        );
+        text.ShouldContain(
+            "{\"id\":\"noodles\",\"title\":\"Synthetic lunch\",\"kind\":\"expense\",\"total\":1088,\"share\":1088,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\",\"originalAmount\":1200,\"originalCurrency\":\"JPY\",\"rate\":\"0.00906283\",\"rateStatus\":\"provisional\",\"rateDate\":\"2026-11-02\"}"
+        );
+        text.ShouldContain(
+            "{\"id\":\"tea\",\"title\":\"Synthetic lunch\",\"kind\":\"expense\",\"total\":553,\"share\":553,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\",\"originalAmount\":1234,\"originalCurrency\":\"KWD\",\"rate\":\"4.48\",\"rateStatus\":\"edited\"}"
+        );
+        text.ShouldContain(
+            "{\"id\":\"lunch\",\"title\":\"Synthetic lunch\",\"kind\":\"expense\",\"total\":1250,\"share\":1250,\"categoryId\":\"food\",\"date\":\"2026-10-01\",\"note\":\"\"}"
+        );
+        var userId = await UserIdAsync("owner@example.test");
+        await using var context = PennyDbContext.Create(Fixture.Admin);
+        (
+            await context
+                .LedgerEntries.Where(entry => entry.UserId == userId)
+                .OrderBy(entry => entry.Id)
+                .Select(entry => new
+                {
+                    entry.Id,
+                    entry.OriginalCurrency,
+                    entry.Rate,
+                    entry.RateStatus,
+                    entry.RateDate,
+                })
+                .ToListAsync(Ct)
+        ).Select(row => (row.Id, row.OriginalCurrency, row.Rate, row.RateStatus, row.RateDate)).ShouldBe([("class", "EUR", "1.4612", "published", new DateOnly(2026, 11, 3)), ("lunch", null, null, null, null), ("noodles", "JPY", "0.00906283", "provisional", new DateOnly(2026, 11, 2)), ("tea", "KWD", "4.48", "edited", (DateOnly?)null)]);
+    }
+
+    [Theory]
+    [InlineData("total-mismatch")]
+    [InlineData("home-currency")]
+    [InlineData("partial")]
+    [InlineData("rate-date-alone")]
+    [InlineData("edited-with-date")]
+    [InlineData("published-without-date")]
+    [InlineData("non-canonical-rate")]
+    [InlineData("null-rate")]
+    [InlineData("recurring-rule")]
+    public async Task whenForeignAmountInvalid_PutLedger_ShouldRejectTheLedger(string mutation)
+    {
+        var token = await RegisterAsync("owner@example.test");
+        var snapshot = await GetAsync(token);
+        var entry = Foreign(
+            Entry("class", "food", 12420, 12420),
+            8500,
+            "EUR",
+            "1.4612",
+            "published",
+            "2026-11-03"
+        );
+        switch (mutation)
+        {
+            case "total-mismatch":
+                entry["total"] = 12421;
+                break;
+            case "home-currency":
+                Foreign(entry, 12420, "CAD", "1", "published", "2026-11-03");
+                break;
+            case "partial":
+                entry.Remove("rate");
+                break;
+            case "rate-date-alone":
+                entry = Entry("class", "food", 12420, 12420);
+                entry["rateDate"] = "2026-11-03";
+                break;
+            case "edited-with-date":
+                entry["rateStatus"] = "edited";
+                break;
+            case "published-without-date":
+                entry.Remove("rateDate");
+                break;
+            case "non-canonical-rate":
+                entry["rate"] = "1.46120";
+                break;
+            case "null-rate":
+                entry["rate"] = null;
+                break;
+            case "recurring-rule":
+                entry["frequency"] = "monthly";
+                entry["nextDate"] = "2026-11-01";
+                entry["anchorDay"] = 1;
+                entry["active"] = true;
+                snapshot["ledger"]!["recurring"]!.AsArray().Add(entry);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mutation));
+        }
+        if (mutation != "recurring-rule")
+            snapshot["ledger"]!["transactions"]!.AsArray().Add(entry);
+        await ShouldFailAsync(token, snapshot, Invalid);
+        (await GetAsync(token))["revision"]!.GetValue<long>().ShouldBe(0);
+    }
+
     [Fact]
     public async Task whenDismissedSuggestionsSaved_LedgerFlow_ShouldReturnThemInOrderUntilOmitted()
     {

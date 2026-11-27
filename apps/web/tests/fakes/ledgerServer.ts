@@ -6,7 +6,7 @@ import { bodyOf, emptySearch, json, stubServer } from "../render";
  * A revision-checked `GET`/`PUT /api/ledger` (409 on a stale write, never a merge), the shared
  * projection and search, for the entry form and Activity tests (MAZ-88). Synthetic data only.
  */
-export type WireEntry = { id: string; title: string; kind: string; total: number; share: number; participants?: number; categoryId: string; date: string; note: string; accountId?: string; tripId?: string; recurringId?: string };
+export type WireEntry = { id: string; title: string; kind: string; total: number; share: number; participants?: number; categoryId: string; date: string; note: string; accountId?: string; tripId?: string; recurringId?: string; originalAmount?: number; originalCurrency?: string; rate?: string; rateStatus?: string; rateDate?: string };
 
 export const entry = (id: string, title: string, extra: Partial<WireEntry> = {}): WireEntry => ({
   id,
@@ -63,7 +63,7 @@ export const sharedRow = ({ id, title, date, shareCents, totalCents = shareCents
   note: "",
 });
 
-export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: ReturnType<typeof sharedRow>[]; scheduled?: object[]; search?: (body: Record<string, unknown>) => object[] } = {}) {
+export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: ReturnType<typeof sharedRow>[]; scheduled?: object[]; search?: (body: Record<string, unknown>) => object[]; /** `GET /api/rates` (MAZ-151); without it the server answers 404, as one before 2.4.0. */ rates?: (url: string) => Response } = {}) {
   const state = {
     revision: 3,
     ledger: richLedger(initial),
@@ -105,6 +105,10 @@ export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: 
       return json({ ...emptySearch, items, totalCount: items.length });
     }
     if (url === "/api/auth/logout") return json({ ok: true });
+    if (url.startsWith("/api/rates?") && options.rates) {
+      if (state.down) throw new TypeError("Failed to fetch");
+      return options.rates(url);
+    }
     return undefined;
   });
   /** Another device writes to the server, as the iOS app would. */

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-26",
+  "reviewedAt": "2026-11-27",
   "cards": [
     {
       "id": "system-foundations",
@@ -2055,12 +2055,29 @@
       "id": "iphone-currency",
       "view": "currency settings, locked by existing entries",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The locked home currency shows as one row (CAD, Canadian dollar, a lock), not the list of CAD, USD, EUR and GBP with a gray check",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Exchange rates (Daily rates, Your last rates) and Recent currencies sections follow the list; the footer reads “Insights, Left to spend, budgets and recaps add up in Canadian dollars. Your home currency is locked once your ledger has entries.”",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Design decision: the screen follows the approved MAZ-270 currency and rates cards (iphone-currency-rates, web-currency-rates), which supersede this card; it needs to be retired or redrawn",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
         ]
       },
       "web": {
@@ -2073,19 +2090,19 @@
         ],
         "deviations": [
           {
-            "summary": "The list sits in a card headed “Currency” / “Ledger currency”; the card's list has no heading",
+            "summary": "The locked home currency shows as one row with its name and a lock in a Home currency card, not the list of four currencies",
             "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-151"
           },
           {
-            "summary": "CAD has a copper check and no lock; the card shows a lock and a gray check, because the choice is locked",
+            "summary": "Exchange rates and Recent currencies cards follow, and the help text names the home currency and says each entry can be in any currency",
             "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-151"
           },
           {
-            "summary": "The help reads “Your ledger already has entries in CAD, so the currency can't change…” inside the list, not the footer “Currency is locked once your ledger has entries.”",
+            "summary": "Design decision: the screen follows the approved MAZ-270 currency and rates cards (iphone-currency-rates, web-currency-rates), which supersede this card; it needs to be retired or redrawn",
             "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-151"
           }
         ]
       }
@@ -2941,128 +2958,182 @@
       "id": "iphone-entry-currency",
       "view": "add expense in euros: €85.00 cooking class, ≈ $124.20 CAD at the ECB rate for Nov 3",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The test stack runs with exchange-rate fetching off, so the capture shows a typed (Edited) rate instead of the European Central Bank rate and its date; the published-rate states are covered by unit tests only",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "The form keeps its Split row (All mine) between Rate and Receipt, repeat, trip; the card has none",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-currency-picker",
       "view": "currency picker: the trip's EUR and home CAD suggested, recent USD and JPY, then all ISO currencies",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "JPY shows the locale's symbol “JP¥”; the card shows “¥”",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Suggested has no trip currency (“Lisbon's currency”): trip currencies are phase 2",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-entry-rate-provisional",
       "view": "add expense dated today in euros: Friday's rate, marked provisional until today's is published",
       "native": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built, with unit tests; a provisional rate needs published rates, and the test stack runs with fetching off, so it can't be captured yet."
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-entry-rate-edited",
       "view": "exchange rate sheet: the rate edited to 1.4900, with the ECB rate 1.4612 to go back to",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "With no published rate on the test stack, the sheet offers “Last used 1.4600 · Use the last rate” instead of the European Central Bank rate and “Use the published rate”",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-entry-rate-manual",
       "view": "add expense in euros on a server with rate fetching off: the rate to enter, the last one suggested",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The form keeps its Split row (All mine) between Rate and Receipt, repeat, trip; the card has none",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-home-currencies",
       "view": "home with Recent rows in euros and US dollars, home amount first",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "iphone-activity-currencies",
       "view": "activity with entries in euros and US dollars, both amounts, one rate provisional",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-entry-detail-currency",
       "view": "entry detail of a €85.00 trip entry: $124.20 CAD and its ECB rate",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
@@ -3117,32 +3188,43 @@
       "id": "iphone-currency-rates",
       "view": "currency settings: home currency CAD, daily ECB rates on, recent currencies",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The test stack runs with fetching off, so Daily rates shows Off and Your last rates instead of On and Latest rates",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "iphone-currency-rates-off",
       "view": "currency settings on a server with rate fetching turned off",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 (the web entry form, lists and Settings › Currency work at every width), but only the desktop web cards were captured in this change."
       }
     },
     {
@@ -3546,32 +3628,43 @@
       "id": "ipad-add-entry-currency",
       "view": "iPad add entry in euros with the converted amount and the rate",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The test stack runs with exchange-rate fetching off, so the capture shows a typed (Edited) rate instead of the European Central Bank rate and its date; the published-rate states are covered by unit tests only",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 at every width, but only the desktop web cards were captured in this change."
       }
     },
     {
       "id": "ipad-activity-currencies",
       "view": "iPad activity with entries in several currencies and the €85.00 entry in the detail pane",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 at every width, but only the desktop web cards were captured in this change."
       }
     },
     {
@@ -3594,16 +3687,25 @@
       "id": "ipad-settings-currency",
       "view": "iPad settings with Currency in the detail column: home currency and daily rates",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The test stack runs with fetching off, so Daily rates shows Off and Your last rates instead of On and Latest rates",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 1 at every width, but only the desktop web cards were captured in this change."
       }
     },
     {
@@ -3909,9 +4011,19 @@
         ],
         "deviations": [
           {
-            "summary": "The section list has no Export data item (follow-up recorded on MAZ-239)",
+            "summary": "A Home currency card with one locked row (CAD, Canadian dollar) replaces the Ledger currency list of CAD, USD, EUR and GBP, and its help text differs",
             "kind": "follow-up",
-            "ref": "MAZ-239"
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Exchange rates and Recent currencies cards follow the home currency",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Design decision: the screen follows the approved MAZ-270 currency and rates cards (iphone-currency-rates, web-currency-rates), which supersede this card; it needs to be retired or redrawn",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
           }
         ]
       }
@@ -4804,80 +4916,97 @@
       "id": "web-add-entry-currency",
       "view": "web add entry dialog in euros with the currency menu open",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Suggested has no trip currency (“Lisbon's currency”): trip currencies are phase 2",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
       "id": "web-entry-rate-provisional",
       "view": "web add entry dialog dated today: Friday's rate, marked provisional",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "web-entry-rate-edited",
       "view": "web add entry dialog with the rate edited inline to 1.4900",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "web-entry-rate-manual",
       "view": "web add entry dialog on a server with rate fetching off: the rate to enter",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "web-activity-currencies",
       "view": "web activity with entries in several currencies and the €85.00 entry in the detail panel",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -4916,32 +5045,36 @@
       "id": "web-currency-rates",
       "view": "web currency settings: home currency CAD and daily ECB rates",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "web-currency-rates-off",
       "view": "web currency settings on a server with rate fetching turned off",
       "native": {
-        "status": "not-built",
+        "status": "not-applicable",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

@@ -1981,3 +1981,30 @@
   flex: none;
   margin-top: 2px;
 }
+
+/* MAZ-151: the amount an entry was paid in, under its home amount (`web-activity-currencies`). */
+.activity-table__num .results__original {
+  display: block;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.results__provisional {
+  color: var(--pk-pending);
+}
+
+/* MAZ-151: the Exchange rate section of an entry paid in another currency (`web-activity-currencies`). */
+.entry-sheet__aside {
+  margin-left: 4px;
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  font-weight: 400;
+}
+
+.entry-sheet__rate-note {
+  margin: 4px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  line-height: 17px;
+}

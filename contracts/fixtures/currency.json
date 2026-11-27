@@ -1,0 +1,2255 @@
+{
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
+  "description": "MAZ-151: entries in several currencies. currencies is every ISO 4217 currency an entry may use with its minor units (homeCurrencies the ones a ledger may use); amounts are integers in minor units; a rate is a canonical decimal string of home units per unit; conversion rounds once, half up, to the home currency's minor units; cross rates round half up to 6 significant digits (at most 8 fraction digits); a date uses the latest publication on or before it, and one after every publication uses the latest provisionally.",
+  "currencies": [
+    {
+      "code": "AED",
+      "name": "UAE dirham",
+      "minorUnits": 2
+    },
+    {
+      "code": "AFN",
+      "name": "Afghan afghani",
+      "minorUnits": 2
+    },
+    {
+      "code": "ALL",
+      "name": "Albanian lek",
+      "minorUnits": 2
+    },
+    {
+      "code": "AMD",
+      "name": "Armenian dram",
+      "minorUnits": 2
+    },
+    {
+      "code": "AOA",
+      "name": "Angolan kwanza",
+      "minorUnits": 2
+    },
+    {
+      "code": "ARS",
+      "name": "Argentine peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "AUD",
+      "name": "Australian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "AWG",
+      "name": "Aruban florin",
+      "minorUnits": 2
+    },
+    {
+      "code": "AZN",
+      "name": "Azerbaijani manat",
+      "minorUnits": 2
+    },
+    {
+      "code": "BAM",
+      "name": "Bosnia and Herzegovina convertible mark",
+      "minorUnits": 2
+    },
+    {
+      "code": "BBD",
+      "name": "Barbadian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "BDT",
+      "name": "Bangladeshi taka",
+      "minorUnits": 2
+    },
+    {
+      "code": "BGN",
+      "name": "Bulgarian lev",
+      "minorUnits": 2
+    },
+    {
+      "code": "BHD",
+      "name": "Bahraini dinar",
+      "minorUnits": 3
+    },
+    {
+      "code": "BIF",
+      "name": "Burundian franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "BMD",
+      "name": "Bermudian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "BND",
+      "name": "Brunei dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "BOB",
+      "name": "Bolivian boliviano",
+      "minorUnits": 2
+    },
+    {
+      "code": "BRL",
+      "name": "Brazilian real",
+      "minorUnits": 2
+    },
+    {
+      "code": "BSD",
+      "name": "Bahamian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "BTN",
+      "name": "Bhutanese ngultrum",
+      "minorUnits": 2
+    },
+    {
+      "code": "BWP",
+      "name": "Botswana pula",
+      "minorUnits": 2
+    },
+    {
+      "code": "BYN",
+      "name": "Belarusian ruble",
+      "minorUnits": 2
+    },
+    {
+      "code": "BZD",
+      "name": "Belize dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "CAD",
+      "name": "Canadian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "CDF",
+      "name": "Congolese franc",
+      "minorUnits": 2
+    },
+    {
+      "code": "CHF",
+      "name": "Swiss franc",
+      "minorUnits": 2
+    },
+    {
+      "code": "CLP",
+      "name": "Chilean peso",
+      "minorUnits": 0
+    },
+    {
+      "code": "CNY",
+      "name": "Chinese yuan",
+      "minorUnits": 2
+    },
+    {
+      "code": "COP",
+      "name": "Colombian peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "CRC",
+      "name": "Costa Rican col\u00f3n",
+      "minorUnits": 2
+    },
+    {
+      "code": "CUP",
+      "name": "Cuban peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "CVE",
+      "name": "Cape Verdean escudo",
+      "minorUnits": 2
+    },
+    {
+      "code": "CZK",
+      "name": "Czech koruna",
+      "minorUnits": 2
+    },
+    {
+      "code": "DJF",
+      "name": "Djiboutian franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "DKK",
+      "name": "Danish krone",
+      "minorUnits": 2
+    },
+    {
+      "code": "DOP",
+      "name": "Dominican peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "DZD",
+      "name": "Algerian dinar",
+      "minorUnits": 2
+    },
+    {
+      "code": "EGP",
+      "name": "Egyptian pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "ERN",
+      "name": "Eritrean nakfa",
+      "minorUnits": 2
+    },
+    {
+      "code": "ETB",
+      "name": "Ethiopian birr",
+      "minorUnits": 2
+    },
+    {
+      "code": "EUR",
+      "name": "Euro",
+      "minorUnits": 2
+    },
+    {
+      "code": "FJD",
+      "name": "Fijian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "FKP",
+      "name": "Falkland Islands pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "GBP",
+      "name": "Pound sterling",
+      "minorUnits": 2
+    },
+    {
+      "code": "GEL",
+      "name": "Georgian lari",
+      "minorUnits": 2
+    },
+    {
+      "code": "GHS",
+      "name": "Ghanaian cedi",
+      "minorUnits": 2
+    },
+    {
+      "code": "GIP",
+      "name": "Gibraltar pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "GMD",
+      "name": "Gambian dalasi",
+      "minorUnits": 2
+    },
+    {
+      "code": "GNF",
+      "name": "Guinean franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "GTQ",
+      "name": "Guatemalan quetzal",
+      "minorUnits": 2
+    },
+    {
+      "code": "GYD",
+      "name": "Guyanese dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "HKD",
+      "name": "Hong Kong dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "HNL",
+      "name": "Honduran lempira",
+      "minorUnits": 2
+    },
+    {
+      "code": "HTG",
+      "name": "Haitian gourde",
+      "minorUnits": 2
+    },
+    {
+      "code": "HUF",
+      "name": "Hungarian forint",
+      "minorUnits": 2
+    },
+    {
+      "code": "IDR",
+      "name": "Indonesian rupiah",
+      "minorUnits": 2
+    },
+    {
+      "code": "ILS",
+      "name": "Israeli new shekel",
+      "minorUnits": 2
+    },
+    {
+      "code": "INR",
+      "name": "Indian rupee",
+      "minorUnits": 2
+    },
+    {
+      "code": "IQD",
+      "name": "Iraqi dinar",
+      "minorUnits": 3
+    },
+    {
+      "code": "IRR",
+      "name": "Iranian rial",
+      "minorUnits": 2
+    },
+    {
+      "code": "ISK",
+      "name": "Icelandic kr\u00f3na",
+      "minorUnits": 0
+    },
+    {
+      "code": "JMD",
+      "name": "Jamaican dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "JOD",
+      "name": "Jordanian dinar",
+      "minorUnits": 3
+    },
+    {
+      "code": "JPY",
+      "name": "Japanese yen",
+      "minorUnits": 0
+    },
+    {
+      "code": "KES",
+      "name": "Kenyan shilling",
+      "minorUnits": 2
+    },
+    {
+      "code": "KGS",
+      "name": "Kyrgyz som",
+      "minorUnits": 2
+    },
+    {
+      "code": "KHR",
+      "name": "Cambodian riel",
+      "minorUnits": 2
+    },
+    {
+      "code": "KMF",
+      "name": "Comorian franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "KPW",
+      "name": "North Korean won",
+      "minorUnits": 2
+    },
+    {
+      "code": "KRW",
+      "name": "South Korean won",
+      "minorUnits": 0
+    },
+    {
+      "code": "KWD",
+      "name": "Kuwaiti dinar",
+      "minorUnits": 3
+    },
+    {
+      "code": "KYD",
+      "name": "Cayman Islands dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "KZT",
+      "name": "Kazakhstani tenge",
+      "minorUnits": 2
+    },
+    {
+      "code": "LAK",
+      "name": "Lao kip",
+      "minorUnits": 2
+    },
+    {
+      "code": "LBP",
+      "name": "Lebanese pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "LKR",
+      "name": "Sri Lankan rupee",
+      "minorUnits": 2
+    },
+    {
+      "code": "LRD",
+      "name": "Liberian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "LSL",
+      "name": "Lesotho loti",
+      "minorUnits": 2
+    },
+    {
+      "code": "LYD",
+      "name": "Libyan dinar",
+      "minorUnits": 3
+    },
+    {
+      "code": "MAD",
+      "name": "Moroccan dirham",
+      "minorUnits": 2
+    },
+    {
+      "code": "MDL",
+      "name": "Moldovan leu",
+      "minorUnits": 2
+    },
+    {
+      "code": "MGA",
+      "name": "Malagasy ariary",
+      "minorUnits": 2
+    },
+    {
+      "code": "MKD",
+      "name": "Macedonian denar",
+      "minorUnits": 2
+    },
+    {
+      "code": "MMK",
+      "name": "Myanmar kyat",
+      "minorUnits": 2
+    },
+    {
+      "code": "MNT",
+      "name": "Mongolian t\u00f6gr\u00f6g",
+      "minorUnits": 2
+    },
+    {
+      "code": "MOP",
+      "name": "Macanese pataca",
+      "minorUnits": 2
+    },
+    {
+      "code": "MRU",
+      "name": "Mauritanian ouguiya",
+      "minorUnits": 2
+    },
+    {
+      "code": "MUR",
+      "name": "Mauritian rupee",
+      "minorUnits": 2
+    },
+    {
+      "code": "MVR",
+      "name": "Maldivian rufiyaa",
+      "minorUnits": 2
+    },
+    {
+      "code": "MWK",
+      "name": "Malawian kwacha",
+      "minorUnits": 2
+    },
+    {
+      "code": "MXN",
+      "name": "Mexican peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "MYR",
+      "name": "Malaysian ringgit",
+      "minorUnits": 2
+    },
+    {
+      "code": "MZN",
+      "name": "Mozambican metical",
+      "minorUnits": 2
+    },
+    {
+      "code": "NAD",
+      "name": "Namibian dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "NGN",
+      "name": "Nigerian naira",
+      "minorUnits": 2
+    },
+    {
+      "code": "NIO",
+      "name": "Nicaraguan c\u00f3rdoba",
+      "minorUnits": 2
+    },
+    {
+      "code": "NOK",
+      "name": "Norwegian krone",
+      "minorUnits": 2
+    },
+    {
+      "code": "NPR",
+      "name": "Nepalese rupee",
+      "minorUnits": 2
+    },
+    {
+      "code": "NZD",
+      "name": "New Zealand dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "OMR",
+      "name": "Omani rial",
+      "minorUnits": 3
+    },
+    {
+      "code": "PAB",
+      "name": "Panamanian balboa",
+      "minorUnits": 2
+    },
+    {
+      "code": "PEN",
+      "name": "Peruvian sol",
+      "minorUnits": 2
+    },
+    {
+      "code": "PGK",
+      "name": "Papua New Guinean kina",
+      "minorUnits": 2
+    },
+    {
+      "code": "PHP",
+      "name": "Philippine peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "PKR",
+      "name": "Pakistani rupee",
+      "minorUnits": 2
+    },
+    {
+      "code": "PLN",
+      "name": "Polish z\u0142oty",
+      "minorUnits": 2
+    },
+    {
+      "code": "PYG",
+      "name": "Paraguayan guaran\u00ed",
+      "minorUnits": 0
+    },
+    {
+      "code": "QAR",
+      "name": "Qatari riyal",
+      "minorUnits": 2
+    },
+    {
+      "code": "RON",
+      "name": "Romanian leu",
+      "minorUnits": 2
+    },
+    {
+      "code": "RSD",
+      "name": "Serbian dinar",
+      "minorUnits": 2
+    },
+    {
+      "code": "RUB",
+      "name": "Russian ruble",
+      "minorUnits": 2
+    },
+    {
+      "code": "RWF",
+      "name": "Rwandan franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "SAR",
+      "name": "Saudi riyal",
+      "minorUnits": 2
+    },
+    {
+      "code": "SBD",
+      "name": "Solomon Islands dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "SCR",
+      "name": "Seychellois rupee",
+      "minorUnits": 2
+    },
+    {
+      "code": "SDG",
+      "name": "Sudanese pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "SEK",
+      "name": "Swedish krona",
+      "minorUnits": 2
+    },
+    {
+      "code": "SGD",
+      "name": "Singapore dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "SHP",
+      "name": "Saint Helena pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "SLE",
+      "name": "Sierra Leonean leone",
+      "minorUnits": 2
+    },
+    {
+      "code": "SOS",
+      "name": "Somali shilling",
+      "minorUnits": 2
+    },
+    {
+      "code": "SRD",
+      "name": "Surinamese dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "SSP",
+      "name": "South Sudanese pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "STN",
+      "name": "S\u00e3o Tom\u00e9 and Pr\u00edncipe dobra",
+      "minorUnits": 2
+    },
+    {
+      "code": "SVC",
+      "name": "Salvadoran col\u00f3n",
+      "minorUnits": 2
+    },
+    {
+      "code": "SYP",
+      "name": "Syrian pound",
+      "minorUnits": 2
+    },
+    {
+      "code": "SZL",
+      "name": "Swazi lilangeni",
+      "minorUnits": 2
+    },
+    {
+      "code": "THB",
+      "name": "Thai baht",
+      "minorUnits": 2
+    },
+    {
+      "code": "TJS",
+      "name": "Tajikistani somoni",
+      "minorUnits": 2
+    },
+    {
+      "code": "TMT",
+      "name": "Turkmenistani manat",
+      "minorUnits": 2
+    },
+    {
+      "code": "TND",
+      "name": "Tunisian dinar",
+      "minorUnits": 3
+    },
+    {
+      "code": "TOP",
+      "name": "Tongan pa\u02bbanga",
+      "minorUnits": 2
+    },
+    {
+      "code": "TRY",
+      "name": "Turkish lira",
+      "minorUnits": 2
+    },
+    {
+      "code": "TTD",
+      "name": "Trinidad and Tobago dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "TWD",
+      "name": "New Taiwan dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "TZS",
+      "name": "Tanzanian shilling",
+      "minorUnits": 2
+    },
+    {
+      "code": "UAH",
+      "name": "Ukrainian hryvnia",
+      "minorUnits": 2
+    },
+    {
+      "code": "UGX",
+      "name": "Ugandan shilling",
+      "minorUnits": 0
+    },
+    {
+      "code": "USD",
+      "name": "US dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "UYU",
+      "name": "Uruguayan peso",
+      "minorUnits": 2
+    },
+    {
+      "code": "UZS",
+      "name": "Uzbekistani sum",
+      "minorUnits": 2
+    },
+    {
+      "code": "VES",
+      "name": "Venezuelan bol\u00edvar",
+      "minorUnits": 2
+    },
+    {
+      "code": "VND",
+      "name": "Vietnamese \u0111\u1ed3ng",
+      "minorUnits": 0
+    },
+    {
+      "code": "VUV",
+      "name": "Vanuatu vatu",
+      "minorUnits": 0
+    },
+    {
+      "code": "WST",
+      "name": "Samoan t\u0101l\u0101",
+      "minorUnits": 2
+    },
+    {
+      "code": "XAF",
+      "name": "Central African CFA franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "XCD",
+      "name": "East Caribbean dollar",
+      "minorUnits": 2
+    },
+    {
+      "code": "XCG",
+      "name": "Caribbean guilder",
+      "minorUnits": 2
+    },
+    {
+      "code": "XOF",
+      "name": "West African CFA franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "XPF",
+      "name": "CFP franc",
+      "minorUnits": 0
+    },
+    {
+      "code": "YER",
+      "name": "Yemeni rial",
+      "minorUnits": 2
+    },
+    {
+      "code": "ZAR",
+      "name": "South African rand",
+      "minorUnits": 2
+    },
+    {
+      "code": "ZMW",
+      "name": "Zambian kwacha",
+      "minorUnits": 2
+    },
+    {
+      "code": "ZWG",
+      "name": "Zimbabwe Gold",
+      "minorUnits": 2
+    }
+  ],
+  "homeCurrencies": [
+    "CAD",
+    "USD",
+    "EUR",
+    "GBP"
+  ],
+  "parse": [
+    {
+      "input": "85.00",
+      "currency": "EUR",
+      "amount": 8500
+    },
+    {
+      "input": "85",
+      "currency": "EUR",
+      "amount": 8500
+    },
+    {
+      "input": "85,5",
+      "currency": "EUR",
+      "amount": 8550
+    },
+    {
+      "input": "1200",
+      "currency": "JPY",
+      "amount": 1200
+    },
+    {
+      "input": "1200.5",
+      "currency": "JPY",
+      "error": "Enter a whole amount, with no decimal places."
+    },
+    {
+      "input": "1.234",
+      "currency": "KWD",
+      "amount": 1234
+    },
+    {
+      "input": "1.2345",
+      "currency": "KWD",
+      "error": "Enter an amount with up to three decimal places."
+    },
+    {
+      "input": "0.5",
+      "currency": "BHD",
+      "amount": 500
+    },
+    {
+      "input": "99999999999",
+      "currency": "JPY",
+      "amount": 99999999999
+    },
+    {
+      "input": "999999999.99",
+      "currency": "EUR",
+      "amount": 99999999999
+    },
+    {
+      "input": "99999999.999",
+      "currency": "KWD",
+      "amount": 99999999999
+    },
+    {
+      "input": "1000000000",
+      "currency": "EUR",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "",
+      "currency": "EUR",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "-1",
+      "currency": "EUR",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "1",
+      "currency": "XXX",
+      "error": "Choose a currency from the list."
+    }
+  ],
+  "rates": [
+    {
+      "input": "1.4612",
+      "rate": "1.4612"
+    },
+    {
+      "input": "1,4900",
+      "rate": "1.49"
+    },
+    {
+      "input": "1.4900",
+      "rate": "1.49"
+    },
+    {
+      "input": " 0.0093 ",
+      "rate": "0.0093"
+    },
+    {
+      "input": "0010.50",
+      "rate": "10.5"
+    },
+    {
+      "input": "1",
+      "rate": "1"
+    },
+    {
+      "input": "0",
+      "error": "Enter a rate greater than zero."
+    },
+    {
+      "input": "0.00000000",
+      "error": "Enter a rate greater than zero."
+    },
+    {
+      "input": "0.00000001",
+      "rate": "0.00000001"
+    },
+    {
+      "input": "1.123456789",
+      "error": "Enter a rate with up to eight decimal places."
+    },
+    {
+      "input": "1234567890",
+      "error": "Enter a rate with up to eight decimal places."
+    },
+    {
+      "input": "-1",
+      "error": "Enter a rate with up to eight decimal places."
+    },
+    {
+      "input": "1e3",
+      "error": "Enter a rate with up to eight decimal places."
+    },
+    {
+      "input": "",
+      "error": "Enter a rate with up to eight decimal places."
+    }
+  ],
+  "conversions": [
+    {
+      "amount": 8500,
+      "from": "EUR",
+      "rate": "1.4612",
+      "home": "CAD",
+      "converted": 12420
+    },
+    {
+      "amount": 8500,
+      "from": "EUR",
+      "rate": "1.49",
+      "home": "CAD",
+      "converted": 12665
+    },
+    {
+      "amount": 4800,
+      "from": "EUR",
+      "rate": "1.463",
+      "home": "CAD",
+      "converted": 7022
+    },
+    {
+      "amount": 3499,
+      "from": "USD",
+      "rate": "1.373",
+      "home": "CAD",
+      "converted": 4804
+    },
+    {
+      "amount": 1200,
+      "from": "JPY",
+      "rate": "0.00906283",
+      "home": "CAD",
+      "converted": 1088
+    },
+    {
+      "amount": 1,
+      "from": "JPY",
+      "rate": "0.0093",
+      "home": "CAD",
+      "converted": 1
+    },
+    {
+      "amount": 1234,
+      "from": "KWD",
+      "rate": "4.48",
+      "home": "CAD",
+      "converted": 553
+    },
+    {
+      "amount": 5,
+      "from": "EUR",
+      "rate": "0.1",
+      "home": "CAD",
+      "converted": 1
+    },
+    {
+      "amount": 15,
+      "from": "EUR",
+      "rate": "0.1",
+      "home": "CAD",
+      "converted": 2
+    },
+    {
+      "amount": 25,
+      "from": "EUR",
+      "rate": "0.1",
+      "home": "CAD",
+      "converted": 3
+    },
+    {
+      "amount": 10000,
+      "from": "CAD",
+      "rate": "109.5",
+      "home": "JPY",
+      "converted": 10950
+    },
+    {
+      "amount": 10000,
+      "from": "CAD",
+      "rate": "0.2215",
+      "home": "KWD",
+      "converted": 22150
+    },
+    {
+      "amount": 99999999999,
+      "from": "JPY",
+      "rate": "0.00000001",
+      "home": "CAD",
+      "converted": 100000
+    },
+    {
+      "amount": 0,
+      "from": "EUR",
+      "rate": "1.4612",
+      "home": "CAD",
+      "converted": 0
+    }
+  ],
+  "crossRates": [
+    {
+      "fromPerBase": "1",
+      "toPerBase": "1.4612",
+      "rate": "1.4612"
+    },
+    {
+      "fromPerBase": "1.0812",
+      "toPerBase": "1.4612",
+      "rate": "1.35146"
+    },
+    {
+      "fromPerBase": "161.23",
+      "toPerBase": "1.4612",
+      "rate": "0.00906283"
+    },
+    {
+      "fromPerBase": "1.4612",
+      "toPerBase": "1",
+      "rate": "0.684369"
+    },
+    {
+      "fromPerBase": "1.4612",
+      "toPerBase": "1.4612",
+      "rate": "1"
+    },
+    {
+      "fromPerBase": "17000",
+      "toPerBase": "0.84",
+      "rate": "0.00004941"
+    },
+    {
+      "fromPerBase": "0.84",
+      "toPerBase": "17000",
+      "rate": "20238.1"
+    },
+    {
+      "fromPerBase": "1",
+      "toPerBase": "0.00000001",
+      "rate": "0.00000001"
+    },
+    {
+      "fromPerBase": "99999999",
+      "toPerBase": "0.00000001",
+      "rate": null
+    },
+    {
+      "fromPerBase": "3",
+      "toPerBase": "1",
+      "rate": "0.333333"
+    },
+    {
+      "fromPerBase": "7",
+      "toPerBase": "2",
+      "rate": "0.285714"
+    }
+  ],
+  "rateDates": [
+    {
+      "published": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "date": "2026-11-03",
+      "expected": {
+        "date": "2026-11-03",
+        "provisional": false
+      }
+    },
+    {
+      "published": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "date": "2026-11-07",
+      "expected": {
+        "date": "2026-11-06",
+        "provisional": true
+      }
+    },
+    {
+      "published": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "date": "2026-11-08",
+      "expected": {
+        "date": "2026-11-06",
+        "provisional": true
+      }
+    },
+    {
+      "published": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "date": "2026-11-09",
+      "expected": {
+        "date": "2026-11-06",
+        "provisional": true
+      }
+    },
+    {
+      "published": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "date": "2026-11-01",
+      "expected": null
+    },
+    {
+      "published": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "date": "2026-11-06",
+      "expected": {
+        "date": "2026-11-06",
+        "provisional": false
+      }
+    },
+    {
+      "published": [],
+      "date": "2026-11-03",
+      "expected": null
+    }
+  ],
+  "entryAmounts": [
+    {
+      "amount": "85.00",
+      "currency": "EUR",
+      "home": "CAD",
+      "rate": "1.4612",
+      "mode": "full",
+      "split": "",
+      "expected": {
+        "originalAmount": 8500,
+        "total": 12420,
+        "share": 12420
+      }
+    },
+    {
+      "amount": "85.00",
+      "currency": "EUR",
+      "home": "CAD",
+      "rate": "1.4612",
+      "mode": "equal",
+      "split": "2",
+      "expected": {
+        "originalAmount": 8500,
+        "total": 12420,
+        "share": 6210
+      }
+    },
+    {
+      "amount": "373.25",
+      "currency": "CAD",
+      "home": "CAD",
+      "mode": "equal",
+      "split": "4",
+      "expected": {
+        "originalAmount": 37325,
+        "total": 37325,
+        "share": 9331
+      }
+    },
+    {
+      "amount": "85.00",
+      "currency": "EUR",
+      "home": "CAD",
+      "rate": "1.4612",
+      "mode": "percent",
+      "split": "25",
+      "expected": {
+        "originalAmount": 8500,
+        "total": 12420,
+        "share": 3105
+      }
+    },
+    {
+      "amount": "85.00",
+      "currency": "EUR",
+      "home": "CAD",
+      "rate": "1.4612",
+      "mode": "amount",
+      "split": "40",
+      "expected": {
+        "originalAmount": 8500,
+        "total": 12420,
+        "share": 5845
+      }
+    },
+    {
+      "amount": "85.00",
+      "currency": "EUR",
+      "home": "CAD",
+      "rate": "1.4612",
+      "mode": "amount",
+      "split": "85.01",
+      "error": "Your share cannot exceed the receipt total."
+    },
+    {
+      "amount": "1200",
+      "currency": "JPY",
+      "home": "CAD",
+      "rate": "0.00906283",
+      "mode": "equal",
+      "split": "3",
+      "expected": {
+        "originalAmount": 1200,
+        "total": 1088,
+        "share": 363
+      }
+    },
+    {
+      "amount": "1200.5",
+      "currency": "JPY",
+      "home": "CAD",
+      "rate": "0.00906283",
+      "mode": "full",
+      "split": "",
+      "error": "Enter a whole amount, with no decimal places."
+    },
+    {
+      "amount": "85.00",
+      "currency": "EUR",
+      "home": "CAD",
+      "mode": "full",
+      "split": "",
+      "error": "Enter the exchange rate."
+    },
+    {
+      "amount": "0.01",
+      "currency": "JPY",
+      "home": "CAD",
+      "rate": "0.0093",
+      "mode": "full",
+      "split": "",
+      "error": "Enter a whole amount, with no decimal places."
+    },
+    {
+      "amount": "1",
+      "currency": "JPY",
+      "home": "CAD",
+      "rate": "0.0001",
+      "mode": "full",
+      "split": "",
+      "error": "Enter an amount greater than zero."
+    },
+    {
+      "amount": "12.345",
+      "currency": "KWD",
+      "home": "CAD",
+      "rate": "4.48",
+      "mode": "full",
+      "split": "",
+      "expected": {
+        "originalAmount": 12345,
+        "total": 5531,
+        "share": 5531
+      }
+    }
+  ],
+  "reconversions": [
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-06",
+        "total": 7022,
+        "share": 7022
+      },
+      "next": {
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "rateDate": "2026-11-09"
+      },
+      "expected": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "total": 7034,
+        "share": 7034,
+        "rateDate": "2026-11-09"
+      }
+    },
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-06",
+        "total": 7022,
+        "share": 3511,
+        "participants": 2
+      },
+      "next": {
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "rateDate": "2026-11-09"
+      },
+      "expected": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "total": 7034,
+        "share": 3517,
+        "participants": 2,
+        "rateDate": "2026-11-09"
+      }
+    },
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "originalAmount": 1001,
+        "originalCurrency": "EUR",
+        "rate": "1",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-06",
+        "total": 1001,
+        "share": 334,
+        "participants": 3
+      },
+      "next": {
+        "rate": "1.5",
+        "rateStatus": "published",
+        "rateDate": "2026-11-09"
+      },
+      "expected": {
+        "kind": "expense",
+        "originalAmount": 1001,
+        "originalCurrency": "EUR",
+        "rate": "1.5",
+        "rateStatus": "published",
+        "total": 1502,
+        "share": 501,
+        "participants": 3,
+        "rateDate": "2026-11-09"
+      }
+    },
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-06",
+        "total": 7022,
+        "share": 2000
+      },
+      "next": {
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "rateDate": "2026-11-09"
+      },
+      "expected": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "total": 7034,
+        "share": 2003,
+        "rateDate": "2026-11-09"
+      }
+    },
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-06",
+        "total": 7022,
+        "share": 7022
+      },
+      "next": {
+        "rate": "1.5",
+        "rateStatus": "edited"
+      },
+      "expected": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.5",
+        "rateStatus": "edited",
+        "total": 7200,
+        "share": 7200
+      }
+    },
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "edited",
+        "total": 7022,
+        "share": 7022
+      },
+      "next": {
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "rateDate": "2026-11-09"
+      },
+      "expected": {
+        "kind": "expense",
+        "originalAmount": 4800,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "edited",
+        "total": 7022,
+        "share": 7022
+      }
+    },
+    {
+      "home": "CAD",
+      "entry": {
+        "kind": "expense",
+        "total": 7022,
+        "share": 7022
+      },
+      "next": {
+        "rate": "1.4655",
+        "rateStatus": "published",
+        "rateDate": "2026-11-09"
+      },
+      "expected": {
+        "kind": "expense",
+        "total": 7022,
+        "share": 7022
+      }
+    }
+  ],
+  "ledgers": [
+    {
+      "name": "home entry",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": ""
+          }
+        ],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "euro entry at the published rate",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "provisional rate",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "provisional",
+            "rateDate": "2026-11-02"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "edited rate has no publication date",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12665,
+            "share": 12665,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.49",
+            "rateStatus": "edited"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "edited rate with a publication date",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "edited",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "published rate without its date",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "total that doesn't match the conversion",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12421,
+            "share": 12421,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "share above the converted total",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12421,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "original amount without a rate",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "rate date alone",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "original currency is the home currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 8500,
+            "share": 8500,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "CAD",
+            "rate": "1",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "XXX",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "lower-case currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "eur",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "rate that isn't canonical",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.46120",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "zero rate",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "0",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "zero original amount",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 0,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown rate status",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "manual",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "yen entry with no decimals",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12416,
+            "share": 12416,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 13700,
+            "originalCurrency": "JPY",
+            "rate": "0.00906283",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "euro home with a dollar entry",
+      "ledger": {
+        "version": 4,
+        "currency": "EUR",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 3236,
+            "share": 3236,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 3499,
+            "originalCurrency": "USD",
+            "rate": "0.9248",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03"
+          }
+        ],
+        "recurring": []
+      },
+      "valid": true
+    },
+    {
+      "name": "home currency outside the home list",
+      "ledger": {
+        "version": 4,
+        "currency": "JPY",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": ""
+          }
+        ],
+        "recurring": []
+      },
+      "valid": false
+    },
+    {
+      "name": "recurring rule in another currency",
+      "ledger": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [],
+        "trips": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [],
+        "recurring": [
+          {
+            "id": "t",
+            "title": "Cooking class",
+            "kind": "expense",
+            "total": 12420,
+            "share": 12420,
+            "categoryId": "food",
+            "date": "2026-11-03",
+            "note": "",
+            "originalAmount": 8500,
+            "originalCurrency": "EUR",
+            "rate": "1.4612",
+            "rateStatus": "published",
+            "rateDate": "2026-11-03",
+            "frequency": "monthly",
+            "nextDate": "2026-12-03",
+            "anchorDay": 3,
+            "active": true
+          }
+        ]
+      },
+      "valid": false
+    }
+  ]
+}

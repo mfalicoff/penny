@@ -57,6 +57,9 @@ public sealed class TestApiFactory(
         builder.UseSetting("InboundMail:Worker", "false");
         // Tests run the unlinked receipt cleanup explicitly (MAZ-165).
         builder.UseSetting("Receipts:CleanupWorker", "false");
+        // Tests never fetch reference rates from the ECB (MAZ-151): they seed the cache or
+        // run the refresher with a fake handler.
+        builder.UseSetting("ExchangeRates:Worker", "false");
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");

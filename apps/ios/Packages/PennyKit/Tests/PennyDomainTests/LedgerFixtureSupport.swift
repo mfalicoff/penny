@@ -43,7 +43,12 @@ enum ContractLedger {
         LedgerEntry(
             id: wire.id, title: wire.title, kind: try kind(wire.kind), total: wire.total, share: wire.share,
             categoryId: wire.categoryId, accountId: wire.accountId, tripId: wire.tripId, date: try date(wire.date),
-            note: wire.note, recurringId: wire.recurringId)
+            note: wire.note, recurringId: wire.recurringId, originalAmount: wire.originalAmount,
+            originalCurrency: wire.originalCurrency, rate: wire.rate,
+            rateStatus: try wire.rateStatus.map {
+                try #require(RateStatus(rawValue: $0), "\($0) is not a rate status")
+            },
+            rateDate: try wire.rateDate.map(date))
     }
 
     /// The `searchable-household` seed: alex's personal ledger as written in its first step.

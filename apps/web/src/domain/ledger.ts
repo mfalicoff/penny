@@ -1,3 +1,4 @@
+import type { RateStatus } from "./currency.ts";
 export type Kind = "expense" | "income" | "investment";
 export const kinds: Kind[] = ["expense", "income", "investment"];
 export const kindLabels: Record<Kind, string> = {
@@ -40,8 +41,17 @@ export type Transaction = {
   note: string;
   receipt?: Receipt;
   recurringId?: string;
+  // Contract 2.4.0 (MAZ-151): an entry paid in another currency keeps the amount it was paid in
+  // (minor units of `originalCurrency`) and the rate used; `total` and `share` stay home amounts.
+  // All four come together or not at all; `rateDate` names the publication unless the rate was
+  // edited. Rules: ./currency.ts.
+  originalAmount?: number;
+  originalCurrency?: string;
+  rate?: string;
+  rateStatus?: RateStatus;
+  rateDate?: string;
 };
-export type Recurring = Omit<Transaction, "receipt" | "recurringId" | "tripId"> & {
+export type Recurring = Omit<Transaction, "receipt" | "recurringId" | "tripId" | "originalAmount" | "originalCurrency" | "rate" | "rateStatus" | "rateDate"> & {
   frequency: Frequency;
   nextDate: string;
   anchorDay: number;

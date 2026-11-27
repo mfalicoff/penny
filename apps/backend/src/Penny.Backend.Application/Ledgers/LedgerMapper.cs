@@ -68,7 +68,12 @@ internal static class LedgerMapper
                     entry.Date,
                     entry.Note,
                     entry.Receipt?.Id,
-                    entry.RecurringId
+                    entry.RecurringId,
+                    entry.Foreign?.OriginalAmount,
+                    entry.Foreign?.OriginalCurrency,
+                    entry.Foreign?.Rate,
+                    entry.Foreign?.RateStatus,
+                    entry.Foreign?.RateDate
                 )),
             ],
             [.. ledger.DismissedSuggestions]
@@ -145,8 +150,21 @@ internal static class LedgerMapper
             entry.Date,
             entry.Note,
             entry.ReceiptId is null ? null : Receipt(entry.ReceiptId, receipts),
-            entry.RecurringId
+            entry.RecurringId,
+            Foreign(entry)
         );
+
+    // Contract 2.4.0: the columns hold all four values or none (a check constraint).
+    private static ForeignAmount? Foreign(StoredEntry entry) =>
+        entry
+            is {
+                OriginalAmount: { } amount,
+                OriginalCurrency: { } currency,
+                Rate: { } rate,
+                RateStatus: { } status,
+            }
+            ? new(amount, currency, rate, status, entry.RateDate)
+            : null;
 
     // Replaces client-sent receipt metadata with the stored receipt's.
     public static LedgerDocument WithReceipts(

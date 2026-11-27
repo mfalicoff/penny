@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny API",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "description": "The HTTP API that the .NET backend serves and the iOS and web apps call. See docs/reference/.",
     "license": {
       "name": "MIT",
@@ -6845,7 +6845,7 @@
       "get": {
         "summary": "Export entries as CSV",
         "operationId": "getApiExportEntries",
-        "description": "MAZ-152. Personal entries and the person's share of recorded shared expenses for a month, a year or everything, oldest first, as a CSV file (`penny-entries-<period>.csv`, or the day's date for everything) that spreadsheets open as is: UTF-8 with a byte order mark, CRLF line ends, RFC 4180 quoting. Columns: Date, Type (Expense, Income or Investment), Title, Category, Account, Amount, Your share (positive decimals), Currency, Household (shared expenses), Trip, Note. Text that a spreadsheet would read as a formula starts with an apostrophe.",
+        "description": "MAZ-152. Personal entries and the person's share of recorded shared expenses for a month, a year or everything, oldest first, as a CSV file (`penny-entries-<period>.csv`, or the day's date for everything) that spreadsheets open as is: UTF-8 with a byte order mark, CRLF line ends, RFC 4180 quoting. Columns: Date, Type (Expense, Income or Investment), Title, Category, Account, Amount, Your share (positive decimals), Currency, Household (shared expenses), Trip, Note, then (contract 2.4.0) Original amount (a positive decimal in that currency's minor units), Original currency and Exchange rate for an entry paid in another currency, empty otherwise. Text that a spreadsheet would read as a formula starts with an apostrophe.",
         "parameters": [
           {
             "name": "month",
@@ -7385,6 +7385,95 @@
           }
         }
       }
+    },
+    "/api/rates": {
+      "get": {
+        "summary": "Reference exchange rates for a date",
+        "operationId": "getApiRates",
+        "description": "Contract 2.4.0 (MAZ-151). The server fetches the European Central Bank's daily reference rates and caches them in PostgreSQL; operators turn fetching off with ExchangeRates__Enabled=false (docs/reference/exchange-rates.md). Clients call this when an entry's currency or date changes, cache the last answer for offline entries, and replace provisional rates on a later sync.",
+        "parameters": [
+          {
+            "name": "base",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CurrencyCode"
+            },
+            "description": "The home currency the rates are quoted in."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "description": "The entry's date (2000-01-01 through 2100-12-31). Absent: the latest publication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": {
+                "description": "private, max-age=3600.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRates"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown base currency or an invalid date (\"Invalid exchange rate request.\", code rates.invalid_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7512,6 +7601,7 @@
               "rate_limit.invite",
               "rate_limit.search",
               "rate_limit.telemetry",
+              "rates.invalid_request",
               "receipt.changed",
               "receipt.invalid_name",
               "receipt.not_found",
@@ -8037,6 +8127,43 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "originalAmount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999,
+            "description": "Contract 2.4.0 (MAZ-151). The amount paid, in integer minor units of originalCurrency. originalAmount, originalCurrency, rate and rateStatus come together or not at all; total and share stay home amounts, and total must equal originalAmount converted at rate, rounded once, half up, to the ledger currency's minor units. Transactions only (recurring rules stay in the home currency). Optional: servers before 2.4.0 reject it, and clients before 2.4.0 drop it when they save, keeping the home amounts."
+          },
+          "originalCurrency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyCode"
+              }
+            ],
+            "description": "Contract 2.4.0. The currency the entry was paid in; never the ledger currency."
+          },
+          "rate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeRate"
+              }
+            ],
+            "description": "Contract 2.4.0. The rate the home total was converted at."
+          },
+          "rateStatus": {
+            "type": "string",
+            "enum": [
+              "published",
+              "provisional",
+              "edited"
+            ],
+            "description": "Contract 2.4.0. published: the reference rate for the entry's date (the latest publication on or before it). provisional: the latest known rate, used for an entry dated after the latest publication or made offline; clients replace it with the published rate on a later sync. edited: a rate the person entered or changed, which nothing replaces."
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Contract 2.4.0. The publication date of a published or provisional rate; absent when the rate is edited."
           }
         },
         "required": [
@@ -10706,6 +10833,237 @@
           "web",
           "sessionReplay",
           "native"
+        ]
+      },
+      "CurrencyCode": {
+        "type": "string",
+        "pattern": "^[A-Z]{3}$",
+        "enum": [
+          "AED",
+          "AFN",
+          "ALL",
+          "AMD",
+          "AOA",
+          "ARS",
+          "AUD",
+          "AWG",
+          "AZN",
+          "BAM",
+          "BBD",
+          "BDT",
+          "BGN",
+          "BHD",
+          "BIF",
+          "BMD",
+          "BND",
+          "BOB",
+          "BRL",
+          "BSD",
+          "BTN",
+          "BWP",
+          "BYN",
+          "BZD",
+          "CAD",
+          "CDF",
+          "CHF",
+          "CLP",
+          "CNY",
+          "COP",
+          "CRC",
+          "CUP",
+          "CVE",
+          "CZK",
+          "DJF",
+          "DKK",
+          "DOP",
+          "DZD",
+          "EGP",
+          "ERN",
+          "ETB",
+          "EUR",
+          "FJD",
+          "FKP",
+          "GBP",
+          "GEL",
+          "GHS",
+          "GIP",
+          "GMD",
+          "GNF",
+          "GTQ",
+          "GYD",
+          "HKD",
+          "HNL",
+          "HTG",
+          "HUF",
+          "IDR",
+          "ILS",
+          "INR",
+          "IQD",
+          "IRR",
+          "ISK",
+          "JMD",
+          "JOD",
+          "JPY",
+          "KES",
+          "KGS",
+          "KHR",
+          "KMF",
+          "KPW",
+          "KRW",
+          "KWD",
+          "KYD",
+          "KZT",
+          "LAK",
+          "LBP",
+          "LKR",
+          "LRD",
+          "LSL",
+          "LYD",
+          "MAD",
+          "MDL",
+          "MGA",
+          "MKD",
+          "MMK",
+          "MNT",
+          "MOP",
+          "MRU",
+          "MUR",
+          "MVR",
+          "MWK",
+          "MXN",
+          "MYR",
+          "MZN",
+          "NAD",
+          "NGN",
+          "NIO",
+          "NOK",
+          "NPR",
+          "NZD",
+          "OMR",
+          "PAB",
+          "PEN",
+          "PGK",
+          "PHP",
+          "PKR",
+          "PLN",
+          "PYG",
+          "QAR",
+          "RON",
+          "RSD",
+          "RUB",
+          "RWF",
+          "SAR",
+          "SBD",
+          "SCR",
+          "SDG",
+          "SEK",
+          "SGD",
+          "SHP",
+          "SLE",
+          "SOS",
+          "SRD",
+          "SSP",
+          "STN",
+          "SVC",
+          "SYP",
+          "SZL",
+          "THB",
+          "TJS",
+          "TMT",
+          "TND",
+          "TOP",
+          "TRY",
+          "TTD",
+          "TWD",
+          "TZS",
+          "UAH",
+          "UGX",
+          "USD",
+          "UYU",
+          "UZS",
+          "VES",
+          "VND",
+          "VUV",
+          "WST",
+          "XAF",
+          "XCD",
+          "XCG",
+          "XOF",
+          "XPF",
+          "YER",
+          "ZAR",
+          "ZMW",
+          "ZWG"
+        ],
+        "description": "Contract 2.4.0 (MAZ-151). A circulating ISO 4217 currency an entry may be paid in; contracts/fixtures/currency.json lists each with its minor units (JPY has none, KWD has three)."
+      },
+      "ExchangeRate": {
+        "type": "string",
+        "pattern": "^(0|[1-9]\\d{0,8})(\\.\\d{0,7}[1-9])?$",
+        "maxLength": 18,
+        "description": "Contract 2.4.0. How many home units one unit of the other currency is worth, as a canonical decimal (no trailing fraction zeros, greater than zero), for example \"1.4612\" for 1 EUR = 1.4612 CAD."
+      },
+      "ExchangeRates": {
+        "type": "object",
+        "description": "Contract 2.4.0 (MAZ-151). Reference rates against one base currency for one date.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this server fetches reference rates (ExchangeRates__Enabled). When false, rates is empty and clients ask the person for a rate."
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100,
+            "description": "Who publishes the rates, for example \"European Central Bank\". Null when fetching is off."
+          },
+          "base": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "The date asked for."
+          },
+          "rateDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "The publication used: the latest on or before date, or the latest of all when date is after it. Null when the server has no rates (fetching off, or nothing fetched yet)."
+          },
+          "provisional": {
+            "type": "boolean",
+            "description": "True when date is after the latest publication: the rates are the latest known and the entry's rate becomes final on a later sync."
+          },
+          "latestDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "The latest publication the server has, for Settings › Currency."
+          },
+          "rates": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ExchangeRate"
+            },
+            "description": "Home units (base) per one unit of each currency the source quotes, cross rates rounded half up to 6 significant digits. A currency the source doesn't quote is absent: clients ask for its rate."
+          }
+        },
+        "required": [
+          "enabled",
+          "source",
+          "base",
+          "date",
+          "rateDate",
+          "provisional",
+          "latestDate",
+          "rates"
         ]
       }
     }

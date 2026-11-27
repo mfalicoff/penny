@@ -3,6 +3,7 @@
 // (LedgerReader); keep them in step with contracts/openapi.json.
 import { z } from "zod";
 import { accountTypes, validDate } from "../domain/ledger.ts";
+import { foreignAmountProblem, homeCurrencies, isCurrency, rateStatuses, validRate } from "../domain/currency.ts";
 
 const id = z.string().min(1).max(100);
 const date = z.string().refine(validDate, "Invalid calendar date");
@@ -30,7 +31,7 @@ const receipt = z.object({
 const ledgerSchema = z
   .object({
     version: z.literal(4),
-    currency: z.enum(["CAD", "USD", "EUR", "GBP"]),
+    currency: z.enum(homeCurrencies),
     accounts: z.array(z.object({ id, name: z.string().trim().min(1).max(50), type: z.enum(accountTypes) })).max(300),
     trips: z.array(z.object({ id, name: z.string().trim().min(1).max(80), startDate: date, endDate: date, sharedHouseholdId: id.optional() })).max(300),
     categories: z
@@ -49,6 +50,12 @@ const ledgerSchema = z
         entry.extend({
           receipt: receipt.optional(),
           recurringId: id.optional(),
+          // Contract 2.4.0 (MAZ-151): the amount in the currency it was paid in, and the rate used.
+          originalAmount: amount.positive().optional(),
+          originalCurrency: z.string().refine(isCurrency, "Invalid original currency").optional(),
+          rate: z.string().refine(validRate, "Invalid exchange rate").optional(),
+          rateStatus: z.enum(rateStatuses as [string, ...string[]]).optional(),
+          rateDate: date.optional(),
         }),
       )
       .max(100000),
@@ -59,6 +66,12 @@ const ledgerSchema = z
           nextDate: date,
           anchorDay: z.number().int().min(1).max(31),
           active: z.boolean(),
+          // Rules stay in the home currency (MAZ-151 phase 1); read so a foreign rule is refused, not stripped.
+          originalAmount: z.unknown().optional(),
+          originalCurrency: z.unknown().optional(),
+          rate: z.unknown().optional(),
+          rateStatus: z.unknown().optional(),
+          rateDate: z.unknown().optional(),
         }),
       )
       .max(1000),
@@ -87,11 +100,18 @@ const ledgerSchema = z
       if (categories.get(t.categoryId)?.kind !== t.kind)
         ctx.addIssue({ code: "custom", message: "Invalid category" });
     }
+    for (const t of data.transactions) {
+      const problem = foreignAmountProblem(t, data.currency);
+      if (problem) ctx.addIssue({ code: "custom", message: problem });
+    }
     for (const t of data.transactions)
       if (t.tripId && (t.kind !== "expense" || !trips.has(t.tripId)))
         ctx.addIssue({ code: "custom", message: "Invalid trip assignment" });
-    for (const rule of data.recurring)
+    for (const rule of data.recurring) {
       if (rule.tripId) ctx.addIssue({ code: "custom", message: "Recurring entries cannot belong to a trip" });
+      if ([rule.originalAmount, rule.originalCurrency, rule.rate, rule.rateStatus, rule.rateDate].some((value) => value !== undefined))
+        ctx.addIssue({ code: "custom", message: "Recurring entries are in the home currency" });
+    }
   });
 
 export const ledgerWriteSchema = z.object({

@@ -10,6 +10,7 @@ internal static class Checks
     public const string Kinds = "('income','expense','investment')";
     public const string SplitModes = "('equal','exact','percent')";
     public const string Frequencies = "('weekly','monthly','yearly')";
+    public const string RateStatuses = "('published','provisional','edited')";
 
     public static string Cents(string column, long min = 0) =>
         $"{column} BETWEEN {min} AND {MaxCents}";
@@ -31,6 +32,11 @@ internal static class Checks
 
     public static string ParticipantsExpenseOnly(string column) =>
         $"{column} IS NULL OR kind = 'expense'";
+
+    // A canonical exchange rate (contract 2.4.0): up to 9 integer and 8 fraction digits, no
+    // trailing fraction zeros, greater than zero.
+    public static string Rate(string column) =>
+        $"{column} ~ '^(0|[1-9][0-9]{{0,8}})([.][0-9]{{0,7}}[1-9])?$' AND {column} ~ '[1-9]'";
 
     public const string Lease =
         "(lease_owner IS NULL) = (lease_token IS NULL) AND (lease_token IS NULL) = (lease_expires_at IS NULL)";

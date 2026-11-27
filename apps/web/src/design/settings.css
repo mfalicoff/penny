@@ -1284,3 +1284,78 @@
   inset: 0;
   background: rgb(0 0 0 / 0.25);
 }
+
+/* ---------- Currency › Exchange rates and Recent currencies (MAZ-151, `web-currency-rates`, `web-currency-rates-off`) ---------- */
+.currency-home,
+.currency-rows {
+  display: grid;
+  margin: 0;
+  padding: 2px 14px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  list-style: none;
+}
+
+.currency-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 0;
+  font-size: 0.90625rem;
+}
+
+.currency-rows > .currency-row + .currency-row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.currency-row__code {
+  flex: none;
+  width: 46px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.currency-row__name {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.currency-row__sub {
+  display: block;
+  margin-top: 1px;
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+}
+
+.currency-row__value {
+  flex: none;
+  margin: 0;
+  color: var(--pk-label-2);
+  text-align: end;
+}
+
+.currency-home .icon {
+  color: var(--pk-label-3);
+}
+
+.currency-card__note--box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--pk-surface-2);
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.currency-card__note--box .currency-card__note-icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 1px;
+}

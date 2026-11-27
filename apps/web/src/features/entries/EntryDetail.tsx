@@ -15,6 +15,8 @@ import { ReceiptLink } from "../receipts/ReceiptLink";
 import { categoryIcon, longDay, repeatLabel, splitSummary } from "./model";
 import { EntryFormDialog } from "./EntryForm";
 import { useLedgerWriter } from "./writer";
+import { foreignOf, formatMinor, rateLine, shortDate } from "./currency";
+import { DEFAULT_SOURCE } from "./RateRow";
 
 const TONE = { expense: "expense", income: "income", investment: "investment" } as const;
 
@@ -114,6 +116,7 @@ function EntryDetailFrame({
   const account = ledger?.accounts.find((item) => item.id === entry.accountId);
   const trip = ledger?.trips.find((item) => item.id === entry.tripId);
   const split = splitSummary(entry);
+  const foreign = currency ? foreignOf(entry) : null;
   const expected = isExpectedIncome(entry, today);
   const canWrite = Boolean(writer.save) && !gone;
   const openAdd = useOpenAddEntry();
@@ -189,8 +192,23 @@ function EntryDetailFrame({
         {pane ? null : head}
         <p className="entry-sheet__amount">
           {/* Signed as the cards read it (MAZ-202): expenses −, income +, investments unsigned; expected income in amber, unsigned. */}
-          {expected ? <Money cents={entry.share} currency={currency} tone="pending" /> : <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={TONE[entry.kind]} />}
-          {split ? <span className="entry-sheet__share">your share of {formatCents(entry.total, currency)}</span> : null}
+          {foreign ? (
+            <>
+              {/* web-activity-currencies: the amount it was paid in leads, then the home amount the totals use. */}
+              <span className={cx("pk-num money", expected ? "pk-money--pending" : entry.kind !== "expense" && `pk-money--${TONE[entry.kind]}`)}>
+                {formatMinor(expected ? foreign.amount : rowAmount(entry.kind, foreign.amount).cents, foreign.currency, currency, { signed: !expected && entry.kind !== "investment" })}
+              </span>
+              <span className="entry-sheet__share pk-num">
+                {formatCents(entry.total, currency)} {currency}
+                {split ? ` · your share ${formatCents(entry.share, currency)}` : ""}
+              </span>
+            </>
+          ) : (
+            <>
+              {expected ? <Money cents={entry.share} currency={currency} tone="pending" /> : <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={TONE[entry.kind]} />}
+              {split ? <span className="entry-sheet__share">your share of {formatCents(entry.total, currency)}</span> : null}
+            </>
+          )}
         </p>
         {expected || writer.pending.has(entry.id) ? (
           <span className="entry-detail__badges">
@@ -219,6 +237,8 @@ function EntryDetailFrame({
           {entry.kind === "expense" ? <DetailRow label="Trip" value={trip?.name ?? null} /> : null}
           {entry.note ? <DetailRow label="Note" value={entry.note} note /> : null}
         </DetailGroup>
+
+        {foreign && currency ? <ExchangeRate foreign={foreign} total={entry.total} home={currency} titled={pane} /> : null}
 
         {split || entry.receipt ? (
           <DetailGroup title={pane ? (split ? "Split" : "Receipt") : split && entry.receipt ? "Split & receipt" : split ? "Split" : "Receipt"} aside={pane ? split?.method : undefined} titled={pane} list={false}>
@@ -345,6 +365,41 @@ function ShareRows({ people, share, total, currency }: { people: number | null; 
         <dd className="pk-num">{formatCents(total - share, currency)}</dd>
       </div>
     </dl>
+  );
+}
+
+/**
+ * The Exchange rate section (`web-activity-currencies`, `iphone-entry-detail-currency`): the rate,
+ * where it comes from and its date, and what the totals use.
+ */
+function ExchangeRate({ foreign, total, home, titled }: { foreign: NonNullable<ReturnType<typeof foreignOf>>; total: number; home: string; titled: boolean }) {
+  const used = formatCents(total, home);
+  const note =
+    foreign.status === "edited"
+      ? `Your totals use ${used}, at the rate you entered. To change it, edit the entry.`
+      : foreign.status === "provisional"
+        ? `Your totals use ${used} for now. Penny updates it with the day's rate on the next sync, unless you change it.`
+        : `Your totals use ${used}. To use your card's rate instead, edit the entry and change its rate.`;
+  return (
+    <DetailGroup title="Exchange rate" titled={titled} list={false}>
+      <dl className="entry-sheet__rows">
+      <DetailRow label="Rate" value={rateLine(foreign.currency, foreign.rate, home)} />
+      <div className="entry-sheet__row">
+        <dt>Source</dt>
+        <dd>
+          {foreign.status === "edited" ? (
+            "You entered it"
+          ) : (
+            <>
+              {DEFAULT_SOURCE}
+              {foreign.rateDate ? <small className="entry-sheet__aside">{shortDate(foreign.rateDate)}{foreign.status === "provisional" ? " · provisional" : ""}</small> : null}
+            </>
+          )}
+        </dd>
+      </div>
+      </dl>
+      <p className="entry-sheet__rate-note">{note}</p>
+    </DetailGroup>
   );
 }
 

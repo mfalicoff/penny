@@ -48,6 +48,14 @@ public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible 
     case categoryKindInUse
     case currencyLocked
 
+    // Entries in several currencies (MAZ-151, apps/web/src/domain/currency.ts).
+    case unknownCurrency
+    /// An amount in a currency with `decimals` minor-unit places other than two (two is `invalidAmount`).
+    case invalidCurrencyAmount(decimals: Int)
+    case invalidRateFormat
+    case zeroRate
+    case missingRate
+
     public var message: String {
         switch self {
         case .invalidAmount: "Enter an amount with up to two decimal places."
@@ -87,6 +95,17 @@ public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible 
         case .tooManyCategories: "You can add up to 300 categories."
         case .categoryKindInUse: "This category has entries. Keep its type to preserve your history."
         case .currencyLocked: "Currency can only be changed before adding entries."
+        case .unknownCurrency: "Choose a currency from the list."
+        case .invalidCurrencyAmount(let decimals):
+            switch decimals {
+            case 0: "Enter a whole amount, with no decimal places."
+            case 1: "Enter an amount with up to one decimal place."
+            case 3: "Enter an amount with up to three decimal places."
+            default: "Enter an amount with up to two decimal places."
+            }
+        case .invalidRateFormat: "Enter a rate with up to eight decimal places."
+        case .zeroRate: "Enter a rate greater than zero."
+        case .missingRate: "Enter the exchange rate."
         }
     }
 

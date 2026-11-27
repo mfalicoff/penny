@@ -262,6 +262,14 @@ export function groupAmount(value: string): string {
 
 interface AmountHeroProps {
   id: string;
+  /** The symbol before the amount, when it isn't `currency`'s own (an entry in another currency: "€"). */
+  symbol?: string;
+  /** Replaces the currency pill: the entry form's currency menu (MAZ-151), beside the amount on the web card. */
+  currencyControl?: ReactNode;
+  /** Under the amount: the converted home amount ("≈ $124.20 CAD"). */
+  conversion?: ReactNode;
+  /** The placeholder in the amount's currency ("0" for JPY). */
+  placeholder?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   value: string;
   onChange: (value: string) => void;
@@ -282,6 +290,10 @@ interface AmountHeroProps {
  */
 export function AmountHero({
   id,
+  symbol,
+  currencyControl,
+  conversion,
+  placeholder = "0.00",
   inputRef,
   value,
   onChange,
@@ -295,14 +307,15 @@ export function AmountHero({
   const [focused, setFocused] = useState(false);
   const shown = focused ? value : groupAmount(value);
   return (
-    <div className={`amount-hero amount-hero--${kind}`}>
+    <div className={cx(`amount-hero amount-hero--${kind}`, currencyControl ? "amount-hero--menu" : undefined)}>
       <label htmlFor={id} className="visually-hidden">
         Amount ({currency})
       </label>
+      <div className="amount-hero__head">
       <div className="amount-hero__line">
         <span className="amount-hero__symbol" aria-hidden="true">
           {kind === "income" ? "+" : ""}
-          {currencySymbol(currency)}
+          {symbol ?? currencySymbol(currency)}
         </span>
         <input
           id={id}
@@ -310,7 +323,7 @@ export function AmountHero({
           className="amount-hero__input"
           inputMode="decimal"
           autoComplete="off"
-          placeholder="0.00"
+          placeholder={placeholder}
           size={Math.max(shown.length, 4)}
           value={shown}
           disabled={disabled}
@@ -326,11 +339,13 @@ export function AmountHero({
           {...invalid}
         />
       </div>
-      {currencyPill ? (
+      {currencyControl ?? (currencyPill ? (
         <span className="amount-hero__currency" aria-hidden="true">
           {currency}
         </span>
-      ) : null}
+      ) : null)}
+      </div>
+      {conversion}
       {error}
     </div>
   );

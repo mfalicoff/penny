@@ -31,6 +31,7 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 | Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](../reference/search.md)) |
 | Mail delivery | `Email__Worker` | Sends queued password reset and invitation emails, when email is configured ([email delivery](email.md)) |
 | Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
+| Exchange rates | `ExchangeRates__Worker` | Fetches the European Central Bank's reference rates every four hours, when `ExchangeRates__Enabled` is on; no lease, any number may run ([exchange rates](../reference/exchange-rates.md)) |
 
 Supported topologies:
 
@@ -165,6 +166,8 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Receipts__MinFreeMegabytes` | 100 | Readiness fails (`disk-space`) below this much free space on the receipt volume |
 | `Receipts__UnlinkedRetentionDays` | 30 | Receipts nothing links to (discarded drafts, removed or replaced receipts) are deleted once this old, 1–3650; keep it longer than devices stay offline ([unlinked receipts](../reference/receipts.md#unlinked-receipts)) |
 | `Receipts__CleanupWorker` | true | `false` stops this process from deleting unlinked receipts (every six hours); `receipts-sweep` still does |
+| `ExchangeRates__Enabled` | `true` | Fetches the European Central Bank's public reference rates for entries in other currencies; `false` turns fetching off and the apps ask for rates ([exchange rates](../reference/exchange-rates.md)) |
+| `ExchangeRates__RefreshMinutes` | 240 | Delay between rate fetches, 15–10,080 |
 | `Search__RateLimitPermits` | 30 | Searches per session per minute |
 | `Logging__LogLevel__Default` | `Information` | `Warning` drops the per-request access line |
 | `ClientTelemetry__FaroUrl`, `ClientTelemetry__OtlpEndpoint` and the other `ClientTelemetry__*` settings | off | Opt-in error, crash and performance reports (and web Session Replay) from the apps, which post them to the API; the API scrubs them and forwards them to your collector ([client telemetry](observability.md#client-telemetry)). Replaces the web container's `PENNY_WEB_TELEMETRY_URL`, which is now ignored |

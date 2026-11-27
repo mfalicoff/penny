@@ -3,6 +3,23 @@
   "description": "Every shared fixture, its SHA-256 (LF line endings) and the suites consuming it. Regenerate with `node --experimental-strip-types apps/web/scripts/fixtures/generate-golden.ts`; tests in each language verify the hashes, so an unreviewed edit fails everywhere.",
   "fixtures": [
     {
+      "file": "currency.json",
+      "sha256": "302762fe0b1d57760e3f06cc4193127426477e869a3db7de8ddd85923c16c2d0",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "apps/web/tests/domain/golden-fixtures.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Contracts/CurrencyFixtureTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/CurrencyTests.swift"
+        ]
+      }
+    },
+    {
       "file": "full-stack-seeds.json",
       "sha256": "b87e49b15beb412d0b07eee2bcb4a1645cd222a177b419fee11abdd2f40361d7",
       "generatedBy": null,
@@ -35,7 +52,7 @@
     },
     {
       "file": "merge-conflicts.json",
-      "sha256": "cd77bcc214b110c37b708da630f08406396a209ead45873dfa01797c73a9c29e",
+      "sha256": "fab86637e7af11a564c3b9fbf1d5da0ae7dbbb61c87bbf151ed6461d105bdf3b",
       "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [

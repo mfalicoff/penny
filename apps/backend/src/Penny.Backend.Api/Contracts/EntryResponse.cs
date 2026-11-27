@@ -19,7 +19,14 @@ public sealed record EntryResponse(
     string Note,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         ReceiptResponse? Receipt,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId,
+    // Contract 2.4.0 (MAZ-151): an entry paid in another currency.
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? OriginalAmount,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? OriginalCurrency,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Rate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateStatus,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateDate
 )
 {
     public static EntryResponse From(Entry entry) =>
@@ -36,6 +43,11 @@ public sealed record EntryResponse(
             LedgerDates.Write(entry.Date),
             entry.Note,
             entry.Receipt is null ? null : ReceiptResponse.From(entry.Receipt),
-            entry.RecurringId
+            entry.RecurringId,
+            entry.Foreign?.OriginalAmount,
+            entry.Foreign?.OriginalCurrency,
+            entry.Foreign?.Rate,
+            entry.Foreign?.RateStatus,
+            entry.Foreign?.RateDate is { } rateDate ? LedgerDates.Write(rateDate) : null
         );
 }

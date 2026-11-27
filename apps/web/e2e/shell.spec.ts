@@ -21,6 +21,10 @@ async function mockApi(page: Page, email = "alex@example.test") {
   await page.route("/api/households/**", (route) => route.fulfill({ status: 404, json: { error: "Household not found." } }));
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
   await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
+  // Settings › Currency's Exchange rates (MAZ-151).
+  await page.route("/api/rates?*", (route) =>
+    route.fulfill({ json: { enabled: true, source: "European Central Bank", base: "CAD", date: "2026-11-09", rateDate: "2026-11-06", provisional: true, latestDate: "2026-11-06", rates: { EUR: "1.463" } } }),
+  );
 }
 
 // Phones title a settings section by its name (with Back to the list); wider, the page is Settings.

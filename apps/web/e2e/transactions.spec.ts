@@ -165,6 +165,9 @@ test("adds an expense with the keyboard only and finds it in Activity", async ({
   const add = form(page);
   await expect(add.getByLabel("Amount (CAD)")).toBeFocused();
   await page.keyboard.type("18.40");
+  // The entry's currency (MAZ-151) comes right after the amount.
+  await page.keyboard.press("Tab");
+  await expect(add.getByRole("button", { name: "Currency: CAD, Canadian dollar" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(add.getByLabel("Title")).toBeFocused();
   await page.keyboard.type("Coffee beans");

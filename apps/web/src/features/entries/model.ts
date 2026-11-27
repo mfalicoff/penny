@@ -1,4 +1,5 @@
 import { saveEntry, type LedgerChange } from "@domain/commands.ts";
+import { convertAmount, entryAmounts, minorUnits, normalizeRate, parseAmount } from "@domain/currency.ts";
 import {
   cents,
   kindLabels,
@@ -49,13 +50,40 @@ export interface EntryDraft {
   repeat: Repeat;
   /** The linked receipt (expenses only): uploaded in this form, or the entry's own. Null for none. */
   receipt: Receipt | null;
+  /**
+   * The currency the amount is typed in (MAZ-151): null for the ledger's home currency. `amount`
+   * and an "amount" split are in this currency; the saved `total` and `share` are home amounts.
+   */
+  currency: string | null;
+  /** A rate the person typed or changed (an "edited" rate, never replaced), or null to use the published one. */
+  rateInput: string | null;
+  /**
+   * An edited entry's own published or provisional rate, kept while its currency and date stay
+   * the same; a change to either looks the rate up again.
+   */
+  storedRate: StoredRate | null;
 }
 
-export type DraftField = "amount" | "title" | "date" | "category" | "account" | "trip" | "share" | "note";
+export interface StoredRate {
+  currency: string;
+  date: string;
+  rate: string;
+  status: "published" | "provisional";
+  rateDate: string;
+}
+
+/** The looked-up rate a foreign draft is built with (`./currency.ts` `AutoRate`, or the entry's stored one). */
+export interface DraftRate {
+  rate: string;
+  status: "published" | "provisional";
+  rateDate: string;
+}
+
+export type DraftField = "amount" | "title" | "date" | "category" | "account" | "rate" | "trip" | "share" | "note";
 export type DraftErrors = Partial<Record<DraftField, string>>;
 
 /** Fields in the order the form shows them, for moving focus to the first problem. */
-export const FIELD_ORDER: DraftField[] = ["amount", "title", "category", "date", "account", "share", "trip", "note"];
+export const FIELD_ORDER: DraftField[] = ["amount", "title", "category", "date", "account", "rate", "share", "trip", "note"];
 
 export const KIND_PLURAL: Record<Kind, string> = { expense: "Expenses", income: "Income", investment: "Investments" };
 export { kindLabels };
@@ -126,27 +154,51 @@ export function newDraft(ledger: Pick<Ledger, "categories" | "transactions">, ki
     shareInput: "",
     repeat: "none",
     receipt: null,
+    currency: null,
+    rateInput: null,
+    storedRate: null,
   };
+}
+
+/** Minor units as typed text in their currency: "85.00", "1200" (JPY), "1.250" (KWD). */
+export function minorToInput(value: number, code: string): string {
+  const units = minorUnits(code);
+  return units === 0 ? String(value) : (value / 10 ** units).toFixed(units);
 }
 
 export function draftFromEntry(entry: Transaction): EntryDraft {
   const split: ShareMode = recordedSplit(entry);
+  const original = entry.originalCurrency && entry.originalAmount !== undefined && entry.rate && entry.rateStatus ? { code: entry.originalCurrency, amount: entry.originalAmount, rate: entry.rate, status: entry.rateStatus } : null;
+  // A split typed as an amount is in the entry's currency; read it back at the entry's rate (the share's proportion).
+  const shareAmount = original ? Math.round((entry.share * original.amount) / Math.max(1, entry.total)) : entry.share;
   return {
     id: entry.id,
     ruleId: uid(),
     kind: entry.kind,
     title: entry.title,
-    amount: centsToInput(entry.total),
+    amount: original ? minorToInput(original.amount, original.code) : centsToInput(entry.total),
     date: entry.date,
     categoryId: entry.categoryId,
     accountId: entry.accountId ?? "",
     tripId: entry.tripId ?? "",
     note: entry.note,
     split,
-    shareInput: split === "equal" ? String(entry.participants) : split === "amount" ? centsToInput(entry.share) : "",
+    shareInput: split === "equal" ? String(entry.participants) : split === "amount" ? (original ? minorToInput(shareAmount, original.code) : centsToInput(entry.share)) : "",
     repeat: "none",
     receipt: entry.receipt ?? null,
+    currency: original ? original.code : null,
+    rateInput: original?.status === "edited" ? original.rate : null,
+    storedRate: original && original.status !== "edited" && entry.rateDate ? { currency: original.code, date: entry.date, rate: original.rate, status: original.status, rateDate: entry.rateDate } : null,
   };
+}
+
+/** The currency a draft's amount is in. */
+export const draftCurrency = (draft: Pick<EntryDraft, "currency">, home: string) => draft.currency ?? home;
+
+/** The entry's own stored rate, while the draft's currency and date are still the entry's. */
+export function storedRateOf(draft: Pick<EntryDraft, "currency" | "date" | "storedRate">): DraftRate | null {
+  const stored = draft.storedRate;
+  return stored && stored.currency === draft.currency && stored.date === draft.date ? { rate: stored.rate, status: stored.status, rateDate: stored.rateDate } : null;
 }
 
 /** Changing the kind keeps what was typed but picks a category of the new kind. Trips and splits are expense-only. */
@@ -169,14 +221,42 @@ export interface BuiltEntry {
  * Checks the draft against the ledger it will be saved to and builds the entry (and, for a new
  * repeating entry, its rule). Every problem is reported against its field.
  */
-export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transaction): { errors: DraftErrors; built?: BuiltEntry } {
+export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transaction, lookedUp?: DraftRate | null): { errors: DraftErrors; built?: BuiltEntry } {
   const errors: DraftErrors = {};
+  const home = ledger.currency;
+  const code = draftCurrency(draft, home);
+  const foreign = code !== home;
   let total = 0;
-  try {
-    total = cents(draft.amount);
-    if (total <= 0) errors.amount = "Enter an amount greater than zero.";
-  } catch (error) {
-    errors.amount = message(error, "Enter an amount with up to two decimal places.");
+  let originalAmount = 0;
+  let rate: (DraftRate | { rate: string; status: "edited" }) | null = null;
+  if (foreign) {
+    try {
+      originalAmount = parseAmount(draft.amount, code);
+      if (originalAmount <= 0) errors.amount = "Enter an amount greater than zero.";
+    } catch (error) {
+      errors.amount = message(error, "Enter an amount.");
+    }
+    if (draft.rateInput !== null) {
+      try {
+        rate = { rate: normalizeRate(draft.rateInput), status: "edited" };
+      } catch (error) {
+        errors.rate = draft.rateInput.trim() ? message(error, "Enter the exchange rate.") : "Enter the exchange rate.";
+      }
+    } else {
+      rate = storedRateOf(draft) ?? lookedUp ?? null;
+      if (!rate) errors.rate = "Enter the exchange rate.";
+    }
+    if (!errors.amount && rate) {
+      total = convertAmount(originalAmount, code, rate.rate, home);
+      if (total <= 0) errors.amount = "This amount converts to less than one cent. Check the amount and the rate.";
+    }
+  } else {
+    try {
+      total = cents(draft.amount);
+      if (total <= 0) errors.amount = "Enter an amount greater than zero.";
+    } catch (error) {
+      errors.amount = message(error, "Enter an amount with up to two decimal places.");
+    }
   }
   const title = draft.title.trim();
   if (!title) errors.title = "Add a name for this entry.";
@@ -190,14 +270,17 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
   let share = total;
   const split = draft.kind === "expense" ? draft.split : "full";
   const participants = splitParticipants(split, draft.shareInput);
-  if (!errors.amount) {
+  if (!errors.amount && !errors.rate) {
     try {
-      share = personalShare(total, split, draft.shareInput);
+      // An "amount" split of a foreign entry is typed in its currency and converted at its rate (the shared `entryAmounts`).
+      share = foreign && rate ? entryAmounts({ amount: draft.amount, currency: code, home, rate: rate.rate, mode: split, split: draft.shareInput }).share : personalShare(total, split, draft.shareInput);
     } catch (error) {
       errors.share = message(error, "Check your share.");
     }
   }
   if (Object.keys(errors).length) return { errors };
+  const foreignFields: Partial<Transaction> =
+    foreign && rate ? { originalAmount, originalCurrency: code, rate: rate.rate, rateStatus: rate.status, ...("rateDate" in rate ? { rateDate: rate.rateDate } : {}) } : {};
 
   const receipt = draft.kind === "expense" ? draft.receipt : null;
   const transaction: Transaction = {
@@ -214,8 +297,10 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
     note: draft.note.trim(),
     ...(receipt ? { receipt } : {}),
     ...(original?.recurringId ? { recurringId: original.recurringId } : {}),
+    ...foreignFields,
   };
-  if (original || draft.repeat === "none") return { errors, built: { transaction } };
+  // Schedules stay in the home currency (MAZ-151 phase 1): the form turns Repeat off for another currency.
+  if (original || draft.repeat === "none" || foreign) return { errors, built: { transaction } };
   const anchorDay = parseDate(draft.date).getDate();
   const rule: Recurring = {
     id: draft.ruleId,

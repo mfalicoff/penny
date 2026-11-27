@@ -173,6 +173,12 @@ final class ShellModel {
 
     /// Dismissed recap banners and the recap notification (device settings; in memory for previews).
     var recap = MonthlyRecap(defaults: nil, center: nil)
+
+    // MARK: Currencies (MAZ-151)
+
+    /// Exchange rates for entries in other currencies: the account's server, sample rates in the
+    /// demo, nothing in previews (the entry form then asks for a rate).
+    var rates = ExchangeRateModel(service: nil)
     /// Bumped when the person opens the recap, for its haptic. (Dismissing the banner plays its
     /// own, from the banner.)
     private(set) var recapOpenedCount = 0
