@@ -74,6 +74,10 @@ test("Insights offers the year from December 26, and the year shows categories, 
   const facts = page.getByRole("region", { name: "A few things about your year" });
   await expect(facts.getByRole("listitem")).toHaveText(["262days without spending", "13 dayslongest run without spending, in December", "103expenses recorded, about 2 a week", "Sundaythe day you spent the most"]);
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  // The narrowest width the web supports: the share button keeps to its icon, so nothing scrolls sideways.
+  await page.setViewportSize({ width: 320, height: 700 });
+  await expect(page.getByRole("button", { name: "Share your year" })).toBeVisible();
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });
 

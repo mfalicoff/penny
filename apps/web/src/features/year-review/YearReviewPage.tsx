@@ -131,7 +131,7 @@ function YearBar({ year, max, onChange, onShare }: { year: string; max: string; 
       {onShare ? (
         <button type="button" className="wbtn wbtn--primary year-bar__share" onClick={onShare}>
           <CardGlyph name="share" size={16} weight={40} />
-          Share your year
+          <span className="year-bar__share-label">Share your year</span>
         </button>
       ) : null}
     </div>

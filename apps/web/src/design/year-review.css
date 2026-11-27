@@ -51,6 +51,28 @@
   height: 16px;
 }
 
+/* Narrow phones: the year control and the share button don't both fit with its label (WebKit's
+   Inter is a few pixels wider), so the button shows its icon only, keeping its accessible name. */
+@media (max-width: 479px) {
+  .year-bar__share {
+    flex: none;
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .year-bar__share-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* Phones and touch: 44px targets. */
 @media (pointer: coarse) {
   .year-nav {
