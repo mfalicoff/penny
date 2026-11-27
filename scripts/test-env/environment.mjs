@@ -410,6 +410,9 @@ export async function up(options = {}) {
         // Receipt OCR (MAZ-125) needs Tesseract and poppler on the host; the full-stack
         // journeys do not depend on it, so it is off unless PENNY_OCR_WORKER=true.
         Ocr__Worker: process.env.PENNY_OCR_WORKER === "true" ? "true" : "false",
+        // Reference exchange rates (MAZ-151) come from the ECB over the internet; test runs never
+        // fetch them, so the apps ask for rates as on a server with fetching turned off.
+        ExchangeRates__Enabled: "false",
         Recurrence__PollSeconds: "2",
         TestControls__Enabled: "true",
         TestControls__Token: state.controlToken,

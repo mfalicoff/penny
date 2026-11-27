@@ -49,6 +49,7 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<InboundMessage> InboundMessages => Set<InboundMessage>();
     public DbSet<ReceiptInboxItem> ReceiptInboxItems => Set<ReceiptInboxItem>();
     public DbSet<ReceiptInboxReceipt> ReceiptInboxReceipts => Set<ReceiptInboxReceipt>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
 
     public static PennyDbContext Create(NpgsqlDataSource source) =>
         new(Configure(new DbContextOptionsBuilder<PennyDbContext>(), source).Options);

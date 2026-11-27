@@ -1,5 +1,11 @@
 import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { convertAmount, minorUnits, normalizeRate, parseAmount } from "@domain/currency.ts";
+import { fetchRates, isOffline, lastKnownRates } from "../../api/rates";
+import { currencySymbolFor, currencyUses, displayRate, fitAmount, lastRateFor, resolveRate, type AutoRate } from "./currency";
+import { CurrencyMenu } from "./CurrencyMenu";
+import { RateNote, RateRow, useRateLookup, useShownRate, type RateMode } from "./RateRow";
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode, type SyntheticEvent } from "react";
 import { useAccountEmail } from "../../auth/account";
 import { categoryTint } from "../../design/categoryTint";
@@ -15,6 +21,9 @@ import {
   buildEntry,
   categoryIcon,
   draftFromEntry,
+  draftCurrency,
+  centsToInput,
+  storedRateOf,
   entryChange,
   undoEntryChange,
   FIELD_ORDER,
@@ -166,9 +175,35 @@ function EntryForm({
     receipt: useId(),
     error: useId(),
     category: useId(),
+    rate: useId(),
   };
   const currency = ledger.currency;
   const money = (value: number) => formatCents(value, currency);
+  const queryClient = useQueryClient();
+
+  // MAZ-151: the amount may be typed in another currency, converted at the rate for its date.
+  const code = draftCurrency(draft, currency);
+  const foreign = code !== currency;
+  const stored = foreign ? storedRateOf(draft) : null;
+  const lookup = useRateLookup(currency, code, draft.date, foreign);
+  const shownRate = useShownRate(lookup);
+  const lookedUp: AutoRate | null = stored ? { ...stored, source: null, reason: stored.status === "provisional" ? "notYet" : null } : lookup.state === "rate" ? lookup.rate : null;
+  const rateMode: RateMode = !foreign
+    ? { mode: "loading" }
+    : !lookedUp && lookup.state === "manual"
+      ? { mode: "manual", reason: lookup.reason }
+      : draft.rateInput !== null
+        ? { mode: "edited", published: lookedUp }
+        : lookedUp
+          ? { mode: "auto", rate: lookedUp, refreshing: false }
+          : shownRate.rate
+            ? { mode: "auto", rate: shownRate.rate, refreshing: true }
+            : { mode: "loading" };
+  const uses = currencyUses(ledger);
+  const lastRate = foreign ? lastRateFor(ledger, code) : null;
+  // The rate the conversion shows as you type: the typed one once valid, else the looked-up one.
+  const conversionRate = !foreign ? null : draft.rateInput !== null ? validRateOrNull(draft.rateInput) : rateMode.mode === "auto" ? rateMode.rate.rate : null;
+  const missingRate = foreign && conversionRate === null && (rateMode.mode === "manual" || rateMode.mode === "edited");
 
   function setDraft(update: (previous: EntryDraft) => EntryDraft) {
     setDraftState((previous) => {
@@ -187,7 +222,7 @@ function EntryForm({
   const categories = frequentCategories(ledger, draft.kind);
   // The three most used categories, as the cards draw them and Manage › Categories says (MAZ-257).
   const inline = inlineCategories(categories, draft.categoryId, 3);
-  const preview = buildEntry(draft, ledger, base).built?.transaction;
+  const preview = buildEntry(draft, ledger, base, lookedUp).built?.transaction;
   const futureNote = futureIncomeNote(draft);
   // Add entry can send a new expense to a household instead (not a personal trip's expense or an edit).
   const householdScope = scope && target.kind === "new" && !tripId && draft.kind === "expense" && scope.households.length ? scope : undefined;
@@ -201,7 +236,7 @@ function EntryForm({
       if (element instanceof HTMLFieldSetElement) element.querySelector<HTMLInputElement>("input:checked, input")?.focus();
       else element?.focus();
       // docs/design/motion.md, Feedback: the refused field shakes (not under reduced motion); its error text says why.
-      shake(element?.closest(".field, fieldset, .entry-amount") ?? element);
+      shake(element?.closest(".field, fieldset, .entry-amount, .entry-rate") ?? element);
     }, 0);
   }
 
@@ -211,7 +246,19 @@ function EntryForm({
       setFailure("The receipt is still uploading. Wait for it to finish, or cancel the upload.");
       return;
     }
-    const result = buildEntry(draft, ledger, base);
+    let rate: AutoRate | null = lookedUp;
+    if (foreign && !rate && draft.rateInput === null && lookup.state === "loading") {
+      // The rate for a new date or currency is still on its way: wait for it rather than refuse.
+      try {
+        const answer = await fetchRates(queryClient, email, currency, draft.date);
+        const found = resolveRate(code, { answer, offline: false, failed: false, cached: null });
+        rate = found.state === "rate" ? found.rate : null;
+      } catch (error) {
+        const found = resolveRate(code, { offline: isOffline(error), failed: true, cached: lastKnownRates(currency) });
+        rate = found.state === "rate" ? found.rate : null;
+      }
+    }
+    const result = buildEntry(draft, ledger, base, rate);
     setErrors(result.errors);
     const first = FIELD_ORDER.find((field) => result.errors[field]);
     if (first || !result.built) {
@@ -336,8 +383,10 @@ function EntryForm({
     </select>
   );
 
+  // Schedules stay in the home currency for now (MAZ-151 phase 1): another currency means Repeat is Never.
+  const repeatLocked = foreign ? `Repeating entries are in ${currency} only. Switch the amount to ${currency} to repeat it.` : null;
   const repeatSelect = (
-    <select id={ids.repeat} className="entry-row__select" value={draft.repeat} onChange={(event) => { set("repeat", event.currentTarget.value as Repeat); }}>
+    <select id={ids.repeat} className="entry-row__select" value={foreign ? "none" : draft.repeat} disabled={foreign} title={repeatLocked ?? undefined} aria-describedby={foreign ? `${ids.repeat}-locked` : undefined} onChange={(event) => { set("repeat", event.currentTarget.value as Repeat); }}>
       {(["none", "weekly", "monthly", "yearly"] as const).map((value) => (
         <option key={value} value={value}>
           {repeatText(value, draft.date)}
@@ -394,6 +443,26 @@ function EntryForm({
       <DetailRow icon={draft.kind === "income" ? "wallet" : "card"} label="Account" htmlFor={ids.account} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
         {accountSelect}
       </DetailRow>
+      {foreign ? (
+        <RateRow
+          id={ids.rate}
+          code={code}
+          home={currency}
+          state={rateMode}
+          input={draft.rateInput}
+          onInput={(value) => {
+            set("rateInput", value);
+          }}
+          onEdit={() => {
+            if (rateMode.mode === "auto") set("rateInput", displayRate(rateMode.rate.rate));
+            setTimeout(() => {
+              document.getElementById(ids.rate)?.focus();
+            }, 0);
+          }}
+          invalid={invalid("rate")}
+          error={errorText("rate")}
+        />
+      ) : null}
       {expense ? (
         <button type="button" className="entry-row entry-row--button" aria-expanded={splitOpen} aria-controls={ids.split} onClick={() => { setSplitOpen((open) => !open); }}>
           <Icon name="people" size={18} />
@@ -516,20 +585,20 @@ function EntryForm({
             <ChoiceGroup<Repeat>
               legend="Repeat"
               name="entry-repeat"
-              value={draft.repeat}
+              value={foreign ? "none" : draft.repeat}
               describedBy={ids.repeat}
               onChange={(value) => {
                 set("repeat", value);
               }}
               options={[
                 { value: "none", label: "Never" },
-                { value: "weekly", label: "Weekly" },
-                { value: "monthly", label: "Monthly" },
-                { value: "yearly", label: "Yearly" },
+                { value: "weekly", label: "Weekly", disabled: foreign },
+                { value: "monthly", label: "Monthly", disabled: foreign },
+                { value: "yearly", label: "Yearly", disabled: foreign },
               ]}
             />
             <p id={ids.repeat} className="note">
-              Repeating creates a schedule you can pause in Recurring.
+              {repeatLocked ?? "Repeating creates a schedule you can pause in Recurring."}
             </p>
           </section>
         ) : null}
@@ -572,6 +641,24 @@ function EntryForm({
       </div>
     ) : null;
 
+  const rateNote = foreign ? (
+    <RateNote
+      state={rateMode}
+      code={code}
+      date={draft.date}
+      today={today()}
+      lastRate={lastRate}
+      onUseLast={(value) => {
+        set("rateInput", value);
+      }}
+    />
+  ) : null;
+  const repeatNote = repeatLocked ? (
+    <span id={`${ids.repeat}-locked`} className="visually-hidden">
+      {repeatLocked}
+    </span>
+  ) : null;
+
   const notes = (
     <>
       {futureNote ? (
@@ -600,6 +687,8 @@ function EntryForm({
     layout === "phone" ? (
       <>
         {rows}
+        {rateNote}
+        {repeatNote}
         {fieldErrors}
         {split}
         {extras}
@@ -609,6 +698,8 @@ function EntryForm({
       <>
         {layout === "tablet" ? <span className="entry-label">Details</span> : null}
         {rows}
+        {rateNote}
+        {repeatNote}
         {fieldErrors}
         {split}
         {expense && layout === "tablet" ? (
@@ -630,7 +721,40 @@ function EntryForm({
 
   const main = (
     <>
-      <AmountHero id={ids.amount} inputRef={amountRef} value={draft.amount} onChange={(value) => { set("amount", value); }} currency={currency} kind={draft.kind} invalid={invalid("amount")} error={errorText("amount")} />
+      <AmountHero
+        id={ids.amount}
+        inputRef={amountRef}
+        value={draft.amount}
+        onChange={(value) => {
+          set("amount", value);
+        }}
+        currency={code}
+        symbol={currencySymbolFor(code, currency)}
+        placeholder={minorUnits(code) === 0 ? "0" : `0.${"0".repeat(minorUnits(code))}`}
+        kind={draft.kind}
+        invalid={invalid("amount")}
+        error={errorText("amount")}
+        currencyControl={
+          <CurrencyMenu
+            code={code}
+            home={currency}
+            recent={uses.map((use) => use.code)}
+            locked={isNew && draft.repeat !== "none" ? `Repeating entries are in ${currency} only. Set Repeat to Never to use another currency.` : null}
+            onPick={(next) => {
+              setDraft((previous) => ({
+                ...previous,
+                currency: next === currency ? null : next,
+                amount: fitAmount(previous.amount, next),
+                shareInput: previous.split === "amount" ? fitAmount(previous.shareInput, next) : previous.shareInput,
+                // A rate belongs to its currency: the new one is looked up.
+                rateInput: null,
+                repeat: next === currency ? previous.repeat : "none",
+              }));
+            }}
+          />
+        }
+        conversion={foreign ? <p className="amount-hero__conversion pk-num" aria-live="polite">{conversionText(draft.amount, code, conversionRate, currency, rateMode.mode === "loading")}</p> : null}
+      />
       <div className="entry-title">
         <label htmlFor={ids.title} className="visually-hidden">
           Title
@@ -717,7 +841,7 @@ function EntryForm({
   const hasNotices = restoredDraft || conflict !== null || failure !== null;
 
   const primary = (
-    <Button type="submit" form={ids.form} variant="primary" busy={saving} aria-keyshortcuts="Meta+Enter Control+Enter">
+    <Button type="submit" form={ids.form} variant="primary" busy={saving} aria-keyshortcuts="Meta+Enter Control+Enter" className={missingRate ? "wbtn--unready" : undefined} {...(missingRate ? { "aria-disabled": true } : {})}>
       {saving ? "Saving…" : isNew ? addLabel(draft.kind) : "Save"}
       {layout === "desktop" ? <Kbd>{isMac() ? "⌘↵" : "Ctrl ↵"}</Kbd> : null}
     </Button>
@@ -788,8 +912,11 @@ function EntryForm({
 /** What a personal draft carries to the shared form. */
 function seedFrom(draft: EntryDraft, ledger: Ledger): EntrySeed {
   const category = ledger.categories.find((item) => item.id === draft.categoryId);
+  // The shared form is in the household's currency: a draft in another currency carries its home amount.
+  const home = draftCurrency(draft, ledger.currency) === ledger.currency;
+  const converted = home ? undefined : buildEntry(draft, ledger).built?.transaction.total;
   return {
-    amount: draft.amount,
+    amount: home ? draft.amount : converted !== undefined ? centsToInput(converted) : "",
     title: draft.title,
     date: draft.date,
     ...(category ? { categoryName: category.name } : {}),
@@ -812,6 +939,26 @@ function seededDraft(ledger: Ledger, seed: EntrySeed, kind: Kind = "expense"): E
     receipt: kind === "expense" ? seed.receipt : null,
     ...(category ? { categoryId: category.id } : {}),
   };
+}
+
+/** "≈ $124.20 CAD" as the amount is typed (tabular figures, no count: typing is the motion), or what's missing. */
+function conversionText(amount: string, code: string, rate: string | null, home: string, loading: boolean): string {
+  if (!rate) return loading ? "Looking up the rate…" : "Enter a rate to convert";
+  let minor: number;
+  try {
+    minor = amount.trim() ? parseAmount(amount, code) : 0;
+  } catch {
+    return `≈ ${formatCents(0, home)} ${home}`;
+  }
+  return `≈ ${formatCents(convertAmount(minor, code, rate, home), home)} ${home}`;
+}
+
+function validRateOrNull(value: string): string | null {
+  try {
+    return normalizeRate(value);
+  } catch {
+    return null;
+  }
 }
 
 /** The shared trips among `households`, the latest start first (More details › Trip, as on iOS). */

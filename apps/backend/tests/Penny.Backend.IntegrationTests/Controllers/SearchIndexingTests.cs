@@ -25,6 +25,35 @@ public sealed class SearchIndexingTests(ApiFixture fixture) : SearchTestBase(fix
             ["note"] = note,
         };
 
+    // Contract 2.4.0: a personal result is the stored entry, foreign amount included.
+    [Fact]
+    public async Task whenEntryPaidInAnotherCurrency_Search_ShouldReturnItsOriginalAmount()
+    {
+        var (token, _) = await AccountAsync("traveller@example.test");
+        await SeedLedgerAsync(token);
+        await SaveLedgerAsync(token, ledger =>
+        {
+            var entry = Entry("z1", "Zebra crossing tour");
+            entry["total"] = 12420;
+            entry["share"] = 12420;
+            entry["originalAmount"] = 8500;
+            entry["originalCurrency"] = "EUR";
+            entry["rate"] = "1.4612";
+            entry["rateStatus"] = "published";
+            entry["rateDate"] = "2026-11-03";
+            ledger["transactions"]!.AsArray().Add(entry);
+        });
+        var page = await SearchAsync(token, new { query = "zebra" });
+        Keys(page).ShouldBe(["personal:z1"]);
+        var found = page.GetProperty("items")[0].GetProperty("entry");
+        found.GetProperty("total").GetInt64().ShouldBe(12420);
+        found.GetProperty("originalAmount").GetInt64().ShouldBe(8500);
+        found.GetProperty("originalCurrency").GetString().ShouldBe("EUR");
+        found.GetProperty("rate").GetString().ShouldBe("1.4612");
+        found.GetProperty("rateStatus").GetString().ShouldBe("published");
+        found.GetProperty("rateDate").GetString().ShouldBe("2026-11-03");
+    }
+
     [Fact]
     public async Task whenLedgerWriteRejected_Search_ShouldKeepTheCommittedDocuments()
     {

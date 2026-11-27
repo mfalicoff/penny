@@ -1,3 +1,4 @@
+import { crossRate } from "@domain/currency.ts";
 import { initialCategories } from "@domain/ledger.ts";
 import { yearReviewYear } from "@domain/yearReview.ts";
 import type { Transport } from "../api/client";
@@ -174,6 +175,31 @@ export function sampleSchedules(today = new Date()) {
     id, title, kind, total, share: total, categoryId, date: last, note: "", frequency: "monthly", nextDate: last, anchorDay, active: true,
   });
   return [rule("demo-rule-1", "Design retainer", "income", 40000, "freelance"), rule("demo-rule-2", "Phone plan", "expense", 4500, "other")];
+}
+
+/**
+ * Made-up reference rates, per euro, for the demo's `GET /api/rates` (MAZ-151): the cards' sample
+ * values (1 EUR = 1.4612 CAD). The same every day, published every weekday before today, so an
+ * entry dated today is provisional, as on a real server before the day's rates are out.
+ */
+const DEMO_PER_EURO: Record<string, string> = { EUR: "1", CAD: "1.4612", USD: "1.0642", GBP: "0.8721", JPY: "163.21", CHF: "0.9412", AUD: "1.642", MXN: "21.43" };
+
+export function demoRates(base: string, date: string, today = new Date()) {
+  const latest = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  while (latest.getDay() === 0 || latest.getDay() === 6) latest.setDate(latest.getDate() - 1);
+  const latestDate = dateKey(latest);
+  const day = new Date(`${date}T12:00:00`);
+  while (day.getDay() === 0 || day.getDay() === 6) day.setDate(day.getDate() - 1);
+  const provisional = date > latestDate;
+  const rateDate = provisional ? latestDate : dateKey(day);
+  const home = DEMO_PER_EURO[base];
+  const rates: Record<string, string> = {};
+  if (home)
+    for (const [code, perEuro] of Object.entries(DEMO_PER_EURO)) {
+      const rate = code === base ? null : crossRate(perEuro, home);
+      if (rate) rates[code] = rate;
+    }
+  return { enabled: true, source: "European Central Bank", base, date, rateDate, provisional, latestDate, rates };
 }
 
 /** The demo household (MAZ-283): made-up people and amounts, so Together lists one, as `web-demo` draws. */
@@ -359,6 +385,14 @@ export function createDemoServer(today = new Date()): Transport {
 
     const shared = method === "GET" ? households(path) : null;
     if (shared) return shared;
+
+    if (method === "GET" && path.startsWith("/api/rates?")) {
+      const params = new URLSearchParams(path.slice("/api/rates?".length));
+      const base = params.get("base") ?? "";
+      const date = params.get("date") ?? dateKey(today);
+      if (!(base in DEMO_PER_EURO) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: "Invalid exchange rate request.", code: "rates.invalid_request" }, 400);
+      return json(demoRates(base, date, today));
+    }
 
     const route = `${method} ${path}`;
     switch (route) {

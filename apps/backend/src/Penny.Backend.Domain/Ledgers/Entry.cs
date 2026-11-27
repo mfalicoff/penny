@@ -15,5 +15,8 @@ public sealed record Entry(
     DateOnly Date,
     string Note,
     ReceiptLink? Receipt,
-    string? RecurringId
+    string? RecurringId,
+    // Contract 2.4.0: the amount paid in another currency and the rate used; null for an
+    // entry in the home currency.
+    ForeignAmount? Foreign
 );

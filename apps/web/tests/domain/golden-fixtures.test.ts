@@ -47,7 +47,7 @@ const Money = z.strictObject({
   ledgerParticipants: z.array(z.strictObject({ kind: entryKind, list: z.enum(["transaction", "recurring"]), participants: z.number().nullable(), valid: z.boolean() })).min(10),
 });
 
-const Outcome = <T extends z.ZodRawShape>(input: T, value: z.ZodRawShape) =>
+const Outcome = <T extends z.ZodRawShape, V extends z.ZodRawShape>(input: T, value: V) =>
   z.union([z.strictObject({ ...input, ...value }), z.strictObject({ ...input, error: z.string().min(1) })]);
 const rateText = z.string().regex(/^\d+(\.\d+)?$/);
 const rateStatus = z.enum(["published", "provisional", "edited"]);

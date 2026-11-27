@@ -56,7 +56,7 @@ function mergeItems<T extends Item>(base: T[], local: T[], remote: T[]): T[] {
     if (foreign && amountGroup.some(edited))
       for (const key of amountGroup) {
         const value = (next as Record<string, unknown>)[key];
-        if (value === undefined) delete merged[key];
+        if (value === undefined) Reflect.deleteProperty(merged, key);
         else merged[key] = value;
       }
     return merged as T;

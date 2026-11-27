@@ -117,6 +117,8 @@ public static class ErrorCodes
     public const string RateLimitSearch = "rate_limit.search";
     public const string RateLimitTelemetry = "rate_limit.telemetry";
 
+    public const string RatesInvalidRequest = "rates.invalid_request";
+
     public const string ReceiptChanged = "receipt.changed";
     public const string ReceiptInvalidName = "receipt.invalid_name";
     public const string ReceiptNotFound = "receipt.not_found";

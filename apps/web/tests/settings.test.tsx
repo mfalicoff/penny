@@ -133,7 +133,7 @@ describe("currency", () => {
     const user = userEvent.setup();
     renderApp("/settings/currency");
     const group = await screen.findByRole("group", { name: "Ledger currency" });
-    expect(group).toHaveAccessibleDescription(/Choose your currency before adding entries/);
+    expect(group).toHaveAccessibleDescription(/Choose your home currency before adding entries/);
     expect(within(group).getByRole("radio", { name: /CAD/ })).toBeChecked();
 
     await user.click(within(group).getByRole("radio", { name: /EUR/ }));
@@ -159,10 +159,12 @@ describe("currency", () => {
   it("explains, and doesn't offer, a change once the ledger has entries", async () => {
     ledgerServer({ currency: "USD", transactions: [{ id: "t1" }] });
     renderApp("/settings/currency");
+    // web-currency-rates (MAZ-151): only the home currency, with its lock, and why.
     const group = await screen.findByRole("group", { name: "Ledger currency" });
-    expect(group).toHaveAccessibleDescription(/already has entries in USD, so the currency can't change/);
-    expect(within(group).getByRole("radio", { name: /USD/ })).toBeEnabled();
-    for (const code of ["CAD", "EUR", "GBP"]) expect(within(group).getByRole("radio", { name: new RegExp(code) })).toBeDisabled();
+    expect(group).toHaveAccessibleDescription(/add up in US dollars. Your home currency is locked once your ledger has entries. Each entry can be in any currency./);
+    expect(group).toHaveTextContent("USDUS dollar");
+    expect(within(group).getByRole("img", { name: "Locked" })).toBeInTheDocument();
+    expect(within(group).queryByRole("radio")).not.toBeInTheDocument();
   });
 
   it("says why under Preferences on phones, in the iOS app's words, once the ledger has entries", async () => {

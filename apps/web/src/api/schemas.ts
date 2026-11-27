@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { currencies, validRate } from "@domain/currency.ts";
 import { ERROR_CODES } from "./errorCodes";
 
 /**
@@ -11,6 +12,10 @@ const id = z.string().min(1).max(100);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const cents = z.number().int().min(0).max(99_999_999_999);
 export const kindSchema = z.enum(["income", "expense", "investment"]);
+/** `CurrencyCode` (contract 2.4.0): a circulating ISO 4217 code from the shared list. */
+export const currencyCodeSchema = z.enum(currencies.map((info) => info.code) as [string, ...string[]]);
+/** `ExchangeRate`: a canonical decimal string greater than zero. */
+export const exchangeRateSchema = z.string().max(18).refine(validRate, "Invalid exchange rate");
 
 /** Every error body (contract 2.1.0): the message to show and its machine-readable code (MAZ-187). */
 export const errorSchema = z.object({ error: z.string(), code: z.enum(ERROR_CODES) });
@@ -171,7 +176,30 @@ export const entrySchema = z.object({
   note: z.string().max(1000),
   receipt: receiptSchema.optional(),
   recurringId: id.optional(),
+  // Contract 2.4.0 (MAZ-151): the amount in the currency it was paid in, and the rate used.
+  originalAmount: z.number().int().min(1).max(99_999_999_999).optional(),
+  originalCurrency: currencyCodeSchema.optional(),
+  rate: exchangeRateSchema.optional(),
+  rateStatus: z.enum(["published", "provisional", "edited"]).optional(),
+  rateDate: isoDate.optional(),
 });
+
+/**
+ * `GET /api/rates?base=&date=` (contract 2.4.0, MAZ-151): the reference rates in the home currency
+ * (`base`) for a date. `rates[X]` is how many home units one X is worth. Fetching off: `enabled` is
+ * false, `source` and `rateDate` are null and `rates` is empty.
+ */
+export const exchangeRatesSchema = z.object({
+  enabled: z.boolean(),
+  source: z.string().max(100).nullable(),
+  base: currencyCodeSchema,
+  date: isoDate,
+  rateDate: isoDate.nullable(),
+  provisional: z.boolean(),
+  latestDate: isoDate.nullable(),
+  rates: z.record(z.string(), exchangeRateSchema),
+});
+export type ExchangeRates = z.infer<typeof exchangeRatesSchema>;
 
 /** `ExpensePayer`: who paid a shared expense (MAZ-275). `deleted`: show "Former member", never the email. */
 export const expensePayerSchema = z.object({

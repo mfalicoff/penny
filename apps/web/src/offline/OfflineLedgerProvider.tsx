@@ -1,5 +1,8 @@
 import { hashKey, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { createContext, use, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, use, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { ratesQuery } from "../api/rates";
+import type { ExchangeRates } from "../api/schemas";
+import { provisionalDates, settleChange, settledEntries } from "./provisionalRates";
 import { sessionKey } from "../api/keys";
 import { ledgerKey, readLedgerSnapshot, setLedgerSnapshot, toLedgerSnapshot, writeLedgerSnapshot, type LedgerSnapshot } from "../api/ledger";
 import { receiptExists } from "../api/receipts";
@@ -119,7 +122,44 @@ function AccountLedger({ email, children }: { email: string; children: ReactNode
     };
   }, [engine, email, queryClient]);
 
-  return <EngineContext value={engine}>{children}</EngineContext>;
+  return (
+    <EngineContext value={engine}>
+      <ProvisionalRates engine={engine} email={email} />
+      {children}
+    </EngineContext>
+  );
+}
+
+/**
+ * After each sync that leaves the ledger up to date, replaces provisional rates the server has now
+ * published (MAZ-151, `./provisionalRates.ts`), saving through the offline store like any edit.
+ */
+function ProvisionalRates({ engine, email }: { engine: LedgerSyncEngine; email: string }) {
+  const queryClient = useQueryClient();
+  const state = useSyncExternalStore(engine.subscribe, engine.getState);
+  const running = useRef(false);
+  const ledger = state.phase === "upToDate" ? state.ledger : null;
+  const dates = ledger ? provisionalDates(ledger).join(",") : "";
+  useEffect(() => {
+    if (!ledger || !dates || running.current) return;
+    running.current = true;
+    const home = ledger.currency;
+    void (async () => {
+      try {
+        const answers = new Map<string, ExchangeRates>();
+        for (const date of dates.split(",")) {
+          // A day's rates change once; a recent answer is fresh enough, and a sync often follows another.
+          const answer = await queryClient.query({ ...ratesQuery(email, home, date), staleTime: 15 * 60_000 }).catch(() => null);
+          if (answer) answers.set(date, answer);
+        }
+        const settled = settledEntries(ledger, answers);
+        if (settled.length) await engine.save(settleChange(ledger.transactions, settled)).catch(() => undefined);
+      } finally {
+        running.current = false;
+      }
+    })();
+  }, [dates, email, engine, ledger, queryClient]);
+  return null;
 }
 
 /** Tests swap these for an in-memory database, fake storage or a fake API. */

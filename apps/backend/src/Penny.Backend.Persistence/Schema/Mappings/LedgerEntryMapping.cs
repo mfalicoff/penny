@@ -27,6 +27,32 @@ internal sealed class LedgerEntryMapping : IEntityTypeConfiguration<LedgerEntry>
                 "ck_ledger_entries_participants_kind",
                 Checks.ParticipantsExpenseOnly("participants")
             );
+            // Contract 2.4.0: the foreign-amount columns (the conversion itself is checked by
+            // LedgerReader, which knows the ledger's currency).
+            table.HasCheckConstraint(
+                "ck_ledger_entries_original_amount",
+                $"original_amount IS NULL OR {Checks.Cents("original_amount", 1)}"
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_entries_original_currency",
+                "original_currency IS NULL OR original_currency ~ '^[A-Z]{3}$'"
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_entries_rate",
+                $"rate IS NULL OR ({Checks.Rate("rate")})"
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_entries_rate_status",
+                $"rate_status IS NULL OR {Checks.In("rate_status", Checks.RateStatuses)}"
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_entries_foreign",
+                "(original_amount IS NULL) = (original_currency IS NULL) AND (original_currency IS NULL) = (rate IS NULL) AND (rate IS NULL) = (rate_status IS NULL)"
+            );
+            table.HasCheckConstraint(
+                "ck_ledger_entries_rate_date",
+                "(rate_date IS NULL) = (rate_status IS NULL OR rate_status = 'edited')"
+            );
         });
         builder.HasKey(entry => new { entry.UserId, entry.Id });
         builder.HasOne<Ledger>().WithMany().HasForeignKey(entry => entry.UserId);

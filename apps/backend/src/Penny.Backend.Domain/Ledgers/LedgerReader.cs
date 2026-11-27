@@ -15,6 +15,10 @@ namespace Penny.Backend.Domain.Ledgers;
 // - Strings with NUL or unpaired surrogates are rejected (PostgreSQL text cannot hold
 //   them), and the last safe revision cannot be written because its successor would
 //   not be a safe integer.
+// - Contract 2.4.0 (MAZ-151): a transaction paid in another currency carries
+//   originalAmount, originalCurrency, rate and rateStatus together (plus rateDate unless
+//   the rate is edited) and its total is the conversion (Currencies.ForeignAmountProblem);
+//   recurring rules carry none of them.
 public static class LedgerReader
 {
     // Returns null for any invalid body: every problem is reported with one message.
@@ -99,6 +103,21 @@ public static class LedgerReader
             Require(entry.Participants is null || entry.Kind == "expense");
         foreach (var rule in recurring)
             Require(rule.Participants is null || rule.Kind == "expense");
+        // An entry paid in another currency carries its amount, currency and rate together,
+        // and its total is the conversion (contract 2.4.0). Rules stay in the home currency.
+        foreach (var entry in transactions)
+            Require(
+                Currencies.ForeignAmountProblem(
+                    entry.Total,
+                    entry.Foreign?.OriginalAmount,
+                    entry.Foreign?.OriginalCurrency,
+                    entry.Foreign?.Rate,
+                    entry.Foreign?.RateStatus,
+                    entry.Foreign?.RateDate,
+                    currency
+                )
+                    is null
+            );
         foreach (var entry in transactions)
             Require(
                 entry.TripId is null || (entry.Kind == "expense" && tripIds.Contains(entry.TripId))
@@ -191,7 +210,8 @@ public static class LedgerReader
             Date(Required(fields, "date")),
             Text(Required(fields, "note"), 0, 1000),
             receipt,
-            OptionalId(fields, "recurringId")
+            OptionalId(fields, "recurringId"),
+            ReadForeign(fields)
         );
     }
 
@@ -201,6 +221,10 @@ public static class LedgerReader
         // The entry schema parses tripId, then the refinement rejects it on rules.
         OptionalId(fields, "tripId");
         Require(!fields.ContainsKey("tripId"));
+        // Rules stay in the home currency (MAZ-151 phase 1): any foreign-amount key, even
+        // null, is refused rather than stripped.
+        foreach (var name in ForeignFields)
+            Require(!fields.ContainsKey(name));
         var active = Required(fields, "active");
         Require(active.ValueKind is JsonValueKind.True or JsonValueKind.False);
         return new(
@@ -263,6 +287,52 @@ public static class LedgerReader
 
     private static string? OptionalId(Dictionary<string, JsonElement> fields, string name) =>
         fields.TryGetValue(name, out var value) ? Id(value) : null;
+
+    private static readonly string[] ForeignFields =
+    [
+        "originalAmount",
+        "originalCurrency",
+        "rate",
+        "rateStatus",
+        "rateDate",
+    ];
+
+    // The foreign-amount fields of a transaction (contract 2.4.0), each typed like the
+    // ledger schema: a positive amount, a listed currency code, a canonical rate, a known
+    // status and a calendar date. A partial set (or a rate date alone) is invalid; the
+    // cross-field rules (currency, date by status, conversion) run with the ledger's
+    // currency in ReadWrite.
+    private static ForeignAmount? ReadForeign(Dictionary<string, JsonElement> fields)
+    {
+        long? amount = fields.TryGetValue("originalAmount", out var amountValue)
+            ? Integer(amountValue, 1, LedgerLimits.MaxCents)
+            : null;
+        string? currency = null;
+        if (fields.TryGetValue("originalCurrency", out var currencyValue))
+        {
+            currency = Text(currencyValue, 0, int.MaxValue);
+            Require(Currencies.IsCurrency(currency));
+        }
+        string? rate = null;
+        if (fields.TryGetValue("rate", out var rateValue))
+        {
+            rate = Text(rateValue, 0, int.MaxValue);
+            Require(Currencies.ValidRate(rate));
+        }
+        string? status = fields.TryGetValue("rateStatus", out var statusValue)
+            ? Choice(statusValue, Currencies.RateStatuses)
+            : null;
+        DateOnly? date = fields.TryGetValue("rateDate", out var dateValue) ? Date(dateValue) : null;
+        if (amount is null && currency is null && rate is null && status is null)
+        {
+            Require(date is null);
+            return null;
+        }
+        Require(
+            amount is not null && currency is not null && rate is not null && status is not null
+        );
+        return new(amount!.Value, currency!, rate!, status!, date);
+    }
 
     // How many people split an expense, the person included: an integer from 2 to 100.
     private static int? OptionalParticipants(Dictionary<string, JsonElement> fields) =>

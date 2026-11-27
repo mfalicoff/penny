@@ -18,6 +18,7 @@ import { dayLabel, payerName } from "../households/model";
 import type { EntryAction } from "../entries/EntryDetail";
 import { categoryIcon, repeatLabel, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
+import { OriginalAmount } from "../entries/OriginalAmount";
 import { categoryName, dayTotal, groupByDay, localRows, type ActivityRow, type RowFilters, type SharedState } from "./data";
 import type { ActivitySearch } from "./filters";
 import { leavingProps, useListMotion } from "../../design/motion";
@@ -466,6 +467,7 @@ function Row({ row, context, leaving }: { row: ActivityRow; context: RowContext;
           <span className="results__amount">
             <RowAmount row={row} context={context} />
             {split ? <span className="results__sub">of {formatCents(entry.total, currency)}</span> : null}
+            <OriginalAmount entry={entry} home={currency} />
           </span>
         </button>
       </li>
@@ -738,6 +740,7 @@ function TableRow({ row, context, leaving }: { row: ActivityRow; context: RowCon
       <td className={split ? undefined : "activity-table__none"}>{split ? (split.people ? `${String(split.people)} people` : "Custom share") : "—"}</td>
       <td className="activity-table__num">
         <RowAmount row={row} context={context} />
+        <OriginalAmount entry={entry} home={context.currency} />
       </td>
       <td className="activity-table__actions">
         <Button variant="quiet" iconOnly icon="create" aria-label={`Edit ${entry.title}`} tabIndex={-1} onClick={(event) => { onOpen(entry, event.currentTarget, "edit"); }} />

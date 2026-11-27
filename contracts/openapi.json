@@ -6845,7 +6845,7 @@
       "get": {
         "summary": "Export entries as CSV",
         "operationId": "getApiExportEntries",
-        "description": "MAZ-152. Personal entries and the person's share of recorded shared expenses for a month, a year or everything, oldest first, as a CSV file (`penny-entries-<period>.csv`, or the day's date for everything) that spreadsheets open as is: UTF-8 with a byte order mark, CRLF line ends, RFC 4180 quoting. Columns: Date, Type (Expense, Income or Investment), Title, Category, Account, Amount, Your share (positive decimals), Currency, Household (shared expenses), Trip, Note. Text that a spreadsheet would read as a formula starts with an apostrophe.",
+        "description": "MAZ-152. Personal entries and the person's share of recorded shared expenses for a month, a year or everything, oldest first, as a CSV file (`penny-entries-<period>.csv`, or the day's date for everything) that spreadsheets open as is: UTF-8 with a byte order mark, CRLF line ends, RFC 4180 quoting. Columns: Date, Type (Expense, Income or Investment), Title, Category, Account, Amount, Your share (positive decimals), Currency, Household (shared expenses), Trip, Note, then (contract 2.4.0) Original amount (a positive decimal in that currency's minor units), Original currency and Exchange rate for an entry paid in another currency, empty otherwise. Text that a spreadsheet would read as a formula starts with an apostrophe.",
         "parameters": [
           {
             "name": "month",

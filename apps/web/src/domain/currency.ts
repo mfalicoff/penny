@@ -236,10 +236,9 @@ function scaled(rate: string): Scaled {
 }
 
 function canonical(mantissa: bigint, scale: number): string {
-  let digits = mantissa.toString().padStart(scale + 1, "0");
-  let whole = digits.slice(0, digits.length - scale);
-  let fraction = digits.slice(digits.length - scale).replace(/0+$/, "");
-  whole = whole.replace(/^0+(?=\d)/, "");
+  const digits = mantissa.toString().padStart(scale + 1, "0");
+  const whole = digits.slice(0, digits.length - scale).replace(/^0+(?=\d)/, "");
+  const fraction = digits.slice(digits.length - scale).replace(/0+$/, "");
   return fraction ? `${whole}.${fraction}` : whole;
 }
 

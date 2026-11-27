@@ -38,6 +38,7 @@ Shared expense/rule edits and deletes carry the entity revision; creation begins
 - **Emailed receipts (MAZ-184, in progress).** `getApiReceiptEmail`, `postApiReceiptEmail` (create or rotate), `patchApiReceiptEmail` (`extend`, `allowedSenders`) and `deleteApiReceiptEmail` manage one live private address per user; GET reports `enabled: false` when `InboundMail__Enabled` is off, and the other operations then answer 404. `postApiInboundMail` and `getApiInboundMailRecipients` are for the Cloudflare Email Worker only: no session, an HMAC signature (`webhookSignature`), not routed by the public web proxy. `getApiReceiptInbox` lists the owner-only receipt inbox (newest first, `status=to_attach|attached`, `before` cursor); `deleteApiReceiptInboxId` discards an item and `postApiReceiptInboxIdDone` finishes a partly attached one, both deleting only files nothing links. Attaching uses the normal entry and shared expense saves with the file's `receiptId`; those saves keep the item's status in step. See [emailed receipts](../plans/email-receipts.md).
 - **Push devices (MAZ-61).** `postApiPushDevices` and `deleteApiPushDevices` register APNs device tokens (`provider: "apns"`, `environment` `sandbox` or `production`); a PostgreSQL-leased worker delivers. See [push](push.md).
 - **Search v1 (MAZ-121).** Authenticated `POST /api/v1/search/transactions` over personal entries and visible shared expenses: accent- and case-insensitive substring, typo-tolerant and meaning-based (on-server embedding) matching, relevance or date/amount sorting, authorization before count/page, keyset cursors and explicit local pending/offline scope. See [search](search.md).
+- **Exchange rates (MAZ-151).** Authenticated `GET /api/rates?base=CAD&date=YYYY-MM-DD` (`getApiRates`, schema `ExchangeRates`) answers the cached European Central Bank reference rates for a date in a base currency (`private, max-age=3600`); `400 Invalid exchange rate request.` (`rates.invalid_request`) for an unknown base or an invalid date. `enabled: false` with no rates when the operator turned fetching off. See [exchange rates](exchange-rates.md).
 
 ## Participant count
 
@@ -58,6 +59,15 @@ Since contract 2.3.0 a ledger may carry `dismissedSuggestions`: the recurring su
 - It is optional, so ledgers written before contract 2.3.0 stay valid and read back unchanged. A server before 2.3.0 rejects a ledger that carries it (`400 Invalid ledger data.`), so deploy the API before the clients that send it. A client before 2.3.0 drops it when it saves, so its dismissed suggestions show again.
 - An empty list and no list are stored the same way, so the response leaves the field out when there are none.
 - Storage: `ledger_dismissed_suggestions`, one row per item (`value`, keyed with the user, and its `position`), with the length and count limits as check constraints.
+
+## Entries in several currencies
+
+Since contract 2.4.0 (MAZ-151) a personal transaction may carry the amount it was paid in, in any circulating ISO 4217 currency: `originalAmount` (integer minor units of that currency), `originalCurrency`, `rate` (home units per unit, a canonical decimal string), `rateStatus` (`published`, `provisional` or `edited`) and `rateDate` (the publication, absent for an edited rate). `total` and `share` stay home amounts, and `total` must equal `originalAmount × rate` rounded once, half up, to the home currency's minor units. Recurring rules stay in the home currency. Rules: [ledger](ledger.md#entries-in-several-currencies); rates: [exchange rates](exchange-rates.md).
+
+- The fields are optional, so ledgers written before contract 2.4.0 stay valid and read back unchanged.
+- A server before contract 2.4.0 rejects a ledger that carries them (`400 Invalid ledger data.`), and has no `GET /api/rates`, so deploy the API before the clients that send them.
+- A client before contract 2.4.0 ignores the fields when it reads the ledger and drops them when it saves; the entry keeps its home `total` and `share`, so every total is unchanged, only the original amount and its rate are lost.
+- Storage: the nullable `original_amount`, `original_currency`, `rate`, `rate_status` and `rate_date` columns of `ledger_entries`; the reference rates in `exchange_rates`. The rules and their golden cases (`contracts/fixtures/currency.json`) are shared by TypeScript, C# and Swift. Search results and the entries CSV (`Original amount`, `Original currency`, `Exchange rate`) carry them too.
 
 ## Error codes
 

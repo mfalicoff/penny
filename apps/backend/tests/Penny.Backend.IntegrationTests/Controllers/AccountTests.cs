@@ -355,13 +355,13 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
         }
         var csv = Text(zip, "entries.csv");
         csv.ShouldStartWith(
-            "﻿Date,Type,Title,Category,Account,Amount,Your share,Currency,Household,Trip,Note\r\n"
+            "﻿Date,Type,Title,Category,Account,Amount,Your share,Currency,Household,Trip,Note,Original amount,Original currency,Exchange rate\r\n"
         );
         csv.ShouldContain(
-            $"2026-09-28,Expense,Groceries,Groceries,,90.00,45.00,CAD,Apartment,,\r\n"
+            $"2026-09-28,Expense,Groceries,Groceries,,90.00,45.00,CAD,Apartment,,,,,\r\n"
         );
         csv.ShouldContain(
-            $"2026-09-28,Expense,Synthetic lunch,{category},,12.50,12.50,CAD,,,\"'=1+1, \"\"quoted\"\"\"\r\n"
+            $"2026-09-28,Expense,Synthetic lunch,{category},,12.50,12.50,CAD,,,\"'=1+1, \"\"quoted\"\"\",,,\r\n"
         );
 
         // Nothing of the export stays on the server.
@@ -419,6 +419,46 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
             null,
             HttpStatusCode.Unauthorized,
             AuthService.SignInRequired
+        );
+    }
+
+    [Fact]
+    public async Task whenEntriesPaidInOtherCurrencies_ExportEntries_ShouldListTheirOriginalAmounts()
+    {
+        At(Noon);
+        var (alex, _) = await AccountAsync("alex@example.test");
+        var snapshot = await GetLedgerAsync(alex);
+        var category = snapshot["ledger"]!["categories"]![0]!;
+        JsonObject Entry(string id, long total, long amount, string currency, string rate) =>
+            new()
+            {
+                ["id"] = id,
+                ["title"] = "Synthetic " + id,
+                ["kind"] = "expense",
+                ["total"] = total,
+                ["share"] = total,
+                ["categoryId"] = category["id"]!.GetValue<string>(),
+                ["date"] = "2026-09-28",
+                ["note"] = "",
+                ["originalAmount"] = amount,
+                ["originalCurrency"] = currency,
+                ["rate"] = rate,
+                ["rateStatus"] = "edited",
+            };
+        var transactions = snapshot["ledger"]!["transactions"]!.AsArray();
+        transactions.Add(Entry("class", 12420, 8500, "EUR", "1.4612"));
+        transactions.Add(Entry("noodles", 1088, 1200, "JPY", "0.00906283"));
+        using (var saved = await PutLedgerAsync(alex, snapshot))
+            saved.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var response = await SendAsync(HttpMethod.Get, "/api/export/entries", alex);
+        var text = Encoding.UTF8.GetString(await response.Content.ReadAsByteArrayAsync(Ct));
+        var name = category["name"]!.GetValue<string>();
+        text.ShouldContain(
+            $"2026-09-28,Expense,Synthetic class,{name},,124.20,124.20,CAD,,,,85.00,EUR,1.4612\r\n"
+        );
+        text.ShouldContain(
+            $"2026-09-28,Expense,Synthetic noodles,{name},,10.88,10.88,CAD,,,,1200,JPY,0.00906283\r\n"
         );
     }
 

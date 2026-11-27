@@ -128,6 +128,24 @@ public sealed class LedgerReaderTests
     [InlineData("duplicate-dismissed-suggestions")]
     [InlineData("too-many-dismissed-suggestions")]
     [InlineData("nul-dismissed-suggestion")]
+    [InlineData("foreign-null-amount")]
+    [InlineData("foreign-without-rate")]
+    [InlineData("foreign-rate-date-alone")]
+    [InlineData("foreign-home-currency")]
+    [InlineData("foreign-lowercase-currency")]
+    [InlineData("foreign-unknown-currency")]
+    [InlineData("foreign-total-mismatch")]
+    [InlineData("foreign-edited-with-date")]
+    [InlineData("foreign-published-without-date")]
+    [InlineData("foreign-noncanonical-rate")]
+    [InlineData("foreign-zero-rate")]
+    [InlineData("foreign-fractional-amount")]
+    [InlineData("foreign-string-amount")]
+    [InlineData("foreign-zero-amount")]
+    [InlineData("foreign-unknown-status")]
+    [InlineData("foreign-huge-conversion")]
+    [InlineData("foreign-on-recurring")]
+    [InlineData("null-rate-date-on-recurring")]
     public void whenLedgerBreaksRule_Read_ShouldReject(string mutation)
     {
         Read(Mutate(mutation)).ShouldBeNull(mutation);
@@ -177,6 +195,27 @@ public sealed class LedgerReaderTests
         var absent = Read(JsonNode.Parse(Valid)!)!;
         absent.Ledger.Transactions.Single().Participants.ShouldBeNull();
         absent.Ledger.Recurring.Single().Participants.ShouldBeNull();
+    }
+
+    [Fact]
+    public void whenForeignAmountSent_Read_ShouldKeepItExactly()
+    {
+        var body = JsonNode.Parse(Valid)!;
+        var entry = body["ledger"]!["transactions"]![0]!.AsObject();
+        Foreign(entry);
+        Read(body)!
+            .Ledger.Transactions.Single()
+            .Foreign.ShouldBe(
+                new ForeignAmount(10000, "USD", "1.2", "published", new(2026, 9, 11))
+            );
+        entry["rateStatus"] = "edited";
+        entry["rate"] = "1.19999999";
+        entry.Remove("rateDate");
+        // 10000 cents x 1.19999999 = 11999.9999 cents, rounded half up once.
+        Read(body)!
+            .Ledger.Transactions.Single()
+            .Foreign.ShouldBe(new ForeignAmount(10000, "USD", "1.19999999", "edited", null));
+        Read(JsonNode.Parse(Valid)!)!.Ledger.Transactions.Single().Foreign.ShouldBeNull();
     }
 
     [Fact]
@@ -261,6 +300,16 @@ public sealed class LedgerReaderTests
     {
         using var document = JsonDocument.Parse(json);
         return LedgerReader.Read(document.RootElement);
+    }
+
+    // The valid entry's total ($120.00) paid as US$100.00 at 1.2 (contract 2.4.0).
+    private static void Foreign(JsonObject entry)
+    {
+        entry["originalAmount"] = 10000;
+        entry["originalCurrency"] = "USD";
+        entry["rate"] = "1.2";
+        entry["rateStatus"] = "published";
+        entry["rateDate"] = "2026-09-11";
     }
 
     private static string Mutate(string mutation)
@@ -514,6 +563,80 @@ public sealed class LedgerReaderTests
                 break;
             case "nul-dismissed-suggestion":
                 ledger["dismissedSuggestions"] = new JsonArray("expense|a\u0000|monthly|1");
+                break;
+            case "foreign-null-amount":
+                Foreign(entry);
+                entry["originalAmount"] = null;
+                break;
+            case "foreign-without-rate":
+                Foreign(entry);
+                entry.Remove("rate");
+                break;
+            case "foreign-rate-date-alone":
+                entry["rateDate"] = "2026-09-11";
+                break;
+            case "foreign-home-currency":
+                Foreign(entry);
+                entry["originalAmount"] = 12000;
+                entry["originalCurrency"] = "CAD";
+                entry["rate"] = "1";
+                break;
+            case "foreign-lowercase-currency":
+                Foreign(entry);
+                entry["originalCurrency"] = "usd";
+                break;
+            case "foreign-unknown-currency":
+                Foreign(entry);
+                entry["originalCurrency"] = "XXX";
+                break;
+            case "foreign-total-mismatch":
+                Foreign(entry);
+                entry["total"] = 12001;
+                break;
+            case "foreign-edited-with-date":
+                Foreign(entry);
+                entry["rateStatus"] = "edited";
+                break;
+            case "foreign-published-without-date":
+                Foreign(entry);
+                entry.Remove("rateDate");
+                break;
+            case "foreign-noncanonical-rate":
+                Foreign(entry);
+                entry["rate"] = "1.20";
+                break;
+            case "foreign-zero-rate":
+                Foreign(entry);
+                entry["rate"] = "0";
+                break;
+            case "foreign-fractional-amount":
+                Foreign(entry);
+                entry["originalAmount"] = 10000.5;
+                break;
+            case "foreign-string-amount":
+                Foreign(entry);
+                entry["originalAmount"] = "10000";
+                break;
+            case "foreign-zero-amount":
+                Foreign(entry);
+                entry["originalAmount"] = 0;
+                break;
+            case "foreign-unknown-status":
+                Foreign(entry);
+                entry["rateStatus"] = "manual";
+                break;
+            case "foreign-huge-conversion":
+                Foreign(entry);
+                entry["originalAmount"] = 99_999_999_999;
+                entry["rate"] = "999999999.99999999";
+                break;
+            case "foreign-on-recurring":
+                Foreign(rule);
+                rule["total"] = 12000;
+                rule["share"] = 12000;
+                break;
+            case "null-rate-date-on-recurring":
+                rule["rateDate"] = null;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(mutation));

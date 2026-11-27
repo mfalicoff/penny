@@ -70,6 +70,33 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ExchangeRate", b =>
+                {
+                    b.Property<DateOnly>("RateDate")
+                        .HasColumnType("date")
+                        .HasColumnName("rate_date");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("text")
+                        .HasColumnName("currency")
+                        .UseCollation("C");
+
+                    b.Property<string>("PerEuro")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("per_euro")
+                        .UseCollation("C");
+
+                    b.HasKey("RateDate", "Currency");
+
+                    b.ToTable("exchange_rates", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_exchange_rates_currency", "currency ~ '^[A-Z]{3}$'");
+
+                            t.HasCheckConstraint("ck_exchange_rates_per_euro", "per_euro ~ '^(0|[1-9][0-9]{0,8})([.][0-9]{0,7}[1-9])?$' AND per_euro ~ '[1-9]'");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Household", b =>
                 {
                     b.Property<string>("Id")
@@ -1101,9 +1128,32 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("note")
                         .UseCollation("C");
 
+                    b.Property<long?>("OriginalAmount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("original_amount");
+
+                    b.Property<string>("OriginalCurrency")
+                        .HasColumnType("text")
+                        .HasColumnName("original_currency")
+                        .UseCollation("C");
+
                     b.Property<int?>("Participants")
                         .HasColumnType("integer")
                         .HasColumnName("participants");
+
+                    b.Property<string>("Rate")
+                        .HasColumnType("text")
+                        .HasColumnName("rate")
+                        .UseCollation("C");
+
+                    b.Property<DateOnly?>("RateDate")
+                        .HasColumnType("date")
+                        .HasColumnName("rate_date");
+
+                    b.Property<string>("RateStatus")
+                        .HasColumnType("text")
+                        .HasColumnName("rate_status")
+                        .UseCollation("C");
 
                     b.Property<string>("ReceiptId")
                         .HasColumnType("text")
@@ -1148,15 +1198,27 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.ToTable("ledger_entries", "penny", t =>
                         {
+                            t.HasCheckConstraint("ck_ledger_entries_foreign", "(original_amount IS NULL) = (original_currency IS NULL) AND (original_currency IS NULL) = (rate IS NULL) AND (rate IS NULL) = (rate_status IS NULL)");
+
                             t.HasCheckConstraint("ck_ledger_entries_id", "length(id) BETWEEN 1 AND 100");
 
                             t.HasCheckConstraint("ck_ledger_entries_kind", "kind IN ('income','expense','investment')");
 
                             t.HasCheckConstraint("ck_ledger_entries_note", "length(note) BETWEEN 0 AND 1000");
 
+                            t.HasCheckConstraint("ck_ledger_entries_original_amount", "original_amount IS NULL OR original_amount BETWEEN 1 AND 99999999999");
+
+                            t.HasCheckConstraint("ck_ledger_entries_original_currency", "original_currency IS NULL OR original_currency ~ '^[A-Z]{3}$'");
+
                             t.HasCheckConstraint("ck_ledger_entries_participants", "participants IS NULL OR participants BETWEEN 2 AND 100");
 
                             t.HasCheckConstraint("ck_ledger_entries_participants_kind", "participants IS NULL OR kind = 'expense'");
+
+                            t.HasCheckConstraint("ck_ledger_entries_rate", "rate IS NULL OR (rate ~ '^(0|[1-9][0-9]{0,8})([.][0-9]{0,7}[1-9])?$' AND rate ~ '[1-9]')");
+
+                            t.HasCheckConstraint("ck_ledger_entries_rate_date", "(rate_date IS NULL) = (rate_status IS NULL OR rate_status = 'edited')");
+
+                            t.HasCheckConstraint("ck_ledger_entries_rate_status", "rate_status IS NULL OR rate_status IN ('published','provisional','edited')");
 
                             t.HasCheckConstraint("ck_ledger_entries_share", "share_cents BETWEEN 0 AND total_cents");
 
