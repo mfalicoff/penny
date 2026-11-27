@@ -1,9 +1,10 @@
 import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { convertAmount, minorUnits, normalizeRate, parseAmount } from "@domain/currency.ts";
+import { minorUnits, normalizeRate } from "@domain/currency.ts";
 import { fetchRates, isOffline, lastKnownRates } from "../../api/rates";
 import { currencySymbolFor, currencyUses, displayRate, fitAmount, lastRateFor, resolveRate, type AutoRate } from "./currency";
+import { ConversionLine } from "./ConversionLine";
 import { CurrencyMenu } from "./CurrencyMenu";
 import { RateNote, RateRow, useRateLookup, useShownRate, type RateMode } from "./RateRow";
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode, type SyntheticEvent } from "react";
@@ -753,7 +754,7 @@ function EntryForm({
             }}
           />
         }
-        conversion={foreign ? <p className="amount-hero__conversion pk-num" aria-live="polite">{conversionText(draft.amount, code, conversionRate, currency, rateMode.mode === "loading")}</p> : null}
+        conversion={foreign ? <ConversionLine amount={draft.amount} code={code} rate={conversionRate} home={currency} loading={rateMode.mode === "loading"} /> : null}
       />
       <div className="entry-title">
         <label htmlFor={ids.title} className="visually-hidden">
@@ -939,18 +940,6 @@ function seededDraft(ledger: Ledger, seed: EntrySeed, kind: Kind = "expense"): E
     receipt: kind === "expense" ? seed.receipt : null,
     ...(category ? { categoryId: category.id } : {}),
   };
-}
-
-/** "≈ $124.20 CAD" as the amount is typed (tabular figures, no count: typing is the motion), or what's missing. */
-function conversionText(amount: string, code: string, rate: string | null, home: string, loading: boolean): string {
-  if (!rate) return loading ? "Looking up the rate…" : "Enter a rate to convert";
-  let minor: number;
-  try {
-    minor = amount.trim() ? parseAmount(amount, code) : 0;
-  } catch {
-    return `≈ ${formatCents(0, home)} ${home}`;
-  }
-  return `≈ ${formatCents(convertAmount(minor, code, rate, home), home)} ${home}`;
 }
 
 function validRateOrNull(value: string): string | null {

@@ -73,6 +73,17 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertTrue(year.households.contains { $0.trip != nil })
         XCTAssertTrue(year.window.contains { $0.year != nil && $0.banner == nil })
         XCTAssertTrue(year.window.contains { $0.banner != nil })
+        // MAZ-151: entries in several currencies.
+        let currency = try Fixtures.decode(CurrencyFixture.self, from: "currency.json")
+        XCTAssertEqual(currency.homeCurrencies, ["CAD", "USD", "EUR", "GBP"])
+        XCTAssertEqual(currency.currencies.map(\.code), currency.currencies.map(\.code).sorted())
+        XCTAssertTrue(currency.currencies.allSatisfy { [0, 2, 3].contains($0.minorUnits) })
+        XCTAssertTrue(Set(currency.homeCurrencies).isSubset(of: currency.currencies.map(\.code)))
+        XCTAssertTrue(currency.parse.allSatisfy { ($0.amount == nil) != ($0.error == nil) })
+        XCTAssertTrue(currency.rates.allSatisfy { ($0.rate == nil) != ($0.error == nil) })
+        XCTAssertTrue(currency.entryAmounts.allSatisfy { ($0.expected == nil) != ($0.error == nil) })
+        XCTAssertTrue(currency.ledgers.contains { $0.valid } && currency.ledgers.contains { !$0.valid })
+        XCTAssertTrue(merge.cases.contains { item in item.local.transactions.contains { $0.originalCurrency != nil } })
     }
 
     func testScenarioFixturesDecodeStrictlyAndAgree() throws {

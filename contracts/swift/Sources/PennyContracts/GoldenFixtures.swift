@@ -540,3 +540,116 @@ public struct FixtureManifest: Codable, Equatable, Sendable {
         public var consumers: [String: JSONValue]
     }
 }
+
+/// currency.json (MAZ-151, contract 2.4.0): entries in several currencies.
+public struct CurrencyFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    public var currencies: [CurrencyInfo]
+    public var homeCurrencies: [String]
+    public var parse: [ParseCase]
+    public var rates: [RateCase]
+    public var conversions: [ConversionCase]
+    public var crossRates: [CrossRateCase]
+    public var rateDates: [RateDateCase]
+    public var entryAmounts: [EntryAmountsCase]
+    public var reconversions: [ReconversionCase]
+    public var ledgers: [LedgerCase]
+
+    public struct CurrencyInfo: Codable, Equatable, Sendable {
+        public var code: String
+        public var name: String
+        public var minorUnits: Int
+    }
+
+    /// Exactly one of `amount` (minor units) and `error` is present.
+    public struct ParseCase: Codable, Equatable, Sendable {
+        public var input: String
+        public var currency: String
+        public var amount: Int64?
+        public var error: String?
+    }
+
+    /// Exactly one of `rate` (canonical) and `error` is present.
+    public struct RateCase: Codable, Equatable, Sendable {
+        public var input: String
+        public var rate: String?
+        public var error: String?
+    }
+
+    public struct ConversionCase: Codable, Equatable, Sendable {
+        public var amount: Int64
+        public var from: String
+        public var rate: String
+        public var home: String
+        public var converted: Int64
+    }
+
+    /// A nil `rate` is a cross rate that rounds to zero.
+    public struct CrossRateCase: Codable, Equatable, Sendable {
+        public var fromPerBase: String
+        public var toPerBase: String
+        public var rate: String?
+    }
+
+    public struct RateDateCase: Codable, Equatable, Sendable {
+        public struct Expected: Codable, Equatable, Sendable {
+            public var date: String
+            public var provisional: Bool
+        }
+
+        public var published: [String]
+        public var date: String
+        public var expected: Expected?
+    }
+
+    public struct EntryAmountsCase: Codable, Equatable, Sendable {
+        public struct Expected: Codable, Equatable, Sendable {
+            public var originalAmount: Int64
+            public var total: Int64
+            public var share: Int64
+        }
+
+        public var amount: String
+        public var currency: String
+        public var home: String
+        public var rate: String?
+        public var mode: String
+        public var split: String
+        public var expected: Expected?
+        public var error: String?
+    }
+
+    /// The amount fields of an entry before and after `reconvertEntry`.
+    public struct ReconvertedEntry: Codable, Equatable, Sendable {
+        public var kind: String
+        public var total: Int64
+        public var share: Int64
+        public var participants: Int?
+        public var originalAmount: Int64?
+        public var originalCurrency: String?
+        public var rate: String?
+        public var rateStatus: String?
+        public var rateDate: String?
+    }
+
+    public struct NextRate: Codable, Equatable, Sendable {
+        public var rate: String
+        public var rateStatus: String
+        public var rateDate: String?
+    }
+
+    public struct ReconversionCase: Codable, Equatable, Sendable {
+        public var home: String
+        public var entry: ReconvertedEntry
+        public var next: NextRate
+        public var expected: ReconvertedEntry
+    }
+
+    /// A whole ledger and whether the write schema accepts it.
+    public struct LedgerCase: Codable, Equatable, Sendable {
+        public var name: String
+        public var ledger: Ledger
+        public var valid: Bool
+    }
+}

@@ -116,6 +116,8 @@ enum EntryFormPage: Hashable {
 /// Sheets stacked over the entry form.
 enum EntryFormOverlay: String, Identifiable {
     case date, split, category, household
+    /// MAZ-151: the currency picker and the Exchange rate sheet.
+    case currency, rate
     var id: String { rawValue }
 }
 
@@ -151,6 +153,12 @@ private struct EntryForm: View {
     @FocusState private var amountFocused: Bool
     @State private var editingAmount = false
     @State private var width: Double = 0
+    /// MAZ-151: the rate lookup for an entry in another currency, the latest one asked, the Rate
+    /// row's refused-save shake and the selection haptic of a currency or rate choice.
+    @State private var rateState = EntryRateState()
+    @State private var rateLookup = 0
+    @State private var rateShake = 0
+    @State private var picked = 0
 
     var body: some View {
         Group {
@@ -312,6 +320,7 @@ private struct EntryForm: View {
                         VStack(spacing: 8) {
                             groupLabel("Details")
                             rows(model)
+                            EntryRateNote(draft: draft, state: rateState, today: shell.today)
                             groupLabel("Note").padding(.top, 12)
                             noteField(model)
                             futureDateNote(draft)
@@ -323,6 +332,7 @@ private struct EntryForm: View {
                     titleField(model)
                     categoryChips(model)
                     rows(model)
+                    EntryRateNote(draft: draft, state: rateState, today: shell.today)
                     if !model.editor.isNew {
                         // `iphone-edit-entry`: an edit never changes the schedule it came from.
                         Text("Editing changes this entry only. Change future dates in Recurring.")
@@ -346,7 +356,10 @@ private struct EntryForm: View {
         .background(PennyColor.background)
         .safeAreaInset(edge: .bottom) {
             if showsKeypad {
-                AmountKeypad { key in model.editor.draft.amount = AmountInput.apply(key, to: model.draft.amount) }
+                AmountKeypad { key in
+                    model.editor.draft.amount = AmountInput.apply(
+                        key, to: model.draft.amount, minorUnits: model.draft.minorUnits)
+                }
             } else if isTwoColumn {
                 EntryShortcutFooter()
             }
@@ -373,7 +386,10 @@ private struct EntryForm: View {
                 // iPad: a labelled "Add expense" capsule; ⌘↩ saves (`ipad-add-entry`).
                 EntrySaveButton(
                     saving: model.editor.isSaving,
-                    title: isTwoColumn ? EntryText.saveTitle(model.draft.kind, isNew: model.editor.isNew) : nil
+                    title: isTwoColumn ? EntryText.saveTitle(model.draft.kind, isNew: model.editor.isNew) : nil,
+                    // MAZ-151: no rate yet, so it can't save (`iphone-entry-rate-manual`); a tap still
+                    // says why, with the Rate row's shake.
+                    waiting: model.draft.foreignCurrency(home: ledger.currency) != nil && model.draft.rate == nil
                 ) { save(model) }
             }
         }
@@ -405,6 +421,25 @@ private struct EntryForm: View {
                 EntryCategoryPickerSheet(
                     kind: draft.kind, selection: $model.editor.draft.categoryId, ledger: ledger,
                     editCategories: { editCategories() })
+            case .currency:
+                CurrencyPickerSheet(
+                    selection: draft.currency ?? ledger.currency.rawValue, home: ledger.currency,
+                    recent: CurrencyUsage(ledger).uses.map(\.code)
+                ) { code in
+                    picked += 1
+                    chooseCurrency(code, model: model)
+                }
+            case .rate:
+                ExchangeRateSheet(
+                    draft: draft, home: ledger.currency, published: rateState.published, source: rateState.source,
+                    lastUsed: draft.currency.flatMap(CurrencyUsage(ledger).lastRate)
+                ) { choice in
+                    withAnimation(.snappy) {
+                        // Use the published rate replaces an edited one; a typed rate is edited.
+                        if choice.status != .edited { model.editor.draft.rateStatus = nil }
+                        model.editor.draft.applyRate(choice)
+                    }
+                }
             case .household:
                 EntryHouseholdSheet(
                     households: scope?.households ?? [], current: nil,
@@ -425,6 +460,14 @@ private struct EntryForm: View {
             Text("Keep it as a draft to finish later, or discard what you entered.")
         }
         .pennyHaptic(.refused, trigger: model.refusedCount)
+        // MAZ-151: picking a currency (the rate sheet plays its own).
+        .pennyHaptic(.select, trigger: picked)
+        // A new date or currency looks the rate up again, unless the person edited it.
+        .onChange(of: draft.date) { lookUpRate(model, apply: true) }
+        .onChange(of: draft.currency) { lookUpRate(model, apply: true) }
+        .onAppear { lookUpRate(model, apply: model.draft.rate == nil) }
+        .animation(.snappy, value: draft.rateStatus)
+        .animation(.snappy, value: draft.currency)
         // Opening or closing one of the form's own pickers (the category menu, date, split): a light impact.
         .pennyHaptic(.openClose, trigger: overlay)
         // The shelf always holds the latest unsaved draft while the sheet is open, so a sheet
@@ -489,14 +532,15 @@ private struct EntryForm: View {
     private func amount(_ model: EntryFormModel) -> some View {
         @Bindable var model = model
         let draft = model.draft
-        let currency = ledger.currency.rawValue
+        let currency = draft.currency ?? ledger.currency.rawValue
+        let symbol = CurrencyText.symbol(currency, home: ledger.currency.rawValue)
         VStack(spacing: 6) {
             if typesAmount, sizeClass != .regular, !editingAmount {
                 // iPhone income: the formatted amount until it is tapped (`iphone-add-income`).
                 Button {
                     editingAmount = true
                 } label: {
-                    AmountDisplay(text: draft.amount, kind: draft.kind, currency: currency, caret: false)
+                    AmountDisplay(text: draft.amount, kind: draft.kind, symbol: symbol, caret: false)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Amount")
@@ -507,7 +551,7 @@ private struct EntryForm: View {
                 // The currency symbol before the typed amount, as on the keypad's display and the
                 // `ipad-add-entry` card.
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text((draft.kind == .income ? "+" : "") + AmountDisplay.symbol(currency))
+                    Text((draft.kind == .income ? "+" : "") + symbol)
                         .foregroundStyle(AmountDisplay.signStyle(draft.kind))
                         .accessibilityHidden(true)
                     TextField("0.00", text: $model.editor.draft.amount)
@@ -529,7 +573,7 @@ private struct EntryForm: View {
                     titleFocused = false
                     noteFocused = false
                 } label: {
-                    AmountDisplay(text: draft.amount, kind: draft.kind, currency: currency, caret: showsKeypad)
+                    AmountDisplay(text: draft.amount, kind: draft.kind, symbol: symbol, caret: showsKeypad)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Amount")
@@ -537,13 +581,11 @@ private struct EntryForm: View {
                 .accessibilityHint("Use the keypad below to type the amount.")
                 .accessibilityIdentifier("entryForm.amount")
             }
-            Text(currency)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(PennyColor.fill, in: Capsule())
-                .accessibilityLabel("Currency \(currency)")
+            EntryCurrencyLine(draft: draft, home: ledger.currency, loading: rateState.loading) {
+                titleFocused = false
+                noteFocused = false
+                overlay = .currency
+            }
         }
         .frame(maxWidth: .infinity)
         // A save the rules refuse shakes the amount, with the error haptic (MAZ-287).
@@ -559,6 +601,8 @@ private struct EntryForm: View {
         let draft = model.draft
         let currency = ledger.currency.rawValue
         let expense = draft.kind == .expense
+        // MAZ-151: schedules stay in the home currency.
+        let repeats = draft.currency == nil
         // The cards' rows are 46pt on the iPhone expense form and 48pt elsewhere.
         let height = isTwoColumn || !expense ? 48 : ControlSize.compactRow
         VStack(spacing: 0) {
@@ -580,6 +624,15 @@ private struct EntryForm: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("entryForm.account")
+            if draft.foreignCurrency(home: ledger.currency) != nil {
+                EntryFieldRow.divider
+                EntryRateRow(
+                    draft: draft, home: ledger.currency, state: rateState,
+                    lastUsed: draft.currency.flatMap(CurrencyUsage(ledger).lastRate), height: height
+                ) { overlay = .rate }
+                .pennyShake(trigger: rateShake)
+                .transition(.opacity)
+            }
             if expense {
                 EntryFieldRow.divider
                 Button {
@@ -592,7 +645,7 @@ private struct EntryForm: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("entryForm.split")
             }
-            if isTwoColumn || !expense {
+            if (isTwoColumn || !expense) && repeats {
                 EntryFieldRow.divider
                 repeatRow(model, height: height)
             }
@@ -764,7 +817,7 @@ private struct EntryForm: View {
 
     private func splitValue(_ draft: EntryDraft, currency: String) -> String {
         guard draft.split != .full else { return "All mine" }
-        guard let share = draft.previewShare else { return "Check the split" }
+        guard let share = draft.previewShare(home: ledger.currency) else { return "Check the split" }
         if draft.split == .equal {
             return "\(draft.shareInput) ways · \(MoneyFormat.amount(share, currency: currency)) yours"
         }
@@ -773,7 +826,7 @@ private struct EntryForm: View {
 
     /// "$24.80", drawn in copper inside the Split row's value, as on the cards.
     private func splitShare(_ draft: EntryDraft, currency: String) -> String? {
-        guard draft.split != .full, let share = draft.previewShare else { return nil }
+        guard draft.split != .full, let share = draft.previewShare(home: ledger.currency) else { return nil }
         return MoneyFormat.amount(share, currency: currency)
     }
 
@@ -805,8 +858,70 @@ private struct EntryForm: View {
             let saved = await model.save(in: ledger) { entry, isNew in
                 EntrySummary.saved(entry, isNew: isNew, ledger: ledger)
             }
-            if saved { finish(discard: true) }
+            if saved {
+                finish(discard: true)
+            } else if model.editor.failure?.rule == .missingRate {
+                rateShake += 1
+            }
         }
+    }
+
+    // MARK: Currencies (MAZ-151)
+
+    /// The currency picker's choice: the amount keeps its digits (those beyond the new currency's
+    /// minor units are dropped) and the rate is looked up again.
+    private func chooseCurrency(_ code: String, model: EntryFormModel) {
+        withAnimation(.snappy) {
+            model.editor.draft.setCurrency(code, home: ledger.currency)
+            if model.draft.currency != nil { model.editor.draft.frequency = nil }
+        }
+        if model.draft.currency == nil { rateState = EntryRateState() }
+    }
+
+    /// Looks up the rate for the draft's currency and date. `apply` puts it on the draft (never
+    /// over an edited rate); otherwise only the source and the published rate are read (an entry
+    /// opened for editing keeps its rate). The old rate stays, dimmed, until the answer arrives.
+    private func lookUpRate(_ model: EntryFormModel, apply: Bool) {
+        guard let code = model.draft.foreignCurrency(home: ledger.currency),
+            let date = CalendarDate.ledgerDate(model.draft.date)
+        else {
+            rateState.loading = false
+            return
+        }
+        rateLookup += 1
+        let lookup = rateLookup
+        rateState.loading = true
+        let home = ledger.currency
+        Task {
+            let result = await shell.rates.lookup(code, home: home, date: date)
+            guard lookup == rateLookup, model.draft.currency == code else { return }
+            rateState.loading = false
+            switch result {
+            case .found(let choice, let source):
+                rateState.source = source
+                rateState.published = choice
+                rateState.off = false
+                rateState.unavailable = false
+                if apply { withAnimation(.snappy) { model.editor.draft.applyRate(choice) } }
+            case .off:
+                rateState = EntryRateState(off: true)
+                if apply, model.draft.rateStatus != .edited { clearRate(model) }
+            case .unavailable:
+                rateState = EntryRateState(unavailable: true)
+                if apply, model.draft.rateStatus != .edited { clearRate(model) }
+            }
+        }
+    }
+
+    /// A looked-up rate for another day or currency no longer applies.
+    private func clearRate(_ model: EntryFormModel) {
+        guard model.draft.rate != nil, model.draft.rateStatus != .edited else { return }
+        let date = CalendarDate.ledgerDate(model.draft.date)
+        // A provisional or published rate for the same date stays (offline: the kept one).
+        if model.draft.rateStatus == .published, model.draft.rateDate == date { return }
+        model.editor.draft.rate = nil
+        model.editor.draft.rateStatus = nil
+        model.editor.draft.rateDate = nil
     }
 
     private func close(_ model: EntryFormModel) {
@@ -849,6 +964,9 @@ struct EntrySaveButton: View {
     let saving: Bool
     /// The capsule's label; nil draws the check.
     var title: String?
+    /// Drawn as disabled (grey) while something is missing that the person must add first (an
+    /// entry in another currency without a rate, MAZ-151); a tap still refuses with the reason.
+    var waiting = false
     let action: () -> Void
 
     var body: some View {
@@ -862,10 +980,12 @@ struct EntrySaveButton: View {
             }
         }
         .buttonStyle(.borderedProminent)
-        .tint(PennyColor.tint)
+        .tint(waiting ? PennyColor.fill : PennyColor.tint)
+        .foregroundStyle(waiting ? PennyColor.tertiaryLabel : Color.white)
         .disabled(saving)
         .keyboardShortcut(.return, modifiers: .command)
         .accessibilityLabel(saving ? "Saving" : (title ?? "Save"))
+        .accessibilityHint(waiting ? "Enter the exchange rate first" : "")
         .accessibilityIdentifier("entryForm.save")
     }
 }
@@ -914,7 +1034,8 @@ struct EntryShortcutFooter: View {
 struct AmountDisplay: View {
     let text: String
     let kind: EntryKind
-    let currency: String
+    /// The currency's symbol, as `CurrencyText.symbol` writes it ("€", "US$").
+    let symbol: String
     var caret = false
     @ScaledMetric(relativeTo: .largeTitle) private var caretHeight = 50.0
 
@@ -923,7 +1044,7 @@ struct AmountDisplay: View {
         let typed = text.isEmpty ? "0" : MoneyFormat.typed(text)
         let sign = kind == .income ? "+" : ""
         HStack(alignment: .firstTextBaseline, spacing: 0) {
-            Text(sign + Self.symbol(currency)).foregroundStyle(Self.signStyle(kind))
+            Text(sign + symbol).foregroundStyle(Self.signStyle(kind)).pennyCrossfade(symbol, duration: .quick)
             Text(typed).foregroundStyle(text.isEmpty ? PennyColor.tertiaryLabel : EntryText.meaning(kind).color)
             if caret {
                 RoundedRectangle(cornerRadius: 2)

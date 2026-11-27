@@ -112,11 +112,24 @@ public struct LedgerEntry: Hashable, Sendable {
     /// The rule this entry was recorded from. It may name a rule that was since removed:
     /// removing a schedule keeps its history.
     public var recurringId: String?
+    /// Contract 2.4.0 (MAZ-151): the amount paid in another currency, in that currency's minor
+    /// units. `originalAmount`, `originalCurrency`, `rate` and `rateStatus` are all set or all
+    /// nil; `total` is then `Currencies.convertAmount(originalAmount, originalCurrency, rate)`.
+    public var originalAmount: Int64?
+    /// Any ISO 4217 code of `Currencies.all`, never the ledger's currency.
+    public var originalCurrency: String?
+    /// Canonical decimal string: home units per one unit of `originalCurrency`.
+    public var rate: String?
+    public var rateStatus: RateStatus?
+    /// The publication the rate comes from; nil for an edited rate.
+    public var rateDate: CalendarDate?
 
     public init(
         id: String, title: String, kind: EntryKind, total: Int64, share: Int64, participants: Int? = nil,
         categoryId: String, accountId: String? = nil, tripId: String? = nil, date: CalendarDate, note: String = "",
-        receipt: ReceiptReference? = nil, recurringId: String? = nil
+        receipt: ReceiptReference? = nil, recurringId: String? = nil, originalAmount: Int64? = nil,
+        originalCurrency: String? = nil, rate: String? = nil, rateStatus: RateStatus? = nil,
+        rateDate: CalendarDate? = nil
     ) {
         self.id = id
         self.title = title
@@ -131,7 +144,15 @@ public struct LedgerEntry: Hashable, Sendable {
         self.note = note
         self.receipt = receipt
         self.recurringId = recurringId
+        self.originalAmount = originalAmount
+        self.originalCurrency = originalCurrency
+        self.rate = rate
+        self.rateStatus = rateStatus
+        self.rateDate = rateDate
     }
+
+    /// Whether the entry was paid in another currency than the ledger's.
+    public var isForeign: Bool { originalCurrency != nil }
 }
 
 /// A repeating rule. `date` is the first occurrence, `nextDate` the next one not yet

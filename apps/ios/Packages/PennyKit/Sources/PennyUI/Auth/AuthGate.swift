@@ -30,6 +30,8 @@ struct AuthGate: View {
                             leaveDemo: { self.demo = nil })
                         shell.now = services.now
                         shell.recap = services.recap
+                        // Illustrative rates; nothing is fetched in the demo.
+                        shell.rates = ExchangeRateModel(service: SampleExchangeRateService(latest: services.today()))
                         return shell
                     }
                 )
@@ -93,6 +95,11 @@ struct AuthGate: View {
                             shell.widgets = services.widgets
                             shell.now = services.now
                             shell.recap = services.recap
+                            // Exchange rates (MAZ-151); the last answer is kept for offline entries.
+                            shell.rates = ExchangeRateModel(
+                                service: auth.client.map {
+                                    APIExchangeRateService(client: $0) { auth.sessionDidExpire(for: account) }
+                                }, defaults: .standard)
                             return shell
                         }
                     )

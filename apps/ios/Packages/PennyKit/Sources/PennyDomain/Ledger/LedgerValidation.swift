@@ -18,6 +18,9 @@ public enum LedgerViolation: Hashable, Sendable {
     /// A participant count outside 2...100, or on an entry or rule that is not an expense
     /// (contract 2.2.0).
     case invalidParticipants(String)
+    /// An entry's original amount, currency, rate or rate date is incomplete or doesn't convert to
+    /// its total (contract 2.4.0); `reason` is `Currencies.foreignAmountProblem`'s sentence.
+    case invalidForeignAmount(String, reason: String)
 }
 
 extension Ledger {
@@ -110,6 +113,9 @@ extension Ledger {
                 found.append(.invalidTrip(entry.id))
             }
             if let recurringId = entry.recurringId { id(recurringId, entry.id) }
+            if let problem = Currencies.foreignAmountProblem(entry, home: currency.rawValue) {
+                found.append(.invalidForeignAmount(entry.id, reason: problem))
+            }
             if let receipt = entry.receipt {
                 id(receipt.id, entry.id)
                 if !text(receipt.name, 0...255) || !text(receipt.mime, 0...100) || !text(receipt.uri, 0...500) {

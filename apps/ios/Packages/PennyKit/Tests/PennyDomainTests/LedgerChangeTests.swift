@@ -345,6 +345,15 @@ struct LedgerChangeTests {
         case .categoryKindInUse: "This category has entries. Keep its type to preserve your history."
         case .scheduleAfterLedgerRange:
             "This schedule would repeat after 2100. Choose an earlier date, or choose Does not repeat."
+        // apps/web/src/domain/currency.ts (MAZ-151).
+        case .unknownCurrency: "Choose a currency from the list."
+        case .invalidCurrencyAmount(decimals: 0): "Enter a whole amount, with no decimal places."
+        case .invalidCurrencyAmount(decimals: 1): "Enter an amount with up to one decimal place."
+        case .invalidCurrencyAmount(decimals: 3): "Enter an amount with up to three decimal places."
+        case .invalidCurrencyAmount: "Enter an amount with up to two decimal places."
+        case .invalidRateFormat: "Enter a rate with up to eight decimal places."
+        case .zeroRate: "Enter a rate greater than zero."
+        case .missingRate: "Enter the exchange rate."
         }
     }
 
@@ -358,7 +367,9 @@ struct LedgerChangeTests {
             .tripUnavailable, .tripHasEntries, .categoryHasEntries, .accountHasEntries, .invalidTripName,
             .invalidTripDates, .duplicateTripName, .tooManyTrips, .invalidAccountName, .duplicateAccountName,
             .tooManyAccounts, .invalidCategoryName, .duplicateCategoryName, .tooManyCategories, .categoryKindInUse,
-            .currencyLocked,
+            .currencyLocked, .unknownCurrency, .invalidCurrencyAmount(decimals: 0),
+            .invalidCurrencyAmount(decimals: 1), .invalidCurrencyAmount(decimals: 3), .invalidRateFormat, .zeroRate,
+            .missingRate,
         ]
         for error in all {
             #expect(error.message == Self.sharedMessage(error), "\(error)")

@@ -502,7 +502,11 @@ struct EntryExtrasView: View {
                     receipt: $model.editor.draft.receipt, upload: upload, context: receiptContext(draft))
             }
             Section {
-                if model.editor.isNew {
+                if model.editor.isNew, draft.currency != nil {
+                    // MAZ-151: schedules stay in the home currency.
+                    Text("Entries in another currency don't repeat.")
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                } else if model.editor.isNew {
                     Picker("Repeat", selection: $model.editor.draft.frequency) {
                         Text("Never").tag(RecurrenceFrequency?.none)
                         Text("Weekly").tag(RecurrenceFrequency?.some(.weekly))

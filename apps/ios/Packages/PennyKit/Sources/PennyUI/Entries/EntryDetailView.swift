@@ -52,17 +52,36 @@ struct EntryDetailView: View {
                 if regular {
                     HStack(alignment: .top, spacing: 16) {
                         detailsPanel(entry, ledger: ledger)
-                        if EntryDetailText.hasSplitOrReceipt(entry) {
+                        if entry.isForeign {
+                            // `ipad-activity-currencies`: Exchange rate beside Details (MAZ-151).
+                            exchangePanel(entry, currency: currency)
+                        } else if EntryDetailText.hasSplitOrReceipt(entry) {
                             splitPanel(entry, currency: currency)
                         } else {
                             Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
                         }
                     }
                     .padding(.top, 24)
+                    if entry.isForeign, EntryDetailText.hasSplitOrReceipt(entry) {
+                        splitPanel(entry, currency: currency).padding(.top, 16)
+                    }
                 } else {
                     groupLabel("Details")
                     detailRows(entry, ledger: ledger)
                         .background(PennyColor.surface, in: cardShape)
+                    if entry.isForeign {
+                        // `iphone-entry-detail-currency` (MAZ-151): the rate and where it came from.
+                        groupLabel("Exchange rate")
+                        exchangeRows(entry, currency: currency)
+                            .background(PennyColor.surface, in: cardShape)
+                        Text(CurrencyText.detailNote(total: entry.total, home: currency))
+                            .font(.footnote)
+                            .foregroundStyle(PennyColor.secondaryLabel)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                            .accessibilityIdentifier("entryDetail.rateNote")
+                    }
                     if EntryDetailText.hasSplitOrReceipt(entry) {
                         groupLabel(
                             entry.share != entry.total && entry.receipt != nil
@@ -141,12 +160,28 @@ struct EntryDetailView: View {
         let title = Text(entry.title).font(.title.weight(.bold)).foregroundStyle(PennyColor.label)
         let meta = Text("\(category?.name ?? "No category") · \(EntryDetailText.day(entry.date, today: shell.today))")
             .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-        let amount = Text(MoneyFormat.signed(entry.share, meaning: meaning, currency: currency))
+        // MAZ-151: an entry in another currency leads with what was paid ("−€85.00"), then the home
+        // amount ("$124.20 CAD").
+        let original = entry.originalCurrency.flatMap { code in
+            entry.originalAmount.map { CurrencyText.signed($0, code: code, home: currency, kind: entry.kind) }
+        }
+        let amount = Text(original ?? MoneyFormat.signed(entry.share, meaning: meaning, currency: currency))
             .modifier(HeroAmountFont())
             .foregroundStyle(meaning.color)
             .lineLimit(1)
             .minimumScaleFactor(0.4)
-            .accessibilityLabel(MoneyFormat.spoken(entry.share, meaning: meaning, currency: currency))
+            .accessibilityLabel(
+                original.map { "\($0), \(MoneyFormat.amount(entry.total, currency: currency)) \(currency)" }
+                    ?? MoneyFormat.spoken(entry.share, meaning: meaning, currency: currency)
+            )
+            .accessibilityIdentifier(original == nil ? "entryDetail.amount" : "entryDetail.original")
+        let home = original.map { _ in
+            Text("\(MoneyFormat.amount(entry.total, currency: currency)) \(currency)")
+                .font(regular ? .title3.weight(.medium) : .title3)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .monospacedDigit()
+                .accessibilityIdentifier("entryDetail.home")
+        }
         let shareOf = entry.share != entry.total ? MoneyFormat.amount(entry.total, currency: currency) : nil
         VStack(alignment: .leading, spacing: 0) {
             if regular {
@@ -160,19 +195,23 @@ struct EntryDetailView: View {
                 // Beside the amount, as on the card: the amount scales down before the line wraps.
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     amount
-                    if let shareOf {
+                    if let shareOf, home == nil {
                         shareOfText("your share of \(shareOf)", regular: true)
                             .lineLimit(2)
                             .layoutPriority(1)
                     }
                 }
                 .padding(.top, 22)
+                if let home { home.padding(.top, 2) }
             } else {
                 icon
                 title.padding(.top, 14)
                 meta.padding(.top, 2)
                 amount.padding(.top, 16)
-                if let shareOf { shareOfText("Your share of \(shareOf)", regular: false).padding(.top, 8) }
+                if let home { home.padding(.top, 2) }
+                if let shareOf, home == nil {
+                    shareOfText("Your share of \(shareOf)", regular: false).padding(.top, 8)
+                }
             }
             if waiting {
                 Label("Waiting to sync", systemImage: "clock")
@@ -241,6 +280,81 @@ struct EntryDetailView: View {
                     .frame(width: 112)
             }
         }
+    }
+
+    // MARK: Exchange rate (MAZ-151)
+
+    /// Who published the entry's rate: the server's source (the last answer kept), else the ECB.
+    private var rateSource: String {
+        shell.rates.latest[shell.currency]?.source ?? "European Central Bank"
+    }
+
+    /// Rate and Source rows (`iphone-entry-detail-currency`): "1 EUR = 1.4612 CAD", and
+    /// "European Central Bank" with the publication's day (provisional, or "Your rate" when edited).
+    private func exchangeRows(_ entry: LedgerEntry, currency: String) -> some View {
+        VStack(spacing: 0) {
+            kv("Rate", CurrencyText.rateLine(entry.originalCurrency ?? "", rate: entry.rate ?? "", home: currency))
+                .accessibilityIdentifier("entryDetail.rate")
+            Rectangle().fill(PennyColor.separator).frame(height: 0.5).padding(.leading, 16)
+            sourceRow(entry, name: rateSource).accessibilityIdentifier("entryDetail.rateSource")
+        }
+        .font(.body)
+    }
+
+    private func sourceRow(_ entry: LedgerEntry, name: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("Source").foregroundStyle(PennyColor.secondaryLabel)
+            Spacer(minLength: 12)
+            if entry.rateStatus == .edited {
+                Text("Your rate").fontWeight(.medium).foregroundStyle(PennyColor.label)
+            } else {
+                let day = entry.rateDate.map(CurrencyText.day) ?? ""
+                let status = entry.rateStatus == .provisional ? " · provisional" : ""
+                Text(
+                    "\(Text(name).fontWeight(.medium).foregroundStyle(PennyColor.label)) \(Text(day + status).font(.footnote).foregroundStyle(PennyColor.secondaryLabel))"
+                )
+                .multilineTextAlignment(.trailing)
+            }
+        }
+        .padding(.horizontal, regular ? 0 : 16)
+        .frame(minHeight: regular ? 46 : 48)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func kv(_ title: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).foregroundStyle(PennyColor.secondaryLabel)
+            Spacer(minLength: 12)
+            Text(value).fontWeight(.medium).foregroundStyle(PennyColor.label).monospacedDigit()
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(.horizontal, regular ? 0 : 16)
+        .frame(minHeight: regular ? 46 : 48)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// iPad: "Exchange rate" with "1 EUR · 1.4612 CAD", the source and the note.
+    private func exchangePanel(_ entry: LedgerEntry, currency: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            panelTitle("Exchange rate", detail: nil)
+            VStack(spacing: 0) {
+                kv("1 \(entry.originalCurrency ?? "")", "\(CurrencyText.rate(entry.rate ?? "")) \(currency)")
+                    .accessibilityIdentifier("entryDetail.rate")
+                Rectangle().fill(PennyColor.separator).frame(height: 0.5)
+                sourceRow(entry, name: rateSource == "European Central Bank" ? "ECB" : rateSource)
+                    .accessibilityIdentifier("entryDetail.rateSource")
+            }
+            .font(.subheadline)
+            Text(CurrencyText.detailNote(total: entry.total, home: currency))
+                .font(.footnote)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
+                .accessibilityIdentifier("entryDetail.rateNote")
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PennyColor.surface, in: cardShape)
     }
 
     // MARK: Regular-width panels

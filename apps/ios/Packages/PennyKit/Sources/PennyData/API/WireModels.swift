@@ -1,4 +1,4 @@
-// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.1.0).
+// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.4.0).
 //
 // These types mirror the JSON exactly and carry no presentation state. Money is integer
 // minor units (cents, Int64), calendar dates stay "YYYY-MM-DD" strings (never Date, so a
@@ -88,12 +88,21 @@ public struct WireEntry: Codable, Equatable, Sendable {
     public var date: String
     public var note: String
     public var receipt: WireReceipt?
+    /// Contract 2.4.0 (MAZ-151): the amount in the currency it was paid in (its minor units), that
+    /// currency, the rate (home units per unit, a canonical decimal string) and where the rate came
+    /// from. All four or none; `rateDate` is absent for an edited rate. Omitted when nil.
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rate: String?
+    public var rateStatus: String?
+    public var rateDate: String?
 
     public init(
         id: String, title: String, kind: WireEntryKind, total: Int64, share: Int64, participants: Int? = nil,
         categoryId: String,
         accountId: String? = nil, tripId: String? = nil, recurringId: String? = nil, date: String,
-        note: String, receipt: WireReceipt? = nil
+        note: String, receipt: WireReceipt? = nil, originalAmount: Int64? = nil, originalCurrency: String? = nil,
+        rate: String? = nil, rateStatus: String? = nil, rateDate: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -108,6 +117,11 @@ public struct WireEntry: Codable, Equatable, Sendable {
         self.date = date
         self.note = note
         self.receipt = receipt
+        self.originalAmount = originalAmount
+        self.originalCurrency = originalCurrency
+        self.rate = rate
+        self.rateStatus = rateStatus
+        self.rateDate = rateDate
     }
 }
 

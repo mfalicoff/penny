@@ -76,6 +76,12 @@ struct StoredDraft: Codable {
     var shareInput: String
     var frequency: String?
     var receipt: WireReceipt?
+    /// MAZ-151: the draft's currency and rate; absent for a home draft (and in drafts kept
+    /// by earlier builds).
+    var currency: String?
+    var rate: String?
+    var rateStatus: String?
+    var rateDate: String?
 
     init(_ draft: EntryDraft) {
         kind = draft.kind.rawValue
@@ -90,6 +96,10 @@ struct StoredDraft: Codable {
         shareInput = draft.shareInput
         frequency = draft.frequency?.rawValue
         receipt = draft.receipt.map { WireReceipt(id: $0.id, name: $0.name, mime: $0.mime, uri: $0.uri) }
+        currency = draft.currency
+        rate = draft.rate
+        rateStatus = draft.rateStatus?.rawValue
+        rateDate = draft.rateDate?.description
     }
 
     /// The draft, or nil when a value is not one this build knows.
@@ -100,9 +110,17 @@ struct StoredDraft: Codable {
             guard let known = RecurrenceFrequency(rawValue: frequency) else { return nil }
             repeats = known
         }
+        var status: RateStatus?
+        if let rateStatus {
+            guard let known = RateStatus(rawValue: rateStatus) else { return nil }
+            status = known
+        }
+        if let currency, !Currencies.isCurrency(currency) { return nil }
         return EntryDraft(
             kind: kind, title: title, amount: amount, date: date, categoryId: categoryId, accountId: accountId,
             tripId: tripId, note: note, split: split, shareInput: shareInput, frequency: repeats,
-            receipt: receipt.map { ReceiptReference(id: $0.id, name: $0.name, uri: $0.uri, mime: $0.mime) })
+            receipt: receipt.map { ReceiptReference(id: $0.id, name: $0.name, uri: $0.uri, mime: $0.mime) },
+            currency: currency, rate: rate.flatMap { Currencies.validRate($0) ? $0 : nil }, rateStatus: status,
+            rateDate: rateDate.flatMap(PennyDomain.CalendarDate.init))
     }
 }

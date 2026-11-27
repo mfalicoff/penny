@@ -373,7 +373,8 @@ private struct SharedExpenseForm: View {
                     focus = nil
                     amountActive = true
                 } label: {
-                    AmountDisplay(text: form.draft.amountText, kind: .expense, currency: model.currency)
+                    AmountDisplay(
+                        text: form.draft.amountText, kind: .expense, symbol: AmountDisplay.symbol(model.currency))
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)

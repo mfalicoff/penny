@@ -311,7 +311,9 @@ extension LedgerEntry {
             participants: wire.participants,
             categoryId: wire.categoryId, accountId: wire.accountId, tripId: wire.tripId, date: date, note: wire.note,
             receipt: wire.receipt.map { ReceiptReference(id: $0.id, name: $0.name, uri: $0.uri, mime: $0.mime) },
-            recurringId: wire.recurringId)
+            recurringId: wire.recurringId, originalAmount: wire.originalAmount, originalCurrency: wire.originalCurrency,
+            rate: wire.rate, rateStatus: wire.rateStatus.flatMap(RateStatus.init(rawValue:)),
+            rateDate: wire.rateDate.flatMap(PennyDomain.CalendarDate.init))
     }
 }
 

@@ -183,8 +183,11 @@ private struct ThemePreview: View {
     }
 }
 
-/// Currency (`settings` card's Currency row): the four currencies the API accepts, locked
-/// with the reason once entries exist (or, from MAZ-75, while in a household).
+/// Currency (`settings` card's Currency row; `iphone-currency-rates`, `iphone-currency-rates-off`,
+/// `ipad-settings-currency`, MAZ-151): the home currency every total adds up in (one of the four the
+/// API accepts, locked once entries exist or while in a household), the server's exchange rates
+/// (daily ECB rates and their latest date, or "Turned off on this server" with your last rates),
+/// and the currencies your entries used.
 struct CurrencySettingsView: View {
     @Environment(ShellModel.self) private var shell
     @State private var failure: SaveFailure?
@@ -193,6 +196,7 @@ struct CurrencySettingsView: View {
     var body: some View {
         WorkspaceContent { ledger in
             let lockReason = CurrencyPolicy.lockReason(ledger: ledger)
+            let usage = CurrencyUsage(ledger)
             List {
                 if let failure {
                     Section {
@@ -201,54 +205,172 @@ struct CurrencySettingsView: View {
                     }
                 }
                 Section {
-                    ForEach(CurrencyPolicy.options, id: \.self) { currency in
-                        let selected = ledger.currency == currency
-                        let locked = lockReason != nil
-                        Button {
-                            choose(currency)
-                        } label: {
-                            // `currency` card (MAZ-257): while locked, the current code carries a
-                            // small lock and a grey check, and the others are dimmed.
-                            HStack {
-                                // Each currency by its ISO code alone (owner's decision, 2026-11-24).
-                                HStack(spacing: 4) {
-                                    Text(currency.rawValue).font(.body.weight(.semibold))
-                                    if locked, selected {
-                                        Image(systemName: "lock").font(.footnote)
-                                            .accessibilityLabel("Locked")
-                                    }
-                                }
-                                .foregroundStyle(locked && !selected ? PennyColor.tertiaryLabel : PennyColor.label)
-                                Spacer()
-                                if selected {
-                                    Image(systemName: "checkmark").font(.body.weight(.semibold))
-                                        .foregroundStyle(locked ? PennyColor.tertiaryLabel : PennyColor.tint)
-                                }
-                            }
-                            .frame(minHeight: Metrics.minTouchTarget)
-                            .contentShape(Rectangle())
+                    if lockReason != nil {
+                        // Locked: the home currency alone, with its lock (`iphone-currency-rates`).
+                        HStack(spacing: 12) {
+                            Text(ledger.currency.rawValue).font(.body.weight(.bold)).frame(
+                                width: 54, alignment: .leading)
+                            Text(Currencies.info(ledger.currency.rawValue)?.name ?? "")
+                            Spacer()
+                            Image(systemName: "lock").foregroundStyle(PennyColor.tertiaryLabel)
+                                .accessibilityLabel("Locked")
                         }
-                        .buttonStyle(.plain)
-                        // The card's rows, tighter than a list's default.
+                        .frame(minHeight: Metrics.minTouchTarget)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        .disabled(lockReason != nil && !selected)
-                        .accessibilityAddTraits(selected ? .isSelected : [])
-                        .accessibilityIdentifier("currency.\(currency.rawValue)")
+                        .accessibilityElement(children: .combine)
+                        .accessibilityAddTraits(.isSelected)
+                        .accessibilityIdentifier("currency.\(ledger.currency.rawValue)")
+                    } else {
+                        ForEach(CurrencyPolicy.options, id: \.self) { currency in option(currency, ledger: ledger) }
                     }
+                } header: {
+                    Text("Home currency").cardSectionHeader()
                 } footer: {
                     Text(
-                        Self.footer(lockReason)
-                            ?? "Choose your currency before adding entries. One currency per account keeps your totals consistent."
+                        lockReason == LedgerRuleError.currencyLocked.message
+                            ? Self.lockedFooter(ledger.currency)
+                            : Self.footer(lockReason)
+                                ?? "Choose your currency before adding entries. One currency per account keeps your totals consistent."
                     )
+                }
+                exchangeRates(ledger.currency, usage: usage)
+                if !usage.uses.isEmpty {
+                    Section {
+                        ForEach(usage.uses, id: \.code) { use in
+                            HStack(spacing: 12) {
+                                Text(use.code).font(.body.weight(.bold)).frame(width: 54, alignment: .leading)
+                                Text(Currencies.info(use.code)?.name ?? use.code)
+                                Spacer()
+                                Text(CurrencyText.used(use.count)).foregroundStyle(PennyColor.secondaryLabel)
+                            }
+                            .frame(minHeight: Metrics.minTouchTarget)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("currencySettings.recent.\(use.code)")
+                        }
+                    } header: {
+                        Text("Recent currencies").cardSectionHeader()
+                    }
                 }
             }
             .insetGroupedList()
             // The list sits right under the bar, as on the card.
             .contentMargins(.top, 8, for: .scrollContent)
+            .task { await shell.rates.refresh(home: ledger.currency) }
         }
         .background(PennyColor.background)
         .navigationTitle("Currency")
         .accessibilityIdentifier("screen.currency")
+    }
+
+    /// Exchange rates: Daily rates On (the source's reference rates) and Latest rates, or Off
+    /// ("Turned off on this server") and your last rates.
+    @ViewBuilder
+    private func exchangeRates(_ home: Currency, usage: CurrencyUsage) -> some View {
+        let answer = shell.rates.latest[home.rawValue]
+        let on = answer?.enabled ?? shell.rates.isAvailable
+        Section {
+            HStack {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Daily rates")
+                    Text(
+                        on
+                            ? "\(answer?.source ?? "European Central Bank") reference rates"
+                            : "Turned off on this server"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(PennyColor.secondaryLabel)
+                }
+                Spacer()
+                Text(on ? "On" : "Off").foregroundStyle(PennyColor.secondaryLabel)
+            }
+            .frame(minHeight: Metrics.minTouchTarget)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("currencySettings.dailyRates")
+            if on {
+                HStack {
+                    Text("Latest rates")
+                    Spacer()
+                    Text(Self.latest(answer)).foregroundStyle(PennyColor.secondaryLabel)
+                        .pennyCrossfade(answer?.latestDate, duration: .quick)
+                }
+                .frame(minHeight: Metrics.minTouchTarget)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("currencySettings.latestRates")
+            } else {
+                HStack {
+                    Text("Your last rates").layoutPriority(1)
+                    Spacer()
+                    Text(Self.lastRates(usage)).foregroundStyle(PennyColor.secondaryLabel)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(minHeight: Metrics.minTouchTarget)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("currencySettings.lastRates")
+            }
+        } header: {
+            Text("Exchange rates").cardSectionHeader()
+        } footer: {
+            Text(on ? Self.ratesOnFooter : Self.ratesOffFooter)
+        }
+    }
+
+    static let ratesOnFooter =
+        "Each entry in another currency is converted at the rate for its date, and keeps it: later rates never change old totals. On weekends and holidays, the last business day's rate is used. Your server fetches the rates; turning them off is up to whoever runs it."
+    static let ratesOffFooter =
+        "Your server doesn't fetch exchange rates. When you add an entry in another currency, enter the rate you got; Penny suggests the last one you used for that currency."
+
+    /// "Insights, Left to spend, budgets and recaps add up in Canadian dollars. Your home currency
+    /// is locked once your ledger has entries."
+    static func lockedFooter(_ home: Currency) -> String {
+        let name =
+            switch home {
+            case .cad: "Canadian dollars"
+            case .usd: "US dollars"
+            case .eur: "euros"
+            case .gbp: "pounds sterling"
+            }
+        return
+            "Insights, Left to spend, budgets and recaps add up in \(name). Your home currency is locked once your ledger has entries."
+    }
+
+    /// "Fri, Nov 6", or a dash before the server has answered.
+    static func latest(_ answer: WireExchangeRates?) -> String {
+        guard let date = answer?.latestDate.flatMap(CalendarDate.init) else { return "—" }
+        return CurrencyText.mediumDay(date)
+    }
+
+    /// "EUR 1.4600 · USD 1.3700": the last rate used for the two most recent currencies.
+    static func lastRates(_ usage: CurrencyUsage) -> String {
+        let rates = usage.uses.prefix(2).map { "\($0.code) \(CurrencyText.rate($0.lastRate))" }
+        return rates.isEmpty ? "None yet" : rates.joined(separator: " · ")
+    }
+
+    private func option(_ currency: Currency, ledger: Ledger) -> some View {
+        let selected = ledger.currency == currency
+        return Button {
+            choose(currency)
+        } label: {
+            HStack(spacing: 12) {
+                Text(currency.rawValue).font(.body.weight(.bold)).frame(width: 54, alignment: .leading)
+                Text(Currencies.info(currency.rawValue)?.name ?? "")
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark").font(.body.weight(.semibold)).foregroundStyle(PennyColor.tint)
+                }
+            }
+            .foregroundStyle(PennyColor.label)
+            .frame(minHeight: Metrics.minTouchTarget)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("currency.\(currency.rawValue)")
     }
 
     /// The card's footer while the ledger rule locks the currency, the same sentence as Settings'
