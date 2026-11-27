@@ -61,6 +61,11 @@ struct AppShell: View {
         .sheet(isPresented: $shell.route.isCalendarPresented, onDismiss: shell.sheetDismissed) {
             NavigationStack { CalendarView().pennySolidBars() }.environment(shell)
         }
+        // The year in review (MAZ-292), over everything, from the Insights card or the January banner.
+        // iPad shows the iPhone layout, centered, as the recap does.
+        .yearReviewCover($shell.yearReview) { request in
+            YearReviewView(year: request.year).environment(shell)
+        }
         .accessibilityIdentifier(shell.isDemo ? "root.demo" : "root.signedIn")
     }
 

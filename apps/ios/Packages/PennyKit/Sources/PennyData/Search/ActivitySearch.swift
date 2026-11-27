@@ -342,7 +342,8 @@ extension SharedExpenseShare {
             total: wire.totalCents, share: wire.shareCents,
             category: Category(name: wire.category.name, icon: wire.category.icon, color: wire.category.color),
             note: wire.note, householdName: wire.householdName ?? "", accountId: wire.accountId,
-            recurringId: wire.recurringId, scheduled: wire.scheduled ?? false, payer: Self.payer(wire))
+            recurringId: wire.recurringId, scheduled: wire.scheduled ?? false, payer: Self.payer(wire),
+            payerEmail: wire.paidByYou == true ? nil : wire.payer?.email)
     }
 
     /// "you" when the viewer paid, else the payer's shown name; nil when the server sent neither.

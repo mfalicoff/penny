@@ -3,28 +3,36 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
+/// What the recap banner offers: last month's recap, or in January last year's review (MAZ-292).
+enum RecapBannerItem: Hashable {
+    case month(MonthKey)
+    case year(Int)
+}
+
 /// "Your October recap is ready" (`iphone-home-recap`, `iphone-insights-recap` cards, MAZ-292): on
 /// Home and Insights during the first 7 days of a month, when last month's recap isn't empty,
 /// until it's dismissed on this device. The banner opens the recap; its close button dismisses it.
+/// In January the same banner offers last year's review instead ("Your 2026 in review is ready"),
+/// opening it in a full-screen cover; it has no card of its own.
 ///
 /// Motion (docs/design/motion.md §7): it arrives sliding down `nudge` and fading in while the
-/// content below makes room (the parent animates `month`); dismissed, it fades out (`quick`, exit),
+/// content below makes room (the parent animates `item`); dismissed, it fades out (`quick`, exit),
 /// then the space closes (`standard`). Under Reduce Motion it fades in and out (`quick`) and the
-/// space opens and closes at once. Dismissing plays a light impact; opening the recap a selection.
+/// space opens and closes at once. Dismissing plays a light impact; opening a selection.
 struct RecapBanner: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The month on show, from `MonthlyRecap.bannerMonth`; nil hides the banner.
-    let month: MonthKey?
-    /// The month whose banner is fading out after its close button.
-    @State private var closing: MonthKey?
+    /// The banner on show, from `MonthlyRecap.banner`; nil hides it.
+    let item: RecapBannerItem?
+    /// The banner fading out after its close button.
+    @State private var closing: RecapBannerItem?
     @State private var dismissals = 0
 
     var body: some View {
         Group {
-            if let month {
-                banner(month)
-                    .opacity(closing == month ? 0 : 1)
+            if let item {
+                banner(item)
+                    .opacity(closing == item ? 0 : 1)
                     // In: down `nudge` and a fade. Out: it has already faded, so only the space closes.
                     .transition(
                         .asymmetric(
@@ -34,10 +42,12 @@ struct RecapBanner: View {
         .pennyHaptic(.dismissRecap, trigger: dismissals)
     }
 
-    private func banner(_ month: MonthKey) -> some View {
-        HStack(alignment: .center, spacing: 12) {
+    private func banner(_ item: RecapBannerItem) -> some View {
+        let isYear: Bool
+        if case .year = item { isYear = true } else { isYear = false }
+        return HStack(alignment: .center, spacing: 12) {
             Button {
-                shell.openRecap(month)
+                open(item)
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "sparkles")
@@ -50,10 +60,10 @@ struct RecapBanner: View {
                         )
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(RecapText.bannerTitle(month))
+                        Text(Self.title(item))
                             .font(.callout.weight(.semibold))
                             .foregroundStyle(PennyColor.label)
-                        Text(RecapText.bannerMessage)
+                        Text(isYear ? YearReviewText.bannerMessage : RecapText.bannerMessage)
                             .font(.footnote)
                             .foregroundStyle(PennyColor.secondaryLabel)
                     }
@@ -68,10 +78,10 @@ struct RecapBanner: View {
             }
             .buttonStyle(.pennyPress)
             .accessibilityElement(children: .combine)
-            .accessibilityHint("Opens the recap")
-            .accessibilityIdentifier("home.recapBanner")
+            .accessibilityHint(isYear ? "Opens your year in review" : "Opens the recap")
+            .accessibilityIdentifier(isYear ? "home.yearReviewBanner" : "home.recapBanner")
             Button {
-                close(month)
+                close(item)
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
@@ -84,8 +94,8 @@ struct RecapBanner: View {
             .buttonStyle(.plain)
             .frame(maxHeight: .infinity, alignment: .top)
             .accessibilityLabel("Dismiss")
-            .accessibilityHint("Hides this month's recap banner")
-            .accessibilityIdentifier("home.recapBannerDismiss")
+            .accessibilityHint(isYear ? "Hides this year's review banner" : "Hides this month's recap banner")
+            .accessibilityIdentifier(isYear ? "home.yearReviewBannerDismiss" : "home.recapBannerDismiss")
         }
         .fixedSize(horizontal: false, vertical: true)
         .padding(.leading, 14)
@@ -95,14 +105,31 @@ struct RecapBanner: View {
         .accessibilityElement(children: .contain)
     }
 
-    /// Fades the banner out, then closes its space, and keeps it dismissed for that month.
-    private func close(_ month: MonthKey) {
+    static func title(_ item: RecapBannerItem) -> String {
+        switch item {
+        case .month(let month): RecapText.bannerTitle(month)
+        case .year(let year): YearReviewText.bannerTitle(year)
+        }
+    }
+
+    private func open(_ item: RecapBannerItem) {
+        switch item {
+        case .month(let month): shell.openRecap(month)
+        case .year(let year): shell.openYearReview(year)
+        }
+    }
+
+    /// Fades the banner out, then closes its space, and keeps it dismissed for that month or year.
+    private func close(_ item: RecapBannerItem) {
         dismissals += 1
-        withAnimation(Motion.animation(.quick, exit: true, reduceMotion: reduceMotion)) { closing = month }
+        withAnimation(Motion.animation(.quick, exit: true, reduceMotion: reduceMotion)) { closing = item }
         Task {
             try? await Task.sleep(for: .seconds(Motion.Duration.quick.rawValue))
             withAnimation(Motion.movement(.standard, reduceMotion: reduceMotion)) {
-                shell.dismissRecapBanner(month)
+                switch item {
+                case .month(let month): shell.dismissRecapBanner(month)
+                case .year(let year): shell.dismissYearReviewBanner(year)
+                }
             }
         }
     }

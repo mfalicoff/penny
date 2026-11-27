@@ -169,6 +169,97 @@ final class CardCaptureTests: CardTestCase {
                 + "(RecapTests); its look is checked on a device (docs/ios/qa.md).")
     }
 
+    // MARK: iPhone year in review (MAZ-292, phase 2)
+
+    /// The year-in-review cards are drawn on December 28, inside its December 26–January 31 window.
+    private static let yearReviewToday = "2026-12-28"
+
+    /// Opens the year in review from Insights' card and pages forward `pages` times.
+    @MainActor
+    private func openYearReview(_ card: CardContext, pages: Int = 0) throws {
+        try card.penny.openInsights()
+        try card.penny.tap(AccessibilityID.YearReview.insightsCard)
+        try card.penny.wait(for: AccessibilityID.YearReview.screen)
+        let names = ["categories", "trips", "shared", "facts"]
+        try card.penny.wait(for: AccessibilityID.YearReview.page(names[0]))
+        for index in 0..<pages {
+            try card.penny.nextYearReviewPage(from: names[index])
+            try card.penny.wait(for: AccessibilityID.YearReview.page(names[index + 1]))
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneInsightsYearReview_ShouldBeCaptured() async throws {
+        try await card("iphone-insights-year-review", today: Self.yearReviewToday) { card in
+            try card.penny.openInsights()
+            try card.penny.wait(for: AccessibilityID.YearReview.insightsCard)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReview_ShouldBeCaptured() async throws {
+        try await card("iphone-year-review", today: Self.yearReviewToday) { card in
+            try openYearReview(card)
+            try card.penny.wait(for: AccessibilityID.YearReview.total)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReviewTrips_ShouldBeCaptured() async throws {
+        try await card("iphone-year-review-trips", today: Self.yearReviewToday) { card in
+            try openYearReview(card, pages: 1)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReviewShared_ShouldBeCaptured() async throws {
+        try await card("iphone-year-review-shared", today: Self.yearReviewToday) { card in
+            try openYearReview(card, pages: 2)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReviewFacts_ShouldBeCaptured() async throws {
+        try await card("iphone-year-review-facts", today: Self.yearReviewToday) { card in
+            try openYearReview(card, pages: 3)
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReviewShare_ShouldBeCaptured() async throws {
+        try await card("iphone-year-review-share", today: Self.yearReviewToday) { card in
+            try openYearReview(card, pages: 3)
+            try card.penny.tap(AccessibilityID.YearReview.share)
+            try card.penny.wait(for: AccessibilityID.YearReview.shareScreen)
+            try card.penny.waitForYearShareImage()
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReviewShareAmounts_ShouldBeCaptured() async throws {
+        try await card("iphone-year-review-share-amounts", today: Self.yearReviewToday) { card in
+            try openYearReview(card, pages: 3)
+            try card.penny.tap(AccessibilityID.YearReview.share)
+            try card.penny.waitForYearShareImage()
+            try card.penny.showYearShareAmounts()
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneYearReviewShareSheet_ShouldBeCaptured() async throws {
+        try await card(
+            "iphone-year-review-share-sheet",
+            note: "The system share sheet is iOS chrome; its apps and actions are the simulator's.",
+            today: Self.yearReviewToday
+        ) { card in
+            try openYearReview(card, pages: 3)
+            try card.penny.tap(AccessibilityID.YearReview.share)
+            try card.penny.waitForYearShareImage()
+            try card.penny.tap(AccessibilityID.YearReview.shareSend)
+            card.penny.waitForShareSheet()
+        }
+    }
+
     // MARK: iPhone activity and entries
 
     @MainActor

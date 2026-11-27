@@ -79,11 +79,14 @@ public struct SharedExpenseShare: Hashable, Sendable {
     public var scheduled: Bool
     /// Who paid; nil when the server sent no payer (before MAZ-275).
     public var payer: SharedPayer?
+    /// The payer's email when someone else paid, so the year in review (MAZ-292) counts each
+    /// person once whatever their name; never shown. Nil when you paid or the server sent none.
+    public var payerEmail: String?
 
     public init(
         id: String, householdId: String, currency: Currency, title: String, date: CalendarDate, total: Int64,
         share: Int64, category: Category, note: String = "", householdName: String = "", accountId: String? = nil,
-        recurringId: String? = nil, scheduled: Bool = false, payer: SharedPayer? = nil
+        recurringId: String? = nil, scheduled: Bool = false, payer: SharedPayer? = nil, payerEmail: String? = nil
     ) {
         self.id = id
         self.householdId = householdId
@@ -99,6 +102,7 @@ public struct SharedExpenseShare: Hashable, Sendable {
         self.recurringId = recurringId
         self.scheduled = scheduled
         self.payer = payer
+        self.payerEmail = payerEmail
     }
 }
 
@@ -128,6 +132,8 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     public var householdName: String?
     /// Who paid a shared row; nil for a personal row, or a shared one the server sent no payer for.
     public var payer: SharedPayer?
+    /// The payer's email when someone else paid a shared row (`SharedExpenseShare.payerEmail`).
+    public var payerEmail: String?
     public var recurringId: String?
     /// Not recorded yet: a preview, never cash.
     public var scheduled: Bool
@@ -147,6 +153,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         note = entry.note
         householdName = nil
         payer = nil
+        payerEmail = nil
         recurringId = entry.recurringId
         self.scheduled = scheduled
     }
@@ -168,6 +175,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         note = item.note
         householdName = item.householdName
         payer = item.payer
+        payerEmail = item.payerEmail
         recurringId = item.recurringId
         scheduled = item.scheduled
     }

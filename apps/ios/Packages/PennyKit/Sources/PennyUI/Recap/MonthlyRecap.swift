@@ -83,12 +83,15 @@ public final class MonthlyRecap {
     /// The person turned the switch on and notifications are off for Penny in iOS Settings.
     public private(set) var permissionDenied = false
     private(set) var dismissed: Set<String>
+    /// Years whose January year-in-review banner was dismissed here (MAZ-292, phase 2).
+    private(set) var dismissedYears: Set<String>
 
     @ObservationIgnored private let defaults: UserDefaults?
     @ObservationIgnored private let center: (any RecapNotificationCenter)?
 
     static let notifiesKey = "penny.recap.notifies"
     static let dismissedKey = "penny.recap.dismissed"
+    static let dismissedYearsKey = "penny.yearReview.dismissed"
     /// About a year ahead: enough for a person who doesn't open Penny for months.
     static let scheduledCount = 12
     /// Dismissed banners kept; older months can't show a banner again anyway.
@@ -101,6 +104,7 @@ public final class MonthlyRecap {
         self.center = center
         notifies = center != nil && (defaults?.bool(forKey: Self.notifiesKey) ?? false)
         dismissed = Set(defaults?.stringArray(forKey: Self.dismissedKey) ?? [])
+        dismissedYears = Set(defaults?.stringArray(forKey: Self.dismissedYearsKey) ?? [])
     }
 
     #if canImport(UserNotifications)
@@ -131,6 +135,36 @@ public final class MonthlyRecap {
             !report.month(month, today: today).recordedEntries.isEmpty
         else { return nil }
         return month
+    }
+
+    // MARK: Year in review (MAZ-292, phase 2)
+
+    func isDismissed(year: Int) -> Bool { dismissedYears.contains(String(year)) }
+
+    /// The January banner's close button: that year's banner doesn't come back on this device.
+    func dismiss(year: Int) {
+        dismissedYears.insert(String(year))
+        let kept = dismissedYears.sorted().suffix(Self.keptDismissals)
+        dismissedYears = Set(kept)
+        defaults?.set(Array(kept), forKey: Self.dismissedYearsKey)
+    }
+
+    /// The year whose banner shows on Home and Insights: last year, in January
+    /// (`YearReview.bannerYear`), unless nothing was recorded in it or it was dismissed here.
+    func bannerYear(today: CalendarDate, report: LedgerReport) -> Int? {
+        guard let year = YearReview.bannerYear(today: today), !isDismissed(year: year),
+            YearReviewText.hasEntries(year, report: report, today: today)
+        else { return nil }
+        return year
+    }
+
+    /// The banner on Home and Insights. In January the year's banner takes the monthly recap
+    /// banner's place while it shows (owner decision for iOS and the web: the two never stack, so
+    /// Home stays uncrowded); once it's dismissed, December's recap banner shows for the rest of
+    /// its first 7 days.
+    func banner(today: CalendarDate, report: LedgerReport) -> RecapBannerItem? {
+        if let year = bannerYear(today: today, report: report) { return .year(year) }
+        return bannerMonth(today: today, report: report).map(RecapBannerItem.month)
     }
 
     // MARK: Notification

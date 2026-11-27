@@ -33,8 +33,9 @@ struct HomeView: View {
             let summary = report.month(shell.month, today: shell.today)
             let currency = ledger.currency.rawValue
             let dashboard = sizeClass == .regular && !typeSize.isAccessibilitySize && width >= 760
-            // Last month's recap, during the first 7 days of a month (MAZ-292).
-            let recapMonth = shell.recap.bannerMonth(today: shell.today, report: report)
+            // Last month's recap, during the first 7 days of a month, or in January last year's
+            // review in its place (MAZ-292).
+            let recapBanner = shell.recap.banner(today: shell.today, report: report)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     SyncBanner()
@@ -48,13 +49,13 @@ struct HomeView: View {
                             if Self.isEmpty(ledger: ledger, report: report) {
                                 EmptyHomeContent(currency: currency)
                             } else if dashboard {
-                                RecapBanner(month: recapMonth)
+                                RecapBanner(item: recapBanner)
                                 HomeDashboard(
                                     report: report, summary: summary, currency: currency, width: width,
                                     portrait: portrait)
                             } else {
                                 HomeHero(summary: summary, currency: currency)
-                                RecapBanner(month: recapMonth)
+                                RecapBanner(item: recapBanner)
                                 ExpectedIncomeCard(summary: summary, currency: currency, today: shell.today)
                                 FlowSummaryCard(
                                     flow: MoneyFlow(summary, categories: report.categories), currency: currency)
@@ -74,7 +75,7 @@ struct HomeView: View {
                 .animation(Motion.animation(.standard, reduceMotion: reduceMotion), value: shell.workspace.sync)
                 // The recap banner arriving or leaving: the content below makes room or moves up
                 // (`standard`); at once under Reduce Motion, where the banner only fades.
-                .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: recapMonth)
+                .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: recapBanner)
                 // The tinted glow behind the hero (MAZ-180), dimmed on the empty Home as on its card.
                 .heroGlow(opacity: Self.isEmpty(ledger: ledger, report: report) ? 0.6 : 1)
                 .padding(.horizontal, Metrics.gutter)

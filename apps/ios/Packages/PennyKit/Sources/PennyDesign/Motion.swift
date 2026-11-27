@@ -174,17 +174,25 @@ extension Motion {
         case open
         /// Dismiss the recap banner (MAZ-292).
         case dismissRecap
-        /// Open the recap: the banner, Insights' Recap button (MAZ-292).
+        /// Open the recap or the year in review: the banner, Insights' Recap button, the Insights card
+        /// (MAZ-292).
         case openRecap
+        /// Page to the next or previous page of the year in review (MAZ-292).
+        case pageYearReview
+        /// Open Share your year, or the system share sheet from it (MAZ-292).
+        case openShare
+        /// The share completes; never when it's cancelled (MAZ-292).
+        case shareCompleted
         /// Dismiss a schedule suggestion on Recurring (MAZ-290).
         case dismissSuggestion
 
         public var feedback: SensoryFeedback {
             switch self {
-            case .save, .syncSucceeded: .success
+            case .save, .syncSucceeded, .shareCompleted: .success
             case .refused, .failed, .syncFailed: .error
-            case .undo, .openClose, .sidebar, .dismissRecap, .dismissSuggestion: .impact(weight: .light)
-            case .stepPeriod, .focusChart, .select, .disclosure, .toggle, .open, .openRecap: .selection
+            case .undo, .openClose, .sidebar, .dismissRecap, .dismissSuggestion, .openShare: .impact(weight: .light)
+            case .stepPeriod, .focusChart, .select, .disclosure, .toggle, .open, .openRecap, .pageYearReview:
+                .selection
             case .delete, .bulkChange: .impact(weight: .medium)
             case .destructiveConfirmation: .warning
             }
