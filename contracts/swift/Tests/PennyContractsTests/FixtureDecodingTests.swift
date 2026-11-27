@@ -69,7 +69,7 @@ final class FixtureDecodingTests: XCTestCase {
     func testScenarioFixturesDecodeStrictlyAndAgree() throws {
         let seeds = try Fixtures.decode(SeedFixture.self, from: "full-stack-seeds.json")
         let states = try Fixtures.decode(RedesignStates.self, from: "redesign-states.json")
-        XCTAssertEqual(states.states.count, 213)
+        XCTAssertEqual(states.states.count, 238)
         XCTAssertEqual(states.palettes, ["light", "dark"])
         for state in states.states {
             guard let name = state.scenario else {

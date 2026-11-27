@@ -1,0 +1,120 @@
+<!-- @dsCard group="Web" name="Inbox · Split a purchase" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Split a captured purchase</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"tray":"<path d=\"M384 80H128L64 272v128a32 32 0 0032 32h320a32 32 0 0032-32V272z\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M64 272h112a80 80 0 00160 0h112\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","link":"<path d=\"M208 352h-64a96 96 0 010-192h64M304 160h64a96 96 0 010 192h-64M163.29 256h187.42\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,36px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","mic":"<rect x=\"192\" y=\"48\" width=\"128\" height=\"256\" rx=\"64\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M400 240a144 144 0 01-288 0M256 384v80M192 464h128\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","layers":"<path d=\"M256 64L48 176l208 112 208-112zM48 256l208 112 208-112M48 336l208 112 208-112\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","swap-horizontal":"<path d=\"M304 48l112 112-112 112M398.87 160H96M208 464L96 352l112-112M114 352h302\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<script>WEB_NAV[0].items.push(["inbox", "tray", "Inbox", "", "5"]);</script>
+<style>
+  .wnav:has([data-i="tray"]) .n { min-width: 22px; height: 20px; padding: 0 7px; border-radius: 10px; background: var(--tint); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+  .ibar { display: flex; align-items: center; gap: 12px; }
+  .choice { display: flex; background: var(--fill); border-radius: 10px; padding: 3px; height: 36px; width: 260px; }
+  .choice div { flex: 1; display: grid; place-items: center; font-size: 13.5px; font-weight: 600; border-radius: 8px; }
+  .choice .on { background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .dark .choice .on { background: var(--surface-2); }
+  .sec { display: flex; align-items: baseline; justify-content: space-between; max-width: 880px; margin: 22px 0 8px; }
+  .sec h2 { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; }
+  .ilist { max-width: 880px; padding: 6px; }
+  .prw { display: grid; grid-template-columns: 36px minmax(0,1fr) auto auto; column-gap: 14px; align-items: center; padding: 10px 14px; border-radius: 12px; position: relative; }
+  .prw + .prw::before, .wrow + .wrow::before { content: ""; position: absolute; top: 0; left: 62px; right: 14px; border-top: .5px solid var(--separator); }
+  .prw.hover { background: var(--fill); }
+  .prw .ci { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; }
+  .prw .ci [data-i] { width: 18px; height: 18px; --sw: 40px; }
+  .prw b { display: block; font-size: 15px; font-weight: 600; }
+  .prw .s { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .prw .am { text-align: right; font-size: 15px; font-weight: 600; } .prw .am small { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .prw .ra { display: flex; gap: 6px; min-width: 196px; justify-content: flex-end; }
+  .tg { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 10px; background: var(--fill); color: var(--label-2); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .tg [data-i] { width: 12px; height: 12px; --sw: 48px; }
+  .tg.match { background: var(--tint-soft); color: var(--tint-text); }
+  .wrow { display: grid; grid-template-columns: 36px minmax(0,1fr) auto; grid-template-areas: "icon sender date" "icon subject subject"; column-gap: 14px; row-gap: 2px; padding: 10px 14px; border-radius: 12px; position: relative; }
+  .wrow .ri { grid-area: icon; width: 36px; height: 36px; border-radius: 10px; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+  .wrow .ri [data-i] { width: 18px; height: 18px; }
+  .wrow b { grid-area: sender; font-size: 15px; font-weight: 600; }
+  .wrow time { grid-area: date; font-size: 13px; color: var(--label-2); }
+  .wrow .s { grid-area: subject; font-size: 13px; color: var(--label-2); }
+  .btn.q { background: transparent; box-shadow: none; }
+  .btn.dq { background: transparent; box-shadow: none; color: var(--danger); }
+  .lnk { color: var(--tint-text); font-weight: 600; font-size: 14px; }
+  .modal { left: 50%; top: 110px; transform: translateX(-50%); }
+  .mb { display: grid; grid-template-columns: 1fr 1fr; }
+  .mb > div { padding: 18px; }
+  .mb > div + div { border-left: .5px solid var(--separator); background: var(--surface-2); }
+  .amtrow { display: flex; align-items: baseline; gap: 12px; margin-top: 4px; }
+  .amtin { font-size: 48px; font-weight: 700; letter-spacing: -0.04em; } .amtin .c { opacity: .35; }
+  .conv { font-size: 14px; font-weight: 600; color: var(--label-2); margin-top: 2px; }
+  .capl { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--label-2); margin-top: 10px; } .capl [data-i] { width: 14px; height: 14px; }
+  .field { margin-top: 12px; height: 40px; border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); display: flex; align-items: center; padding: 0 12px; font-size: 15px; }
+  .lab { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 8px; display: flex; justify-content: space-between; }
+  .lab span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips .wchip [data-i] { width: 14px; height: 14px; }
+  .drow { display: flex; align-items: center; gap: 10px; min-height: 42px; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .drow:first-child { border-top: 0; }
+  .drow [data-i] { width: 17px; height: 17px; color: var(--label-2); }
+  .drow .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 4px; text-align: right; }
+  .drow .v.col { flex-direction: column; align-items: flex-end; gap: 1px; padding: 6px 0; } .drow .v.col b { color: var(--label); font-weight: 600; } .drow .v.col small { font-size: 12px; }
+  .drow .v.on { color: var(--tint-text); font-weight: 600; }
+  .menu { position: absolute; z-index: 80; left: calc(50% + 70px); top: 312px; width: 300px; padding: 8px; box-shadow: 0 18px 50px rgba(0,0,0,.22), 0 0 0 .5px var(--separator); }
+  .menu .mh2 { font-size: 11px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; padding: 8px 8px 4px; }
+  .menu .mi { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 8px; border-radius: 7px; font-size: 13.5px; }
+  .menu .mi [data-i] { width: 15px; height: 15px; color: var(--label-2); }
+  .menu .mi span { margin-left: auto; font-size: 12px; color: var(--label-2); }
+  .menu .mi.on { background: var(--tint-soft); }
+  .menu .mi.on [data-i].ck { color: var(--tint); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="inbox" data-url="penny.example.com/inbox">
+  <main class="wmain">
+    <div class="wtop"><h1>Inbox</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="ibar"><div class="choice"><div class="on">To review</div><div>Done</div></div></div>
+      <div class="sec"><h2>Purchases</h2><span class="btn"><i data-i="checkmark"></i>Add all</span></div>
+      <div class="panel ilist">
+        <div class="prw"><span class="ci" style="background:var(--c-food)"><i data-i="cafe"></i></span><div><b>Mill St. Coffee</b><div class="s">Food &amp; drinks · Visa ··4412 · Today, 8:05 AM <span class="tg match"><i data-i="link"></i>Matches a receipt</span></div></div><div class="am num">−$6.75</div><div class="ra"></div></div>
+        <div class="prw"><span class="ci" style="background:var(--c-groceries)"><i data-i="basket"></i></span><div><b>Metro</b><div class="s">Groceries · Visa ··4412 · Yesterday, 6:40 PM</div></div><div class="am num">−$54.18</div><div class="ra"></div></div>
+        <div class="prw"><span class="ci" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></span><div><b>Steam</b><div class="s">Fun · Amex ··1008 · Sun, Nov 8</div></div><div class="am num">−$48.08<small>US$34.99</small></div><div class="ra"></div></div>
+      </div>
+      <div class="sec"><h2>Emailed receipts</h2></div>
+      <div class="panel ilist">
+        <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Mill St. Coffee</b><time>Today, 8:06 AM</time><span class="s">Your receipt from Mill St. Coffee · 1 file</span></div>
+        <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Acme Store</b><time>Nov 6</time><span class="s">Your Acme Store receipt for order 4412 · 2 files</span></div>
+      </div>
+    </div>
+  </main>
+  <div class="scrimw"></div>
+  <div class="modal" style="width:760px">
+    <div class="mh"><h3>Purchase</h3><div class="btn icon q" style="margin-left:auto"><i data-i="close"></i></div></div>
+    <div class="mb">
+      <div>
+        <div class="amtrow"><div class="amtin num"><span class="c">$</span>54.18</div></div>
+        <div class="capl"><i data-i="card"></i>Apple Pay · Visa ··4412 · Yesterday, 6:40 PM</div>
+        <div class="field">Metro</div>
+        <div class="lab">Category<span>Suggested from your last Metro entry</span></div>
+        <div class="chips"><span class="wchip" style="background:var(--c-groceries);color:#fff"><i data-i="basket"></i>Groceries</span><span class="wchip"><i data-i="cafe"></i>Food &amp; drinks</span><span class="wchip"><i data-i="home"></i>Home</span><span class="wchip">All…</span></div>
+        <div class="lab">In Apartment</div>
+        <div class="drow"><i data-i="person-add"></i>Paid by<span class="v">You</span></div>
+        <div class="drow"><i data-i="options"></i>Split<span class="v">Equally, 2 people</span></div>
+        <div class="drow"><i data-i="cash"></i>Your share<span class="v num" style="color:var(--label);font-weight:600">$27.09</span></div>
+      </div>
+      <div>
+        <div class="drow"><i data-i="calendar"></i>Date<span class="v">Sun, Nov 8 <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="card"></i>Account<span class="v">Visa <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="people"></i>Split<span class="v on">Apartment <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+      </div>
+    </div>
+    <div class="mf"><span class="btn dq"><i data-i="trash"></i>Discard</span><span style="flex:1"></span><span class="btn">Cancel</span><span class="btn primary">Add to Apartment <kbd>⌘↵</kbd></span></div>
+  </div>
+  <div class="menu panel">
+    <div class="mi"><i data-i="person-add"></i>Just me</div>
+    <div class="mh2">Households</div>
+    <div class="mi on"><i data-i="people"></i>Apartment<span>You and Jo</span><i data-i="checkmark" class="ck"></i></div>
+    <div class="mh2">Trips</div>
+    <div class="mi"><i data-i="airplane"></i>Lisbon<span>Nov 12–19 · 4 people</span></div>
+  </div>
+</div>
+</body></html>

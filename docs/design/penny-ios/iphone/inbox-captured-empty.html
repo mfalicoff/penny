@@ -1,0 +1,73 @@
+<!-- @dsCard group="iPhone" name="Inbox · Nothing to review" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Empty inbox</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<script>/* Stand-ins for SF Symbols this card needs beyond assets/icons.js (Ionicons-style); drawn by its DOMContentLoaded pass. */
+Object.assign(ICONS, {"tray":"<path d=\"M384 80H128L64 272v128a32 32 0 0032 32h320a32 32 0 0032-32V272z\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M64 272h112a80 80 0 00160 0h112\" fill=\"none\" stroke=\"currentColor\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","link":"<path d=\"M208 352h-64a96 96 0 010-192h64M304 160h64a96 96 0 010 192h-64M163.29 256h187.42\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,36px)\"/>","notifications":"<path d=\"M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","mic":"<rect x=\"192\" y=\"48\" width=\"128\" height=\"256\" rx=\"64\" fill=\"none\" stroke=\"currentColor\" style=\"stroke-width:var(--sw,32px)\"/><path d=\"M400 240a144 144 0 01-288 0M256 384v80M192 464h128\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","layers":"<path d=\"M256 64L48 176l208 112 208-112zM48 256l208 112 208-112M48 336l208 112 208-112\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>","swap-horizontal":"<path d=\"M304 48l112 112-112 112M398.87 160H96M208 464L96 352l112-112M114 352h302\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"stroke-width:var(--sw,32px)\"/>"});</script>
+<style>
+  .gh { padding: 22px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; align-items: baseline; }
+  .gh a { text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 600; color: var(--tint-text); }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .prow { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; position: relative; }
+  .prow + .prow::before, .irow + .irow::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; border-top: .5px solid var(--separator); }
+  .prow .cic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; flex: none; margin-top: 1px; }
+  .prow .cic [data-i] { width: 19px; height: 19px; --sw: 40px; }
+  .prow .t { flex: 1; min-width: 0; }
+  .prow .top { display: flex; align-items: baseline; gap: 8px; }
+  .prow .top b { flex: 1; font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prow .top .am { font-size: 17px; font-weight: 600; white-space: nowrap; }
+  .prow .sub { display: flex; gap: 8px; font-size: 14px; color: var(--label-2); margin-top: 2px; }
+  .prow .sub span:first-child { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prow .sub .orig { white-space: nowrap; }
+  .prow .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tg { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--fill); color: var(--label-2); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tg [data-i] { width: 13px; height: 13px; --sw: 48px; }
+  .tg.match { background: var(--tint-soft); color: var(--tint-text); }
+  .tg.pend { color: var(--pending); }
+  .irow { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; position: relative; }
+  .irow .env { width: 36px; height: 36px; border-radius: 11px; background: var(--fill); display: grid; place-items: center; color: var(--label-2); flex: none; }
+  .irow .env [data-i] { width: 20px; height: 20px; }
+  .irow .t { flex: 1; min-width: 0; }
+  .irow .top { display: flex; align-items: baseline; gap: 8px; }
+  .irow .top b { flex: 1; font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .irow .top span { font-size: 13px; color: var(--label-2); white-space: nowrap; }
+  .irow .sub { font-size: 14px; color: var(--label-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .head { padding: 112px 20px 0; }
+  .segwrap { margin: 14px 16px 0; }
+  .empty { text-align: center; padding: 120px 40px 0; }
+  .empty .ei { width: 64px; height: 64px; margin: 0 auto; color: var(--label-3); }
+  .empty .ei [data-i] { width: 64px; height: 64px; --sw: 20px; }
+  .empty h3 { font-size: 22px; font-weight: 700; margin-top: 14px; letter-spacing: -0.01em; }
+  .empty p { font-size: 16px; color: var(--label-2); margin-top: 8px; line-height: 1.4; }
+  .empty .lk { display: block; margin-top: 18px; font-size: 17px; font-weight: 600; color: var(--tint-text); }
+  .empty .lk + .lk { margin-top: 12px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="scroll">
+    <div class="navbar"><div class="glass gbtn"><i data-i="chevron-back"></i></div><div></div></div>
+    <div class="head"><div class="largetitle">Inbox</div></div>
+    <div class="segwrap"><div class="seg"><div class="on">To review</div><div>Done</div></div></div>
+    <div class="empty">
+      <div class="ei"><i data-i="tray"></i></div>
+      <h3>Nothing to review</h3>
+      <p>Purchases you pay for with Apple Pay and receipts you email to Penny wait here until you add them.</p>
+      <span class="lk">Set up Apple Pay capture</span>
+      <span class="lk">Your receipt email address</span>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab on"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

@@ -255,6 +255,31 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-trip-form-currency` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-trip-form-currency`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-currency-rates` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-currency-rates`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-currency-rates-off` | — | Web-only reference (MAZ-270): native behavior is traced through `iphone-currency-rates-off`; the browser journeys are MAZ-96 | Not applicable to native |
+| `iphone-inbox-captured` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-inbox-captured-empty` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-add` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-split` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-match` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-add-all` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-discard` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-home-inbox-badge` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-nudge-setting` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-capture-nudge-notification` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-shortcuts-settings` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-shortcuts-card-add` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-shortcuts-card-edit` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-siri-added` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `iphone-siri-refusals` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `ipad-inbox-captured` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `ipad-inbox-captured-empty` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `ipad-shortcuts-settings` | — | Draft card (MAZ-291), waiting for the owner's review; the feature isn't built yet (it follows MAZ-151) | Gap: draft card, not built yet |
+| `web-inbox-captured` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-inbox-captured`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-inbox-captured-empty` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-inbox-captured-empty`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-capture-add` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-capture-add`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-capture-split` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-capture-split`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-capture-match` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-capture-match`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-capture-add-all` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-capture-add-all`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-capture-discard` | — | Web-only draft reference (MAZ-291): native behavior is traced through `iphone-capture-discard`; the browser journeys are MAZ-96 | Not applicable to native |
 
 Justified native adaptations are recorded in [redesign](../reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 

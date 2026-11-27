@@ -383,6 +383,45 @@ Owner decisions (2026-11-26):
 2. **One trip currency.** It's the default for new expenses and also the settle-up currency, switchable on the settle screen (Settle in EUR).
 3. **Rates off.** A rate is required: Penny suggests the last one used, and Save stays disabled until there's one.
 
+## Drafted cards: Apple Pay purchases in the Inbox, and Siri (MAZ-291, 2026-11-27)
+
+A Wallet **Transaction** automation in Shortcuts captures each Apple Pay purchase **silently** as a draft in the shared Inbox, next to emailed receipts (MAZ-184); you triage it later on iOS or the web. Siri and Shortcuts can still add a full entry directly. These 25 cards draw it on iPhone, iPad and the web, light and dark, after the receipt inbox, add expense, MAZ-270 currency, Settings and recap notification cards, following the owner's Addendum on the issue (2026-11-26): no sheet or question at payment time, no "Ask first", and no currency-mismatch sheet, because per-entry currency (MAZ-151) records the purchase in the card's currency and converts it. **Drafts for the owner's review**; nothing is built, and the build waits for MAZ-151. [Motion](motion.md#apple-pay-purchases-in-the-inbox-maz-291) covers how each new moment animates.
+
+The sample: Max's home currency is CAD and today is Monday, Nov 9, as on the MAZ-270 cards. Visa ··4412 maps to the Visa account and Amex ··1008 to Amex; Mastercard ··7781 isn't mapped yet. Waiting in the Inbox: Mill St. Coffee $6.75 (its emailed receipt arrived a minute later), Esso $62.30 (captured offline, not synced yet), Metro $54.18 and Steam US$34.99 (≈ $48.08 at 1 USD = 1.3742 CAD, the ECB rate for Friday Nov 6), plus two emailed receipts.
+
+| State | Cards |
+| --- | --- |
+| **The Inbox.** One list, two sections: **Purchases** (with **Add all**) above **Emailed receipts**, each newest first, with To review and Done. A purchase row shows its suggested category's icon, the merchant, the home amount (the original under it when converted), the category, the account from the card mapping (or the card's name when it isn't mapped) and the time. Tags: **Matches a receipt**, **Not synced yet** (a draft still only on this iPhone; iOS only), **No account for this card** | `iphone-inbox-captured`, `ipad-inbox-captured`, `web-inbox-captured` (row actions on hover: Discard, Review) |
+| **Nothing to review.** The tray, "Nothing to review", what lands here, and links to set up Apple Pay capture (iOS) and to the receipt address | `iphone-inbox-captured-empty`, `ipad-inbox-captured-empty`, `web-inbox-captured-empty` |
+| **Add.** The triage sheet is the entry form, prefilled: merchant as title, the amount in the card's currency with "≈ $48.08 CAD" and the Rate row as on the MAZ-270 cards, the suggested category ("Suggested from your last Steam entry"), the date of the purchase, and the account "From your Amex ··1008 card". A line under the amount says where it came from: "Apple Pay · Amex ··1008 · Sun, Nov 8, 9:14 PM". **Add expense** and **Discard** | `iphone-capture-add`, the detail pane of `ipad-inbox-captured`, `web-capture-add` |
+| **Split.** Split offers Just me, your households and your trips; picking Apartment shows Paid by, Split and your share, and the button becomes **Add to Apartment** | `iphone-capture-split`, `web-capture-split` (the menu) |
+| **Match.** When an emailed receipt or an existing entry has the same amount close in time, the sheet leads with **Looks like the same purchase** and **Attach to this** on each, then Add as a new expense and Discard. Attaching to a receipt adds one expense with that receipt; attaching to an entry adds nothing and clears the purchase | `iphone-capture-match`, `web-capture-match` |
+| **Add all** lists what it adds, with each suggested category and account, and the total. Purchases that match a receipt or an entry **stay in the Inbox**, and receipts are never added | `iphone-capture-add-all`, `web-capture-add-all` |
+| **Discard** acts at once, with **Undo** on the toast (as MAZ-290's dismiss, no confirmation) | `iphone-capture-discard`, `web-capture-discard` |
+| **The count.** iPhone: the Inbox row on Home shows a copper count (6) and what's waiting; iPad and web: the **Inbox** sidebar item carries it. The app icon shows the same number (not drawn: a system badge) | `iphone-home-inbox-badge`, `ipad-inbox-captured`, `web-inbox-captured` |
+| **The evening reminder.** Settings › Preferences: **Purchases to review** ("At 8 PM, only when some are waiting"), off by default, and under it **Show merchants and amounts** (off). Its footer says it never notifies at payment time | `iphone-capture-nudge-setting` |
+| **The reminder on the Lock Screen**: "3 purchases to review", with no merchant or amount. With Show merchants and amounts on, it would read "Steam $48.08, Metro $54.18 and 1 more" (not drawn) | `iphone-capture-nudge-notification` |
+| **Settings › Shortcuts** (a new row under Manage): the three steps to set up the Wallet Transaction automation with **Open Shortcuts**; **Cards**, the card-to-account list, with cards seen in purchases but not mapped ("Set up") and **Add card**; **Default category** | `iphone-shortcuts-settings`, `ipad-shortcuts-settings` |
+| **Add card** prefills a card name seen in your purchases and asks for the account; drafts already waiting with that card get it too. **Edit card** changes the account or **Remove card** (past expenses keep theirs) | `iphone-shortcuts-card-add`, `iphone-shortcuts-card-edit` |
+| **Siri adds an expense** directly (not to the Inbox): the snippet says what it added and shows the entry, with **Undo** and **Open in Penny** | `iphone-siri-added` |
+| **Siri refuses** and writes nothing: signed out, the demo, storage locked before the first unlock, a duplicate within 2 minutes (it shows the entry it kept), and a zero or negative amount | `iphone-siri-refusals` |
+
+Behavior the cards propose:
+
+- **Capture** saves a draft (amount, currency, merchant, card name, time) on the device, uploads it on the next sync with an idempotency key, and shows nothing but the system's Shortcuts banner. Two captures of the same tap give one item.
+- **Category suggestion:** the last expense with the same merchant (trimmed, ignoring case), else the default category, else the first expense category. **Account:** the card's mapping, else none.
+- **The count** is everything waiting in the Inbox (purchases and receipts), the same number on Home or the sidebar and on the app icon. The reminder counts purchases only.
+- **The web** has no capture, Siri, Shortcuts or reminder: it triages what the iPhone captured, and its count is the sidebar's.
+
+Open questions for the owner:
+
+1. **The name.** The cards rename "Receipts to attach" to **Inbox**, with To review and Done, since it now holds purchases too. Keep it?
+2. **The count.** Purchases and receipts together (as drawn), or purchases only on the app icon?
+3. **The card mapping** lives with the account (synced), so web triage gets the account too, but it's edited only in Settings › Shortcuts on iOS. Should the web have it as well?
+4. **The reminder time:** 8 PM, fixed (as drawn), or a time you pick?
+5. **Add all** skips purchases that match a receipt or an entry (as drawn). Should it attach them to their match instead?
+6. **Phase 2 of the original issue** (the Control Center and Action button control, Spotlight) isn't drawn here.
+
 ## Review scenarios
 
 A capture shows one state at one size. The scenarios below are covered by these suites, so a card review doesn't need to repeat them:
