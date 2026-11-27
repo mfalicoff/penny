@@ -69,6 +69,12 @@ public struct RenewalReminder: Equatable, Hashable, Sendable {
     /// iOS keeps at most 64 pending notifications per app; the monthly recap takes 12.
     public static let limit = 40
 
+    public init(ruleID: String, renews: CalendarDate, day: CalendarDate) {
+        self.ruleID = ruleID
+        self.renews = renews
+        self.day = day
+    }
+
     public var identifier: String { Self.identifierPrefix + ruleID }
 
     /// The reminders to schedule for `rules`: each active yearly schedule in `reminding` whose
