@@ -1077,9 +1077,9 @@ final class CardCaptureTests: CardTestCase {
     @MainActor
     func test_whenSeeded_IphoneCurrency_ShouldBeCaptured() async throws {
         try await card("iphone-currency") { card in
-            // The seeded ledger has entries, so the currency is locked, as on the card.
+            // The seeded ledger has entries, so the home currency is locked: one row, not a choice.
             try card.penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
-            try card.penny.wait(for: AccessibilityID.Settings.currency("CAD"))
+            try card.penny.wait(for: AccessibilityID.Currencies.dailyRates)
         }
     }
 

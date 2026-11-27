@@ -40,7 +40,7 @@ test("currency, organize, income, expense, investment, a schedule and Home's tot
 
   // Currency can be chosen while the ledger is empty, and the server stores it.
   await page.goto("/settings/currency");
-  await expect(page.getByText(/Choose your currency before adding entries/)).toBeVisible();
+  await expect(page.getByText(/Choose your home currency before adding entries/)).toBeVisible();
   const eur = page.getByRole("radio", { name: "EUR" });
   await expect(async () => {
     await eur.check({ force: true, timeout: 2_000 });
