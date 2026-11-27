@@ -64,3 +64,8 @@ public enum PennyColor {
 
     public static func category(_ category: CategoryColor) -> Color { category.value.color }
 }
+
+extension PennyColor {
+    /// A category drawn in its palette color, or the person's own (`CategoryTint`).
+    public static func category(_ tint: CategoryTint) -> Color { tint.value.color }
+}

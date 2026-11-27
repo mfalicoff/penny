@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { useAccountEmail, useAccountMe } from "../../auth/account";
 import { useOpenAddEntry, usePageTitle, useTopbarSlot } from "../../app/shell/pageTitle";
 import { useToday } from "../../app/useToday";
-import { tileStyle } from "../../design/categoryTint";
+import { ownTileStyle } from "../../design/categoryTint";
 import { Avatar, Button, cx } from "../../design/controls";
 import { CardGlyph, Icon, SparklesIcon } from "../../design/Icon";
 import { formatWhole } from "../../design/Money";
@@ -219,13 +219,13 @@ function CategoriesPanel({ review, currency }: { review: YearReview; currency: s
               <span className="year-rank__n pk-num" aria-hidden="true">
                 {index + 1}
               </span>
-              <span className="category-dot" style={tileStyle(category)}>
+              <span className="category-dot" style={ownTileStyle(category)}>
                 <Icon name={categoryIcon(category.icon)} size={16} />
               </span>
               <span className="year-rank__name">
                 {category.name}
                 <span className="year-bar-track" aria-hidden="true">
-                  <i data-bar="" style={{ width: `${String(category.share)}%`, ...tileStyle(category) }} />
+                  <i data-bar="" style={{ width: `${String(category.share)}%`, ...ownTileStyle(category) }} />
                 </span>
               </span>
               <span className="year-rank__value pk-num">

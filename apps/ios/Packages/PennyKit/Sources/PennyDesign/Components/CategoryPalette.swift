@@ -52,6 +52,28 @@ nonisolated extension CategoryStyle {
         return ledgerPalette[upper] ?? .other
     }
 
+    /// The color the recap, the year in review and its share image draw a category with
+    /// (MAZ-290): as `color(forCategoryID:hex:)`, except that a stored `#RRGGBB` outside both
+    /// palettes keeps the person's own color instead of gray (a seeded "Housing" in `#5B7DB1`).
+    public static func tint(forCategoryID id: String, hex stored: String) -> CategoryTint {
+        let palette = color(forCategoryID: id, hex: stored)
+        guard palette == .other, stored.uppercased() != hex(.other), let own = rgba(stored) else {
+            return .palette(palette)
+        }
+        return ledgerPalette[stored.uppercased()] == nil ? .custom(own) : .palette(palette)
+    }
+
+    /// `#RRGGBB` as a color; nil for anything else.
+    static func rgba(_ stored: String) -> RGBA? {
+        let digits = stored.dropFirst()
+        guard stored.first == "#", digits.count == 6, digits.allSatisfy(\.isHexDigit),
+            let value = UInt32(digits, radix: 16)
+        else {
+            return nil
+        }
+        return RGBA(value)
+    }
+
     /// Whether two Ionicons names are the same icon (`home` and `home-outline`).
     public static func sameIcon(_ lhs: String, _ rhs: String) -> Bool { base(lhs) == base(rhs) }
 
@@ -77,5 +99,19 @@ nonisolated extension CategoryStyle {
 
     private static func base(_ name: String) -> String {
         name.replacingOccurrences(of: "-outline", with: "").replacingOccurrences(of: "-sharp", with: "")
+    }
+}
+
+/// A category's color where Penny keeps the person's own (`CategoryStyle.tint`): one of the
+/// palette's, or a stored `#RRGGBB` outside it, drawn as stored in light and dark.
+nonisolated public enum CategoryTint: Equatable, Hashable, Sendable {
+    case palette(CategoryColor)
+    case custom(RGBA)
+
+    public var value: RGBA {
+        switch self {
+        case .palette(let color): color.value
+        case .custom(let rgba): rgba
+        }
     }
 }

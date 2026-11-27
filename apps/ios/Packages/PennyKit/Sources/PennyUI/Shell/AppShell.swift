@@ -23,6 +23,8 @@ struct AppShell: View {
         .environment(shell)
         // The Home Screen widgets follow the account's ledger (MAZ-80); never the demo's.
         .modifier(WidgetPublishing(shell: shell))
+        // Renewal reminders follow the ledger: pause, remove and edit (MAZ-290).
+        .modifier(RenewalScheduling(shell: shell))
         // Today moves on at midnight and when the app comes back, so income dated on the new
         // day leaves Expected for Left to spend without a relaunch (MAZ-136).
         .task { await shell.followDayChanges() }
@@ -333,7 +335,9 @@ private struct SplitShell: View {
             TabStack(tab: shell.route.tab).id(shell.route.tab)
         case .manage(let page):
             NavigationStack {
-                SettingsPage(route: page)
+                // The copper Add entry capsule after the page's own + (`ipad-recurring-suggested`,
+                // MAZ-290), as on Home, Activity and Settings.
+                SettingsPage(route: page).manageAddEntry()
             }
             .id(page)
         case .settings:
@@ -573,6 +577,18 @@ struct AddEntryCapsule: View {
 }
 
 extension View {
+    /// The copper Add entry capsule at the trailing end of an iPad Manage page's toolbar
+    /// (Recurring, Accounts, Categories; `ipad-recurring-suggested`, MAZ-290), after the page's
+    /// own + in a glass group of its own.
+    func manageAddEntry() -> some View {
+        toolbar {
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItem(placement: .primaryAction) {
+                AddEntryCapsule().accessibilityIdentifier("manage.addEntry")
+            }
+        }
+    }
+
     /// A tab page on iPhone (MAZ-254): the system tab bar hidden under `PennyTabBar`, and the
     /// page's content ending above the bar, so its last rows scroll clear of it as they do above
     /// the system's. Each page gets it itself: a `TabView`'s own inset doesn't reach its pages.

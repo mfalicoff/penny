@@ -56,4 +56,21 @@ struct CategoryPaletteTests {
         #expect(!CategoryStyle.sameIcon("home-outline", "heart-outline"))
         #expect(CategoryStyle.iconName("bag-handle-outline") == "Bag handle")
     }
+
+    @Test(
+        "whenACategoryKeepsItsOwnColor_Tint_ShouldMapPaletteColorsAndKeepAnyOtherHex",
+        arguments: [
+            ("", "#3B82F6", CategoryTint.palette(.home)),
+            ("", "#E47850", .palette(.food)),
+            ("", "#5B7DB1", .custom(RGBA(0x5B7DB1))),
+            ("", "#5b7db1", .custom(RGBA(0x5B7DB1))),
+            ("home", "#5B7DB1", .palette(.home)),
+            ("", "#8E8A85", .palette(.other)),
+            ("", "#12345G", .palette(.other)),
+            ("", "#+12345", .palette(.other)),
+            ("", "", .palette(.other)),
+        ] as [(String, String, CategoryTint)])
+    func tint(id: String, stored: String, expected: CategoryTint) {
+        #expect(CategoryStyle.tint(forCategoryID: id, hex: stored) == expected)
+    }
 }

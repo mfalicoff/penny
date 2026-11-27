@@ -388,6 +388,18 @@ public enum AccessibilityID {
         public static let emptyAdd = "recurring.emptyAdd"
         /// The filled-in form's Already in your activity section.
         public static let scheduleFormMatched = "scheduleForm.matched"
+        /// iPad: the copper Add entry capsule in the Manage pages' toolbar (Recurring, Accounts,
+        /// Categories), after their + (`ipad-recurring-suggested`, MAZ-290).
+        public static let addEntry = "manage.addEntry"
+        /// A yearly schedule's amber Renews soon tag on Recurring, by its rule id (MAZ-290).
+        public static func renewsSoon(_ id: String) -> String { "renewsSoon.\(id)" }
+        /// The schedule page's "Renews in 3 days" tag, and its Reminder section (yearly schedules):
+        /// "Remind me before it renews" and "Show name and amount" (`iphone-schedule-reminder`).
+        public static let scheduleRenewsSoon = "schedule.renewsSoon"
+        public static let scheduleReminder = "schedule.reminder"
+        public static let scheduleReminderDetails = "schedule.reminderDetails"
+        /// Shown when iOS has notifications off for Penny and the reminder can't be turned on.
+        public static let scheduleReminderDenied = "schedule.reminderDenied"
 
         static func token(_ id: String) -> String {
             String(id.map { $0 == "|" ? "." : $0 == " " ? "_" : $0 })
@@ -395,11 +407,12 @@ public enum AccessibilityID {
 
         static let all = [
             addAccount, addCategory, addSchedule, accountName, accountSave, categoryName, categorySave, scheduleSave,
-            scheduleMore, suggestedHeader, empty, emptyAdd, scheduleFormMatched,
+            scheduleMore, suggestedHeader, empty, emptyAdd, scheduleFormMatched, addEntry, scheduleRenewsSoon,
+            scheduleReminder, scheduleReminderDetails, scheduleReminderDenied,
         ]
         static let prefixes = [
             "account.", "category.", "schedule.", "sharedSchedule.", "suggestion.", "suggestionAccept.",
-            "suggestionDismiss.",
+            "suggestionDismiss.", "renewsSoon.",
         ]
     }
 

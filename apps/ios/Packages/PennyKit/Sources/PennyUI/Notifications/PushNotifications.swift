@@ -192,9 +192,9 @@ public final class PushNotifications {
     }
 
     public func showsInForeground(target notification: NotificationTarget?) -> Bool {
-        // The recap notification (MAZ-292) is Penny's own, local and names no one: it shows for
-        // whoever is signed in.
-        if case .recap = notification { return account != nil }
+        // The recap notification (MAZ-292) and renewal reminders (MAZ-290) are Penny's own and
+        // local: they show for whoever is signed in (renewal reminders are removed at sign-out).
+        if notification?.isLocal == true { return account != nil }
         guard notification != nil, let account else { return false }
         return registrar.owner.map { $0 == account.owner } ?? true
     }
@@ -204,8 +204,9 @@ public final class PushNotifications {
     private func deliverPending() {
         guard let notification = pending, let account, let deliver else { return }
         pending = nil
-        // A local recap notification (MAZ-292) isn't tied to the device's push registration.
-        if case .recap = notification {
+        // A local notification (the recap, a renewal reminder) isn't tied to the device's push
+        // registration.
+        if notification.isLocal {
             deliver(notification.deepLink)
             return
         }

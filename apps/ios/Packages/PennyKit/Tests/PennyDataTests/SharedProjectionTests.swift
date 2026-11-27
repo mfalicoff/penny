@@ -177,4 +177,42 @@ struct SharedProjectionTests {
         #expect(model.status(for: Self.november) == .idle)
         #expect(model.shares(currency: .cad).recorded.isEmpty)
     }
+
+    @Test("whenAYearIsRead_SharedProjectionModel_ShouldAskOnceAndCountItsRowsWithTheMonths")
+    func year() async throws {
+        let march = Self.row("e1", date: "2026-03-03", total: 9000, share: 3000)
+        let november = Self.row("e2", date: "2026-11-03", total: 4000, share: 2000)
+        let service = QueuedProjection([
+            "2026": [.success(try Self.answer(recorded: [march, november]))],
+            "2026-11": [.success(try Self.answer(recorded: [november]))],
+        ])
+        let model = SharedProjectionModel(service: service)
+        let before = model.revision
+        await model.refresh(year: 2026)
+        #expect(service.asked == ["2026"], "one request for the year, not twelve")
+        #expect(model.status(forYear: 2026) == .loaded)
+        #expect(model.revision > before)
+        await model.refresh(Self.november)
+        let rows = model.shares(currency: .cad)
+        let report = LedgerReport(ledger: Ledger(), shared: rows.recorded, sharedScheduled: rows.scheduled)
+        #expect(report.month(Self.november).recorded.expense == 2000, "a row in the year and its month counts once")
+        let march2026 = try #require(MonthKey(year: 2026, month: 3))
+        #expect(report.month(march2026).recorded.expense == 3000)
+    }
+
+    @Test("whenAYearFails_SharedProjectionModel_ShouldKeepItsLastAnswerAndSaySo")
+    func yearFails() async throws {
+        let row = Self.row("e1", date: "2026-03-03", total: 9000, share: 3000)
+        let service = QueuedProjection([
+            "2026": [.success(try Self.answer(recorded: [row])), .failure(.offline), .failure(.notFound(message: nil))]
+        ])
+        let model = SharedProjectionModel(service: service)
+        await model.refresh(year: 2026)
+        await model.refresh(year: 2026)
+        #expect(model.status(forYear: 2026) == .failed("You're offline. Shared expenses update when you're back online."))
+        #expect(model.shares(currency: .cad).recorded.map { $0.id } == ["e1"])
+        await model.refresh(year: 2026)
+        #expect(model.status(forYear: 2026) == .loaded)
+        #expect(model.shares(currency: .cad).recorded.isEmpty, "no households: nothing shared")
+    }
 }

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { initials } from "../src/design/controls";
-import { categoryTint } from "../src/design/categoryTint";
+import { categoryHex, categoryTint, ownTileStyle } from "../src/design/categoryTint";
 import { formatCents, HeroMoney, Money } from "../src/design/Money";
 
 describe("money", () => {
@@ -66,5 +66,25 @@ describe("category tiles (MAZ-222)", () => {
     expect(categoryTint({ id: "salary", color: "#6C9C79", entryKind: "income" })).toBe("var(--pk-income)");
     expect(categoryTint({ id: "investments", color: "#678DB1", entryKind: "investment" })).toBe("var(--pk-invest)");
     expect(categoryTint({ id: "groceries", color: "#6C9C79", entryKind: "expense" })).toBe("var(--pk-c-groceries)");
+  });
+});
+
+describe("own category colors on the recap and the year in review (MAZ-290)", () => {
+  it("keeps a color outside both palettes instead of gray", () => {
+    expect(categoryHex({ color: "#5b7db1" })).toBe("#5B7DB1");
+    expect(ownTileStyle({ color: "#5B7DB1" })).toEqual({ "--tile": "#5B7DB1" });
+  });
+
+  it("maps palette colors and default ids as everywhere else", () => {
+    expect(categoryHex({ color: "#E47850" })).toBe("#E0529C");
+    expect(categoryHex({ color: "#3B82F6" })).toBe("#3B82F6");
+    expect(ownTileStyle({ id: "home", color: "#5B7DB1" })).toEqual({ "--tile": "var(--pk-c-home)" });
+    expect(ownTileStyle({ color: "#5B7DB1", entryKind: "income" })).toEqual({ "--tile": "var(--pk-income)" });
+  });
+
+  it("draws an unreadable color gray", () => {
+    expect(categoryHex({ color: "#12345G" })).toBe("#8E8A85");
+    expect(categoryHex(undefined)).toBe("#8E8A85");
+    expect(ownTileStyle({ color: "red" })).toEqual({ "--tile": "var(--pk-c-other)" });
   });
 });

@@ -5,7 +5,7 @@ import { useId, useLayoutEffect, useRef, type ReactNode, type RefObject } from "
 import { useOpenAddEntry, usePageTitle } from "../../app/shell/pageTitle";
 import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { useToday } from "../../app/useToday";
-import { tileStyle } from "../../design/categoryTint";
+import { ownTileStyle } from "../../design/categoryTint";
 import { Button, cx } from "../../design/controls";
 import { Icon, SparklesIcon } from "../../design/Icon";
 import { formatCents, formatWhole, HeroMoney, Money } from "../../design/Money";
@@ -276,7 +276,7 @@ function ChangesPanel({ review, currency, table }: { review: MonthReview; curren
                 <tr key={row.key}>
                   <th scope="row">
                     <span className="category-compare__name">
-                      <span className="category-dot" style={tileStyle(row)}>
+                      <span className="category-dot" style={ownTileStyle(row)}>
                         <Icon name={categoryIcon(row.icon)} size={16} />
                       </span>
                       {row.name}
@@ -307,7 +307,7 @@ function ChangesPanel({ review, currency, table }: { review: MonthReview; curren
         <ul className="recap-list">
           {rows.map((row) => (
             <li key={row.key} className="recap-row">
-              <span className="category-dot" style={tileStyle(row)}>
+              <span className="category-dot" style={ownTileStyle(row)}>
                 <Icon name={categoryIcon(row.icon)} size={18} />
               </span>
               <span className="recap-row__text">
@@ -338,7 +338,7 @@ function SharedPanel({ review, view, currency }: { review: MonthReview; view: Le
       <ul className="recap-list">
         {top ? (
           <li className="recap-row">
-            <span className="category-dot" style={category ? tileStyle(category) : undefined}>
+            <span className="category-dot" style={category ? ownTileStyle(category) : undefined}>
               <Icon name={categoryIcon(category?.icon ?? "")} size={17} />
             </span>
             <span className="recap-row__text">

@@ -19,7 +19,7 @@ struct YearShareContent: Hashable {
         let name: String
         /// For the dot's color: the category's look, drawn in the light appearance.
         let key: String
-        let color: CategoryColor
+        let color: CategoryTint
         /// "63%".
         let percent: String
         /// "$17,400", only with amounts shown.
@@ -55,7 +55,7 @@ struct YearShareContent: Hashable {
         categories = review.topCategories.prefix(3).enumerated().map { index, category in
             Category(
                 rank: index + 1, name: category.name, key: category.key,
-                color: CategoryStyle.color(forCategoryID: "", hex: category.color), percent: "\(category.share)%",
+                color: CategoryStyle.tint(forCategoryID: "", hex: category.color), percent: "\(category.share)%",
                 amount: showsAmounts ? money(category.amount) : nil)
         }
         var tiles: [Tile] = []

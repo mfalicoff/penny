@@ -26,18 +26,23 @@ public struct ReceiptInboxNotification: Equatable, Hashable, Sendable {
 }
 
 /// Every notification Penny opens: a household month or expense (MAZ-79), a receipt inbox
-/// item (MAZ-184) or a monthly recap (MAZ-292). Anything else (a mixture of shapes, a missing or
+/// item (MAZ-184), a monthly recap (MAZ-292) or a renewal reminder (MAZ-290). Anything else (a mixture of shapes, a missing or
 /// mistyped key) is no target, and the app just opens.
 public enum NotificationTarget: Equatable, Hashable, Sendable {
     case household(HouseholdNotification)
     case receiptInbox(ReceiptInboxNotification)
     /// A monthly recap is ready (MAZ-292): a local notification Penny scheduled itself.
     case recap(RecapNotification)
+    /// A yearly schedule renews in 3 days (MAZ-290): a local notification Penny scheduled itself.
+    case renewal(RenewalNotification)
 
     static let householdKeys = ["householdId", "month", "expenseId"]
 
     public init?(userInfo: [AnyHashable: Any]) {
-        if userInfo[RecapNotification.key] != nil {
+        if userInfo[RenewalNotification.key] != nil {
+            guard let renewal = RenewalNotification(userInfo: userInfo) else { return nil }
+            self = .renewal(renewal)
+        } else if userInfo[RecapNotification.key] != nil {
             guard let recap = RecapNotification(userInfo: userInfo) else { return nil }
             self = .recap(recap)
         } else if userInfo[ReceiptInboxNotification.key] != nil {
@@ -55,6 +60,16 @@ public enum NotificationTarget: Equatable, Hashable, Sendable {
         case .household(let notification): notification.deepLink
         case .receiptInbox(let notification): notification.deepLink
         case .recap(let notification): notification.deepLink
+        case .renewal(let notification): notification.deepLink
+        }
+    }
+
+    /// A notification Penny scheduled on this device (the monthly recap, a renewal reminder), not
+    /// one APNs delivered for the device's push registration.
+    public var isLocal: Bool {
+        switch self {
+        case .recap, .renewal: true
+        case .household, .receiptInbox: false
         }
     }
 }
