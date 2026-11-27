@@ -160,6 +160,8 @@ struct ToastOverlay: ViewModifier {
             .pennyHaptic(.syncSucceeded, trigger: shell.syncSucceededCount)
             .pennyHaptic(.syncFailed, trigger: shell.syncFailedCount)
             .pennyHaptic(.stepPeriod, trigger: shell.month)
+            // The recap (MAZ-292), opened from its banner or Insights' Recap button.
+            .pennyHaptic(.openRecap, trigger: shell.recapOpenedCount)
             // Add entry opening or closing.
             .pennyHaptic(.openClose, trigger: shell.route.isAddEntryPresented)
             // An entry opened in the iPad detail column beside Activity.

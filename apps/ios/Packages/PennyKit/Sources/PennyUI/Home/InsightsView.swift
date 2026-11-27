@@ -10,6 +10,7 @@ import SwiftUI
 /// investment contributions are not spending and never appear here.
 struct InsightsView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         WorkspaceContent { ledger in
@@ -17,11 +18,14 @@ struct InsightsView: View {
             let summary = report.month(shell.month, today: shell.today)
             let breakdown = CategoryBreakdown(summary)
             let currency = ledger.currency.rawValue
+            let recapMonth = shell.recap.bannerMonth(today: shell.today, report: report)
             ScrollView {
                 // The month's content slides in from the side its month comes from (MAZ-287).
                 ZStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 20) {
                         Text("Spending · your share").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                        // Last month's recap, during the first 7 days of a month (MAZ-292).
+                        RecapBanner(month: recapMonth)
                         if breakdown.isEmpty {
                             PennyStateView(
                                 .empty, title: "No spending in \(MonthPicker.title(shell.month, long: false))",
@@ -38,6 +42,7 @@ struct InsightsView: View {
                     }
                     .pennyMonthContent(shell.month, earlier: shell.monthMovedEarlier)
                 }
+                .animation(Motion.movement(.standard, reduceMotion: reduceMotion), value: recapMonth)
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 24)
                 .frame(maxWidth: 900)
@@ -47,8 +52,28 @@ struct InsightsView: View {
         .background(PennyColor.background)
         .navigationTitle("Insights")
         .toolbarTitleDisplayModeLarge()
-        .overviewToolbar()
+        .toolbar {
+            // The month, then the Recap button (`iphone-insights-recap`, MAZ-292) in its own circle.
+            ToolbarItem(placement: .primaryAction) { MonthPicker() }
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    shell.openRecap(Self.recapMonth(shown: shell.month, today: shell.today))
+                } label: {
+                    Label("Recap", systemImage: "sparkles")
+                }
+                .tint(PennyColor.label)
+                .accessibilityHint("Opens the monthly recap")
+                .accessibilityIdentifier("insights.recap")
+            }
+        }
         .accessibilityIdentifier("screen.insights")
+    }
+
+    /// The month the Recap button opens: the month on screen once it is over, else the one before it.
+    static func recapMonth(shown: MonthKey, today: CalendarDate) -> MonthKey {
+        let current = MonthKey(today)
+        return shown < current ? shown : current.shifted(by: -1) ?? current
     }
 }
 

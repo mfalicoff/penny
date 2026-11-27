@@ -29,6 +29,7 @@ struct AuthGate: View {
                             workspace: demo, session: .demo, today: services.today(), clock: services.today,
                             leaveDemo: { self.demo = nil })
                         shell.now = services.now
+                        shell.recap = services.recap
                         return shell
                     }
                 )
@@ -91,6 +92,7 @@ struct AuthGate: View {
                             shell.avatars = AvatarStore(service: profiles)
                             shell.widgets = services.widgets
                             shell.now = services.now
+                            shell.recap = services.recap
                             return shell
                         }
                     )

@@ -148,11 +148,42 @@ final class ShellModel {
     }
 
     /// Reads the shared projection for the month on screen and the one before it (Insights
-    /// compares the two), and the Activity periods already read, so a shared write shows there.
+    /// compares the two), the month the recap banner is about (MAZ-292), and the Activity periods
+    /// already read, so a shared write shows there.
     func refreshShared() async {
         await shared.refresh(month)
         if let previous = month.shifted(by: -1) { await shared.refresh(previous) }
+        if let banner = MonthReview.bannerMonth(today: today), banner != month.shifted(by: -1) {
+            await shared.refresh(banner)
+        }
         await activityShared.refreshLoaded()
+    }
+
+    /// The months a recap reads (MAZ-292): the month, the one before it and the same month a year
+    /// earlier, so shared expenses count in all three.
+    func refreshRecap(_ recapMonth: MonthKey) async {
+        for month in [recapMonth, recapMonth.shifted(by: -1), recapMonth.shifted(by: -12)].compactMap(\.self) {
+            await shared.refresh(month)
+        }
+    }
+
+    // MARK: Monthly recap (MAZ-292)
+
+    /// Dismissed recap banners and the recap notification (device settings; in memory for previews).
+    var recap = MonthlyRecap(defaults: nil, center: nil)
+    /// Bumped when the person opens the recap, for its haptic. (Dismissing the banner plays its
+    /// own, from the banner.)
+    private(set) var recapOpenedCount = 0
+
+    /// Opens a month's recap on top of the page on screen (the banner, Insights' Recap button).
+    func openRecap(_ month: MonthKey) {
+        recapOpenedCount += 1
+        route.push(.recap(month: month))
+    }
+
+    /// The banner's close button: that month's banner doesn't come back on this device.
+    func dismissRecapBanner(_ month: MonthKey) {
+        recap.dismiss(month)
     }
 
     @ObservationIgnored private var toastTask: Task<Void, Never>?
