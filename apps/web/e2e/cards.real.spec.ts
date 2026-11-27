@@ -77,6 +77,29 @@ async function insightsRecapCard({ page: p }: Run) {
   await expect(p.getByRole("region", { name: "Your October recap is ready" })).toBeVisible();
 }
 
+// MAZ-292 phase 2: the year in review's cards are drawn on December 28, in the window it's offered.
+const DECEMBER_28 = "2026-12-28T12:00:00Z";
+
+async function insightsYearReviewCard({ page: p }: Run) {
+  await p.clock.setFixedTime(DECEMBER_28);
+  await page(p, "/insights", "Insights");
+  await expect(p.getByRole("region", { name: "Your year in Penny" })).toBeVisible();
+}
+
+async function yearReviewCard({ page: p }: Run) {
+  await p.clock.setFixedTime(DECEMBER_28);
+  await page(p, "/insights/year-review", "2026 in review");
+  await expect(p.getByRole("region", { name: "A few things about your year" })).toBeVisible();
+}
+
+async function yearReviewShareCard(run: Run, amounts: boolean) {
+  await yearReviewCard(run);
+  await run.page.getByRole("button", { name: "Share your year" }).click();
+  const dialog = run.page.getByRole("dialog", { name: "Share your year" });
+  if (amounts) await dialog.getByRole("switch", { name: "Show amounts and names" }).check();
+  await expect(dialog.getByRole("img", { name: amounts ? /spent\./ : /Where my money went/ })).toBeVisible();
+}
+
 async function profilePane(p: Page) {
   await p.goto("/settings/profile");
   await expect(p.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Alex Martin");
@@ -1395,10 +1418,10 @@ const cards: Record<string, Card> = {
   "web-recap-empty": { open: recapEmptyCard },
   "web-home-recap": { open: homeRecapCard },
   "web-insights-recap": { open: insightsRecapCard },
-  "web-year-review": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "web-year-review-share": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "web-year-review-share-amounts": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
-  "web-insights-year-review": { skip: { status: "not-built", note: "The recap and the year in review aren't built yet (MAZ-292)." } },
+  "web-year-review": { open: yearReviewCard },
+  "web-year-review-share": { open: (run) => yearReviewShareCard(run, false) },
+  "web-year-review-share-amounts": { open: (run) => yearReviewShareCard(run, true) },
+  "web-insights-year-review": { open: insightsYearReviewCard },
   "web-add-entry-currency": { skip: { status: "not-built", note: "Approved card (MAZ-270): the web records each entry in one currency today (MAZ-151)." } },
   "web-entry-rate-provisional": { skip: { status: "not-built", note: "Approved card (MAZ-270): the web records each entry in one currency today (MAZ-151)." } },
   "web-entry-rate-edited": { skip: { status: "not-built", note: "Approved card (MAZ-270): the web records each entry in one currency today (MAZ-151)." } },

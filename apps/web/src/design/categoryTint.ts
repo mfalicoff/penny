@@ -47,14 +47,28 @@ export interface TintSource {
   entryKind?: string | undefined;
 }
 
+/** The redesign color name (`home`, `food`, …) of a category. */
+function categoryName(source: TintSource | undefined): string {
+  const stored = (source?.color ?? "").toUpperCase();
+  const id = source?.id ?? "";
+  return REDESIGN[stored] ?? (NAMES.has(id) ? id : ALIASES[id]) ?? LEDGER_PALETTE[stored] ?? "other";
+}
+
 /** The CSS color of a category's tile. */
 export function categoryTint(source: TintSource | undefined): string {
   if (source?.entryKind === "income") return "var(--pk-income)";
   if (source?.entryKind === "investment") return "var(--pk-invest)";
-  const stored = (source?.color ?? "").toUpperCase();
-  const id = source?.id ?? "";
-  const name = REDESIGN[stored] ?? (NAMES.has(id) ? id : ALIASES[id]) ?? LEDGER_PALETTE[stored] ?? "other";
-  return `var(--pk-c-${name})`;
+  return `var(--pk-c-${categoryName(source)})`;
+}
+
+const LIGHT_HEX = Object.fromEntries(Object.entries(REDESIGN).map(([hex, name]) => [name, hex]));
+
+/**
+ * A category's color in the light appearance, as `#RRGGBB`: the year in review's share image is
+ * always light (MAZ-292), whatever the app's appearance, so it can't read the CSS tokens.
+ */
+export function categoryHex(source: TintSource | undefined): string {
+  return LIGHT_HEX[categoryName(source)] ?? "#8E8A85";
 }
 
 /** The inline style that colors a `.category-dot` tile. */

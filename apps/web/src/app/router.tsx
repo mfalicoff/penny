@@ -30,6 +30,8 @@ declare module "@tanstack/react-router" {
     title?: string;
     /** Show the top bar's search field. Default true; Activity has its own. */
     search?: boolean;
+    /** Show the top bar's Add entry button. Default true; the year in review has Share your year in its place (MAZ-292). The N shortcut still works. */
+    add?: boolean;
     /** On phones, a back button to this page in the top bar (pages pushed from a tab, MAZ-221, MAZ-229). */
     back?: "/" | "/insights" | "/households" | "/trips" | "/settings";
     /** The back button's accessible name. Default "Back to Home". */

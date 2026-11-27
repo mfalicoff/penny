@@ -1,0 +1,122 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`share image content > matches the snapshot of both versions 1`] = `
+{
+  "hidden": {
+    "categories": [
+      {
+        "amount": null,
+        "color": "#3B82F6",
+        "name": "Home",
+        "percent": "84%",
+        "rank": 1,
+      },
+      {
+        "amount": null,
+        "color": "#8E8A85",
+        "name": "Entertainment",
+        "percent": "4%",
+        "rank": 2,
+      },
+      {
+        "amount": null,
+        "color": "#8E8A85",
+        "name": "Groceries",
+        "percent": "4%",
+        "rank": 3,
+      },
+    ],
+    "footer": "Made with Penny",
+    "showAmounts": false,
+    "subtitle": {
+      "strong": null,
+      "text": "Where my money went",
+    },
+    "tiles": [
+      {
+        "key": "month",
+        "subtitle": "busiest month",
+        "title": "November",
+        "wide": false,
+      },
+      {
+        "key": "trips",
+        "subtitle": "16 days away",
+        "title": "4 trips",
+        "wide": false,
+      },
+      {
+        "key": "shared",
+        "subtitle": "of our shared expenses",
+        "title": "I paid for 44%",
+        "wide": true,
+      },
+      {
+        "key": "quiet",
+        "subtitle": "days without spending",
+        "title": "333",
+        "wide": true,
+      },
+    ],
+    "title": "My 2026",
+  },
+  "shown": {
+    "categories": [
+      {
+        "amount": "$17,920",
+        "color": "#3B82F6",
+        "name": "Home",
+        "percent": "84%",
+        "rank": 1,
+      },
+      {
+        "amount": "$934",
+        "color": "#8E8A85",
+        "name": "Entertainment",
+        "percent": "4%",
+        "rank": 2,
+      },
+      {
+        "amount": "$884",
+        "color": "#8E8A85",
+        "name": "Groceries",
+        "percent": "4%",
+        "rank": 3,
+      },
+    ],
+    "footer": "Made with Penny",
+    "showAmounts": true,
+    "subtitle": {
+      "strong": "$21,262",
+      "text": " spent",
+    },
+    "tiles": [
+      {
+        "key": "month",
+        "subtitle": "busiest month · $2,740",
+        "title": "November",
+        "wide": false,
+      },
+      {
+        "key": "trips",
+        "subtitle": "16 days away",
+        "title": "4 trips",
+        "wide": false,
+      },
+      {
+        "key": "shared",
+        "subtitle": "of our shared expenses · Former member 1",
+        "title": "I paid 4 · Jo paid 2",
+        "wide": true,
+      },
+      {
+        "key": "quiet",
+        "subtitle": "days without spending",
+        "title": "333",
+        "wide": true,
+      },
+    ],
+    "title": "My 2026",
+  },
+}
+`;
