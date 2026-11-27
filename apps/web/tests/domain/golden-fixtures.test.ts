@@ -11,6 +11,9 @@ import { mergeLedger } from "../../src/domain/merge.ts";
 import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import {
+  convertAmount, crossRate, currencies, entryAmounts, homeCurrencies, normalizeRate, parseAmount, publishedRateDate, reconvertEntry,
+} from "../../src/domain/currency.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { isExpected, monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
@@ -42,6 +45,33 @@ const Money = z.strictObject({
   ])).min(10),
   ledgerAmounts: z.array(z.strictObject({ total: z.number(), share: z.number(), valid: z.boolean() })).min(5),
   ledgerParticipants: z.array(z.strictObject({ kind: entryKind, list: z.enum(["transaction", "recurring"]), participants: z.number().nullable(), valid: z.boolean() })).min(10),
+});
+
+const Outcome = <T extends z.ZodRawShape>(input: T, value: z.ZodRawShape) =>
+  z.union([z.strictObject({ ...input, ...value }), z.strictObject({ ...input, error: z.string().min(1) })]);
+const rateText = z.string().regex(/^\d+(\.\d+)?$/);
+const rateStatus = z.enum(["published", "provisional", "edited"]);
+const Currency = z.strictObject({
+  generator: z.string(),
+  description: z.string(),
+  currencies: z.array(z.strictObject({ code: z.string().regex(/^[A-Z]{3}$/), name: z.string().min(1), minorUnits: z.union([z.literal(0), z.literal(2), z.literal(3)]) })).min(150),
+  homeCurrencies: z.array(z.string()).min(1),
+  parse: z.array(Outcome({ input: z.string(), currency: z.string() }, { amount: z.number().int().nonnegative() })).min(10),
+  rates: z.array(Outcome({ input: z.string() }, { rate: rateText })).min(10),
+  conversions: z.array(z.strictObject({ amount: z.number().int().nonnegative(), from: z.string(), rate: rateText, home: z.string(), converted: z.number().int().nonnegative() })).min(10),
+  crossRates: z.array(z.strictObject({ fromPerBase: rateText, toPerBase: rateText, rate: rateText.nullable() })).min(5),
+  rateDates: z.array(z.strictObject({ published: z.array(date), date, expected: z.strictObject({ date, provisional: z.boolean() }).nullable() })).min(5),
+  entryAmounts: z.array(Outcome(
+    { amount: z.string(), currency: z.string(), home: z.string(), rate: rateText.optional(), mode: shareMode, split: z.string() },
+    { expected: z.strictObject({ originalAmount: z.number().int(), total: z.number().int(), share: z.number().int() }) },
+  )).min(10),
+  reconversions: z.array(z.strictObject({
+    home: z.string(),
+    entry: z.record(z.string(), z.unknown()),
+    next: z.strictObject({ rate: rateText, rateStatus, rateDate: date.optional() }),
+    expected: z.record(z.string(), z.unknown()),
+  })).min(5),
+  ledgers: z.array(z.strictObject({ name: z.string(), ledger: z.record(z.string(), z.unknown()), valid: z.boolean() })).min(15),
 });
 
 const Recurrence = z.strictObject({
@@ -226,6 +256,30 @@ const Redesign = z.strictObject({
       requests: z.array(z.strictObject({ body: z.record(z.string(), z.unknown()), expectStatus: z.number().int(), expectError: z.string().optional() })).min(2),
     }).optional(),
   })),
+});
+
+test("currency fixtures match the currency list, conversion, cross rates and the ledger write rules (MAZ-151)", () => {
+  const golden = parse(Currency, "currency.json");
+  assert.deepEqual(golden.currencies, currencies.map(({ code, name, minorUnits }) => ({ code, name, minorUnits })));
+  assert.deepEqual(golden.homeCurrencies, [...homeCurrencies]);
+  for (const item of golden.parse)
+    if ("error" in item) assert.throws(() => parseAmount(item.input, item.currency), { message: item.error }, item.input);
+    else assert.equal(parseAmount(item.input, item.currency), item.amount, item.input);
+  for (const item of golden.rates)
+    if ("error" in item) assert.throws(() => normalizeRate(item.input), { message: item.error }, item.input);
+    else assert.equal(normalizeRate(item.input), item.rate, item.input);
+  for (const item of golden.conversions) assert.equal(convertAmount(item.amount, item.from, item.rate, item.home), item.converted, JSON.stringify(item));
+  for (const item of golden.crossRates) assert.equal(crossRate(item.fromPerBase, item.toPerBase), item.rate, JSON.stringify(item));
+  for (const item of golden.rateDates) assert.deepEqual(publishedRateDate(item.published, item.date), item.expected, JSON.stringify(item));
+  for (const item of golden.entryAmounts) {
+    const run = () => entryAmounts({ amount: item.amount, currency: item.currency, home: item.home, rate: item.rate, mode: item.mode, split: item.split });
+    if ("error" in item) assert.throws(run, { message: item.error }, JSON.stringify(item));
+    else assert.deepEqual(run(), item.expected, JSON.stringify(item));
+  }
+  for (const item of golden.reconversions)
+    assert.deepEqual(JSON.parse(JSON.stringify(reconvertEntry(item.entry as never, item.home, item.next))), item.expected, JSON.stringify(item));
+  for (const item of golden.ledgers)
+    assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: item.ledger }).success, item.valid, item.name);
 });
 
 test("money fixtures match the amount parser, personal shares and ledger bounds", () => {

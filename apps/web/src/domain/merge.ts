@@ -11,6 +11,11 @@ import { mergeDismissals } from "./suggestions.ts";
 // back; records created here are appended after the server's. Currency: a local change wins.
 // Dismissed recurring suggestions (contract 2.3.0): a set union, less what this device undid.
 //
+// An entry in another currency (MAZ-151) merges its amounts as one group, so the home total always
+// matches its original amount and rate: when this device changed any of `total`, `share`,
+// `participants`, `originalAmount`, `originalCurrency`, `rate`, `rateStatus` or `rateDate`
+// on an entry that has (or had) an original currency on any side, all of them come from this device.
+//
 // Four personal-recurrence refinements keep a rule this device only caught up offline from undoing
 // what another device did (docs/ios/offline-sync.md). An occurrence is "untouched" when it equals
 // what its rule generates for its date:
@@ -27,6 +32,7 @@ import { mergeDismissals } from "./suggestions.ts";
 //
 // Pure; callers materialize after.
 type Item = { id: string };
+const amountGroup = ["total", "share", "participants", "originalAmount", "originalCurrency", "rate", "rateStatus", "rateDate"];
 
 function mergeItems<T extends Item>(base: T[], local: T[], remote: T[]): T[] {
   const before = new Map(base.map((item) => [item.id, item]));
@@ -42,10 +48,17 @@ function mergeItems<T extends Item>(base: T[], local: T[], remote: T[]): T[] {
     if (!original) return next;
     // Keep remote fields this device did not edit.
     const merged = { ...item } as Record<string, unknown>;
+    const edited = (key: string) => JSON.stringify(next[key as keyof T]) !== JSON.stringify(original[key as keyof T]);
     for (const key of new Set([...Object.keys(original), ...Object.keys(next)])) {
-      if (JSON.stringify(next[key as keyof T]) !== JSON.stringify(original[key as keyof T]))
-        merged[key] = next[key as keyof T];
+      if (edited(key)) merged[key] = next[key as keyof T];
     }
+    const foreign = [original, next, item].some((side) => (side as Record<string, unknown>).originalCurrency !== undefined);
+    if (foreign && amountGroup.some(edited))
+      for (const key of amountGroup) {
+        const value = (next as Record<string, unknown>)[key];
+        if (value === undefined) delete merged[key];
+        else merged[key] = value;
+      }
     return merged as T;
   });
   for (const item of local) if (!remoteIds.has(item.id) && changed.has(item.id)) result.push(item);

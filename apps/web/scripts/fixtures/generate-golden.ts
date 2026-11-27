@@ -18,6 +18,10 @@ import { monthReview, reviewBannerMonth } from "../../src/domain/monthReview.ts"
 import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
 import { yearReviews } from "./year-review.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import {
+  convertAmount, crossRate, currencies, entryAmounts, homeCurrencies, normalizeRate, parseAmount, publishedRateDate, reconvertEntry,
+  type SplitMode,
+} from "../../src/domain/currency.ts";
 
 const directory = new URL("../../../../contracts/fixtures/", import.meta.url);
 const generator = "apps/web/scripts/fixtures/generate-golden.ts";
@@ -129,6 +133,31 @@ function recurringMergeCases() {
   ];
 }
 
+// MAZ-151: an entry in another currency merges its amounts as one group.
+function currencyMergeCases() {
+  const cafe = {
+    id: "cafe", title: "Cooking class", kind: "expense", total: 12420, share: 12420, categoryId: "food", date: "2026-11-03", note: "",
+    originalAmount: 8500, originalCurrency: "EUR", rate: "1.4612", rateStatus: "published", rateDate: "2026-11-03",
+  } as const;
+  const museum = {
+    id: "museum", title: "Museum passes", kind: "expense", total: 7022, share: 7022, categoryId: "food", date: "2026-11-09", note: "",
+    originalAmount: 4800, originalCurrency: "EUR", rate: "1.463", rateStatus: "provisional", rateDate: "2026-11-06",
+  } as const;
+  const { rateDate: _published, ...edited } = { ...cafe, rate: "1.49", rateStatus: "edited", total: 12665, share: 12665 } as const;
+  const base = ledger([cafe, museum]);
+  return [
+    {
+      name: "currency: a local rate edit keeps its whole amount group over a remote amount change",
+      base, local: ledger([edited, museum]), remote: ledger([{ ...cafe, originalAmount: 9000, total: 13151, share: 13151, note: "Remote" }, museum]),
+    },
+    {
+      name: "currency: a provisional rate made final remotely survives a local note edit",
+      base, local: ledger([cafe, { ...museum, note: "Local" }]),
+      remote: ledger([cafe, { ...museum, rate: "1.4655", rateStatus: "published", rateDate: "2026-11-09", total: 7034, share: 7034 }]),
+    },
+  ];
+}
+
 function merge() {
   const lunch = { id: "lunch", title: "Lunch", kind: "expense", total: 1200, share: 1200, categoryId: "food", date: "2026-10-01", note: "" };
   const taxi = { id: "taxi", title: "Taxi", kind: "expense", total: 2000, share: 2000, categoryId: "food", date: "2026-10-02", note: "" };
@@ -146,11 +175,113 @@ function merge() {
     { name: "category rename merges with an entry edit", base, local: ledger([lunch, { ...taxi, note: "Airport" }]), remote: ledger([lunch, taxi], { categories: [{ id: "food", name: "Groceries & dining", icon: "cafe-outline", color: "#E47850", kind: "expense" }] }) },
     ...recurringMergeCases(),
     ...dismissalMergeCases(),
+    ...currencyMergeCases(),
   ];
   return {
     generator,
     description: "Three-way ledger merge (offline sync after a 409): base is the last synced server ledger, local the unsynced device ledger, remote the newer server ledger.",
     cases: cases.map((item) => ({ ...item, expected: JSON.parse(JSON.stringify(mergeLedger(item.base, item.local, item.remote))) })),
+  };
+}
+
+// MAZ-151: entries in several currencies. The currency list with its minor units, amount and rate
+// parsing, conversion and rounding, cross rates, which publication a date uses, the stored amounts
+// of a typed entry, re-conversion when a rate changes, and the ledger write rules.
+function currency() {
+  const parse = ([
+    ["85.00", "EUR"], ["85", "EUR"], ["85,5", "EUR"], ["1200", "JPY"], ["1200.5", "JPY"], ["1.234", "KWD"], ["1.2345", "KWD"],
+    ["0.5", "BHD"], ["99999999999", "JPY"], ["999999999.99", "EUR"], ["99999999.999", "KWD"], ["1000000000", "EUR"], ["", "EUR"],
+    ["-1", "EUR"], ["1", "XXX"],
+  ] as const).map(([input, code]) => {
+    const result = attempt(() => parseAmount(input, code));
+    return "value" in result ? { input, currency: code, amount: result.value } : { input, currency: code, error: result.error };
+  });
+  const rates = ["1.4612", "1,4900", "1.4900", " 0.0093 ", "0010.50", "1", "0", "0.00000000", "0.00000001", "1.123456789", "1234567890", "-1", "1e3", ""]
+    .map((input) => {
+      const result = attempt(() => normalizeRate(input));
+      return "value" in result ? { input, rate: result.value } : { input, error: result.error };
+    });
+  const conversions = ([
+    [8500, "EUR", "1.4612", "CAD"], [8500, "EUR", "1.49", "CAD"], [4800, "EUR", "1.463", "CAD"], [3499, "USD", "1.373", "CAD"],
+    [1200, "JPY", "0.00906283", "CAD"], [1, "JPY", "0.0093", "CAD"], [1234, "KWD", "4.48", "CAD"], [5, "EUR", "0.1", "CAD"],
+    [15, "EUR", "0.1", "CAD"], [25, "EUR", "0.1", "CAD"], [10000, "CAD", "109.5", "JPY"], [10000, "CAD", "0.2215", "KWD"],
+    [99999999999, "JPY", "0.00000001", "CAD"], [0, "EUR", "1.4612", "CAD"],
+  ] as const).map(([amount, from, rate, home]) => ({ amount, from, rate, home, converted: convertAmount(amount, from, rate, home) }));
+  // ECB quotes per euro; the euro itself is "1".
+  const crossRates = ([
+    ["1", "1.4612"], ["1.0812", "1.4612"], ["161.23", "1.4612"], ["1.4612", "1"], ["1.4612", "1.4612"], ["17000", "0.84"],
+    ["0.84", "17000"], ["1", "0.00000001"], ["99999999", "0.00000001"], ["3", "1"], ["7", "2"],
+  ] as const).map(([fromPerBase, toPerBase]) => ({ fromPerBase, toPerBase, rate: crossRate(fromPerBase, toPerBase) }));
+  const published = ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"];
+  const rateDates = ["2026-11-03", "2026-11-07", "2026-11-08", "2026-11-09", "2026-11-01", "2026-11-06"].map((date) => ({
+    published, date, expected: publishedRateDate(published, date),
+  }));
+  rateDates.push({ published: [], date: "2026-11-03", expected: publishedRateDate([], "2026-11-03") });
+  const entryCases = ([
+    ["85.00", "EUR", "CAD", "1.4612", "full", ""], ["85.00", "EUR", "CAD", "1.4612", "equal", "2"], ["373.25", "CAD", "CAD", undefined, "equal", "4"],
+    ["85.00", "EUR", "CAD", "1.4612", "percent", "25"], ["85.00", "EUR", "CAD", "1.4612", "amount", "40"], ["85.00", "EUR", "CAD", "1.4612", "amount", "85.01"],
+    ["1200", "JPY", "CAD", "0.00906283", "equal", "3"], ["1200.5", "JPY", "CAD", "0.00906283", "full", ""], ["85.00", "EUR", "CAD", undefined, "full", ""],
+    ["0.01", "JPY", "CAD", "0.0093", "full", ""], ["1", "JPY", "CAD", "0.0001", "full", ""], ["12.345", "KWD", "CAD", "4.48", "full", ""],
+  ] as const).map(([amount, code, home, rate, mode, split]) => {
+    const result = attempt(() => entryAmounts({ amount, currency: code, home, rate, mode: mode as SplitMode, split }));
+    const input = { amount, currency: code, home, ...(rate === undefined ? {} : { rate }), mode, split };
+    return "value" in result ? { ...input, expected: result.value } : { ...input, error: result.error };
+  });
+  const foreign = { kind: "expense" as const, originalAmount: 4800, originalCurrency: "EUR", rate: "1.463", rateStatus: "provisional" as const, rateDate: "2026-11-06" };
+  const final = { rate: "1.4655", rateStatus: "published" as const, rateDate: "2026-11-09" };
+  const reconversions = [
+    { entry: { ...foreign, total: 7022, share: 7022 }, next: final },
+    { entry: { ...foreign, total: 7022, share: 3511, participants: 2 }, next: final },
+    { entry: { ...foreign, originalAmount: 1001, rate: "1", total: 1001, share: 334, participants: 3 }, next: { rate: "1.5", rateStatus: "published" as const, rateDate: "2026-11-09" } },
+    { entry: { ...foreign, total: 7022, share: 2000 }, next: final },
+    { entry: { ...foreign, total: 7022, share: 7022 }, next: { rate: "1.5", rateStatus: "edited" as const } },
+    { entry: { ...foreign, rateStatus: "edited" as const, rateDate: undefined, total: 7022, share: 7022 }, next: final },
+    { entry: { kind: "expense" as const, total: 7022, share: 7022 }, next: final },
+  ].map(({ entry, next }) => {
+    const clean = JSON.parse(JSON.stringify(entry));
+    return { home: "CAD", entry: clean, next, expected: JSON.parse(JSON.stringify(reconvertEntry(clean, "CAD", next))) };
+  });
+  const base = { id: "t", title: "Cooking class", kind: "expense", total: 12420, share: 12420, categoryId: "food", date: "2026-11-03", note: "" };
+  const eur = { originalAmount: 8500, originalCurrency: "EUR", rate: "1.4612", rateStatus: "published", rateDate: "2026-11-03" };
+  const rule = { frequency: "monthly", nextDate: "2026-12-03", anchorDay: 3, active: true };
+  const ledgerCase = (name: string, entry: object, list: "transaction" | "recurring" = "transaction", home = "CAD") => {
+    const value = {
+      version: 4, currency: home, accounts: [], trips: [], categories: [{ id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" }],
+      transactions: list === "transaction" ? [entry] : [], recurring: list === "recurring" ? [{ ...entry, ...rule }] : [],
+    };
+    const result = ledgerWriteSchema.safeParse({ revision: 0, ledger: value });
+    return { name, ledger: value, valid: result.success };
+  };
+  const { rateDate: _date, ...noDate } = eur;
+  const ledgers = [
+    ledgerCase("home entry", { ...base }),
+    ledgerCase("euro entry at the published rate", { ...base, ...eur }),
+    ledgerCase("provisional rate", { ...base, ...eur, rateStatus: "provisional", rateDate: "2026-11-02" }),
+    ledgerCase("edited rate has no publication date", { ...base, ...noDate, rateStatus: "edited", rate: "1.49", total: 12665, share: 12665 }),
+    ledgerCase("edited rate with a publication date", { ...base, ...eur, rateStatus: "edited" }),
+    ledgerCase("published rate without its date", { ...base, ...noDate }),
+    ledgerCase("total that doesn't match the conversion", { ...base, ...eur, total: 12421, share: 12421 }),
+    ledgerCase("share above the converted total", { ...base, ...eur, share: 12421 }),
+    ledgerCase("original amount without a rate", { ...base, originalAmount: 8500, originalCurrency: "EUR" }),
+    ledgerCase("rate date alone", { ...base, rateDate: "2026-11-03" }),
+    ledgerCase("original currency is the home currency", { ...base, ...eur, originalCurrency: "CAD", rate: "1", total: 8500, share: 8500 }),
+    ledgerCase("unknown currency", { ...base, ...eur, originalCurrency: "XXX" }),
+    ledgerCase("lower-case currency", { ...base, ...eur, originalCurrency: "eur" }),
+    ledgerCase("rate that isn't canonical", { ...base, ...eur, rate: "1.46120" }),
+    ledgerCase("zero rate", { ...base, ...eur, rate: "0" }),
+    ledgerCase("zero original amount", { ...base, ...eur, originalAmount: 0 }),
+    ledgerCase("unknown rate status", { ...base, ...eur, rateStatus: "manual" }),
+    ledgerCase("yen entry with no decimals", { ...base, originalAmount: 13700, originalCurrency: "JPY", rate: "0.00906283", rateStatus: "published", rateDate: "2026-11-03", total: 12416, share: 12416 }),
+    ledgerCase("euro home with a dollar entry", { ...base, originalAmount: 3499, originalCurrency: "USD", rate: "0.9248", rateStatus: "published", rateDate: "2026-11-03", total: 3236, share: 3236 }, "transaction", "EUR"),
+    ledgerCase("home currency outside the home list", { ...base }, "transaction", "JPY"),
+    ledgerCase("recurring rule in another currency", { ...base, ...eur }, "recurring"),
+  ];
+  return {
+    generator,
+    description: "MAZ-151: entries in several currencies. currencies is every ISO 4217 currency an entry may use with its minor units (homeCurrencies the ones a ledger may use); amounts are integers in minor units; a rate is a canonical decimal string of home units per unit; conversion rounds once, half up, to the home currency's minor units; cross rates round half up to 6 significant digits (at most 8 fraction digits); a date uses the latest publication on or before it, and one after every publication uses the latest provisionally.",
+    currencies: currencies.map(({ code, name, minorUnits }) => ({ code, name, minorUnits })),
+    homeCurrencies,
+    parse, rates, conversions, crossRates, rateDates, entryAmounts: entryCases, reconversions, ledgers,
   };
 }
 
@@ -436,6 +567,7 @@ const consumers: Record<string, Record<string, string[] | string>> = {
   "month-review.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: client calculation; the recap is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/MonthReviewTests.swift"] },
   "year-review.json": { typescript: ["apps/web/tests/domain/year-review.test.ts"], csharp: "not applicable: client calculation; the year in review is computed on the device", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/YearReviewTests.swift"] },
   "shared-categories.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: shared expenses join the personal view on the client", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
+  "currency.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/CurrencyFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/CurrencyTests.swift"] },
   "parity-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "settlement.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
@@ -457,6 +589,7 @@ export function sha256(text: string): string {
 export function generated(): Record<string, string> {
   return {
     "money.json": serialize(money()),
+    "currency.json": serialize(currency()),
     "recurrence.json": serialize(recurrence()),
     "merge-conflicts.json": serialize(merge()),
     "month-totals.json": serialize(monthTotals()),
