@@ -100,6 +100,7 @@ struct AuthGate: View {
                                 service: auth.client.map {
                                     APIExchangeRateService(client: $0) { auth.sessionDidExpire(for: account) }
                                 }, defaults: .standard)
+                            shell.renewals = services.renewals
                             return shell
                         }
                     )
@@ -122,6 +123,10 @@ struct AuthGate: View {
         // apart from the demo, which never touches them.
         .onChange(of: WidgetPublisher.owner(auth.state), initial: true) { _, owner in
             services.widgets?.ownerChanged(owner)
+            // Renewal reminders (MAZ-290) are the signed-in account's too: signing out or switching
+            // accounts removes the waiting ones.
+            let renewals = services.renewals
+            Task { await renewals.ownerChanged(owner) }
         }
         .task { await auth.restore() }
         .onChange(of: scenePhase) {

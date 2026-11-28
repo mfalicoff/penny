@@ -15,6 +15,7 @@ import {
   emptyDraft,
   newRule,
   relativeDay,
+  renewsSoonIn,
   resumeDate,
   rowAmount,
   seenLabel,
@@ -231,5 +232,23 @@ describe("suggestions (MAZ-290)", () => {
     expect(acceptedRule(netflix, draft, built, "r1")).toMatchObject({ id: "r1", nextDate: "2026-11-30", date: "2026-11-30", anchorDay: 31, total: 1699, share: 1699 });
     // A date moved in the form anchors on the new day, as any new schedule.
     expect(acceptedRule(netflix, { ...draft, date: "2026-12-05" }, built, "r2")).toMatchObject({ nextDate: "2026-12-05", anchorDay: 5 });
+  });
+});
+
+describe("renews soon (MAZ-290)", () => {
+  const yearly = (nextDate: string, extra: Partial<{ active: boolean; frequency: "weekly" | "monthly" | "yearly" }> = {}) => ({ active: true, frequency: "yearly" as const, nextDate, ...extra });
+
+  it("counts the days left while an active yearly schedule renews within 7 days", () => {
+    expect(renewsSoonIn(yearly("2026-11-13"), TODAY)).toBe(3);
+    expect(renewsSoonIn(yearly("2026-11-10"), TODAY)).toBe(0);
+    expect(renewsSoonIn(yearly("2026-11-17"), TODAY)).toBe(7);
+  });
+
+  it("never says soon outside the window, while paused, or for monthly and weekly schedules", () => {
+    expect(renewsSoonIn(yearly("2026-11-18"), TODAY)).toBeNull();
+    expect(renewsSoonIn(yearly("2026-11-09"), TODAY)).toBeNull();
+    expect(renewsSoonIn(yearly("2026-11-13", { active: false }), TODAY)).toBeNull();
+    expect(renewsSoonIn(yearly("2026-11-13", { frequency: "monthly" }), TODAY)).toBeNull();
+    expect(renewsSoonIn(yearly("2026-11-13", { frequency: "weekly" }), TODAY)).toBeNull();
   });
 });

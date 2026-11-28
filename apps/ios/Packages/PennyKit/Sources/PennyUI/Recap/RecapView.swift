@@ -356,7 +356,7 @@ struct RecapChanges: View {
                         icon: CategoryIcon(
                             symbol: CategoryStyle.symbol(forIonicon: change.icon),
                             color: PennyColor.category(
-                                CategoryStyle.color(forCategoryID: change.categoryId, hex: change.color))),
+                                CategoryStyle.tint(forCategoryID: change.categoryId, hex: change.color))),
                         title: change.name,
                         detail: RecapText.previously(change, month: review.previous.month, currency: currency),
                         divider: change.key != review.biggestChanges.last?.key
@@ -411,7 +411,7 @@ struct RecapShared: View {
                         icon: category.map {
                             CategoryIcon(
                                 symbol: CategoryStyle.symbol(forIonicon: $0.icon),
-                                color: PennyColor.category(CategoryStyle.color(forCategoryID: $0.id, hex: $0.color)))
+                                color: PennyColor.category(CategoryStyle.tint(forCategoryID: $0.id, hex: $0.color)))
                         } ?? .neutral(symbol: "person.2"),
                         title: top.title, detail: RecapText.topShared(top), divider: split != nil
                     ) {

@@ -23,6 +23,8 @@ struct AppShell: View {
         .environment(shell)
         // The Home Screen widgets follow the account's ledger (MAZ-80); never the demo's.
         .modifier(WidgetPublishing(shell: shell))
+        // Renewal reminders follow the ledger: pause, remove and edit (MAZ-290).
+        .modifier(RenewalScheduling(shell: shell))
         // Today moves on at midnight and when the app comes back, so income dated on the new
         // day leaves Expected for Left to spend without a relaunch (MAZ-136).
         .task { await shell.followDayChanges() }
@@ -333,7 +335,9 @@ private struct SplitShell: View {
             TabStack(tab: shell.route.tab).id(shell.route.tab)
         case .manage(let page):
             NavigationStack {
-                SettingsPage(route: page)
+                // The copper Add entry capsule after the page's own + (`ipad-recurring-suggested`,
+                // MAZ-290), as on Home, Activity and Settings.
+                SettingsPage(route: page).environment(\.showsManageAddEntry, true)
             }
             .id(page)
         case .settings:
@@ -553,6 +557,28 @@ private struct SidebarFooter: View {
 /// The copper "+ Add entry" capsule in the iPad toolbar of Home, Activity and Settings
 /// (`ipad-home`, `ipad-activity`, `ipad-settings`, MAZ-254). ⌘N opens Add entry from anywhere
 /// on iPad (`SplitShell`), so the capsule carries no shortcut of its own.
+extension EnvironmentValues {
+    /// Set on the iPad's Manage stack (Recurring, Accounts, Categories), whose pages then end their
+    /// toolbar with the copper Add entry capsule (`ManageAddEntryItems`, MAZ-290).
+    @Entry var showsManageAddEntry = false
+}
+
+/// The copper Add entry capsule at the trailing end of an iPad Manage page's toolbar, after the
+/// page's own + in a glass group of its own (`ipad-recurring-suggested`, MAZ-290). Each page adds
+/// it after its + itself: items from an outer `toolbar` would come first.
+struct ManageAddEntryItems: ToolbarContent {
+    let shown: Bool
+
+    var body: some ToolbarContent {
+        if shown {
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItem(placement: .primaryAction) {
+                AddEntryCapsule().accessibilityIdentifier("manage.addEntry")
+            }
+        }
+    }
+}
+
 struct AddEntryCapsule: View {
     @Environment(ShellModel.self) private var shell
 

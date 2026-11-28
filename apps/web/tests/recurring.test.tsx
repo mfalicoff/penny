@@ -99,6 +99,24 @@ describe("recurring schedules", () => {
     expect(within(screen.getByRole("complementary", { name: "Penny" })).getByRole("link", { name: /^Recurring\s*3\s*active$/ })).toHaveTextContent("Recurring3");
   });
 
+  it("marks a yearly schedule renewing within 7 days Renews soon, and no other (MAZ-290)", async () => {
+    ledgerServer({
+      recurring: [
+        rule("prime", "Amazon Prime", { frequency: "yearly", total: 9900, share: 9900, date: "2025-11-12", nextDate: "2026-11-12", anchorDay: 12, accountId: "visa" }),
+        rule("domain", "Domain name", { frequency: "yearly", total: 2400, share: 2400, date: "2025-12-01", nextDate: "2026-12-01", anchorDay: 1 }),
+        rule("net", "Internet", { nextDate: "2026-11-12", anchorDay: 12 }),
+      ],
+    });
+    renderApp("/recurring");
+    const expenses = await screen.findByRole("list", { name: "Expense schedules" });
+    const [prime, net, domain] = within(expenses).getAllByRole("button");
+    expect(prime).toHaveTextContent(/^Amazon PrimeRenews soonYearly · renews Thu, Nov 12/);
+    expect(net).toHaveTextContent(/^InternetMonthly · next Nov 12/);
+    expect(net).not.toHaveTextContent("Renews soon");
+    expect(domain).toHaveTextContent(/^Domain nameYearly · next Dec 1/);
+    expect(domain).not.toHaveTextContent("Renews soon");
+  });
+
   it("lists shared schedules the account is part of with the expenses, marked Shared, with its share", async () => {
     const JOINED = Date.UTC(2026, 0, 5, 12);
     const household = { id: "h1", name: "Maison", currency: "CAD", creatorId: "u-alex", createdAt: JOINED, memberCount: 2 };

@@ -7,6 +7,7 @@ import SwiftUI
 /// Never a balance: Penny doesn't connect to banks. Tapping a row edits it; + adds one.
 struct AccountsListView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.showsManageAddEntry) private var showsManageAddEntry
     @State private var form: AccountFormRequest?
 
     var body: some View {
@@ -62,6 +63,7 @@ struct AccountsListView: View {
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("accounts.add")
             }
+            ManageAddEntryItems(shown: showsManageAddEntry)
         }
         .sheet(item: $form) { request in
             AccountFormSheet(account: request.account).environment(shell)

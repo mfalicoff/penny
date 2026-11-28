@@ -13,14 +13,14 @@ exports[`share image content > matches the snapshot of both versions 1`] = `
       },
       {
         "amount": null,
-        "color": "#8E8A85",
+        "color": "#8E5BB1",
         "name": "Entertainment",
         "percent": "4%",
         "rank": 2,
       },
       {
         "amount": null,
-        "color": "#8E8A85",
+        "color": "#2F9E6B",
         "name": "Groceries",
         "percent": "4%",
         "rank": 3,
@@ -71,14 +71,14 @@ exports[`share image content > matches the snapshot of both versions 1`] = `
       },
       {
         "amount": "$934",
-        "color": "#8E8A85",
+        "color": "#8E5BB1",
         "name": "Entertainment",
         "percent": "4%",
         "rank": 2,
       },
       {
         "amount": "$884",
-        "color": "#8E8A85",
+        "color": "#2F9E6B",
         "name": "Groceries",
         "percent": "4%",
         "rank": 3,

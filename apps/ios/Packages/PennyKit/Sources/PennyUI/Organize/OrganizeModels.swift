@@ -443,7 +443,7 @@ enum ScheduleText {
             let day = "Every month on the \(ordinal(rule.anchorDay))"
             return rule.anchorDay > 28 ? "\(day), or the last day of shorter months" : day
         case .yearly:
-            let day = "Every year on \(monthName(rule.nextDate.month)) \(rule.anchorDay)"
+            let day = "Every year on \(monthName(rule.nextDate.month).prefix(3)) \(rule.anchorDay)"
             return rule.anchorDay > 28 ? "\(day), or the month's last day" : day
         }
     }
@@ -455,13 +455,21 @@ enum ScheduleText {
     }
 
     /// The part of a row's detail before the account: "Monthly · next Nov 15", or "Paused ·
-    /// monthly". The row puts the account on its own line when both don't fit.
+    /// monthly". A yearly schedule within its Renews soon window says "Yearly · renews Thu, Nov
+    /// 12" (MAZ-290). The row puts the account on its own line when both don't fit.
     static func timing(_ rule: RecurringRule, today: CalendarDate) -> String {
         let parts =
             rule.active
-            ? [frequency(rule.frequency), "next \(DayText.short(rule.nextDate, today: today))"]
+            ? [frequency(rule.frequency), next(rule, today: today)]
             : ["Paused", frequency(rule.frequency).lowercased()]
         return parts.joined(separator: " · ")
+    }
+
+    /// "next Nov 15", or "renews Thu, Nov 12" while a yearly schedule renews soon.
+    private static func next(_ rule: RecurringRule, today: CalendarDate) -> String {
+        guard Renewal.isSoon(rule, today: today) else { return "next \(DayText.short(rule.nextDate, today: today))" }
+        let day = DayText.date(rule.nextDate).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        return "renews \(day)"
     }
 
     /// A row's tile symbol: the entry rows' (`EntryText.tileSymbol`), with the repeat icon for an

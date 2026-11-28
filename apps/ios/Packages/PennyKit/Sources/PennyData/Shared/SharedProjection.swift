@@ -55,6 +55,10 @@ public final class SharedProjectionModel {
     /// Answers by month, oldest month first when read.
     public private(set) var answers: [MonthKey: WireHouseholdProjection] = [:]
     public private(set) var statuses: [MonthKey: Status] = [:]
+    /// Whole years read at once (`?year=YYYY`, MAZ-290): the year in review asks for its year in
+    /// one request rather than twelve.
+    public private(set) var yearAnswers: [Int: WireHouseholdProjection] = [:]
+    public private(set) var yearStatuses: [Int: Status] = [:]
     /// Bumped whenever `answers` changes, so a report built from them can be cached.
     public private(set) var revision = 0
 
@@ -69,44 +73,63 @@ public final class SharedProjectionModel {
 
     public func status(for month: MonthKey) -> Status { statuses[month] ?? .idle }
 
+    public func status(forYear year: Int) -> Status { yearStatuses[year] ?? .idle }
+
     /// Reads `month` from the server. A failure keeps the previous answer.
     public func refresh(_ month: MonthKey) async {
         guard let service else { return }
         if statuses[month] == .loading { return }
         statuses[month] = .loading
+        let (answer, status) = await read(.month(month), service: service, previous: answers[month])
+        if answers[month] != answer {
+            answers[month] = answer
+            revision += 1
+        }
+        statuses[month] = status
+    }
+
+    /// Reads a whole year in one request (`GET /api/households/projection?year=YYYY`), as the
+    /// year in review needs (MAZ-290). A failure keeps the previous answer.
+    public func refresh(year: Int) async {
+        guard let service else { return }
+        if yearStatuses[year] == .loading { return }
+        yearStatuses[year] = .loading
+        let (answer, status) = await read(.year(year), service: service, previous: yearAnswers[year])
+        if yearAnswers[year] != answer {
+            yearAnswers[year] = answer
+            revision += 1
+        }
+        yearStatuses[year] = status
+    }
+
+    /// One read: the answer to keep (the previous one when it failed; none when the server has no
+    /// households, a 404) and the status to show.
+    private func read(
+        _ period: ActivityFilters.Period, service: any SharedProjectionService, previous: WireHouseholdProjection?
+    ) async -> (WireHouseholdProjection?, Status) {
         do {
-            let answer = try await service.projection(month: month)
-            if answers[month] != answer {
-                answers[month] = answer
-                revision += 1
-            }
-            statuses[month] = .loaded
+            return (try await service.projection(period: period), .loaded)
         } catch is CancellationError {
-            statuses[month] = answers[month] == nil ? .idle : .loaded
+            return (previous, previous == nil ? .idle : .loaded)
         } catch let error as APIError {
-            if case .notFound = error {
-                // No households on this server: nothing shared to add.
-                if answers[month] != nil {
-                    answers[month] = nil
-                    revision += 1
-                }
-                statuses[month] = .loaded
-            } else {
-                statuses[month] = .failed(Self.message(error))
-            }
+            if case .notFound = error { return (nil, .loaded) }
+            return (previous, .failed(Self.message(error)))
         } catch {
-            statuses[month] = .failed(Self.message(.unreachable))
+            return (previous, .failed(Self.message(.unreachable)))
         }
     }
 
-    /// Every answer's rows as domain shares, oldest month first, so `LedgerReport` keeps the
-    /// newest copy of a row that appears in several answers. Rows that can't be read (a date
-    /// that isn't a calendar date, an unknown currency) are left out.
+    /// Every answer's rows as domain shares: whole years first, then months, oldest first, so
+    /// `LedgerReport` keeps the newest copy of a row that appears in several answers (the month
+    /// on screen is read more often than a year). Rows that can't be read (a date that isn't a
+    /// calendar date, an unknown currency) are left out.
     public func shares(currency: Currency) -> (recorded: [SharedExpenseShare], scheduled: [SharedExpenseShare]) {
         var recorded: [SharedExpenseShare] = []
         var scheduled: [SharedExpenseShare] = []
-        for month in answers.keys.sorted() {
-            guard let answer = answers[month] else { continue }
+        let ordered =
+            yearAnswers.keys.sorted().compactMap { yearAnswers[$0] }
+            + answers.keys.sorted().compactMap { answers[$0] }
+        for answer in ordered {
             recorded += answer.transactions.compactMap { SharedExpenseShare(wire: $0, currency: currency) }
             scheduled += answer.scheduled.compactMap {
                 var share = SharedExpenseShare(wire: $0, currency: currency)

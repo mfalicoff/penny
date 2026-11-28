@@ -29,6 +29,9 @@ public struct AppServices {
     /// The monthly recap's dismissed banners and its notification (MAZ-292). In memory, with no
     /// notification, outside `live()`.
     public var recap = MonthlyRecap(defaults: nil, center: nil)
+    /// Renewal reminders for yearly schedules (MAZ-290). In memory, with no notification, outside
+    /// `live()`.
+    public var renewals = RenewalReminders(defaults: nil, center: nil)
 
     public init(
         preferences: any DevicePreferences, lock: AppLockController,
@@ -61,6 +64,7 @@ public struct AppServices {
         services.widgets = WidgetPublisher.live()
         #if canImport(UserNotifications)
             services.recap = .live()
+            services.renewals = .live()
         #endif
         let recorder = TelemetryRecorder(resource: .current(), pending: .standard())
         services.telemetry = ClientTelemetry(store: UserDefaultsTelemetryChoiceStore(), recorder: recorder)

@@ -347,7 +347,7 @@ struct YearCategoriesPage: View {
             .accessibilityIdentifier("yearReview.total")
             VStack(spacing: 14) {
                 ForEach(Array(review.topCategories.prefix(4).enumerated()), id: \.element.key) { index, category in
-                    let color = PennyColor.category(CategoryStyle.color(forCategoryID: "", hex: category.color))
+                    let color = PennyColor.category(CategoryStyle.tint(forCategoryID: "", hex: category.color))
                     YearBarRow(
                         name: category.name, value: "\(scaled(category.share, progress))%",
                         fraction: Double(category.share) / 100 * progress, color: color
@@ -689,7 +689,7 @@ struct YearFactsPage: View {
         HStack(spacing: 14) {
             CategoryIcon(
                 symbol: CategoryStyle.symbol(forIonicon: category.icon),
-                color: PennyColor.category(CategoryStyle.color(forCategoryID: "", hex: category.color)))
+                color: PennyColor.category(CategoryStyle.tint(forCategoryID: "", hex: category.color)))
             VStack(alignment: .leading, spacing: 4) {
                 Text(category.name)
                     .font(.title3.weight(.bold))

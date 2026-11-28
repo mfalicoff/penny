@@ -15,6 +15,7 @@ import SwiftUI
 /// With no schedules and nothing to suggest, the empty state (`iphone-recurring-empty`).
 struct RecurringListView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.showsManageAddEntry) private var showsManageAddEntry
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selection: ScheduleSelection?
@@ -70,6 +71,7 @@ struct RecurringListView: View {
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("recurring.add")
             }
+            ManageAddEntryItems(shown: showsManageAddEntry)
         }
         .navigationDestination(item: $selection) { ScheduleDetailView(id: $0.id) }
         .confirmationDialog(
@@ -414,9 +416,19 @@ private struct ScheduleRow: View {
                 CategoryIcon(symbol: ScheduleText.tileSymbol(rule.kind, category: category), color: tint(category))
                     .opacity(rule.active ? 1 : 0.5)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(rule.title).font(.callout.weight(.semibold))
-                        .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
-                        .lineLimit(3)
+                    let soon = Renewal.isSoon(rule, today: today)
+                    // A yearly schedule renewing within 7 days wears the amber tag beside its name
+                    // (MAZ-290), on the title's line when it fits.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            title.lineLimit(1)
+                            if soon { RenewsSoonTag(ruleID: rule.id).fixedSize() }
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            title.lineLimit(3)
+                            if soon { RenewsSoonTag(ruleID: rule.id) }
+                        }
+                    }
                     if rule.active {
                         // One line when it fits; otherwise the account on its own line, never a
                         // wrap that strands "· Everyday chequing".
@@ -428,10 +440,14 @@ private struct ScheduleRow: View {
                             }
                         }
                         .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        .contentTransition(.opacity)
                     } else {
                         ScheduleTag(ScheduleText.row(rule, account: account, today: today), systemImage: "pause.fill")
                     }
                 }
+                // The tag fades in and out while the subtitle crossfades to "renews …" (`quick`, also
+                // under Reduce Motion); the row keeps its place and nothing moves (motion.md, MAZ-290).
+                .animation(Motion.Easing.standard.animation(.quick), value: Renewal.isSoon(rule, today: today))
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
             HStack(spacing: 8) {
@@ -447,9 +463,37 @@ private struct ScheduleRow: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var title: some View {
+        Text(rule.title).font(.callout.weight(.semibold))
+            .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
+    }
+
     /// Income and investments take their meaning color, as on the cards; expenses their category's.
     private func tint(_ category: LedgerCategory?) -> Color {
         EntryText.tileColor(rule.kind, category: category, id: rule.categoryId)
+    }
+}
+
+/// The amber "Renews soon" tag (`iphone-recurring-renews-soon`, MAZ-290): a clock and 12-point
+/// semibold words on the pending color at 16%, the words in the pending color mixed with the
+/// label's. On the schedule page it says how soon: "Renews in 3 days" (`iphone-schedule-reminder`).
+struct RenewsSoonTag: View {
+    @ScaledMetric(relativeTo: .caption) private var glyph = 10.0
+    var text = RenewalText.soon
+    var ruleID: String?
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "clock").font(.system(size: glyph, weight: .semibold)).accessibilityHidden(true)
+            Text(text)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(PennyColor.pending.mix(with: PennyColor.label, by: 0.28))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
+        .background(PennyColor.pending.opacity(0.16), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .transition(.opacity)
+        .accessibilityIdentifier(ruleID.map { "renewsSoon.\($0)" } ?? "schedule.renewsSoon")
     }
 }
 
@@ -629,6 +673,10 @@ struct ScheduleDetailView: View {
                     Text(ScheduleText.cadence(rule)).font(.subheadline)
                         .foregroundStyle(PennyColor.secondaryLabel).multilineTextAlignment(.center)
                         .accessibilityIdentifier("schedule.cadence")
+                    // "Renews in 3 days" while a yearly schedule is in its Renews soon window (MAZ-290).
+                    if let days = Renewal.daysUntil(rule, today: shell.today) {
+                        RenewsSoonTag(text: RenewalText.renewsIn(days)).padding(.top, 2)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .combine)
@@ -654,6 +702,10 @@ struct ScheduleDetailView: View {
                     SaveErrorBanner(failure: failure, retry: nil)
                         .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                 }
+            }
+            // Yearly schedules can remind before they renew (`iphone-schedule-reminder`, MAZ-290).
+            if rule.frequency == .yearly, shell.renewals.offersReminders {
+                ScheduleReminderSection(ruleID: rule.id)
             }
             Section {
                 let dates = Self.upcoming(rule, ledger: ledger, today: shell.today)
@@ -761,5 +813,52 @@ struct ScheduleDetailView: View {
     static func longDate(_ date: CalendarDate, today: CalendarDate) -> String {
         let format = Date.FormatStyle.dateTime.weekday(.abbreviated).month(.abbreviated).day()
         return DayText.date(date).formatted(date.days(since: today) < 365 ? format : format.year())
+    }
+}
+
+/// A yearly schedule's Reminder section (`iphone-schedule-reminder`, MAZ-290): "Remind me before
+/// it renews", off until turned on (the first time asks iOS for notification permission), and
+/// "Show name and amount", off by default, which only matters while the reminder is on. Both are
+/// this device's (`RenewalReminders`).
+struct ScheduleReminderSection: View {
+    @Environment(ShellModel.self) private var shell
+    let ruleID: String
+
+    var body: some View {
+        let renewals = shell.renewals
+        let reminds = renewals.reminds(ruleID)
+        Section {
+            Toggle(
+                RenewalText.remind,
+                isOn: Binding(
+                    get: { reminds },
+                    set: { on in Task { await renewals.setReminds(on, ruleID: ruleID) } })
+            )
+            .frame(minHeight: Metrics.minTouchTarget)
+            .accessibilityIdentifier("schedule.reminder")
+            Toggle(
+                isOn: Binding(
+                    get: { renewals.showsDetails(ruleID) },
+                    set: { renewals.setShowsDetails($0, ruleID: ruleID) })
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(RenewalText.details)
+                    Text(RenewalText.detailsCaption).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                }
+            }
+            .disabled(!reminds)
+            .frame(minHeight: Metrics.minTouchTarget)
+            .accessibilityIdentifier("schedule.reminderDetails")
+        } header: {
+            Text(RenewalText.header).cardSectionHeader()
+        } footer: {
+            VStack(alignment: .leading, spacing: 6) {
+                if renewals.permissionDenied {
+                    Text(RenewalText.denied).foregroundStyle(PennyColor.danger)
+                        .accessibilityIdentifier("schedule.reminderDenied")
+                }
+                Text(RenewalText.footer(onPad: RenewalText.isPad))
+            }
+        }
     }
 }

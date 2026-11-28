@@ -173,6 +173,9 @@ final class ShellModel {
 
     /// Dismissed recap banners and the recap notification (device settings; in memory for previews).
     var recap = MonthlyRecap(defaults: nil, center: nil)
+    /// Renewal reminders' switches and notifications (MAZ-290; device settings, in memory with no
+    /// notification for previews and the demo).
+    var renewals = RenewalReminders(defaults: nil, center: nil)
 
     // MARK: Currencies (MAZ-151)
 
@@ -209,14 +212,12 @@ final class ShellModel {
         recap.dismiss(year: year)
     }
 
-    /// The months a year in review reads: all twelve, so shared expenses count in each, and the
-    /// households, for the shared trips' and households' names.
+    /// What a year in review reads: the whole year's shared expenses in one request
+    /// (`?year=YYYY`, as the web does), and the households, for the shared trips' and households'
+    /// names.
     func refreshYear(_ year: Int) async {
         await withTaskGroup(of: Void.self) { group in
-            for index in 1...12 {
-                guard let month = MonthKey(year: year, month: index) else { continue }
-                group.addTask { await self.shared.refresh(month) }
-            }
+            group.addTask { await self.shared.refresh(year: year) }
             if households.isAvailable, households.load != .loading {
                 group.addTask { await self.households.refresh() }
             }

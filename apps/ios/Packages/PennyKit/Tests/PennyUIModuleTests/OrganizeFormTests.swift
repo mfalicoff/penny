@@ -445,7 +445,7 @@ struct OrganizeFormTests {
         #expect(ScheduleText.cadence(rule) == "Every week on Wednesday", "2026-11-18 is a Wednesday")
         rule.frequency = .yearly
         rule.anchorDay = 18
-        #expect(ScheduleText.cadence(rule) == "Every year on November 18")
+        #expect(ScheduleText.cadence(rule) == "Every year on Nov 18")
         #expect(
             ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "23rd"]
                 == [

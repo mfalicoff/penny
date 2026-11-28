@@ -2009,26 +2009,35 @@
       "id": "iphone-recurring-renews-soon",
       "view": "recurring with yearly Amazon Prime marked Renews soon",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
-        "followUp": "MAZ-290"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
       "id": "iphone-schedule-reminder",
       "view": "yearly schedule Amazon Prime with the renewal reminder on and name and amount hidden",
       "native": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Schedules have no renewal reminder yet.",
-        "followUp": "MAZ-290"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       },
       "web": {
         "status": "not-applicable",
@@ -2040,10 +2049,9 @@
       "id": "iphone-renewal-notification",
       "view": "Lock Screen with a private renewal reminder and one that shows its name and amount",
       "native": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. The app sends no renewal reminders yet.",
-        "followUp": "MAZ-290"
+        "note": "Built (a yearly schedule's Reminder section schedules a local notification 3 days before it renews, at 9 AM), but the Lock Screen is system chrome XCUITest can't show. Its text (private by default: \"A yearly schedule renews in 3 days\" / \"Open Penny to see which one.\"; with Show name and amount, the name, amount and day) and trigger date are unit-tested (RenewalReminderTests, RenewalTests); its look is checked on a device (docs/ios/qa.md)."
       },
       "web": {
         "status": "not-applicable",
@@ -3602,19 +3610,12 @@
       "id": "ipad-recurring-suggested",
       "view": "iPad recurring with the Netflix suggestion open in the detail pane",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-290",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The toolbar has only +: the iPad Manage pages (Recurring among them) have no copper Add entry capsule beside it",
-            "kind": "follow-up",
-            "ref": "MAZ-290"
-          }
         ]
       },
       "web": {
@@ -4127,10 +4128,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-290",
-        "note": "Card approved by the owner (MAZ-290, 2026-11-26), not built yet. Recurring rows have no Renews soon badge yet.",
-        "followUp": "MAZ-290"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
