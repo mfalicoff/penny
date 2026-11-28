@@ -9,14 +9,19 @@ import { useLedgerCurrency } from "../../offline/useLedgerCurrency";
 import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
-import { Avatar, Button } from "../../design/controls";
+import { currencyInfo } from "@domain/currency.ts";
+import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
+import { Avatar, Button, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useOnline, useToast } from "../../design/states";
 import { describeSharedError } from "../households/errors";
 import { localDate } from "../households/model";
 import { describeSaveError, detailOf, useLedgerWorkspace } from "../organize/workspace";
-import { DateRowInput, DetailList, DetailRow } from "../entries/EntryParts";
+import { DateRowInput, DetailList, DetailRow, isMac } from "../entries/EntryParts";
+import { CurrencyMenu } from "../entries/CurrencyMenu";
+import { currencyUses } from "../entries/currency";
+import { currencyPlural } from "../households/sharedCurrency";
 import { outsideDatesNote, validateTrip, type SharedTrip, type TripDraft, type TripErrors, type TripField } from "./model";
 
 export type TripFormTarget = { kind: "new" } | { kind: "personal"; trip: Trip; expenseCount: number } | { kind: "shared"; household: SharedTrip };
@@ -38,6 +43,10 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
   const demo = useIsDemo();
   const workspace = useLedgerWorkspace();
   const currency = useLedgerCurrency({ enabled: target.kind === "new" && !demo });
+  const wide = useMediaQuery(WIDE);
+  // MAZ-151 phase 2: the trip's currency, chosen here (null: the home currency). A personal trip keeps
+  // it in the ledger; a new shared trip sends it. A shared trip's can't change, so it's shown read-only.
+  const [chosen, setChosen] = useState<string | null>(target.kind === "personal" ? (target.trip.currency ?? null) : null);
   const initial: TripDraft =
     target.kind === "personal"
       ? { name: target.trip.name, startDate: target.trip.startDate, endDate: target.trip.endDate }
@@ -61,8 +70,10 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
   /** The field's error, or the note it's described by. */
   const invalid = (field: TripField, describedBy?: string) =>
     errors[field] ? { "aria-invalid": true, "aria-describedby": `${ids[field]}-error` } : describedBy ? { "aria-describedby": describedBy } : {};
-  // A trip is always in one currency: the ledger's for a new or personal trip, the household's once shared.
-  const tripCurrency = target.kind === "shared" ? target.household.currency : (currency.data ?? workspace.ledger?.currency);
+  // The home currency, then the trip's: the household's once shared, else the one chosen here.
+  const home = currency.data ?? workspace.ledger?.currency;
+  const tripCurrency = target.kind === "shared" ? target.household.currency : (chosen ?? home);
+  const formId = useId();
 
   const shared = target.kind === "shared" || share;
   const title = target.kind === "new" ? "New trip" : target.kind === "shared" ? "Edit shared trip" : "Edit trip";
@@ -72,7 +83,7 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
     mutationFn: (value: TripDraft) =>
       target.kind === "shared"
         ? updateSharedTrip(target.household.id, { name: value.name.trim(), startDate: value.startDate, endDate: value.endDate })
-        : createSharedTrip({ name: value.name.trim(), currency: currency.data ?? "", startDate: value.startDate, endDate: value.endDate }),
+        : createSharedTrip({ name: value.name.trim(), currency: chosen ?? currency.data ?? "", startDate: value.startDate, endDate: value.endDate }),
     onSuccess: async ({ household }) => {
       if (target.kind === "shared") {
         await refreshHousehold(queryClient, email, household.id);
@@ -113,6 +124,8 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
       startDate: draft.startDate,
       endDate: draft.endDate,
       ...(original?.sharedHouseholdId ? { sharedHouseholdId: original.sharedHouseholdId } : {}),
+      // Contract 2.5.0: kept only when it isn't the home currency (the default).
+      ...(chosen && chosen !== workspace.ledger?.currency ? { currency: chosen } : {}),
     };
     setSaving(true);
     setFailure(null);
@@ -140,7 +153,7 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
       return;
     }
     if (!check() || sharedWrite.isPending) return;
-    if (target.kind === "new" && !currency.data) return;
+    if (target.kind === "new" && !(chosen ?? currency.data)) return;
     sharedWrite.mutate(draft);
   }
 
@@ -171,8 +184,57 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
   }
 
   return (
-    <Dialog title={title} onClose={onClose} initialFocus={nameRef}>
-      <form className="form trip-form" onSubmit={onSubmit} noValidate aria-label={title}>
+    <Dialog
+      title={title}
+      onClose={onClose}
+      initialFocus={nameRef}
+      className={wide ? "trip-form-dialog trip-form-dialog--desktop" : "trip-form-dialog"}
+      // `web-trip-form-currency`: the footer says how to save and cancel from the keyboard.
+      hint={
+        wide ? (
+          <>
+            <Kbd>{isMac() ? "⌘↵" : "Ctrl ↵"}</Kbd> save · <Kbd>Esc</Kbd> cancel
+          </>
+        ) : null
+      }
+      actions={
+        <>
+          {target.kind === "personal" ? (
+            <Button
+              variant="danger-quiet"
+              icon="trash"
+              style={{ marginInlineEnd: "auto" }}
+              disabled={target.expenseCount > 0}
+              aria-describedby={target.expenseCount > 0 ? `${ids.note}-delete` : undefined}
+              onClick={() => { setConfirmDelete(true); }}
+            >
+              Delete trip
+            </Button>
+          ) : null}
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form={formId} variant="primary" busy={busy || (shared && target.kind === "new" && !(chosen ?? currency.data))} aria-keyshortcuts="Meta+Enter Control+Enter">
+            {busy ? "Saving…" : target.kind === "new" ? "Create trip" : "Save changes"}
+            {wide ? <Kbd>{isMac() ? "⌘↵" : "Ctrl ↵"}</Kbd> : null}
+          </Button>
+        </>
+      }
+    >
+      <form
+        id={formId}
+        className="form trip-form"
+        onSubmit={onSubmit}
+        noValidate
+        aria-label={title}
+        onKeyDown={(event) => {
+          // ⌘↵ / Ctrl+Enter saves from any field, as in the entry form.
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            event.currentTarget.requestSubmit();
+          }
+        }}
+      >
         {failure ? <SaveErrorBanner message={failure} onRetry={() => void savePersonal()} retrying={saving} /> : null}
         {sharedFailure ? <SaveErrorBanner message={sharedFailure} /> : null}
         <div className="trip-form__name">
@@ -204,20 +266,41 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
             When
           </h3>
           <DetailList>
-            <DetailRow icon="calendar" label="Starts" htmlFor={ids.startDate}>
+            <DetailRow icon="calendar" label="Starts" htmlFor={ids.startDate} {...(wide ? { chevron: "down" as const } : {})}>
               <span className="trip-form__date">
                 <DateRowInput id={ids.startDate} inputRef={startRef} value={draft.startDate} text={formDate(draft.startDate)} today={localDate()} long onChange={(value) => { set("startDate", value); }} invalid={invalid("startDate")} />
               </span>
             </DetailRow>
-            <DetailRow icon="calendar" label="Ends" htmlFor={ids.endDate}>
+            <DetailRow icon="calendar" label="Ends" htmlFor={ids.endDate} {...(wide ? { chevron: "down" as const } : {})}>
               <span className="trip-form__date">
                 <DateRowInput id={ids.endDate} inputRef={endRef} value={draft.endDate} text={formDate(draft.endDate)} today={localDate()} long onChange={(value) => { set("endDate", value); }} invalid={invalid("endDate", ids.note)} />
               </span>
             </DetailRow>
             <DetailRow icon="cash" label="Currency">
-              {tripCurrency ?? "…"}
-              <Icon name="lock-closed" size={15} />
-              <span className="visually-hidden">, can't be changed</span>
+              {target.kind === "shared" || !home || !tripCurrency ? (
+                // A shared trip's currency is its balances' and can't change once created (the API has no way to).
+                <span className="trip-form__currency">
+                  <CurrencyName code={tripCurrency} />
+                  {target.kind === "shared" ? (
+                    <>
+                      <Icon name="lock-closed" size={15} />
+                      <span className="visually-hidden">, can't be changed</span>
+                    </>
+                  ) : null}
+                </span>
+              ) : (
+                <CurrencyMenu
+                  className="trip-form__currency-menu"
+                  code={tripCurrency}
+                  home={home}
+                  recent={workspace.ledger ? currencyUses(workspace.ledger).map((use) => use.code) : []}
+                  locked={null}
+                  named
+                  onPick={(next) => {
+                    setChosen(next === home ? null : next);
+                  }}
+                />
+              )}
             </DetailRow>
           </DetailList>
           {errors.startDate ? (
@@ -231,6 +314,7 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
             </span>
           ) : null}
           <p id={ids.note} className="trip-form__hint">
+            {tripCurrency ? `${currencyNote(tripCurrency, shared)} ` : ""}
             {outsideDatesNote(draft.startDate)}
           </p>
         </section>
@@ -253,7 +337,8 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
                   onChange={(event) => { setShare(event.currentTarget.checked); }}
                 />
               </DetailRow>
-              {share ? (
+              {/* `iphone-trip-form` lists you and the invite under the switch; `web-trip-form-currency` says it in the hint. */}
+              {share && !wide ? (
                 <>
                   <div className="entry-row trip-form__person">
                     <Avatar name={email || "You"} size={30} />
@@ -271,7 +356,9 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
             <p id={ids.shareHint} className="trip-form__hint">
               {shareBlocked ??
                 (share
-                  ? "Everyone in a shared trip sees its shared expenses and their own share. Anything you added before sharing stays private to you."
+                  ? wide
+                    ? "Everyone in a shared trip sees its shared expenses and their own share, each in their own currency. You can invite people after saving."
+                    : "Everyone in a shared trip sees its shared expenses and their own share. Anything you added before sharing stays private to you."
                   : "Only you see a personal trip. You can share it later; what you add before sharing stays private.")}
             </p>
           </section>
@@ -280,26 +367,6 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
         ) : target.trip.sharedHouseholdId ? (
           <p className="trip-form__hint">This trip was shared. Its expenses here stay private to you.</p>
         ) : null}
-        <div className="form-actions">
-          {target.kind === "personal" ? (
-            <Button
-              variant="danger-quiet"
-              icon="trash"
-              style={{ marginInlineEnd: "auto" }}
-              disabled={target.expenseCount > 0}
-              aria-describedby={target.expenseCount > 0 ? `${ids.note}-delete` : undefined}
-              onClick={() => { setConfirmDelete(true); }}
-            >
-              Delete trip
-            </Button>
-          ) : null}
-          <Button variant="quiet" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" busy={busy || (shared && target.kind === "new" && !currency.data)}>
-            {busy ? "Saving…" : target.kind === "new" ? (share ? "Create shared trip" : "Create trip") : "Save changes"}
-          </Button>
-        </div>
         {target.kind === "personal" && target.expenseCount > 0 ? (
           <p id={`${ids.note}-delete`} className="form-hint">
             {target.expenseCount === 1 ? "1 expense is" : `${String(target.expenseCount)} expenses are`} assigned to this trip. Move them to another trip or no trip before deleting it.
@@ -307,6 +374,27 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
         ) : null}
       </form>
     </Dialog>
+  );
+}
+
+/**
+ * Under the dates (`web-trip-form-currency`, `iphone-trip-form-currency`): what the trip's currency
+ * does. A personal trip has no payments to suggest.
+ */
+function currencyNote(code: string, shared: boolean): string {
+  const plural = currencyPlural(code);
+  return shared
+    ? `New trip expenses start in ${plural}, and payments are suggested in ${plural}. Any expense can use another currency.`
+    : `New trip expenses start in ${plural}. Any expense can use another currency.`;
+}
+
+/** "EUR Euro": a currency's code and name, as the trip form's Currency row shows it. */
+function CurrencyName({ code }: { code: string | undefined }) {
+  if (!code) return <>…</>;
+  return (
+    <>
+      <b>{code}</b> {currencyInfo(code)?.name ?? ""}
+    </>
   );
 }
 
@@ -335,7 +423,8 @@ export function ShareTripDialog({ trip, expenseCount, onClose }: { trip: Trip; e
   const share = useMutation({
     mutationKey: ["trips", "share"],
     mutationFn: async () => {
-      const { household } = await createSharedTrip({ name: trip.name, currency: currency.data ?? "", startDate: trip.startDate, endDate: trip.endDate });
+      // MAZ-151 phase 2: a personal trip with its own currency is shared in it.
+      const { household } = await createSharedTrip({ name: trip.name, currency: trip.currency ?? currency.data ?? "", startDate: trip.startDate, endDate: trip.endDate });
       try {
         await workspace.save(saveTrip({ ...trip, sharedHouseholdId: household.id }, trip));
       } catch (error) {

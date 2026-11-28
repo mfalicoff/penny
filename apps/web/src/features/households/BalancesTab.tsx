@@ -7,11 +7,13 @@ import { TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { Avatar, Badge, Card, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
+import { formatMinor } from "../entries/currency";
 import { ErrorState, LoadingState } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeLoadError } from "./errors";
 import { monthEnd, monthLabel, monthlyPaymentsOpen, shortDate } from "./model";
 import { RecordMonthlyDialog } from "./PaymentDialogs";
+import { balancesTitle, settleNote, SettleInMenu, type SettleView } from "./SettleIn";
 
 const NO_MONEY_NOTE = "Penny records payments made outside the app. It never moves money, and payments never count as spending.";
 
@@ -26,7 +28,7 @@ const NO_MONEY_NOTE = "Penny records payments made outside the app. It never mov
  * open expense (`web-shared-expense`) shows the balances without the suggested payments and the
  * note; closing the expense brings them back (`web-household`).
  */
-export function BalancesTab({ view, recap, compact = false, brief = false }: { view: HouseholdView; recap: UseQueryResult<MonthRecap>; compact?: boolean; brief?: boolean }) {
+export function BalancesTab({ view, recap, compact = false, brief = false, settle }: { view: HouseholdView; recap: UseQueryResult<MonthRecap>; compact?: boolean; brief?: boolean; settle?: SettleView | undefined }) {
   const email = useAccountEmail();
   const [recording, setRecording] = useState<{ month: string; transfer: Transfer } | null>(null);
   const overdue = (recap.data?.overdueMonths ?? []).filter((month) => month !== view.month);
@@ -46,7 +48,7 @@ export function BalancesTab({ view, recap, compact = false, brief = false }: { v
   const olderMonths = overdue.map((month, index) => {
     const data = older[index]?.data;
     const last = index === overdue.length - 1;
-    if (data) return <OverdueMonth key={month} view={view} recap={data} onRecord={record(month)} compact={compact} note={compact && last} />;
+    if (data) return <OverdueMonth key={month} view={view} recap={data} onRecord={record(month)} compact={compact} note={compact && last} settle={settle} />;
     return (
       <Section key={month} compact={compact} title={monthName(month)} status={<StatusTag tone="danger" icon="alert-circle" label="Overdue" />}>
         <p className="muted">{older[index]?.isError ? "Penny couldn't load this month." : "Loading…"}</p>
@@ -56,10 +58,10 @@ export function BalancesTab({ view, recap, compact = false, brief = false }: { v
 
   return (
     <div className="page balances">
-      {compact && touch ? (
+      {compact && touch && !settle ? (
         <TabletBalances view={view} recap={recap.data} onRecord={record(view.month)} />
       ) : (
-        <CurrentMonth view={view} recap={recap.data} onRecord={record(view.month)} compact={compact} note={compact && !brief && overdue.length === 0} brief={compact && brief} />
+        <CurrentMonth view={view} recap={recap.data} onRecord={record(view.month)} compact={compact} note={compact && !brief && overdue.length === 0} brief={compact && brief} settle={settle} />
       )}
       {olderMonths}
       {recording ? <RecordMonthlyDialog view={view} month={recording.month} transfer={recording.transfer} onClose={() => { setRecording(null); }} /> : null}
@@ -113,7 +115,7 @@ function Section({ title, status, compact, children }: { title: string; status?:
 }
 
 /** `note`: the side pane's last card ends with what recording a payment means (`web-household`). */
-function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; note: boolean; brief: boolean }) {
+function CurrentMonth({ view, recap, onRecord, compact, note, brief, settle }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; note: boolean; brief: boolean; settle?: SettleView | undefined }) {
   const totals = new Map<string, { paid: number; share: number; repaid: number }>();
   const sums = (userId: string) => {
     let found = totals.get(userId);
@@ -129,12 +131,20 @@ function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: H
     for (const payment of expense.payments) sums(payment.fromUserId).repaid += expense.splits.find((split) => split.userId === payment.fromUserId)?.amountCents ?? 0;
   }
   const open = monthlyPaymentsOpen(recap.month);
+  // MAZ-151 phase 2 (`iphone-trip-balances-currency`): in the settle currency, highest balance first.
+  const converted = settle?.convert(recap) ?? null;
+  const money = (cents: number) => (settle ? (settle.shown(cents) ?? "…") : view.money(cents));
+  const rowsInOrder = settle ? [...recap.balances].sort((a, b) => b.balanceCents - a.balanceCents) : recap.balances;
 
   const balances = recap.balances.length ? (
     <ul className={cx(compact ? "row-list" : "shared-group__rows")} aria-label={`Balances for ${monthLabel(recap.month)}`}>
-      {recap.balances.map((row) => {
+      {rowsInOrder.map((row) => {
         const member = sums(row.userId);
-        const meta = [`Paid ${view.money(member.paid)}`, `share ${view.money(member.share)}`, ...(member.repaid ? [`${view.money(member.repaid)} repaid`] : [])].join(" · ");
+        const shareShown = !settle || row.userId === view.who.meId;
+        const meta = [`Paid ${money(member.paid)}`, ...(shareShown ? [`share ${money(member.share)}`] : []), ...(member.repaid ? [`${money(member.repaid)} repaid`] : [])].join(" · ");
+        const words = row.balanceCents > 0 ? "gets back" : row.balanceCents < 0 ? "owes" : "settled";
+        const approx = settle?.approx(row.userId, row.balanceCents) ?? null;
+        const shown = settle ? (converted?.balances.get(row.userId) ?? (settle.code === settle.currency ? row.balanceCents : null)) : row.balanceCents;
         return (
           <li key={row.userId} className="row">
             <Avatar name={view.who.avatar(row.userId)} src={view.who.picture(row.userId)} size={compact ? 32 : 36} />
@@ -143,8 +153,24 @@ function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: H
               <span className="row__meta">{meta}</span>
             </span>
             <span className="row__end">
-              <Money cents={row.balanceCents} currency={view.currency} tone={row.balanceCents > 0 ? "income" : "expense"} signed />
-              <span className={cx("row__meta", compact && "visually-hidden")}>{row.balanceCents > 0 ? "gets back" : row.balanceCents < 0 ? "owes" : "settled"}</span>
+              {settle ? (
+                <>
+                  <span className={cx("pk-num money", row.balanceCents > 0 && "pk-money--income")}>{shown === null ? "…" : formatMinor(shown, settle.code, settle.home, { signed: true })}</span>
+                  {approx ? (
+                    <span className="row__meta pk-num">
+                      {approx}
+                      <span className="visually-hidden"> in their currency, {words}</span>
+                    </span>
+                  ) : (
+                    <span className="row__meta">{words}</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Money cents={row.balanceCents} currency={view.currency} tone={row.balanceCents > 0 ? "income" : "expense"} signed />
+                  <span className={cx("row__meta", compact && "visually-hidden")}>{words}</span>
+                </>
+              )}
             </span>
           </li>
         );
@@ -155,7 +181,7 @@ function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: H
   );
 
   const suggestions = recap.suggestions.length ? (
-    <Suggestions view={view} recap={recap} onRecord={onRecord} compact={compact} />
+    <Suggestions view={view} recap={recap} onRecord={onRecord} compact={compact} settle={settle} />
   ) : recap.balances.length ? (
     <p className="muted">Everyone is settled for {monthLabel(recap.month)}.</p>
   ) : null;
@@ -188,20 +214,21 @@ function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: H
 
   if (compact) {
     return (
-      <Section title="Balances" status={monthStatus(recap)} compact>
+      <Section title={settle ? balancesTitle(settle.code) : "Balances"} status={settle ? <SettleInMenu settle={settle} /> : monthStatus(recap)} compact>
         {balances}
         {!brief && recap.suggestions.length ? <h3 className="card__title">Suggested payments</h3> : null}
         {brief ? null : suggestions}
         {brief ? null : waiting}
         {recorded ? <h3 className="card__title">Recorded payments</h3> : null}
         {recorded}
+        {settle && !brief ? <p className="note">{settleNote(settle, false)}</p> : null}
         {note ? <p className="note">{NO_MONEY_NOTE}</p> : null}
       </Section>
     );
   }
   return (
     <>
-      <Section title={monthName(recap.month)} status={monthStatus(recap)} compact={false}>
+      <Section title={settle ? balancesTitle(settle.code) : monthName(recap.month)} status={settle ? <SettleInMenu settle={settle} /> : monthStatus(recap)} compact={false}>
         {balances}
       </Section>
       {recap.suggestions.length ? (
@@ -212,6 +239,12 @@ function CurrentMonth({ view, recap, onRecord, compact, note, brief }: { view: H
         suggestions
       )}
       {waiting}
+      {settle ? (
+        <p className="shared-note settle-note">
+          <Icon name="cash" size={16} />
+          <span>{settleNote(settle, false)}</span>
+        </p>
+      ) : null}
       {recorded ? (
         <Section title="Recorded payments" compact={false}>
           {recorded}
@@ -297,10 +330,10 @@ function TabletBalances({ view, recap, onRecord }: { view: HouseholdView; recap:
 }
 
 /** An older month that is still unpaid: its suggested payments, each with Record paid. */
-function OverdueMonth({ view, recap, onRecord, compact, note }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; note: boolean }) {
+function OverdueMonth({ view, recap, onRecord, compact, note, settle }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; note: boolean; settle?: SettleView | undefined }) {
   return (
     <Section title={monthName(recap.month)} status={monthStatus(recap)} compact={compact}>
-      {recap.suggestions.length ? <Suggestions view={view} recap={recap} onRecord={onRecord} compact={compact} /> : <p className="muted">Everyone is settled for {monthLabel(recap.month)}.</p>}
+      {recap.suggestions.length ? <Suggestions view={view} recap={recap} onRecord={onRecord} compact={compact} settle={settle} /> : <p className="muted">Everyone is settled for {monthLabel(recap.month)}.</p>}
       {note ? <p className="note">{NO_MONEY_NOTE}</p> : null}
     </Section>
   );
@@ -311,11 +344,16 @@ function OverdueMonth({ view, recap, onRecord, compact, note }: { view: Househol
  * copper once the month's payments open and you're one of the two people; before the month's last
  * day it's shown but unavailable, as on the cards.
  */
-function Suggestions({ view, recap, onRecord, compact }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean }) {
+function Suggestions({ view, recap, onRecord, compact, settle }: { view: HouseholdView; recap: MonthRecap; onRecord: (transfer: Transfer) => void; compact: boolean; settle?: SettleView | undefined }) {
   const open = monthlyPaymentsOpen(recap.month);
+  // In the settle currency (display only): Record paid records the household's amount.
+  const converted = settle?.convert(recap) ?? null;
+  const amountOf = (transfer: Transfer, index: number) =>
+    settle ? (converted?.suggestions[index]?.cents ?? (settle.code === settle.currency ? transfer.amountCents : null)) : transfer.amountCents;
   return (
     <ul className={compact ? "transfer-list transfer-list--compact" : "shared-group__rows shared-group__rows--plain transfer-list"} aria-label={`Suggested payments for ${monthLabel(recap.month)}`}>
-      {recap.suggestions.map((transfer) => {
+      {recap.suggestions.map((transfer, index) => {
+        const cents = amountOf(transfer, index);
         const from = view.who.name(transfer.fromUserId);
         const to = view.who.name(transfer.toUserId);
         const involved = view.canWrite && (transfer.fromUserId === view.who.meId || transfer.toUserId === view.who.meId);
@@ -329,7 +367,7 @@ function Suggestions({ view, recap, onRecord, compact }: { view: HouseholdView; 
               <span className="visually-hidden">pays</span>
               <span>{to}</span>
             </span>
-            <Money cents={transfer.amountCents} currency={view.currency} />
+            {settle ? <span className="pk-num money">{cents === null ? "…" : formatMinor(cents, settle.code, settle.home)}</span> : <Money cents={transfer.amountCents} currency={view.currency} />}
             {involved ? (
               open ? (
                 <button type="button" className="pay-pill pay-pill--on" onClick={() => { onRecord(transfer); }} aria-label={`Record that ${from} paid ${to} ${view.money(transfer.amountCents)}`}>

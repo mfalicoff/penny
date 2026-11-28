@@ -10,6 +10,7 @@ import { useAccountEmail } from "../../auth/account";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { parseLedger } from "../../offline/wire";
 import { activeDay, inPeriod, periodOf, projectionPeriod, type ActivitySearch, type Period } from "./filters";
+import { homeAmountsOf } from "../households/sharedCurrency";
 
 /**
  * Activity's inputs (MAZ-88). Personal entries come from this browser's durable ledger (pending
@@ -96,10 +97,10 @@ export function periodTotals(ledger: Ledger, period: Period, shared: SharedRow[]
   const inRange = ledger.transactions.filter((entry) => isRecorded(entry) && inPeriod(entry.date, period));
   const personal = totals(inRange.filter((entry) => !isExpectedIncome(entry, today)));
   const expectedIncome = inRange.filter((entry) => isExpectedIncome(entry, today)).reduce((sum, entry) => sum + entry.share, 0);
-  // A household's currency matches its members' ledgers; a row in another currency, or one whose
-  // is never added in (as the domain's `ledgerWithHouseholds`).
-  const counted = shared.filter((row) => row.householdCurrency === ledger.currency);
-  const sharedTotal = counted.reduce((sum, row) => sum + row.shareCents, 0);
+  // A row from a household in another currency counts at your home amounts (MAZ-151 phase 2);
+  // one without them (no rate known) is never added in, as the domain's `ledgerWithHouseholds`.
+  const counted = shared.flatMap((row) => homeAmountsOf(row, ledger.currency) ?? []);
+  const sharedTotal = counted.reduce((sum, row) => sum + row.share, 0);
   const result = { ...personal, expense: personal.expense + sharedTotal };
   return { ...result, net: net(result), shared: sharedTotal, sharedCount: counted.length, expectedIncome, entries: inRange.length + shared.length };
 }
@@ -138,10 +139,12 @@ export function dayTotal(rows: ActivityRow[], currency: string | undefined, toda
   let cents = 0;
   let unit: string | undefined;
   for (const row of rows) {
-    const rowCurrency = row.source === "personal" ? currency : row.entry.householdCurrency;
+    // A shared row counts at your home amounts when it has them (MAZ-151 phase 2), else in its household's currency.
+    const home = row.source === "shared" ? homeAmountsOf(row.entry, currency) : null;
+    const rowCurrency = row.source === "personal" || home ? currency : row.entry.householdCurrency;
     if (!rowCurrency || (unit !== undefined && unit !== rowCurrency)) return null;
     unit = rowCurrency;
-    if (row.source === "shared") cents -= row.entry.shareCents;
+    if (row.source === "shared") cents -= home ? home.share : row.entry.shareCents;
     else if (row.entry.kind === "income") cents += isExpectedIncome(row.entry, today) ? 0 : row.entry.share;
     else cents -= row.entry.share;
   }

@@ -2,7 +2,7 @@ import { currencyInfo } from "@domain/currency.ts";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
-import { menuSections } from "./currency";
+import { menuSections, type SuggestedCurrency } from "./currency";
 
 /**
  * The entry's currency (MAZ-151, `web-add-entry-currency`): a chip beside the amount on the web
@@ -19,14 +19,23 @@ export function CurrencyMenu({
   onPick,
   locked,
   className,
+  suggested,
+  lockedTo,
+  named = false,
 }: {
   code: string;
   home: string;
   recent: readonly string[];
   onPick: (code: string) => void;
-  /** Why only the home currency can be picked now (a repeating entry), or null. */
+  /** Why only the home currency (or `lockedTo`) can be picked now (a repeating entry), or null. */
   locked: string | null;
   className?: string;
+  /** A trip's or household's currency, suggested above the home one (MAZ-151 phase 2). */
+  suggested?: SuggestedCurrency | null;
+  /** The one currency `locked` still allows, when it isn't the home one (a household's own). */
+  lockedTo?: string;
+  /** The chip also names the currency ("EUR Euro"), as the trip form's Currency row (`web-trip-form-currency`). */
+  named?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -37,7 +46,7 @@ export function CurrencyMenu({
       <button
         ref={triggerRef}
         type="button"
-        className={cx("currency-chip", open && "currency-chip--open")}
+        className={cx("currency-chip", named && "currency-chip--named", open && "currency-chip--open")}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -47,6 +56,7 @@ export function CurrencyMenu({
         }}
       >
         <span className="currency-chip__code">{code}</span>
+        {named ? <span className="currency-chip__name">{name}</span> : null}
         <Icon name="chevron-down" size={12} weight={48} />
       </button>
       {open ? (
@@ -56,6 +66,8 @@ export function CurrencyMenu({
           home={home}
           recent={recent}
           locked={locked}
+          lockedTo={lockedTo ?? home}
+          suggested={suggested ?? null}
           triggerRef={triggerRef}
           onClose={() => {
             setOpen(false);
@@ -79,6 +91,8 @@ function CurrencyPanel({
   home,
   recent,
   locked,
+  lockedTo,
+  suggested,
   triggerRef,
   onClose,
   onPick,
@@ -88,6 +102,8 @@ function CurrencyPanel({
   home: string;
   recent: readonly string[];
   locked: string | null;
+  lockedTo: string;
+  suggested: SuggestedCurrency | null;
   triggerRef: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
   onPick: (code: string) => void;
@@ -95,8 +111,8 @@ function CurrencyPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
-  const sections = menuSections(query, home, recent);
-  const unavailable = (option: string) => locked !== null && option !== home;
+  const sections = menuSections(query, home, recent, suggested);
+  const unavailable = (option: string) => locked !== null && option !== lockedTo;
 
   useEffect(() => {
     searchRef.current?.focus();

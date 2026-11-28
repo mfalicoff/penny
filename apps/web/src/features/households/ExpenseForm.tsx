@@ -1,4 +1,5 @@
 import type { Category, Receipt } from "@domain/ledger.ts";
+import { convertAmount, minorUnits, normalizeRate, parseAmount as parseMinor, type RateStatus } from "@domain/currency.ts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type SyntheticEvent } from "react";
 import { ApiError } from "../../api/client";
@@ -9,7 +10,12 @@ import { Avatar, Button, ChoiceGroup, cx, Kbd, SwitchRow } from "../../design/co
 import { tileStyle } from "../../design/categoryTint";
 import { Icon } from "../../design/Icon";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
-import { categoryIcon, frequentCategories, mostUsedCategories } from "../entries/model";
+import { categoryIcon, frequentCategories, minorToInput, mostUsedCategories } from "../entries/model";
+import { fetchRates, isOffline, lastKnownRates } from "../../api/rates";
+import { ConversionLine } from "../entries/ConversionLine";
+import { CurrencyMenu } from "../entries/CurrencyMenu";
+import { currencySymbolFor, currencyUses, displayRate, fitAmount, resolveRate, type AutoRate } from "../entries/currency";
+import { RateNote, RateRow, useRateLookup, useShownRate, type RateMode } from "../entries/RateRow";
 import { CategoryPickerDialog } from "../entries/pickers";
 import { AmountHero, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, useEntryLayout } from "../entries/EntryParts";
 import { HouseholdField, type EntrySeed, type HouseholdScope } from "../entries/scope";
@@ -24,7 +30,6 @@ import { useLedgerChoices, type LedgerAccountChoice } from "./choices";
 import { describeSharedError } from "./errors";
 import { shake } from "../../design/motion";
 import {
-  centsToInput,
   eligibleMembers,
   equalSplit,
   isCurrent,
@@ -33,7 +38,6 @@ import {
   MAX_CENTS,
   memberName,
   monthLabel,
-  parseAmount,
   parsePercent,
   percentSplit,
   pointsToInput,
@@ -58,38 +62,69 @@ interface Draft {
   active: boolean;
   /** The linked receipt; a repeating expense knows only its id. */
   receipt: Receipt | null;
+  /**
+   * MAZ-151 phase 2: the currency the amount is typed in, null for the household's. Exact split
+   * amounts stay in the household's currency.
+   */
+  currency: string | null;
+  /** A typed (edited or manual) rate, household units per unit, or null for the looked-up one. */
+  rateInput: string | null;
+  /** An edited expense's own published or provisional rate, kept while its currency and date stay. */
+  storedRate: { currency: string; date: string; rate: string; status: Exclude<RateStatus, "edited">; rateDate: string } | null;
 }
 
 /** A receipt known only by id (repeating expenses): the preview reads its name and type from the file. */
 const receiptById = (id: string | undefined): Receipt | null => (id ? { id, name: "", mime: "", uri: `/api/receipts/${id}` } : null);
 
-type Field = "title" | "amount" | "date" | "payer" | "split";
+type Field = "title" | "amount" | "rate" | "date" | "payer" | "split";
+
+/** A typed amount in `code`'s minor units, or null when it isn't one (the shared parsing rule). */
+function parseIn(text: string, code: string): number | null {
+  try {
+    return parseMinor(text, code);
+  } catch {
+    return null;
+  }
+}
+
+function validRateOrNull(value: string): string | null {
+  try {
+    return normalizeRate(value);
+  } catch {
+    return null;
+  }
+}
 
 /** What expenses and repeating expenses share; the date field differs (`date` or `nextDate`). */
 type Base = Omit<ExpenseInput, "date">;
 
-function allocationInputs(allocations: readonly Allocation[] | undefined, splits?: readonly { userId: string; amountCents: number }[]) {
+function allocationInputs(code: string, allocations: readonly Allocation[] | undefined, splits?: readonly { userId: string; amountCents: number }[]) {
   const exact: Record<string, string> = {};
   const percent: Record<string, string> = {};
-  for (const split of splits ?? []) exact[split.userId] = centsToInput(split.amountCents);
+  for (const split of splits ?? []) exact[split.userId] = minorToInput(split.amountCents, code);
   for (const item of allocations ?? []) {
-    if ("amountCents" in item) exact[item.userId] = centsToInput(item.amountCents);
+    if ("amountCents" in item) exact[item.userId] = minorToInput(item.amountCents, code);
     else percent[item.userId] = pointsToInput(item.percentBasisPoints);
   }
   return { exact, percent };
 }
 
-function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategory: string, seed?: EntrySeed, accounts: readonly LedgerAccountChoice[] = []): Draft {
+function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategory: string, householdCurrency: string, seed?: EntrySeed, accounts: readonly LedgerAccountChoice[] = []): Draft {
   if (target.kind === "edit") {
     const { expense } = target;
+    // Paid in another currency (contract 2.5.0): the amount is typed in it again, at its own rate.
+    const original = expense.originalAmount !== undefined && expense.originalCurrency && expense.rate && expense.rateStatus ? { amount: expense.originalAmount, code: expense.originalCurrency, rate: expense.rate, status: expense.rateStatus } : null;
     return {
       title: expense.title,
-      amount: centsToInput(expense.totalCents),
+      amount: original ? minorToInput(original.amount, original.code) : minorToInput(expense.totalCents, householdCurrency),
+      currency: original?.code ?? null,
+      rateInput: original?.status === "edited" ? original.rate : null,
+      storedRate: original && original.status !== "edited" && expense.rateDate ? { currency: original.code, date: expense.date, rate: original.rate, status: original.status, rateDate: expense.rateDate } : null,
       date: expense.date,
       category: expense.category.name,
       payerUserId: expense.payerUserId,
       splitMode: expense.splitMode,
-      ...allocationInputs(expense.allocations, expense.splits),
+      ...allocationInputs(householdCurrency, expense.allocations, expense.splits),
       accountId: expense.accountId ?? "",
       note: expense.note,
       repeat: "none",
@@ -101,12 +136,16 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
     const { rule } = target;
     return {
       title: rule.title,
-      amount: centsToInput(rule.totalCents),
+      // Shared repeating expenses stay in the household's currency (MAZ-151 phase 2).
+      amount: minorToInput(rule.totalCents, householdCurrency),
+      currency: null,
+      rateInput: null,
+      storedRate: null,
       date: rule.nextDate,
       category: rule.category.name,
       payerUserId: rule.payerUserId,
       splitMode: rule.splitMode,
-      ...allocationInputs(rule.allocations),
+      ...allocationInputs(householdCurrency, rule.allocations),
       accountId: rule.accountId ?? "",
       note: rule.note,
       repeat: rule.frequency,
@@ -117,9 +156,14 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
   // A new expense, possibly carrying what was typed in the personal form (Add entry's Household).
   // The viewer pays, so their account carries over once the server has it.
   const account = seed?.accountId && accounts.some((item) => item.id === seed.accountId && item.synced) ? seed.accountId : "";
+  // What was typed in the personal form keeps its currency; the household's is the default.
+  const seeded = seed?.currency && seed.currency !== householdCurrency ? seed.currency : null;
   return {
     title: seed?.title ?? "",
     amount: seed?.amount ?? "",
+    currency: seeded,
+    rateInput: null,
+    storedRate: null,
     date: seed?.date ?? localDate(),
     category: seed?.categoryName ?? fallbackCategory,
     payerUserId: meId ?? "",
@@ -170,7 +214,7 @@ export function ExpenseFormDialog({
   const workspace = useLedgerWorkspace();
   const [picking, setPicking] = useState(false);
   const meId = view.who.meId;
-  const [draft, setDraft] = useState<Draft>(() => draftFrom(target, meId, choices.categories[0]?.name ?? "Other", seed, choices.accounts));
+  const [draft, setDraft] = useState<Draft>(() => draftFrom(target, meId, choices.categories[0]?.name ?? "Other", view.currency, seed, choices.accounts));
   const [more, setMore] = useState(() => target.kind === "rule" || Boolean(draft.note || draft.receipt));
   const [revision, setRevision] = useState(target.kind === "edit" ? target.expense.revision : target.kind === "rule" ? target.rule.revision : 0);
   const [conflict, setConflict] = useState<{ title: string; totalCents: number; payerUserId: string; revision: number; source: SharedExpense | SharedRecurring } | null>(null);
@@ -183,7 +227,7 @@ export function ExpenseFormDialog({
   const payerRef = useRef<HTMLFieldSetElement>(null);
   const splitRef = useRef<HTMLDivElement>(null);
   const layout = useEntryLayout();
-  const ids = { form: useId(), title: useId(), amount: useId(), date: useId(), category: useId(), account: useId(), note: useId(), repeat: useId(), more: useId(), error: useId(), splitStatus: useId(), splitWho: useId() };
+  const ids = { form: useId(), title: useId(), amount: useId(), rate: useId(), date: useId(), category: useId(), account: useId(), note: useId(), repeat: useId(), more: useId(), error: useId(), splitStatus: useId(), splitWho: useId() };
 
   const paid = target.kind === "edit" && isPaid(target.expense);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => { setDraft((previous) => ({ ...previous, [key]: value })); };
@@ -197,12 +241,38 @@ export function ExpenseFormDialog({
       : eligibleMembers(view.detail, draft.date);
   const participantIds = participants.map((member) => member.userId);
 
-  const totalCents = parseAmount(draft.amount);
+  // MAZ-151 phase 2: the amount may be typed in another currency than the household's, converted
+  // at the rate for its date (household units per unit, `GET /api/rates` with the household's
+  // currency as base), as the personal entry form does. Repeating expenses stay in the household's.
+  const householdCurrency = view.currency;
+  const code = draft.currency ?? householdCurrency;
+  const foreign = code !== householdCurrency;
+  const stored = foreign && draft.storedRate?.currency === code && draft.storedRate.date === draft.date ? draft.storedRate : null;
+  const lookup = useRateLookup(householdCurrency, code, draft.date, foreign && !stored);
+  const shownRate = useShownRate(lookup);
+  const lookedUp: AutoRate | null = stored ? { rate: stored.rate, status: stored.status, rateDate: stored.rateDate, source: null, reason: stored.status === "provisional" ? "notYet" : null } : lookup.state === "rate" ? lookup.rate : null;
+  const rateMode: RateMode = !foreign
+    ? { mode: "loading" }
+    : !lookedUp && lookup.state === "manual"
+      ? { mode: "manual", reason: lookup.reason }
+      : draft.rateInput !== null
+        ? { mode: "edited", published: lookedUp }
+        : lookedUp
+          ? { mode: "auto", rate: lookedUp, refreshing: false }
+          : shownRate.rate
+            ? { mode: "auto", rate: shownRate.rate, refreshing: true }
+            : { mode: "loading" };
+  const conversionRate = !foreign ? null : draft.rateInput !== null ? validRateOrNull(draft.rateInput) : rateMode.mode === "auto" ? rateMode.rate.rate : null;
+  const missingRate = foreign && conversionRate === null && (rateMode.mode === "manual" || rateMode.mode === "edited");
+  const originalAmount = foreign ? parseIn(draft.amount, code) : null;
+  // The total in the household's currency: what the splits, balances and the server use.
+  const totalCents = !foreign ? parseIn(draft.amount, householdCurrency) : originalAmount !== null && conversionRate ? convertAmount(originalAmount, code, conversionRate, householdCurrency) : null;
+  const splitAmount = (text: string) => parseIn(text, householdCurrency);
   const preview = (() => {
     if (totalCents === null || totalCents < 1 || !participantIds.length) return null;
     if (draft.splitMode === "equal") return { shares: equalSplit(totalCents, participantIds), status: "ok" as const };
     if (draft.splitMode === "exact") {
-      const amounts = participantIds.map((userId) => ({ userId, amountCents: parseAmount(draft.exact[userId] ?? "0") }));
+      const amounts = participantIds.map((userId) => ({ userId, amountCents: splitAmount(draft.exact[userId] ?? "0") }));
       if (amounts.some((item) => item.amountCents === null)) return { shares: null, status: "invalid" as const };
       const sum = amounts.reduce((acc, item) => acc + (item.amountCents ?? 0), 0);
       return { shares: amounts as { userId: string; amountCents: number }[], status: sum === totalCents ? ("ok" as const) : ("off" as const), left: totalCents - sum };
@@ -279,16 +349,31 @@ export function ExpenseFormDialog({
     },
   });
 
-  function validate(): { errors: Partial<Record<Field, string>>; input?: Base } {
+  function validate(rate: AutoRate | null = lookedUp): { errors: Partial<Record<Field, string>>; input?: Base } {
     const found: Partial<Record<Field, string>> = {};
     const title = draft.title.trim();
     if (!title || title.length > 100) found.title = "Enter a title of up to 100 characters.";
-    if (totalCents === null || totalCents < 1 || totalCents > MAX_CENTS) found.amount = "Enter an amount above zero with up to two decimal places.";
+    // The rate used: a typed one, else the looked-up (or the expense's own) one.
+    let used: { rate: string; status: RateStatus; rateDate?: string } | null = null;
+    if (foreign) {
+      if (draft.rateInput !== null) {
+        const typed = validRateOrNull(draft.rateInput);
+        if (typed) used = { rate: typed, status: "edited" };
+        else found.rate = "Enter the exchange rate.";
+      } else if (rate) used = { rate: rate.rate, status: rate.status, rateDate: rate.rateDate };
+      else found.rate = "Enter the exchange rate.";
+    }
+    const amountOf = (text: string) => parseIn(text, code);
+    const typedAmount = amountOf(draft.amount);
+    const total = !foreign ? typedAmount : typedAmount !== null && used ? convertAmount(typedAmount, code, used.rate, householdCurrency) : null;
+    const units = minorUnits(code);
+    if (typedAmount === null || typedAmount < 1 || typedAmount > MAX_CENTS) found.amount = units === 2 ? "Enter an amount above zero with up to two decimal places." : units === 0 ? "Enter a whole amount above zero." : "Enter an amount above zero with up to three decimal places.";
+    else if (total !== null && (total < 1 || total > MAX_CENTS)) found.amount = `That's ${total < 1 ? "less than the smallest" : "more than the largest"} amount Penny can record in ${householdCurrency}.`;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date) || draft.date < "2000-01-01" || draft.date > "2100-12-31") found.date = "Choose a date between 2000 and 2100.";
     else if (paid && draft.date.slice(0, 7) !== target.expense.date.slice(0, 7)) found.date = `A share is already repaid, so the date must stay in ${monthLabel(target.expense.date.slice(0, 7))}.`;
     if (!participantIds.length) found.split = "Nobody in this household was a member on that date. Choose a later date.";
     else if (!participantIds.includes(draft.payerUserId)) found.payer = "Choose who paid. They must be a member on the expense date.";
-    if (!found.split && totalCents !== null && preview) {
+    if (!found.split && total !== null && totalCents !== null && preview) {
       if (preview.status === "invalid") found.split = draft.splitMode === "exact" ? "Enter each share as an amount with up to two decimals." : "Enter each share as a percentage with up to two decimals.";
       else if (preview.status === "off") {
         found.split =
@@ -297,13 +382,13 @@ export function ExpenseFormDialog({
             : `Percentages must add up to 100%. ${pointsToInput(Math.abs(preview.leftPoints ?? 0))}% ${(preview.leftPoints ?? 0) > 0 ? "left" : "too much"}.`;
       }
     }
-    if (Object.keys(found).length || totalCents === null) return { errors: found };
+    if (Object.keys(found).length || total === null) return { errors: found };
     const known = [...ledgerCategories, ...categories];
     const match = known.find((item) => item.name === draft.category) ?? categories[0] ?? { name: "Other", icon: "pricetag", color: "#8E8E93" };
     const category = { name: match.name, icon: match.icon, color: match.color };
     const allocations: Allocation[] | undefined =
       draft.splitMode === "exact"
-        ? participantIds.map((userId) => ({ userId, amountCents: parseAmount(draft.exact[userId] ?? "0") ?? 0 }))
+        ? participantIds.map((userId) => ({ userId, amountCents: splitAmount(draft.exact[userId] ?? "0") ?? 0 }))
         : draft.splitMode === "percent"
           ? participantIds.map((userId) => ({ userId, percentBasisPoints: parsePercent(draft.percent[userId] ?? "0") ?? 0 }))
           : undefined;
@@ -313,7 +398,11 @@ export function ExpenseFormDialog({
       errors: {},
       input: {
         title,
-        totalCents,
+        totalCents: total,
+        // Contract 2.5.0: what was paid, when it isn't the household's currency (expenses only).
+        ...(foreign && typedAmount !== null && used
+          ? { originalAmount: typedAmount, originalCurrency: code, rate: used.rate, rateStatus: used.status, ...(used.rateDate !== undefined && used.status !== "edited" ? { rateDate: used.rateDate } : {}) }
+          : {}),
         payerUserId: draft.payerUserId,
         splitMode: draft.splitMode,
         ...(allocations ? { allocations } : {}),
@@ -328,14 +417,14 @@ export function ExpenseFormDialog({
 
   function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    submit();
+    void submit();
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLFormElement>) {
     // ⌘↵ / Ctrl+Enter saves from any field, as in the personal form.
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && event.currentTarget.contains(event.target as Node)) {
       event.preventDefault();
-      submit();
+      void submit();
     }
   }
 
@@ -349,21 +438,35 @@ export function ExpenseFormDialog({
       accountId: draft.payerUserId === meId ? draft.accountId : "",
       note: draft.note,
       receipt: draft.receipt,
+      currency: code,
     };
   }
 
-  function submit() {
+  async function submit() {
     if (save.isPending || conflict) return;
     if (receiptBusy) {
       setReceiptWait(true);
       return;
     }
-    const result = validate();
+    let rate: AutoRate | null = lookedUp;
+    if (foreign && !rate && draft.rateInput === null && lookup.state === "loading") {
+      // The rate for a new date or currency is still on its way: wait for it rather than refuse.
+      try {
+        const answer = await fetchRates(queryClient, email, householdCurrency, draft.date);
+        const found = resolveRate(code, { answer, offline: false, failed: false, cached: null });
+        rate = found.state === "rate" ? found.rate : null;
+      } catch (error) {
+        const found = resolveRate(code, { offline: isOffline(error), failed: true, cached: lastKnownRates(householdCurrency) });
+        rate = found.state === "rate" ? found.rate : null;
+      }
+    }
+    const result = validate(rate);
     setErrors(result.errors);
-    const first = (["title", "amount", "date", "payer", "split"] as const).find((field) => result.errors[field]);
+    const first = (["title", "amount", "rate", "date", "payer", "split"] as const).find((field) => result.errors[field]);
     if (first) {
       if (first === "title") titleRef.current?.focus();
       else if (first === "amount") amountRef.current?.focus();
+      else if (first === "rate") document.getElementById(ids.rate)?.focus();
       else if (first === "date") dateRef.current?.focus();
       else if (first === "payer") payerRef.current?.querySelector<HTMLInputElement>("input:not([disabled])")?.focus();
       else (splitRef.current?.querySelector<HTMLInputElement>("input[type=text]:not([disabled]), input[inputmode]:not([disabled])") ?? splitRef.current)?.focus();
@@ -413,6 +516,30 @@ export function ExpenseFormDialog({
     </span>
   );
   const newScope = isNew ? scope : undefined;
+  // The currency menu (MAZ-151 phase 2): Suggested is the household's ("Lisbon's currency"), then your
+  // home currency. Repeating expenses and repaid ones keep their currency.
+  const home = workspace.ledger?.currency;
+  const currencyControl =
+    target.kind === "rule" || paid ? null : (
+      <CurrencyMenu
+        code={code}
+        home={home ?? householdCurrency}
+        recent={workspace.ledger ? currencyUses(workspace.ledger).map((use) => use.code) : []}
+        suggested={{ code: householdCurrency, note: `${view.detail.household.name}'s currency` }}
+        lockedTo={householdCurrency}
+        locked={isNew && draft.repeat !== "none" ? `Repeating expenses are in ${householdCurrency} only. Set Repeat to Never to use another currency.` : null}
+        onPick={(next) => {
+          setDraft((previous) => ({
+            ...previous,
+            currency: next === householdCurrency ? null : next,
+            amount: fitAmount(previous.amount, next),
+            // A rate belongs to its currency: the new one is looked up.
+            rateInput: null,
+            repeat: next === householdCurrency ? previous.repeat : "none",
+          }));
+        }}
+      />
+    );
 
   const notices = (
     <>
@@ -435,7 +562,7 @@ export function ExpenseFormDialog({
                   variant="quiet"
                   onClick={() => {
                     const next: FormTarget = "nextDate" in conflict.source ? { kind: "rule", rule: conflict.source } : { kind: "edit", expense: conflict.source };
-                    setDraft(draftFrom(next, meId, draft.category));
+                    setDraft(draftFrom(next, meId, draft.category, householdCurrency));
                     setRevision(conflict.revision);
                     setConflict(null);
                     save.reset();
@@ -484,14 +611,30 @@ export function ExpenseFormDialog({
         </Button>
       }
       primary={
-        <Button type="submit" form={ids.form} variant="primary" busy={save.isPending || conflict !== null} aria-keyshortcuts="Meta+Enter Control+Enter">
+        // With no rate to convert with, Save waits for one (it still answers a press, pointing at the Rate row).
+        <Button type="submit" form={ids.form} variant="primary" busy={save.isPending || conflict !== null} aria-keyshortcuts="Meta+Enter Control+Enter" className={missingRate ? "wbtn--unready" : undefined} {...(missingRate ? { "aria-disabled": true } : {})}>
           {save.isPending ? "Saving…" : isNew ? "Add expense" : "Save"}
           {layout === "desktop" ? <Kbd>{isMac() ? "⌘↵" : "Ctrl ↵"}</Kbd> : null}
         </Button>
       }
       main={
         <>
-          <AmountHero id={ids.amount} inputRef={amountRef} value={draft.amount} onChange={(value) => { set("amount", value); }} currency={view.currency} kind="expense" currencyPill={false} disabled={paid} invalid={describe("amount")} error={errorText("amount")} />
+          <AmountHero
+            id={ids.amount}
+            inputRef={amountRef}
+            value={draft.amount}
+            onChange={(value) => { set("amount", value); }}
+            currency={code}
+            symbol={currencySymbolFor(code, home ?? householdCurrency)}
+            placeholder={minorUnits(code) === 0 ? "0" : `0.${"0".repeat(minorUnits(code))}`}
+            kind="expense"
+            currencyPill={false}
+            disabled={paid}
+            invalid={describe("amount")}
+            error={errorText("amount")}
+            {...(currencyControl ? { currencyControl } : {})}
+            conversion={foreign ? <ConversionLine amount={draft.amount} code={code} rate={conversionRate} home={householdCurrency} loading={rateMode.mode === "loading"} /> : null}
+          />
           <div className="entry-title entry-title--category">
             <label htmlFor={ids.title} className="visually-hidden">
               Title
@@ -616,6 +759,24 @@ export function ExpenseFormDialog({
             <DetailRow icon="calendar" label={target.kind === "rule" ? "Next date" : "Date"} htmlFor={ids.date} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
               <DateRowInput id={ids.date} inputRef={dateRef} value={draft.date} onChange={(value) => { set("date", value); }} today={localDate()} long={layout === "desktop"} invalid={describe("date")} />
             </DetailRow>
+            {foreign ? (
+              <RateRow
+                id={ids.rate}
+                code={code}
+                home={householdCurrency}
+                state={rateMode}
+                input={draft.rateInput}
+                onInput={(value) => { set("rateInput", value); }}
+                onEdit={() => {
+                  if (rateMode.mode === "auto") set("rateInput", displayRate(rateMode.rate.rate));
+                  setTimeout(() => {
+                    document.getElementById(ids.rate)?.focus();
+                  }, 0);
+                }}
+                invalid={describe("rate")}
+                error={errorText("rate")}
+              />
+            ) : null}
             {account ? (
               <DetailRow icon="card" label="Your account" htmlFor={ids.account} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
                 {account}
@@ -630,6 +791,7 @@ export function ExpenseFormDialog({
               </span>
             </button>
           </DetailList>
+          {foreign ? <RateNote state={rateMode} code={code} date={draft.date} today={localDate()} lastRate={null} onUseLast={(value) => { set("rateInput", value); }} /> : null}
           {errorText("date")}
           {account ? (
             <span id={`${ids.account}-hint`} className="form-hint">
@@ -644,7 +806,7 @@ export function ExpenseFormDialog({
               <div className="form-grid">
                 <div className="form-field">
                   <label htmlFor={ids.repeat}>Repeat</label>
-                  <select id={ids.repeat} value={draft.repeat} onChange={(event) => { set("repeat", event.currentTarget.value as Repeat); }}>
+                  <select id={ids.repeat} value={foreign ? "none" : draft.repeat} disabled={foreign} aria-describedby={foreign ? `${ids.repeat}-locked` : undefined} onChange={(event) => { set("repeat", event.currentTarget.value as Repeat); }}>
                     {isNew ? <option value="none">Doesn't repeat</option> : null}
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
@@ -652,6 +814,11 @@ export function ExpenseFormDialog({
                   </select>
                 </div>
               </div>
+            ) : null}
+            {foreign ? (
+              <p id={`${ids.repeat}-locked`} className="note">
+                Repeating expenses are in {householdCurrency} only. Switch the amount to {householdCurrency} to repeat it.
+              </p>
             ) : null}
             {draft.repeat !== "none" ? <p className="note">Penny adds each occurrence on its date, starting {draft.date || "on the date above"}, split among the members active then.</p> : null}
             {target.kind === "rule" ? <SwitchRow label="Active" description="A paused repeating expense adds nothing until you resume it." checked={draft.active} onChange={(value) => { set("active", value); }} /> : null}

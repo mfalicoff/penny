@@ -19,6 +19,8 @@ export interface EntrySeed {
   accountId: string;
   note: string;
   receipt: Receipt | null;
+  /** MAZ-151 phase 2: the currency `amount` is typed in; absent for the form's own default currency. */
+  currency?: string;
 }
 
 /** Where a new entry goes: `householdId: null` is the personal ledger (with the kind to start on). */

@@ -27,8 +27,12 @@ import { HistoryPanel } from "../households/HistoryPanel";
 import { InviteEmailDialog } from "../households/InviteEmailDialog";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "../households/GroupTools";
 import { GroupLink, type GroupSearch } from "../households/links";
-import { currentMonth, dayLabel, isCurrent, memberName, monthLabel, people } from "../households/model";
-import type { HouseholdMember, MonthRecap } from "../../api/schemas";
+import { currentMonth, dayLabel, isCurrent, localDate, memberName, monthLabel, monthlyPaymentsOpen, people } from "../households/model";
+import type { HouseholdMember, MonthRecap, Transfer } from "../../api/schemas";
+import { RecordMonthlyDialog } from "../households/PaymentDialogs";
+import { balancesTitle, settleNote, SettleInMenu, useSettleIn, type SettleView } from "../households/SettleIn";
+import { currenciesPaidIn, currencyPlural, listCodes } from "../households/sharedCurrency";
+import { formatMinor } from "../entries/currency";
 import { OnlineNotice } from "../households/OnlineNotice";
 import { PeopleTab } from "../households/PeopleTab";
 import { RuleDialog } from "../households/RuleDialog";
@@ -36,7 +40,7 @@ import { MonthBarControls } from "../home/parts";
 import { TOUCH_TABLET, useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import type { HouseholdTab } from "../households/search";
 import { useLedgerWorkspace } from "../organize/workspace";
-import { isSharedTrip, outsideRange, peopleCount, phaseLabel, privateExpenses, shareByCategory, sharedTripTotals, tripMonth, tripOverview, tripRange, type CategoryShare } from "./model";
+import { homeTripTotals, isSharedTrip, outsideRange, peopleCount, phaseLabel, privateExpenses, shareByCategory, sharedTripTotals, tripMonth, tripOverview, tripRange, type CategoryShare } from "./model";
 import type { TripSearch } from "./search";
 import { TripExpenses } from "./TripExpenses";
 import { ShareTripDialog, TripFormDialog } from "./TripForm";
@@ -258,6 +262,9 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   // The desktop (`web-trip`); a touch tablet from 1100px keeps the iPad card (`ipad-trip`).
   const touch = useMediaQuery(TOUCH_TABLET);
   const desktop = wide && !touch;
+  const [recording, setRecording] = useState<Transfer | null>(null);
+  // MAZ-151 phase 2: balances in the trip's currency, shown in another at today's rate ("Settle in").
+  const settle = useSettleIn({ currency: detail.data?.household.currency ?? "", home: workspace.ledger?.currency, members: detail.data?.members ?? [], meId: people(detail.data, email).meId });
   usePageTitle(detail.data?.household.name);
   usePageTitleStyle(tab === "expenses" ? "hero" : "inline");
 
@@ -295,10 +302,17 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const archived = list.isSuccess && !list.data.some((item) => item.id === householdId);
   const view = householdView(householdId, detail.data, who, month, archived, "trips");
   const current = detail.data.members.filter(isCurrent);
-  // Private expenses are in the ledger currency; a trip in another currency can't add them up.
-  const sameCurrency = workspace.ledger?.currency === household.currency;
-  const mine = sameCurrency ? privateExpenses(workspace.ledger, householdId) : [];
-  const totals = expenses.data ? sharedTripTotals(expenses.data, who.meId, mine, household.trip) : null;
+  // MAZ-151 phase 2: with several currencies (the trip's isn't yours, or someone else keeps
+  // another), the totals are in your home currency, each expense at its date's rate, and your
+  // private expenses (already in it) add in. Otherwise everything is the trip's currency.
+  const home = workspace.ledger?.currency ?? null;
+  const multi = settle.multi && home !== null;
+  const mine = privateExpenses(workspace.ledger, householdId);
+  const totals = expenses.data ? (multi && home ? homeTripTotals(expenses.data, who.meId, mine, household.trip, household.currency, home) : { ...sharedTripTotals(expenses.data, who.meId, mine, household.trip), missing: 0 }) : null;
+  const money = multi && home ? (cents: number) => formatCents(cents, home) : view.money;
+  const paidIn = expenses.data ? currenciesPaidIn(expenses.data, household.currency) : [];
+  const rates = multi && home && paidIn.length ? `${listCodes(paidIn)} · each at its date's rate` : null;
+  const missingNote = totals && totals.missing > 0 ? <p className="note">{`${String(totals.missing)} ${totals.missing === 1 ? "expense has" : "expenses have"} no rate to your currency yet, so ${totals.missing === 1 ? "it isn't" : "they aren't"} counted here.`}</p> : null;
   const linkSearch = (next: Partial<GroupSearch>): GroupSearch => ({ month: search.month, tab: search.tab, ...next });
   const go = (next: Partial<GroupSearch>) => void navigate({ to: "/trips/$id", params: { id: householdId }, search: linkSearch(next) });
   const closeRule = () => void navigate({ to: ".", search: linkSearch({}), replace: true });
@@ -339,20 +353,31 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
             <dl className="trip-feature__nums" aria-live="polite">
               <div>
                 <dt>Trip total</dt>
-                <dd className="pk-num">{totals ? view.money(totals.tripTotal) : "…"}</dd>
+                <dd className="pk-num">{totals ? money(totals.tripTotal) : "…"}</dd>
               </div>
               <div>
                 <dt>Your share</dt>
-                <dd className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</dd>
+                <dd className="pk-num">{totals ? money(totals.yourSpending) : "…"}</dd>
               </div>
             </dl>
+            {rates && home ? (
+              <p className="trip-rates trip-rates--feature">
+                <Icon name="cash" size={13} />
+                {`${rates} · in your currency, ${home}`}
+              </p>
+            ) : null}
+            {missingNote}
             {totals && totals.outside > 0 ? (
               <p className="note">
                 {`${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.`}
               </p>
             ) : null}
           </div>
-          <TripPeople members={current} recap={recap.data} loading={recap.isPending} month={month} view={view} />
+          {multi ? (
+            <TripBalances members={current} recap={recap.data} loading={recap.isPending} month={month} view={view} settle={settle} />
+          ) : (
+            <TripPeople members={current} recap={recap.data} loading={recap.isPending} month={month} view={view} />
+          )}
         </section>
       ) : tab === "expenses" ? (
         <section className={wide ? "trip-detail-head trip-detail-head--wide" : "trip-detail-head"} aria-label="Trip summary">
@@ -373,21 +398,22 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
               <dl className="trip-stats trip-stats--hero" aria-live="polite">
                 <div>
                   <dt>Trip total</dt>
-                  <dd className="pk-num">{totals ? view.money(totals.tripTotal) : "…"}</dd>
+                  <dd className="pk-num">{totals ? money(totals.tripTotal) : "…"}</dd>
                 </div>
                 <div>
                   <dt>Your share</dt>
-                  <dd className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</dd>
+                  <dd className="pk-num">{totals ? money(totals.yourSpending) : "…"}</dd>
                 </div>
               </dl>
             ) : (
               <div className="trip-detail-hero__lead" aria-live="polite">
-                <p className="trip-detail-hero__total pk-num">{totals ? view.money(totals.tripTotal) : "…"}</p>
+                <p className="trip-detail-hero__total pk-num">{totals ? money(totals.tripTotal) : "…"}</p>
                 <p className="trip-detail-hero__yours">
-                  trip total · your share <b className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</b>
+                  trip total · your share <b className="pk-num">{totals ? money(totals.yourSpending) : "…"}</b>
                 </p>
               </div>
             )}
+            {missingNote}
             {totals && totals.outside > 0 ? (
               <p className="note">
                 {`${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.`}
@@ -396,6 +422,14 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
           </div>
           {wide ? <PeopleBalances members={current} balances={recap.data?.balances} loading={recap.isPending} month={month} view={view} /> : null}
         </section>
+      ) : null}
+      {tab === "expenses" && !desktop && rates ? (
+        // `iphone-trip-currencies`: the currencies and how they count; it opens the exchange rates (Settings › Currency).
+        <Link to="/settings/currency" className="trip-rates trip-rates--link">
+          <Icon name="cash" size={14} />
+          <span>{rates}</span>
+          <Icon name="chevron-forward" size={12} weight={48} />
+        </Link>
       ) : null}
 
       {archived ? (
@@ -418,17 +452,22 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
 
       {tab === "expenses" ? (
         wide ? (
-          <div className="trip-detail-columns">
-            <TripExpenses view={view} expenses={expenses} mine={mine} ledger={workspace.ledger} search={linkSearch({})} onOpenPrivate={setOpenPrivate} combined tables={desktop} />
-            <ShareByCategory note={!desktop} rows={expenses.data ? shareByCategory(expenses.data, who.meId, mine, workspace.ledger?.categories ?? []) : null} currency={household.currency} />
+          <div className={cx("trip-detail-columns", multi && "trip-detail-columns--currencies")}>
+            <TripExpenses view={view} expenses={expenses} mine={mine} ledger={workspace.ledger} search={linkSearch({})} onOpenPrivate={setOpenPrivate} combined tables={desktop} home={multi ? home : null} today={localDate()} />
+            {/* Several currencies: the suggested payments in the settle currency (`web-trip-currencies`) instead of your share by category. */}
+            {multi ? (
+              <TripSuggestions recap={recap.data} loading={recap.isPending} view={view} settle={settle} onRecord={setRecording} />
+            ) : (
+              <ShareByCategory note={!desktop} rows={expenses.data ? shareByCategory(expenses.data, who.meId, mine, workspace.ledger?.categories ?? []) : null} currency={household.currency} />
+            )}
           </div>
         ) : (
-          <TripExpenses view={view} expenses={expenses} mine={mine} ledger={workspace.ledger} search={linkSearch({})} onOpenPrivate={setOpenPrivate} combined={false} />
+          <TripExpenses view={view} expenses={expenses} mine={mine} ledger={workspace.ledger} search={linkSearch({})} onOpenPrivate={setOpenPrivate} combined={false} home={multi ? home : null} today={localDate()} />
         )
       ) : tab === "balances" ? (
         <>
           <p className="note">A trip settles month by month, like a household: each month's balance is separate, and months don't offset each other.</p>
-          <BalancesTab view={view} recap={recap} />
+          <BalancesTab view={view} recap={recap} {...(multi ? { settle } : {})} />
         </>
       ) : tab === "people" ? (
         <PeopleTab view={view} recap={recap.data} {...(view.creator ? { onEditTrip: () => { setEditing(true); } } : {})} />
@@ -461,6 +500,7 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
       {editing ? <TripFormDialog target={{ kind: "shared", household }} onClose={() => { setEditing(false); }} /> : null}
       {inviting && emailEnabled ? <InviteEmailDialog view={view} onClose={() => { setInviting(false); }} /> : null}
       {openPrivate ? <EntryDetailDialog entry={openPrivate} onClose={() => { setOpenPrivate(null); }} /> : null}
+      {recording ? <RecordMonthlyDialog view={view} month={month} transfer={recording} onClose={() => { setRecording(null); }} /> : null}
     </div>
   );
 }
@@ -584,3 +624,119 @@ function ShareByCategory({ rows, currency, note }: { rows: CategoryShare[] | nul
 
 /** The bar takes the category tile's own color. */
 const barColor = (category: { color: string; icon: string }) => tileStyle(category);
+
+/** What each member paid in the month's expenses, in the household's currency. */
+function paidBy(recap: MonthRecap | undefined): Map<string, number> {
+  const paid = new Map<string, number>();
+  for (const expense of recap?.expenses ?? []) paid.set(expense.payerUserId, (paid.get(expense.payerUserId) ?? 0) + expense.totalCents);
+  return paid;
+}
+
+/**
+ * The desktop hero's right column with several currencies (`web-trip-currencies`): "Balances in
+ * euros" with Settle in, each member with what they paid and their balance, highest first, and
+ * under it their balance in their own currency at today's rate ("≈ US$349.76") when it isn't the
+ * one shown, else "owes" or "gets back", so the words carry the meaning as well as the color.
+ * Balances are the trip's month's: a trip settles month by month.
+ */
+function TripBalances({ members, recap, loading, month, view, settle }: { members: HouseholdMember[]; recap: MonthRecap | undefined; loading: boolean; month: string; view: HouseholdView; settle: SettleView }) {
+  const paid = paidBy(recap);
+  const converted = recap ? settle.convert(recap) : null;
+  const balanceOf = (userId: string) => recap?.balances.find((row) => row.userId === userId)?.balanceCents ?? 0;
+  const ordered = [...members].sort((a, b) => balanceOf(b.userId) - balanceOf(a.userId) || view.who.name(a.userId).localeCompare(view.who.name(b.userId)));
+  return (
+    <section className="trip-feature__people trip-feature__people--currencies" aria-labelledby="trip-people-heading">
+      <div className="trip-feature__people-head">
+        <h2 id="trip-people-heading">{balancesTitle(settle.code)}</h2>
+        <SettleInMenu settle={settle} />
+      </div>
+      <ul className="trip-feature__people-rows" aria-label={`Balances for ${monthLabel(month)}`}>
+        {ordered.map((member) => {
+          const cents = balanceOf(member.userId);
+          const shown = converted?.balances.get(member.userId) ?? (settle.code === settle.currency ? cents : null);
+          const approx = settle.approx(member.userId, cents);
+          const words = cents > 0 ? "gets back" : cents < 0 ? "owes" : "settled";
+          return (
+            <li key={member.userId} className="trip-feature__person">
+              <Avatar name={memberName(member)} src={member.avatarUrl} size={30} />
+              <span className="trip-feature__who">
+                <span>{view.who.name(member.userId)}</span>
+                <span>Paid {settle.shown(paid.get(member.userId) ?? 0) ?? "…"}</span>
+              </span>
+              <span className="trip-feature__balance trip-feature__balance--currencies">
+                {loading || shown === null ? (
+                  "…"
+                ) : (
+                  <>
+                    <b className={cx("pk-num money", cents > 0 && "pk-money--income")}>{formatMinor(shown, settle.code, settle.home, { signed: true })}</b>
+                    {approx ? (
+                      <span className="pk-num">
+                        {approx}
+                        <span className="visually-hidden"> in their currency, {words}</span>
+                      </span>
+                    ) : (
+                      <span>{words}</span>
+                    )}
+                  </>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * Suggested payments beside the expenses with several currencies (`web-trip-currencies`): in the
+ * settle currency ("in euros"), each with Record paid, which records the trip-currency amount;
+ * then how the currencies count. Record paid opens on the month's last day, as everywhere.
+ */
+function TripSuggestions({ recap, loading, view, settle, onRecord }: { recap: MonthRecap | undefined; loading: boolean; view: HouseholdView; settle: SettleView; onRecord: (transfer: Transfer) => void }) {
+  const converted = recap ? settle.convert(recap) : null;
+  const open = recap ? monthlyPaymentsOpen(recap.month) : false;
+  const rows = recap ? (converted?.suggestions ?? (settle.code === settle.currency ? recap.suggestions.map((transfer) => ({ transfer, cents: transfer.amountCents })) : null)) : null;
+  return (
+    <Card title="Suggested payments" action={<span className="muted">in {currencyPlural(settle.code)}</span>} className="trip-suggestions">
+      {loading || !recap || rows === null ? (
+        <p className="note">Loading the balances…</p>
+      ) : rows.length ? (
+        <ul className="transfer-list transfer-list--compact trip-suggestions__rows" aria-label={`Suggested payments for ${monthLabel(recap.month)}`}>
+          {rows.map(({ transfer, cents }) => {
+            const from = view.who.name(transfer.fromUserId);
+            const to = view.who.name(transfer.toUserId);
+            const involved = view.canWrite && (transfer.fromUserId === view.who.meId || transfer.toUserId === view.who.meId);
+            return (
+              <li key={`${transfer.fromUserId}:${transfer.toUserId}`} className="transfer">
+                <span className="transfer__text">
+                  <span className="transfer__from">{from}</span>
+                  <span className="transfer__arrow" aria-hidden="true">
+                    <Icon name="arrow-up" size={15} />
+                  </span>
+                  <span className="visually-hidden">pays</span>
+                  <span>{to}</span>
+                </span>
+                <b className="pk-num money">{formatMinor(cents, settle.code, settle.home)}</b>
+                {involved ? (
+                  open ? (
+                    <button type="button" className="pay-pill pay-pill--on" onClick={() => { onRecord(transfer); }} aria-label={`Record that ${from} paid ${to} ${view.money(transfer.amountCents)}`}>
+                      Record paid
+                    </button>
+                  ) : (
+                    <button type="button" className="pay-pill" disabled>
+                      Record paid
+                    </button>
+                  )
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="muted">Everyone is settled for {monthLabel(recap.month)}.</p>
+      )}
+      <p className="note trip-suggestions__note">{settleNote(settle, true)}</p>
+    </Card>
+  );
+}

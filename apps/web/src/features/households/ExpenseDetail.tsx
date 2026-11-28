@@ -8,7 +8,8 @@ import { Avatar, Badge, Button, cx } from "../../design/controls";
 import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { Icon } from "../../design/Icon";
-import { Money } from "../../design/Money";
+import { formatCents, Money } from "../../design/Money";
+import { formatMinor, rateLine } from "../entries/currency";
 import { EmptyState, ErrorState, LoadingState, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { useLedgerChoices } from "./choices";
@@ -253,6 +254,25 @@ function DetailPane({
         <dd>
           <Money cents={expense.totalCents} currency={view.currency} />
         </dd>
+        {/* MAZ-151 phase 2: what was paid, at which rate, and the total in your own currency. */}
+        {expense.originalAmount !== undefined && expense.originalCurrency && expense.rate ? (
+          <>
+            <dt>Paid</dt>
+            <dd className="pk-num">
+              {formatMinor(expense.originalAmount, expense.originalCurrency, expense.home?.currency ?? view.currency)} · {rateLine(expense.originalCurrency, expense.rate, view.currency)}
+              {expense.rateStatus === "provisional" ? " · provisional" : expense.rateStatus === "edited" ? " · edited" : ""}
+            </dd>
+          </>
+        ) : null}
+        {expense.home ? (
+          <>
+            <dt>In {expense.home.currency}</dt>
+            <dd className="pk-num">
+              {formatCents(expense.home.totalCents, expense.home.currency)}
+              {expense.home.rateStatus === "provisional" ? " · provisional" : ""}
+            </dd>
+          </>
+        ) : null}
         <dt>Date</dt>
         <dd>
           <time dateTime={expense.date}>{panel ? shortDate(expense.date) : dayLabel(expense.date, true)}</time>
@@ -290,6 +310,7 @@ function DetailPane({
         <div className={cx("your-share", panel && "your-share--plain")}>
           <span>Your share · in your spending</span>
           <Money cents={mine} currency={view.currency} />
+          {expense.home ? <span className="your-share__home pk-num">{formatCents(expense.home.shareCents, expense.home.currency)}</span> : null}
         </div>
       ) : null}
 

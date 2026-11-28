@@ -185,6 +185,30 @@ export const entrySchema = z.object({
 });
 
 /**
+ * Contract 2.5.0 (MAZ-151 phase 2): a shared expense paid in another currency than the household's.
+ * `rate` is household units per unit of `originalCurrency`; `totalCents` and splits stay in the
+ * household's currency.
+ */
+const sharedForeignFields = {
+  originalAmount: z.number().int().min(1).max(99_999_999_999).optional(),
+  originalCurrency: currencyCodeSchema.optional(),
+  rate: exchangeRateSchema.optional(),
+  rateStatus: z.enum(["published", "provisional", "edited"]).optional(),
+  rateDate: isoDate.optional(),
+};
+
+/** `MemberHomeAmounts` (contract 2.5.0): the viewer's amounts of a shared expense in their home currency. */
+export const memberHomeAmountsSchema = z.object({
+  currency: currencyCodeSchema,
+  totalCents: z.number().int().min(0).max(99_999_999_999),
+  shareCents: z.number().int().min(0).max(99_999_999_999),
+  rate: exchangeRateSchema.optional(),
+  rateStatus: z.enum(["published", "provisional"]).optional(),
+  rateDate: isoDate.optional(),
+});
+export type MemberHomeAmounts = z.infer<typeof memberHomeAmountsSchema>;
+
+/**
  * `GET /api/rates?base=&date=` (contract 2.4.0, MAZ-151): the reference rates in the home currency
  * (`base`) for a date. `rates[X]` is how many home units one X is worth. Fetching off: `enabled` is
  * false, `source` and `rateDate` are null and `rates` is empty.
@@ -213,7 +237,7 @@ export const projectedExpenseSchema = z.object({
   id,
   householdId: id,
   householdName: z.string(),
-  householdCurrency: z.enum(["CAD", "USD", "EUR", "GBP"]),
+  householdCurrency: currencyCodeSchema,
   title: z.string(),
   date: isoDate,
   totalCents: z.number().int().min(1).max(99_999_999_999),
@@ -233,6 +257,8 @@ export const projectedExpenseSchema = z.object({
   scheduled: z.boolean().optional(),
   recurringId: id.optional(),
   receiptId: id.optional(),
+  ...sharedForeignFields,
+  home: memberHomeAmountsSchema.optional(),
 });
 
 /** `POST /api/v1/search/transactions` request (MAZ-121). The server rejects unknown fields. */
@@ -266,7 +292,8 @@ export type SearchResponse = z.infer<typeof searchResponseSchema>;
 /* ---------- shared households (server MAZ-56–59, web MAZ-91) ---------- */
 
 const instant = z.number().int();
-const householdCurrency = z.enum(["CAD", "USD", "EUR", "GBP"]);
+// Contract 2.5.0 (MAZ-151 phase 2): any CurrencyCode; before, CAD, USD, EUR or GBP.
+const householdCurrency = currencyCodeSchema;
 const tzOffset = z.number().int().min(-840).max(720);
 const monthKey = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const total = z.number().int().min(1).max(99_999_999_999);
@@ -298,6 +325,8 @@ export const householdMemberSchema = z.object({
   avatarUrl: avatarUrl.optional(),
   // MAZ-152: the person deleted their account. Show "Former member", never the placeholder email.
   deleted: z.literal(true).optional(),
+  // Contract 2.5.0 (MAZ-151 phase 2): the member's home (ledger) currency; absent for former members and members with no ledger yet.
+  currency: currencyCodeSchema.optional(),
 });
 export type HouseholdMember = z.infer<typeof householdMemberSchema>;
 
@@ -351,9 +380,9 @@ const expenseFields = {
   timezoneOffsetMinutes: tzOffset.optional(),
 };
 
-export const expenseInputSchema = z.object({ ...expenseFields, date: isoDate });
+export const expenseInputSchema = z.object({ ...expenseFields, date: isoDate, ...sharedForeignFields });
 export type ExpenseInput = z.input<typeof expenseInputSchema>;
-export const expenseUpdateSchema = z.object({ ...expenseFields, date: isoDate, revision: z.number().int().min(0), targetHouseholdId: id.optional() });
+export const expenseUpdateSchema = z.object({ ...expenseFields, date: isoDate, revision: z.number().int().min(0), targetHouseholdId: id.optional(), ...sharedForeignFields });
 export type ExpenseUpdate = z.input<typeof expenseUpdateSchema>;
 export const revisionSchema = z.object({ revision: z.number().int().min(0) });
 
@@ -383,6 +412,8 @@ export const sharedExpenseSchema = z.object({
   recurringId: id.optional(),
   payments: z.array(expensePaymentSchema),
   paymentsClosed: z.boolean(),
+  ...sharedForeignFields,
+  home: memberHomeAmountsSchema.optional(),
 });
 export type SharedExpense = z.infer<typeof sharedExpenseSchema>;
 

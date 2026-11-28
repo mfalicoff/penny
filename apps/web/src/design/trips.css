@@ -552,6 +552,7 @@ a.trip-list-row:hover {
 
 /* The iPad card's panel titles are bold headings, not small upper-case labels. */
 .trip-people > .card__head .card__title,
+.trip-suggestions > .card__head .card__title,
 .trip-categories > .card__head .card__title {
   color: var(--pk-label);
   font-size: 1.0625rem;
@@ -1042,5 +1043,240 @@ button.trip-expense-row:hover {
 }
 
 .trip-table__name > :first-child {
+  font-weight: 600;
+}
+
+/* ---------- several currencies (MAZ-151 phase 2, `web-trip-currencies`, `iphone-trip-currencies`) ---------- */
+/* "EUR, USD and CAD · each at its date's rate": a chip under the totals on the desktop hero, centered under the phone hero. */
+.trip-rates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: var(--pk-surface);
+  color: var(--pk-label-2);
+  font-size: 0.78125rem;
+  font-weight: 600;
+}
+
+.trip-rates--feature {
+  margin: 14px 0 0;
+}
+
+.trip-rates--link {
+  justify-self: center;
+  min-height: 30px;
+  border-radius: 12px;
+  background: var(--pk-fill);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.trip-rates--link:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .trip-rates--link {
+    min-height: 44px;
+  }
+}
+
+/* The table's In CAD: the home amount, "provisional" under it in amber. */
+.trip-table__home {
+  display: inline-grid;
+  justify-items: end;
+}
+
+.trip-table__provisional,
+.trip-expense-row__home--provisional {
+  color: var(--pk-pending);
+}
+
+.trip-table__provisional {
+  font-size: 0.75rem;
+}
+
+.trip-table--currencies tbody td.num b {
+  font-weight: 700;
+}
+
+.trip-expense-row__home {
+  display: block;
+}
+
+/* Balances with each person's own currency under the amount. */
+.trip-feature__balance--currencies {
+  display: grid;
+  justify-items: end;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.trip-feature__balance--currencies > b {
+  color: var(--pk-label);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.trip-feature__balance--currencies > b.pk-money--income {
+  color: var(--pk-income);
+}
+
+/* Suggested payments beside the expenses (`web-trip-currencies`). */
+.trip-suggestions .transfer > .money {
+  margin-inline-start: auto;
+  font-weight: 700;
+}
+
+.trip-suggestions__note {
+  margin-top: 10px;
+  line-height: 17px;
+}
+
+/* The expenses table beside a narrower Suggested payments, as on the card. */
+.trip-detail-columns--currencies {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+}
+
+.trip-suggestions .transfer-list--compact {
+  gap: 0;
+}
+
+.trip-suggestions .transfer-list--compact .transfer {
+  min-height: 0;
+  padding: 7px 0;
+  border-radius: 0;
+  background: none;
+  font-size: 0.84375rem;
+}
+
+.trip-suggestions .transfer + .transfer {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.trip-suggestions .transfer__text {
+  font-size: 0.84375rem;
+}
+
+.trip-suggestions .transfer-list--compact .transfer__from {
+  font-weight: 400;
+}
+
+.trip-suggestions .transfer > .money {
+  font-size: 0.875rem;
+}
+
+.trip-suggestions .pay-pill {
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 0.78125rem;
+}
+
+@media (pointer: coarse) {
+  .trip-suggestions .pay-pill {
+    min-height: 44px;
+  }
+}
+
+/* ---------- the trip form on the desktop (card `web-trip-form-currency`) ---------- */
+/* A 560px dialog: the name in a 44px field, then plain rows with a separator between them, each value
+   in a small bordered pill with a chevron, as the entry dialog's desktop rows. */
+.dialog__panel.pk-dialog.trip-form-dialog--desktop {
+  width: min(100%, 560px);
+}
+
+.trip-form-dialog--desktop .pk-dialog__body {
+  padding: 18px 20px 6px;
+}
+
+.trip-form-dialog--desktop .trip-form {
+  gap: 0;
+}
+
+.trip-form-dialog--desktop .trip-form__name-input {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.trip-form-dialog--desktop .trip-form__group {
+  gap: 0;
+}
+
+.trip-form-dialog--desktop .trip-form__label {
+  margin: 18px 0 8px;
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+.trip-form-dialog--desktop .trip-form__hint {
+  margin-top: 6px;
+  padding: 0;
+  font-size: 0.78125rem;
+  line-height: 17px;
+}
+
+.trip-form-dialog--desktop .entry-rows {
+  border-radius: 0;
+  background: none;
+}
+
+.trip-form-dialog--desktop .entry-row {
+  min-height: 44px;
+  padding: 0;
+  font-size: 0.90625rem;
+}
+
+.trip-form-dialog--desktop .entry-row + .entry-row::before {
+  left: 0;
+}
+
+.trip-form-dialog--desktop .entry-row > .icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+/* The date pill holds the chevron, as the card's `.sel`. */
+.trip-form-dialog--desktop .entry-row__value:has(> .trip-form__date) {
+  position: relative;
+}
+
+.trip-form-dialog--desktop .trip-form__date {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 28px 0 10px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+
+.trip-form-dialog--desktop .entry-row__value:has(> .trip-form__date) > .icon {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+}
+
+/* Narrower (`iphone-trip-form-currency`): the currency reads as the row's value, "EUR Euro", not a pill. */
+.trip-form-dialog:not(.trip-form-dialog--desktop) .currency-chip--named {
+  padding-inline: 4px;
+  background: none;
+  box-shadow: none;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+.trip-form-dialog:not(.trip-form-dialog--desktop) .currency-chip--named .currency-chip__code {
+  color: var(--pk-label);
   font-weight: 600;
 }

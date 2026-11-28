@@ -23,7 +23,6 @@ import {
   categoryIcon,
   draftFromEntry,
   draftCurrency,
-  centsToInput,
   storedRateOf,
   entryChange,
   undoEntryChange,
@@ -141,7 +140,7 @@ function EntryForm({
     editing
       ? draftFromEntry(editing)
       : tripId
-        ? { ...newDraft(ledger, "expense"), tripId }
+        ? { ...newDraft(ledger, "expense"), tripId, currency: tripCurrencyOf(ledger, tripId) }
         : seed
           ? seededDraft(ledger, seed, target.kind === "new" ? target.entryKind : undefined)
           : (restored ?? newDraft(ledger, target.kind === "new" ? target.entryKind : undefined)),
@@ -740,6 +739,7 @@ function EntryForm({
             code={code}
             home={currency}
             recent={uses.map((use) => use.code)}
+            suggested={suggestedFor(ledger, draft.tripId)}
             locked={isNew && draft.repeat !== "none" ? `Repeating entries are in ${currency} only. Set Repeat to Never to use another currency.` : null}
             onPick={(next) => {
               setDraft((previous) => ({
@@ -913,11 +913,10 @@ function EntryForm({
 /** What a personal draft carries to the shared form. */
 function seedFrom(draft: EntryDraft, ledger: Ledger): EntrySeed {
   const category = ledger.categories.find((item) => item.id === draft.categoryId);
-  // The shared form is in the household's currency: a draft in another currency carries its home amount.
-  const home = draftCurrency(draft, ledger.currency) === ledger.currency;
-  const converted = home ? undefined : buildEntry(draft, ledger).built?.transaction.total;
+  // MAZ-151 phase 2: the amount keeps the currency it was typed in; the shared form converts it to the household's.
   return {
-    amount: home ? draft.amount : converted !== undefined ? centsToInput(converted) : "",
+    amount: draft.amount,
+    currency: draftCurrency(draft, ledger.currency),
     title: draft.title,
     date: draft.date,
     ...(category ? { categoryName: category.name } : {}),
@@ -934,12 +933,28 @@ function seededDraft(ledger: Ledger, seed: EntrySeed, kind: Kind = "expense"): E
   return {
     ...fresh,
     amount: seed.amount,
+    currency: seed.currency && seed.currency !== ledger.currency ? seed.currency : null,
     title: seed.title,
     note: seed.note,
     accountId: ledger.accounts.some((item) => item.id === seed.accountId) ? seed.accountId : "",
     receipt: kind === "expense" ? seed.receipt : null,
     ...(category ? { categoryId: category.id } : {}),
   };
+}
+
+/**
+ * A personal trip's currency (contract 2.5.0), the default of its new expenses, or null when it has
+ * none or it is the home currency (MAZ-151 phase 2).
+ */
+function tripCurrencyOf(ledger: Ledger, tripId: string): string | null {
+  const code = ledger.trips.find((trip) => trip.id === tripId)?.currency;
+  return code && code !== ledger.currency ? code : null;
+}
+
+/** The menu's Suggested trip currency ("Lisbon's currency", `iphone-currency-picker`) for the draft's trip. */
+function suggestedFor(ledger: Ledger, tripId: string) {
+  const trip = tripId ? ledger.trips.find((item) => item.id === tripId) : undefined;
+  return trip?.currency ? { code: trip.currency, note: `${trip.name}'s currency` } : null;
 }
 
 function validRateOrNull(value: string): string | null {

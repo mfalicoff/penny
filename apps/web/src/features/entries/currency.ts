@@ -161,12 +161,15 @@ function noteOf(info: CurrencyInfo, home: string): string | null {
   return symbol !== symbolOf(info.code, "en-CA", "narrowSymbol") ? symbol : null;
 }
 
+/** A currency the menu suggests above the home one: a trip's or household's ("Lisbon's currency", MAZ-151 phase 2). */
+export type SuggestedCurrency = { code: string; note: string };
+
 /**
- * The currency menu (`web-add-entry-currency`): Suggested (the home currency; a trip's currency is
- * phase 2), Recent (the last used), then every currency A–Z. A search lists the matches by code,
- * name or country, in one section.
+ * The currency menu (`web-add-entry-currency`, `iphone-currency-picker`): Suggested (a trip's or
+ * household's currency, then the home currency), Recent (the last used), then every currency A–Z.
+ * A search lists the matches by code, name or country, in one section.
  */
-export function menuSections(query: string, home: string, recent: readonly string[]): MenuSection[] {
+export function menuSections(query: string, home: string, recent: readonly string[], suggested?: SuggestedCurrency | null): MenuSection[] {
   const needle = query.trim().toLowerCase();
   const item = (info: CurrencyInfo) => ({ info, note: noteOf(info, home) });
   if (needle) {
@@ -176,9 +179,11 @@ export function menuSections(query: string, home: string, recent: readonly strin
     return found.length ? [{ title: "Matches", items: found.map(item) }] : [];
   }
   const homeInfo = currencyInfo(home);
-  const recentInfo = recent.filter((code) => code !== home).flatMap((code) => currencyInfo(code) ?? []).slice(0, 4);
+  const tripInfo = suggested && suggested.code !== home ? currencyInfo(suggested.code) : undefined;
+  const suggestedItems = [...(tripInfo && suggested ? [{ info: tripInfo, note: suggested.note }] : []), ...(homeInfo ? [item(homeInfo)] : [])];
+  const recentInfo = recent.filter((code) => code !== home && code !== tripInfo?.code).flatMap((code) => currencyInfo(code) ?? []).slice(0, 4);
   return [
-    ...(homeInfo ? [{ title: "Suggested", items: [item(homeInfo)] }] : []),
+    ...(suggestedItems.length ? [{ title: "Suggested", items: suggestedItems }] : []),
     ...(recentInfo.length ? [{ title: "Recent", items: recentInfo.map(item) }] : []),
     { title: "All currencies", items: currencies.map(item) },
   ];

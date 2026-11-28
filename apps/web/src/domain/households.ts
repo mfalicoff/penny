@@ -262,8 +262,8 @@ export function suggestReimbursements(balances: HouseholdBalance[]): SuggestedRe
   let debtorIndex = 0;
   let creditorIndex = 0;
   while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
-    const debtor = debtors[debtorIndex];
-    const creditor = creditors[creditorIndex];
+    const debtor = debtors[debtorIndex] as { userId: string; cents: number };
+    const creditor = creditors[creditorIndex] as { userId: string; cents: number };
     const amountCents = Math.min(debtor.cents, creditor.cents);
     suggestions.push({ fromUserId: debtor.userId, toUserId: creditor.userId, amountCents });
     debtor.cents -= amountCents;
@@ -311,6 +311,13 @@ export function memberAmounts(
   return { totalCents, shareCents: proportionHalfUp(shareCents, expense.totalCents, totalCents) };
 }
 
+/** One figure of `settleIn`: converted half up on its absolute value, keeping its sign. */
+export function convertSigned(value: number, from: string, to: string, rate: string): number {
+  if (from === to) return value;
+  const converted = convertAmount(Math.abs(value), from, rate, to);
+  return value < 0 ? -converted : converted;
+}
+
 /**
  * Balances and suggested payments shown in another currency ("Settle in"), at one rate (`to` units
  * per unit of `from`, today's). Payments are suggested in the household's currency first, then each
@@ -324,11 +331,7 @@ export function settleIn(
   rate: string,
 ): { balances: HouseholdBalance[]; suggestions: SuggestedReimbursement[] } {
   const suggestions = suggestReimbursements(balances);
-  const convert = (value: number) => {
-    if (from === to) return value;
-    const converted = convertAmount(Math.abs(value), from, rate, to);
-    return value < 0 ? -converted : converted;
-  };
+  const convert = (value: number) => convertSigned(value, from, to, rate);
   return {
     balances: balances.map((item) => ({ userId: item.userId, balanceCents: convert(item.balanceCents) })),
     suggestions: suggestions.map((item) => ({ ...item, amountCents: convert(item.amountCents) })),

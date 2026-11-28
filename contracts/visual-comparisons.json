@@ -3146,10 +3146,20 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Design decision: the expenses are listed oldest first, as on web-trip and iphone-trip-detail; this card lists them newest first",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
@@ -3162,10 +3172,20 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Design decision: balances are the trip's month's (Penny settles a trip month by month), so the bar keeps the month and Balances says each month settles on its own and when payments open; the card shows the whole trip's balances with Record paid on every payment",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
@@ -3178,10 +3198,20 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A dialog with labelled fields and Cancel / Create trip, not a sheet, as the web's iphone-trip-form (approved there under the web conventions, MAZ-227)",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
@@ -3677,10 +3707,9 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "blocked",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "note": "Built in phase 2 (a touch tablet shows the trip's totals in your currency, the expenses with both amounts and the suggested payments in the settle currency), but only the desktop and 402px web cards were captured in this change."
       }
     },
     {
@@ -5019,10 +5048,25 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Design decision: balances, what each person paid and the suggested payments are the trip's month's (Penny settles a trip month by month), not the whole trip's as on the card; Record paid opens on the month's last day and shows only on payments you're part of",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Design decision: the expenses are listed oldest first, as on web-trip and iphone-trip-detail; this card lists them newest first",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
@@ -5035,10 +5079,13 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

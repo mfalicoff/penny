@@ -19,6 +19,7 @@ import type { EntryAction } from "../entries/EntryDetail";
 import { categoryIcon, repeatLabel, splitSummary } from "../entries/model";
 import { rowAmount } from "../recurring/model";
 import { OriginalAmount } from "../entries/OriginalAmount";
+import { homeAmountsOf } from "../households/sharedCurrency";
 import { categoryName, dayTotal, groupByDay, localRows, type ActivityRow, type RowFilters, type SharedState } from "./data";
 import type { ActivitySearch } from "./filters";
 import { leavingProps, useListMotion } from "../../design/motion";
@@ -394,7 +395,11 @@ function RowList({ rows, motionContext, grouped, complete, ledger, currency, lay
 
 /** The amount as the cards sign it (MAZ-202): expenses and shares −, income +, investments unsigned; expected income amber, unsigned. */
 function RowAmount({ row, context }: { row: ActivityRow; context: RowContext }) {
-  if (row.source === "shared") return <Money {...rowAmount("expense", row.entry.shareCents)} currency={row.entry.householdCurrency} />;
+  if (row.source === "shared") {
+    // MAZ-151 phase 2: your home amount leads when the household is in another currency; with no rate known, its own.
+    const home = homeAmountsOf(row.entry, context.currency);
+    return home ? <Money {...rowAmount("expense", home.share)} currency={context.currency} /> : <Money {...rowAmount("expense", row.entry.shareCents)} currency={row.entry.householdCurrency} />;
+  }
   const { entry } = row;
   return isExpectedIncome(entry, context.today) ? <Money cents={entry.share} currency={context.currency} tone="pending" /> : <Money {...rowAmount(entry.kind, entry.share)} currency={context.currency} tone={TONE[entry.kind]} />;
 }
@@ -492,6 +497,7 @@ function Row({ row, context, leaving }: { row: ActivityRow; context: RowContext;
         <span className="results__amount">
           <RowAmount row={row} context={context} />
           <span className="results__sub">your share</span>
+          <OriginalAmount entry={homeAmountsOf(entry, context.currency) ?? {}} home={context.currency} />
         </span>
       </Link>
     </li>
@@ -672,6 +678,7 @@ function TableRow({ row, context, leaving }: { row: ActivityRow; context: RowCon
         <td>{sharedSplit(entry)}</td>
         <td className="activity-table__num">
           <RowAmount row={row} context={context} />
+          <OriginalAmount entry={homeAmountsOf(entry, context.currency) ?? {}} home={context.currency} />
         </td>
         <td />
       </tr>

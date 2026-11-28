@@ -95,7 +95,7 @@ describe("export and deletion helpers", () => {
   it("shows someone who deleted their account as a former member, never their placeholder email", () => {
     const gone = { userId: "bea", email: `deleted-${"b".repeat(32)}@deleted.invalid`, joinedAt: 0, leftAt: 1, deleted: true as const };
     expect(memberName(gone)).toBe("Former member");
-    const who = people({ household: household("h", "Home") as never, members: [{ userId: "me", email: ALEX, joinedAt: 0 }, gone] }, ALEX);
+    const who = people({ household: household("h", "Home"), members: [{ userId: "me", email: ALEX, joinedAt: 0 }, gone] }, ALEX);
     expect(who.name("bea")).toBe("Former member");
     expect(who.avatar("bea")).toBe("?");
   });
