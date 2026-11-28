@@ -22,7 +22,7 @@ describe("app URLs", () => {
     ["/settings", "Settings"],
     ["/settings/appearance", "Appearance"],
     ["/settings/receipt-email", "Receipt email"],
-    ["/receipts", "Receipts to attach"],
+    ["/receipts", "Inbox"],
   ])("%s opens with the title %s", async (path, title) => {
     stubServer();
     renderApp(path);

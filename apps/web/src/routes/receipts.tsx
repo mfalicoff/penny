@@ -3,11 +3,15 @@ import { z } from "zod";
 import { InboxPage } from "../features/receiptInbox/InboxPage";
 
 /**
- * Receipts to attach (MAZ-184): the emailed-receipt inbox. `status` is the filter (To attach or
- * Attached) and `item` opens one email, as a notification link does. Bad values fall back.
+ * The Inbox (MAZ-184, MAZ-291): captured purchases and emailed receipts waiting to be handled.
+ * `status` is the filter (To review or Done; the older To attach and Attached links still open
+ * them) and `item` opens one email, as a notification link does. Bad values fall back.
  */
 export const receiptsSearchSchema = z.object({
-  status: z.enum(["to_attach", "attached"]).catch("to_attach").default("to_attach"),
+  status: z
+    .preprocess((value) => (value === "to_attach" ? "to_review" : value === "attached" ? "done" : value), z.enum(["to_review", "done"]))
+    .catch("to_review")
+    .default("to_review"),
   item: z
     .string()
     .regex(/^[0-9a-f]{32}$/)
@@ -16,7 +20,7 @@ export const receiptsSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/receipts")({
-  staticData: { title: "Receipts to attach" },
+  staticData: { title: "Inbox" },
   validateSearch: receiptsSearchSchema,
   component: Receipts,
 });

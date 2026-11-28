@@ -502,3 +502,56 @@ export type ReceiptInboxPage = z.infer<typeof receiptInboxPageSchema>;
 /** Discard and Done: files deleted, and files kept because something links them. */
 export const receiptInboxCleanupSchema = z.object({ deleted: z.number().int().min(0), kept: z.number().int().min(0) });
 export type ReceiptInboxCleanup = z.infer<typeof receiptInboxCleanupSchema>;
+
+/* ---------- captured purchases (contract 2.5.0, MAZ-291) ---------- */
+
+/**
+ * A purchase captured on a device (Apple Pay), as the iPhone uploads it. `amount` is in minor
+ * units of `currency`; the idempotency key is the device's own id for the tap.
+ */
+export const purchaseCaptureSchema = z.strictObject({
+  idempotencyKey: z.string().min(1).max(64).regex(/^[A-Za-z0-9._:-]+$/),
+  merchant: z.string().min(1).max(100),
+  amount: total,
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  card: z.string().max(50).nullable().optional(),
+  capturedAt: instant,
+});
+export type PurchaseCapture = z.input<typeof purchaseCaptureSchema>;
+
+/** One captured purchase in the Inbox. Merchant and card are untrusted text: render them as text only. */
+export const purchaseInboxItemSchema = z.object({
+  id: z.string(),
+  merchant: z.string(),
+  amount: z.number().int().min(1),
+  currency: z.string(),
+  card: z.string().nullable(),
+  capturedAt: instant,
+  createdAt: instant,
+  status: z.enum(["to_review", "done"]),
+  outcome: z.literal(["added", "attached", "discarded", null]),
+  entryId: z.string().nullable(),
+  householdId: z.string().nullable(),
+  resolvedAt: instant.nullable(),
+});
+export type PurchaseInboxItem = z.infer<typeof purchaseInboxItemSchema>;
+
+export const purchaseInboxPageSchema = z.object({
+  items: z.array(purchaseInboxItemSchema),
+  next: z.string().nullable(),
+});
+export type PurchaseInboxPage = z.infer<typeof purchaseInboxPageSchema>;
+
+/** How a purchase left To review. `entryId` names the entry it became (added) or joined (attached). */
+export const purchaseResolutionSchema = z.strictObject({
+  outcome: z.enum(["added", "attached", "discarded"]),
+  entryId: id.nullable().optional(),
+  householdId: id.nullable().optional(),
+});
+export type PurchaseResolution = z.input<typeof purchaseResolutionSchema>;
+
+/** A Wallet card name and the personal account its purchases are added to (edited on iOS). */
+export const cardAccountSchema = z.strictObject({ card: z.string().min(1).max(50), accountId: id });
+export type CardAccount = z.infer<typeof cardAccountSchema>;
+export const cardAccountsSchema = z.strictObject({ cards: z.array(cardAccountSchema).max(50) });
+export type CardAccounts = z.infer<typeof cardAccountsSchema>;

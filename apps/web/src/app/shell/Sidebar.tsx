@@ -7,12 +7,13 @@ import type { Household } from "../../api/schemas";
 import { useAccountEmail, useAccountMe } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Avatar, cx, Kbd } from "../../design/controls";
-import { Icon, type IconName } from "../../design/Icon";
+import { Icon, TrayIcon, type IconName } from "../../design/Icon";
 import { formatCents } from "../../design/Money";
 import { useOnline } from "../../design/states";
 import { currentMonth, findMe, localDate } from "../../features/households/model";
 import { useLedgerWorkspace } from "../../features/organize/workspace";
-import { countLabel, OFFLINE_HINT } from "../../features/receiptInbox/model";
+import { usePurchaseStatus } from "../../features/purchaseInbox/usePurchases";
+import { OFFLINE_HINT } from "../../features/receiptInbox/model";
 import { useInboxStatus } from "../../features/receiptInbox/useInbox";
 import { isSharedTrip, tripPhase } from "../../features/trips/model";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
@@ -345,38 +346,43 @@ export function SyncLine() {
 const countChanges = (count: number) => `${String(count)} change${count === 1 ? "" : "s"} waiting`;
 
 /**
- * Receipts to attach (MAZ-184), with its count. Shown only when the server accepts emailed
- * receipts and an address exists (or items are still waiting). Offline it can't open: the inbox
- * needs a connection, as uploads do.
+ * The Inbox (MAZ-184, MAZ-291; card `web-inbox-captured`), with one count: captured purchases to
+ * review and emailed receipts to attach together. Shown when either has something, or when emailed
+ * receipts are set up. Offline it can't open: the Inbox needs a connection, as uploads do.
  */
 export function InboxNavItem({ className = "navlink" }: { className?: string }) {
   const status = useInboxStatus();
+  const purchases = usePurchaseStatus();
   const online = useOnline();
-  if (!status.visible) return null;
-  // The visible label stays in the name (label in name); the count is read as "3 receipts to attach".
-  const spoken = status.count > 0 ? `Receipts to attach, ${countLabel(status.count, status.more)}` : "Receipts to attach";
+  if (!status.visible && purchases.count === 0) return null;
+  const count = status.count + purchases.count;
+  const more = status.more || purchases.more;
+  // The visible count is part of the name, with words for screen readers around it: "Inbox, 5 to review".
   const badge =
-    status.count > 0 ? (
-      <span className="navlink__count" aria-hidden="true">
-        {status.more ? `${String(status.count)}+` : status.count}
+    count > 0 ? (
+      <span className="navlink__count navlink__count--inbox">
+        <span className="visually-hidden">, </span>
+        {more ? `${String(count)}+` : count}
+        <span className="visually-hidden"> to review</span>
       </span>
     ) : null;
   if (!online) {
     return (
       <li>
-        <span className={cx(className, `${className}--off`)} role="link" aria-disabled="true" aria-label={`${spoken}. ${OFFLINE_HINT}`} title={OFFLINE_HINT}>
-          <Icon name="receipt" size={18} />
-          <span className="navlink__label">Receipts to attach</span>
+        <span className={cx(className, `${className}--off`)} role="link" aria-disabled="true" title={OFFLINE_HINT}>
+          <TrayIcon size={18} />
+          <span className="navlink__label">Inbox</span>
           {badge}
+          <span className="visually-hidden">. {OFFLINE_HINT}</span>
         </span>
       </li>
     );
   }
   return (
     <li>
-      <Link to="/receipts" search={{ status: "to_attach" }} className={className} activeOptions={{ includeSearch: false }} aria-label={spoken}>
-        <Icon name="receipt" size={18} />
-        <span className="navlink__label">Receipts to attach</span>
+      <Link to="/receipts" search={{ status: "to_review" }} className={className} activeOptions={{ includeSearch: false }}>
+        <TrayIcon size={18} />
+        <span className="navlink__label">Inbox</span>
         {badge}
       </Link>
     </li>
