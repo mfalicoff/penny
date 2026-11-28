@@ -31,6 +31,7 @@ using Penny.Backend.Application.InboundMail;
 using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Application.Mail;
 using Penny.Backend.Application.Profiles;
+using Penny.Backend.Application.Purchases;
 using Penny.Backend.Application.Push;
 using Penny.Backend.Application.Rates;
 using Penny.Backend.Application.Receipts;
@@ -139,6 +140,9 @@ public static class BackendServices
             EmailOptions.Read(configuration, AuthOptions.Read(configuration))
         );
         AddExchangeRateServices(builder.Services, ExchangeRatesOptions.Read(configuration));
+        // Captured purchases in the Inbox (MAZ-291): always on, no setting.
+        builder.Services.AddSingleton<IPurchaseInboxRepository, PostgresPurchaseInboxRepository>();
+        builder.Services.AddSingleton<PurchaseInboxService>();
         AddInboundMailServices(
             builder.Services,
             InboundMailOptions.Read(configuration),

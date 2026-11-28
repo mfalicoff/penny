@@ -110,3 +110,29 @@ export function RefreshIcon({ size = 12, weight = 40 }: { size?: number; weight?
     </span>
   );
 }
+
+/**
+ * The Inbox (MAZ-291 cards `web-inbox-captured`, `web-capture-*`): Ionicons' `file-tray-outline`,
+ * which the kit's set lacks, drawn inline as the cards draw it.
+ */
+export function TrayIcon({ size = 18, weight = 32 }: { size?: number; weight?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size, ["--sw" as string]: `${String(weight)}px` }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        <path d="M384 80H128L64 272v128a32 32 0 0032 32h320a32 32 0 0032-32V272z" style={{ ...strokeStyle, strokeLinecap: undefined }} />
+        <path d="M64 272h112a80 80 0 00160 0h112" style={{ ...strokeStyle, strokeLinecap: undefined }} />
+      </svg>
+    </span>
+  );
+}
+
+/** "Matches a receipt" and "Attach to this" (MAZ-291 cards): Ionicons' `link-outline`, drawn inline as the cards draw it. */
+export function LinkIcon({ size = 14, weight = 36 }: { size?: number; weight?: number }) {
+  return (
+    <span className="icon" aria-hidden="true" style={{ width: size, height: size, ["--sw" as string]: `${String(weight)}px` }}>
+      <svg viewBox="0 0 512 512" focusable="false">
+        <path d="M208 352h-64a96 96 0 010-192h64M304 160h64a96 96 0 010 192h-64M163.29 256h187.42" style={strokeStyle} />
+      </svg>
+    </span>
+  );
+}

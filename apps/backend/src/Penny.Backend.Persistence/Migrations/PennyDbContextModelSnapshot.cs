@@ -26,6 +26,134 @@ namespace Penny.Backend.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.CapturedPurchase", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .UseCollation("C");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CapturedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("captured_at");
+
+                    b.Property<string>("Card")
+                        .HasColumnType("text")
+                        .HasColumnName("card")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("currency")
+                        .UseCollation("C");
+
+                    b.Property<string>("EntryId")
+                        .HasColumnType("text")
+                        .HasColumnName("entry_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("HouseholdId")
+                        .HasColumnType("text")
+                        .HasColumnName("household_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("idempotency_key")
+                        .UseCollation("C");
+
+                    b.Property<string>("Merchant")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("merchant")
+                        .UseCollation("C");
+
+                    b.Property<string>("Outcome")
+                        .HasColumnType("text")
+                        .HasColumnName("outcome")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status")
+                        .UseCollation("C");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status", "CapturedAt");
+
+                    b.ToTable("captured_purchases", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_captured_purchases_amount", "amount BETWEEN 1 AND 99999999999");
+
+                            t.HasCheckConstraint("ck_captured_purchases_card", "card IS NULL OR length(card) BETWEEN 1 AND 50");
+
+                            t.HasCheckConstraint("ck_captured_purchases_currency", "currency ~ '^[A-Z]{3}$'");
+
+                            t.HasCheckConstraint("ck_captured_purchases_idempotency_key", "length(idempotency_key) BETWEEN 1 AND 64");
+
+                            t.HasCheckConstraint("ck_captured_purchases_merchant", "length(merchant) BETWEEN 1 AND 100");
+
+                            t.HasCheckConstraint("ck_captured_purchases_outcome", "(status = 'to_review' AND outcome IS NULL AND resolved_at IS NULL AND entry_id IS NULL AND household_id IS NULL) OR (status = 'done' AND resolved_at IS NOT NULL AND ((outcome IN ('added','attached') AND entry_id IS NOT NULL) OR (outcome = 'discarded' AND entry_id IS NULL AND household_id IS NULL)))");
+
+                            t.HasCheckConstraint("ck_captured_purchases_references", "(entry_id IS NULL OR length(entry_id) BETWEEN 1 AND 100) AND (household_id IS NULL OR length(household_id) BETWEEN 1 AND 100)");
+
+                            t.HasCheckConstraint("ck_captured_purchases_status", "status IN ('to_review','done')");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.CardAccount", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("Card")
+                        .HasColumnType("text")
+                        .HasColumnName("card")
+                        .UseCollation("C");
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_id")
+                        .UseCollation("C");
+
+                    b.HasKey("UserId", "Card");
+
+                    b.ToTable("card_accounts", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_card_accounts_account_id", "length(account_id) BETWEEN 1 AND 100");
+
+                            t.HasCheckConstraint("ck_card_accounts_card", "length(card) BETWEEN 1 AND 50");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.EmailVerification", b =>
                 {
                     b.Property<string>("TokenHash")
@@ -2612,6 +2740,22 @@ namespace Penny.Backend.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_user_avatars_mime", "mime = 'image/webp'");
                         });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.CapturedPurchase", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.CardAccount", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.EmailVerification", b =>

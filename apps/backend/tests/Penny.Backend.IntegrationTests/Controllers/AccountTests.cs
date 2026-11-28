@@ -122,6 +122,29 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
         await AddReimbursementAsync(home, "2026-09", alexId, beaId, 5000);
         var personalReceipt = Id(await UploadedAsync(bea, "lunch.pdf", "application/pdf", Pdf()));
         await AddPersonalEntryAsync(bea, personalReceipt);
+        // A captured purchase and the card mapping (MAZ-291) go too.
+        await ExpectAsync(
+            HttpMethod.Post,
+            "/api/purchase-inbox",
+            bea,
+            HttpStatusCode.Created,
+            new
+            {
+                idempotencyKey = "tap-1",
+                merchant = "Corner Bakery",
+                amount = 675,
+                currency = "CAD",
+                card = "Visa 0001",
+                capturedAt = Noon.ToUnixTimeMilliseconds(),
+            }
+        );
+        await ExpectAsync(
+            HttpMethod.Put,
+            "/api/purchase-inbox/cards",
+            bea,
+            HttpStatusCode.OK,
+            new { cards = new[] { new { card = "Visa 0001", accountId = "visa" } } }
+        );
         await Fixture.SqlAsync(
             $"UPDATE penny.users SET display_name = 'Bea Synthetic' WHERE id = '{beaId}'",
             Ct
@@ -160,6 +183,8 @@ public sealed class AccountTests(ApiFixture fixture) : ReceiptTestBase(fixture)
                 "ledger_accounts",
                 "ledger_categories",
                 "ledger_dismissed_suggestions",
+                "captured_purchases",
+                "card_accounts",
                 "receipts",
                 "sessions",
                 "search_documents",

@@ -164,6 +164,14 @@ public sealed class PostgresAccountDeletionRepository(
                 .Ledgers.Where(ledger => ledger.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
+            // Captured purchases and the card mapping (MAZ-291).
+            await context
+                .CapturedPurchases.Where(item => item.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+            await context
+                .CardAccounts.Where(card => card.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
             // Emailed receipts (MAZ-184): inbox items (their receipt links cascade), the
             // raw messages and the receipt address.
             await context

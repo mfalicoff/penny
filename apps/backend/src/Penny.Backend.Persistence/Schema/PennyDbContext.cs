@@ -50,6 +50,8 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<ReceiptInboxItem> ReceiptInboxItems => Set<ReceiptInboxItem>();
     public DbSet<ReceiptInboxReceipt> ReceiptInboxReceipts => Set<ReceiptInboxReceipt>();
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+    public DbSet<CapturedPurchase> CapturedPurchases => Set<CapturedPurchase>();
+    public DbSet<CardAccount> CardAccounts => Set<CardAccount>();
 
     public static PennyDbContext Create(NpgsqlDataSource source) =>
         new(Configure(new DbContextOptionsBuilder<PennyDbContext>(), source).Options);

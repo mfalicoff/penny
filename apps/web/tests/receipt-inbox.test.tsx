@@ -31,7 +31,7 @@ describe("feature switch", () => {
       expect(wasCalled(server.fetchMock, "/api/receipt-email")).toBe(true);
     });
     expect(within(screen.getByRole("navigation", { name: "Settings sections" })).queryByRole("link", { name: "Receipt email" })).not.toBeInTheDocument();
-    expect(within(await sidebar()).queryByText("Receipts to attach")).not.toBeInTheDocument();
+    expect(within(await sidebar()).queryByText("Inbox")).not.toBeInTheDocument();
     expect(server.fetchMock.mock.calls.some(([input]) => (input as string).startsWith("/api/receipt-inbox"))).toBe(false);
   });
 
@@ -39,7 +39,7 @@ describe("feature switch", () => {
     inboxServer({ items: [inboxItem(1), inboxItem(2)] });
     renderApp("/settings");
     expect(await within(await screen.findByRole("navigation", { name: "Settings sections" })).findByRole("link", { name: "Receipt email" })).toBeInTheDocument();
-    expect(await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 2 receipts to attach" })).toHaveAttribute("href", "/receipts?status=to_attach");
+    expect(await within(await sidebar()).findByRole("link", { name: /^Inbox\W*2\s*to review$/ })).toHaveAttribute("href", "/receipts?status=to_review");
   });
 });
 
@@ -51,7 +51,7 @@ describe("Settings › Receipt email", () => {
     await user.click(await screen.findByRole("button", { name: "Create address" }));
     expect(await screen.findByLabelText("Your receipt address")).toHaveValue("r-nnnnnnnnnnnnnnnnnnn1@receipts.example");
     expect(callsTo(server.fetchMock, "/api/receipt-email").filter((init) => init?.method === "POST")).toHaveLength(1);
-    expect(within(await sidebar()).getByRole("link", { name: "Receipts to attach" })).toBeInTheDocument();
+    expect(within(await sidebar()).getByRole("link", { name: "Inbox" })).toBeInTheDocument();
   });
 
   it("shows the address with Copy, the expiry with Extend, and the how-to", async () => {
@@ -141,7 +141,8 @@ describe("the inbox", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toHaveTextContent(`<img src=x onerror="alert(1)">`);
     expect(rows[0]).toHaveTextContent("<b>Your receipt</b> <script>alert(1)</script>");
-    expect(rows[0]).toHaveTextContent("2 files · Deleted in 2 days");
+    expect(rows[0]).toHaveTextContent("<script>alert(1)</script> · 2 files");
+    expect(rows[0]).toHaveTextContent("Deleted in 2 days");
     expect(within(rows[0] as HTMLElement).getByText("Sender not verified")).toBeInTheDocument();
     expect(rows[1]).toHaveTextContent("Acme Store");
     expect(rows[1]).toHaveTextContent("Older order");
@@ -150,14 +151,14 @@ describe("the inbox", () => {
     expect(container.querySelector("main img, main script, main b")).toBeNull();
   });
 
-  it("filters to Attached through the URL", async () => {
+  it("filters to Done through the URL, and still opens an old To attach or Attached link", async () => {
     const server = inboxServer({ items: items() });
     const user = userEvent.setup();
     const { router } = renderApp("/receipts");
     await screen.findByRole("list", { name: "Receipts to attach" });
-    await user.click(screen.getByRole("radio", { name: "Attached" }));
+    await user.click(screen.getByRole("radio", { name: "Done" }));
     expect(await screen.findByRole("list", { name: "Attached receipts" })).toHaveTextContent("Order 3");
-    expect(router.state.location.search).toEqual({ status: "attached" });
+    expect(router.state.location.search).toEqual({ status: "done" });
     expect(server.fetchMock.mock.calls.some(([input]) => (input as string) === "/api/receipt-inbox?status=attached")).toBe(true);
   });
 
@@ -369,7 +370,7 @@ describe("From inbox in the entry form", () => {
     const user = userEvent.setup();
     renderApp("/transactions");
     await screen.findByRole("heading", { level: 1 });
-    await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 1 receipt to attach" });
+    await within(await sidebar()).findByRole("link", { name: /^Inbox\W*1\s*to review$/ });
     await user.keyboard("n");
     const form = await screen.findByRole("form", { name: "New entry" });
     await user.type(within(form).getByLabelText("Amount (CAD)"), "12");
@@ -394,7 +395,7 @@ describe("From inbox in the entry form", () => {
     inboxServer({ ledger: { transactions: [{ ...entry("e1", "Dinner"), receipt } as never] }, items: [item], search: () => [] });
     const user = userEvent.setup();
     renderApp("/settings");
-    await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 1 receipt to attach" });
+    await within(await sidebar()).findByRole("link", { name: /^Inbox\W*1\s*to review$/ });
     await user.keyboard("n");
     const form = await screen.findByRole("form", { name: "New entry" });
     await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
@@ -410,7 +411,7 @@ describe("From inbox in the entry form", () => {
     inboxServer({ items: [inboxItem(1)] });
     const user = userEvent.setup();
     renderApp("/transactions");
-    await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 1 receipt to attach" });
+    await within(await sidebar()).findByRole("link", { name: /^Inbox\W*1\s*to review$/ });
     await user.keyboard("n");
     const form = await screen.findByRole("form", { name: "New entry" });
     await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));

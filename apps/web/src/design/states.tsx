@@ -19,17 +19,17 @@ export function LoadingState({ label = "Loading…" }: { label?: string }) {
 
 interface EmptyStateProps {
   icon?: IconName;
+  /** A glyph the kit lacks, drawn inline (the Inbox tray), in place of `icon`. */
+  glyph?: ReactNode;
   title: string;
   children?: ReactNode;
   action?: ReactNode;
 }
 
-export function EmptyState({ icon = "leaf", title, children, action }: EmptyStateProps) {
+export function EmptyState({ icon = "leaf", glyph, title, children, action }: EmptyStateProps) {
   return (
     <div className="state state--empty">
-      <span className="state__icon">
-        <Icon name={icon} size={28} />
-      </span>
+      <span className="state__icon">{glyph ?? <Icon name={icon} size={28} />}</span>
       <h2 className="state__title">{title}</h2>
       {children ? <div className="state__body">{children}</div> : null}
       {action}
@@ -162,7 +162,9 @@ export interface ToastInput {
    * `neutral` draws the check in the secondary label color, for a change that isn't a save of money
    * (card `web-suggestion-dismissed-toast`: a dismissed suggestion).
    */
-  icon?: "neutral";
+  icon?: "neutral" | "trash";
+  /** The detail on the title's line, as card `web-capture-discard` writes "Purchase discarded Metro · $54.18". */
+  inline?: boolean;
   /** Shows an Undo button that calls this, then dismisses. */
   onUndo?: () => void;
   /** Another action before Undo (e.g. View entry). It calls `onClick`, then dismisses. */
@@ -292,14 +294,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <ToastEntryContext value={toast?.entryId ?? null}>{children}</ToastEntryContext>
       <div className="toast-region" aria-live="polite" aria-atomic="true">
         {leaving && !toast ? (
-          <div key={leaving.id} className={cx("pk-toast", "glass", "pk-toast--leaving", leaving.tone === "error" && "pk-toast--error", leaving.icon === "neutral" && "pk-toast--neutral", Boolean(leaving.action) && "pk-toast--stacked")} inert aria-hidden="true">
+          <div key={leaving.id} className={cx("pk-toast", "glass", "pk-toast--leaving", leaving.tone === "error" && "pk-toast--error", leaving.icon && "pk-toast--neutral", Boolean(leaving.action) && "pk-toast--stacked")} inert aria-hidden="true">
             <ToastContent toast={leaving} onDismiss={() => undefined} />
           </div>
         ) : null}
         {toast ? (
           <div
             key={toast.id}
-            className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error", toast.icon === "neutral" && "pk-toast--neutral", Boolean(toast.action) && "pk-toast--stacked")}
+            className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error", toast.icon && "pk-toast--neutral", Boolean(toast.action) && "pk-toast--stacked")}
             onPointerEnter={(event) => {
               if (pointerCanPause(event.pointerType)) setHovered(true);
             }}
@@ -332,11 +334,19 @@ function ToastContent({ toast, onDismiss }: { toast: ToastState; onDismiss: () =
           <Icon name={toast.tile.icon} size={20} />
         </span>
       ) : (
-        <Icon name={toast.tone === "error" ? "alert-circle" : "checkmark-circle"} size={22} />
+        <Icon name={toast.tone === "error" ? "alert-circle" : toast.icon === "trash" ? "trash" : "checkmark-circle"} size={22} />
       )}
       <div className="pk-toast__body">
-        <div className="pk-toast__title">{toast.title}</div>
-        {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
+        {toast.inline && toast.detail ? (
+          <div className="pk-toast__title">
+            {toast.title} <span className="pk-toast__inline">{toast.detail}</span>
+          </div>
+        ) : (
+          <>
+            <div className="pk-toast__title">{toast.title}</div>
+            {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
+          </>
+        )}
       </div>
       <div className="pk-toast__actions">
         {toast.action ? (

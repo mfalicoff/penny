@@ -100,6 +100,14 @@ public struct APIErrorCode: RawRepresentable, Hashable, Sendable, Codable, Custo
     public static let profileNameManaged = APIErrorCode(rawValue: "profile.name_managed")
     public static let profilePictureNotFound = APIErrorCode(rawValue: "profile.picture_not_found")
     public static let profileUnreadablePicture = APIErrorCode(rawValue: "profile.unreadable_picture")
+    /// Contract 2.5.0: captured purchases in the Inbox (`/api/purchase-inbox`).
+    public static let purchaseInboxAlreadyDone = APIErrorCode(rawValue: "purchase_inbox.already_done")
+    public static let purchaseInboxFull = APIErrorCode(rawValue: "purchase_inbox.full")
+    public static let purchaseInboxInvalidCapture = APIErrorCode(rawValue: "purchase_inbox.invalid_capture")
+    public static let purchaseInboxInvalidCards = APIErrorCode(rawValue: "purchase_inbox.invalid_cards")
+    public static let purchaseInboxInvalidFilter = APIErrorCode(rawValue: "purchase_inbox.invalid_filter")
+    public static let purchaseInboxInvalidResolution = APIErrorCode(rawValue: "purchase_inbox.invalid_resolution")
+    public static let purchaseInboxNotFound = APIErrorCode(rawValue: "purchase_inbox.not_found")
     public static let pushInvalidDevice = APIErrorCode(rawValue: "push.invalid_device")
     public static let rateLimitAuth = APIErrorCode(rawValue: "rate_limit.auth")
     /// Contract 2.4.0: `GET /api/rates` with an unknown base or a bad date.
@@ -242,6 +250,13 @@ public struct APIErrorCode: RawRepresentable, Hashable, Sendable, Codable, Custo
         .profileNameManaged,
         .profilePictureNotFound,
         .profileUnreadablePicture,
+        .purchaseInboxAlreadyDone,
+        .purchaseInboxFull,
+        .purchaseInboxInvalidCapture,
+        .purchaseInboxInvalidCards,
+        .purchaseInboxInvalidFilter,
+        .purchaseInboxInvalidResolution,
+        .purchaseInboxNotFound,
         .pushInvalidDevice,
         .rateLimitAuth,
         .ratesInvalidRequest,
