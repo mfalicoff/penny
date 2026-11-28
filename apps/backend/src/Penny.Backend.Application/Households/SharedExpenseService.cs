@@ -16,7 +16,11 @@ namespace Penny.Backend.Application.Households;
 // ledger row when it validates a payment account, re-checks access inside the lock,
 // compare-and-increments the expense revision and writes its audit (and push outbox)
 // rows before commit.
-public sealed class SharedExpenseService(ISharedExpenseRepository expenses, TimeProvider clock)
+public sealed class SharedExpenseService(
+    ISharedExpenseRepository expenses,
+    HomeAmounts homes,
+    TimeProvider clock
+)
 {
     public const string ExpenseNotFound = "Expense not found.";
     public const string PayerNotMember = "The payer must be a current household member.";
@@ -48,13 +52,14 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
 
     // GET /api/households/{id}/expenses: current and former members (also after
     // archiving). A former member sees only the expenses they have a share in.
-    public Task<IReadOnlyList<ExpenseView>> ListAsync(
+    public async Task<IReadOnlyList<ExpenseView>> ListAsync(
         string householdId,
         string userId,
         string? month,
         CancellationToken cancellationToken
-    ) =>
-        expenses.ReadAsync<IReadOnlyList<ExpenseView>>(
+    )
+    {
+        var (views, currencies) = await expenses.ReadAsync(
             async store =>
             {
                 var membership = await HistoricalMemberAsync(store, householdId, userId);
@@ -64,29 +69,42 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         ErrorCodes.HouseholdInvalidData,
                         HouseholdService.InvalidData
                     );
-                return
+                IReadOnlyList<ExpenseView> visible =
                 [
                     .. (await store.ListExpensesAsync(householdId, month))
                         .Where(expense => CanSee(membership, expense, userId))
                         .Select(expense => ExpenseView.From(expense, userId)),
                 ];
+                return (visible, await CurrenciesAsync(store, householdId, userId));
             },
             cancellationToken
         );
+        return await homes.ExpensesAsync(
+            views,
+            currencies.Household,
+            currencies.Home,
+            userId,
+            cancellationToken
+        );
+    }
 
-    public Task<ExpenseView> GetAsync(
+    public async Task<ExpenseView> GetAsync(
         string householdId,
         string userId,
         string expenseId,
         CancellationToken cancellationToken
-    ) =>
-        expenses.ReadAsync(
+    )
+    {
+        var (view, currencies) = await expenses.ReadAsync(
             async store =>
             {
                 var membership = await HistoricalMemberAsync(store, householdId, userId);
                 var expense = await FindAsync(store, householdId, expenseId);
                 return expense is not null && CanSee(membership, expense, userId)
-                    ? ExpenseView.From(expense, userId)
+                    ? (
+                        ExpenseView.From(expense, userId),
+                        await CurrenciesAsync(store, householdId, userId)
+                    )
                     : throw new BackendFailure(
                         FailureKind.NotFound,
                         ErrorCodes.ExpenseNotFound,
@@ -95,6 +113,14 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             },
             cancellationToken
         );
+        return await homes.ExpenseAsync(
+            view,
+            currencies.Household,
+            currencies.Home,
+            userId,
+            cancellationToken
+        );
+    }
 
     public async Task<ExpenseView> CreateAsync(
         string householdId,
@@ -105,7 +131,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     {
         var input = ExpenseReader.ReadInput(body);
         var now = Now();
-        return await expenses.WriteAsync(
+        var (created, currencies) = await expenses.WriteAsync(
             async store =>
             {
                 // Access is checked before the body.
@@ -116,6 +142,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         ErrorCodes.HouseholdInvalidData,
                         HouseholdService.InvalidData
                     );
+                ValidateCurrency(input, household.Currency);
                 var memberIds = await EligibleAsync(store, household, input);
                 if (!memberIds.Contains(input.PayerUserId, StringComparer.Ordinal))
                     throw new BackendFailure(
@@ -153,8 +180,18 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     created.Date,
                     now
                 );
-                return created;
+                return (
+                    created,
+                    (Household: household.Currency, Home: await store.HomeCurrencyAsync(actorId))
+                );
             },
+            cancellationToken
+        );
+        return await homes.ExpenseAsync(
+            created,
+            currencies.Household,
+            currencies.Home,
+            actorId,
             cancellationToken
         );
     }
@@ -172,7 +209,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     {
         var update = ExpenseReader.ReadUpdate(body);
         var now = Now();
-        return await expenses.WriteAsync(
+        var (updated, currencies) = await expenses.WriteAsync(
             async store =>
             {
                 var destinationId = update?.TargetHouseholdId ?? householdId;
@@ -234,6 +271,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         ErrorCodes.ExpenseDestinationCurrency,
                         DestinationCurrency
                     );
+                ValidateCurrency(input, destination.Currency);
                 // A paid expense keeps the participants it was paid with.
                 IReadOnlyList<string> memberIds = paid
                     ? [.. stored.Splits.Select(share => share.UserId)]
@@ -339,8 +377,18 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                         now
                     );
                 }
-                return after;
+                return (
+                    after,
+                    (Household: destination.Currency, Home: await store.HomeCurrencyAsync(actorId))
+                );
             },
+            cancellationToken
+        );
+        return await homes.ExpenseAsync(
+            updated,
+            currencies.Household,
+            currencies.Home,
+            actorId,
             cancellationToken
         );
     }
@@ -429,10 +477,10 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 HouseholdService.InvalidData
             );
         var now = Now();
-        return await expenses.WriteAsync(
+        var (paid, currencies) = await expenses.WriteAsync(
             async store =>
             {
-                await RequireMemberAsync(store, householdId, actorId);
+                var household = await RequireMemberAsync(store, householdId, actorId);
                 var stored = await FindAsync(store, householdId, expenseId)
                     ?? throw new BackendFailure(
                         FailureKind.NotFound,
@@ -531,8 +579,18 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     month,
                     now
                 );
-                return await ViewAsync(store, householdId, expenseId, actorId);
+                return (
+                    await ViewAsync(store, householdId, expenseId, actorId),
+                    (Household: household.Currency, Home: await store.HomeCurrencyAsync(actorId))
+                );
             },
+            cancellationToken
+        );
+        return await homes.ExpenseAsync(
+            paid,
+            currencies.Household,
+            currencies.Home,
+            actorId,
             cancellationToken
         );
     }
@@ -561,12 +619,22 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 ErrorCodes.ExpenseInvalidYear,
                 InvalidYear
             );
-        return expenses.ReadAsync(
+        return ProjectedAsync(userId, month, year, cancellationToken);
+    }
+
+    private async Task<ProjectionView> ProjectedAsync(
+        string userId,
+        string? month,
+        string? year,
+        CancellationToken cancellationToken
+    )
+    {
+        var (projection, home) = await expenses.ReadAsync(
             async store =>
             {
                 var range = Range(month ?? year);
                 if (range is { Empty: true })
-                    return new ProjectionView([], []);
+                    return (new ProjectionView([], []), (string?)null);
                 var transactions = (await store.ProjectionAsync(userId, range?.From, range?.To))
                     .Select(row => Projected(row, userId))
                     .ToList();
@@ -574,9 +642,17 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     month is null || range is not { } days
                         ? []
                         : await ScheduledAsync(store, userId, days.From, days.To);
-                return new ProjectionView(transactions, scheduled);
+                return (
+                    new ProjectionView(transactions, scheduled),
+                    await store.HomeCurrencyAsync(userId)
+                );
             },
             cancellationToken
+        );
+        // Each row in the viewer's home currency too (contract 2.6.0), after the read.
+        return new(
+            await homes.ProjectedAsync(projection.Transactions, home, cancellationToken),
+            await homes.ProjectedAsync(projection.Scheduled, home, cancellationToken)
         );
     }
 
@@ -720,6 +796,38 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             ),
             input.Date
         );
+    }
+
+    // An expense paid in another currency than the household's carries the amount paid,
+    // that currency and the rate, and its total is the conversion (contract 2.6.0,
+    // `sharedExpenseCurrencyProblem`). Any problem is an invalid body.
+    private static void ValidateCurrency(ExpenseInput input, string householdCurrency)
+    {
+        if (
+            SharedCurrency.ExpenseProblem(input.TotalCents, input.Foreign, householdCurrency)
+            is not null
+        )
+            throw new BackendFailure(
+                FailureKind.Invalid,
+                ErrorCodes.HouseholdInvalidData,
+                HouseholdService.InvalidData
+            );
+    }
+
+    // The household's currency and the viewer's home currency, for `Home` (contract 2.6.0).
+    internal static async Task<(string Household, string? Home)> CurrenciesAsync(
+        ISharedExpenseTransaction store,
+        string householdId,
+        string userId
+    )
+    {
+        var household = await store.FindAsync(householdId, includeArchived: true)
+            ?? throw new BackendFailure(
+                FailureKind.NotFound,
+                ErrorCodes.HouseholdNotFound,
+                HouseholdService.NotFound
+            );
+        return (household.Currency, await store.HomeCurrencyAsync(userId));
     }
 
     // Only the payer attaches their own account, and it must be in their ledger. The
@@ -906,7 +1014,9 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             input.Note,
             accountId,
             input.ReceiptId,
-            shares
+            shares,
+            null,
+            input.Foreign
         );
 
     // Writes the audit row and, for events that notify (`month` set: created, updated

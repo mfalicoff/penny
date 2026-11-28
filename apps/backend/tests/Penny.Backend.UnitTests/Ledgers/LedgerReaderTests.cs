@@ -49,6 +49,7 @@ public sealed class LedgerReaderTests
         entry.Receipt!.Id.ShouldBe("receipt-1");
         entry.RecurringId.ShouldBeNull();
         write.Ledger.Trips.Single().SharedHouseholdId.ShouldBeNull();
+        write.Ledger.Trips.Single().Currency.ShouldBeNull();
         write.Ledger.Recurring.Single().Active.ShouldBeTrue();
     }
 

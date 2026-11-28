@@ -149,11 +149,22 @@ private struct ExpensePage: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
                 }
+                let amounts = expense.amounts(
+                    householdCurrency: model.currency, home: shell.currency, meId: people.meId)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Total").font(.caption).foregroundStyle(PennyColor.secondaryLabel)
-                    Text(MoneyFormat.amount(expense.totalCents, currency: model.currency))
+                    // MAZ-151 phase 2: what was paid leads, in its own currency, then the trip's
+                    // amount and yours under it.
+                    Text(CurrencyText.amount(amounts.paid, code: amounts.paidCurrency, home: shell.currency))
                         .font(.largeTitle.weight(.bold)).monospacedDigit()
                         .lineLimit(1).minimumScaleFactor(0.5)
+                    ForEach(
+                        Self.otherAmounts(amounts, householdTotal: expense.totalCents, household: model.currency),
+                        id: \.text
+                    ) { line in
+                        Text(line.text).font(.callout.weight(.medium)).monospacedDigit()
+                            .foregroundStyle(line.provisional ? PennyColor.pending : PennyColor.secondaryLabel)
+                    }
                     Text(
                         "\(HouseholdText.day(expense.date)) · \(people.name(expense.payerUserId)) paid · split "
                             + expense.mode.label.lowercased()
@@ -178,10 +189,35 @@ private struct ExpensePage: View {
         .listSectionSeparator(.hidden)
         Section {
             LabeledContent("Your share") {
-                MoneyText(expense.share(of: people.meId), meaning: .neutral, currency: model.currency)
-                    .fontWeight(.medium)
+                VStack(alignment: .trailing, spacing: 1) {
+                    MoneyText(expense.share(of: people.meId), meaning: .neutral, currency: model.currency)
+                        .fontWeight(.medium)
+                    // MAZ-151 phase 2: in your currency, when the household's isn't it.
+                    let amounts = expense.amounts(
+                        householdCurrency: model.currency, home: shell.currency, meId: people.meId)
+                    if model.currency != shell.currency, let share = amounts.homeShare {
+                        let text = MoneyFormat.amount(share, currency: shell.currency)
+                        Text(amounts.provisional ? "≈ \(text)" : text)
+                            .font(.footnote).monospacedDigit()
+                            .foregroundStyle(amounts.provisional ? PennyColor.pending : PennyColor.secondaryLabel)
+                    }
+                }
             }
             .accessibilityIdentifier("sharedExpense.yourShare")
+            if let code = expense.originalCurrency, let rate = expense.rate {
+                LabeledContent("Rate") {
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(CurrencyText.rateLine(code, rate: rate, home: model.currency)).monospacedDigit()
+                            .foregroundStyle(PennyColor.label)
+                        Text(Self.rateSource(expense, source: shell.rates.latest[shell.currency]?.source))
+                            .font(.footnote)
+                            .foregroundStyle(
+                                expense.paidRateStatus == .provisional ? PennyColor.pending : PennyColor.secondaryLabel)
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("sharedExpense.rate")
+            }
             LabeledContent("Category") {
                 HStack(spacing: 8) {
                     CategoryIcon(symbol: expense.category.symbol, color: expense.category.tint, size: 24)
@@ -211,6 +247,44 @@ private struct ExpensePage: View {
                 expense.payerUserId == people.meId && expense.accountId != nil
                     ? "Only you see which account you paid with. Your share counts in your spending."
                     : "Your share counts in your spending; the rest belongs to the others.")
+        }
+    }
+
+    /// The amounts under what was paid: the household's total when it was paid in another
+    /// currency ("€564.00 EUR"), then the viewer's ("$823.80 CAD", "≈ $175.56 CAD" while provisional).
+    static func otherAmounts(_ amounts: SharedExpenseAmounts, householdTotal: Int64, household: String) -> [(
+        text: String, provisional: Bool
+    )] {
+        HouseholdExpenseDetailLines.lines(amounts, householdTotal: householdTotal, household: household)
+    }
+}
+
+/// The lines under what a shared expense was paid (MAZ-151 phase 2), pure for tests.
+enum HouseholdExpenseDetailLines {
+    static func lines(_ amounts: SharedExpenseAmounts, householdTotal: Int64, household: String) -> [(
+        text: String, provisional: Bool
+    )] {
+        var lines: [(text: String, provisional: Bool)] = []
+        if amounts.paidCurrency != household {
+            lines.append(("\(MoneyFormat.amount(householdTotal, currency: household)) \(household)", false))
+        }
+        if amounts.showsHome, household != amounts.home, let total = amounts.homeTotal {
+            let text = "\(MoneyFormat.amount(total, currency: amounts.home)) \(amounts.home)"
+            lines.append((amounts.provisional ? "≈ \(text)" : text, amounts.provisional))
+        }
+        return lines
+    }
+}
+
+extension ExpensePage {
+    /// "European Central Bank · Nov 3", "Provisional · Nov 6" or "Your rate".
+    static func rateSource(_ expense: WireSharedExpense, source: String?) -> String {
+        let date = expense.rateDate.flatMap(CalendarDate.init)
+        switch expense.paidRateStatus {
+        case .edited?: return "Your rate"
+        case .provisional?:
+            return ["Provisional", date.map(CurrencyText.day)].compactMap(\.self).joined(separator: " · ")
+        default: return CurrencyText.source(source, date: date)
         }
     }
 

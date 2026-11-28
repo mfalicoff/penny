@@ -29,6 +29,32 @@ internal sealed class HouseholdExpenseMapping : IEntityTypeConfiguration<Househo
             );
             table.HasCheckConstraint("ck_household_expenses_note", Checks.Length("note", 0, 1000));
             table.HasCheckConstraint("ck_household_expenses_revision", Checks.Revision("revision"));
+            // Contract 2.6.0: the foreign-amount columns (the conversion itself is checked by
+            // SharedExpenseService, which knows the household's currency).
+            table.HasCheckConstraint(
+                "ck_household_expenses_original_amount",
+                $"original_amount IS NULL OR {Checks.Cents("original_amount", 1)}"
+            );
+            table.HasCheckConstraint(
+                "ck_household_expenses_original_currency",
+                $"original_currency IS NULL OR {Checks.CurrencyCode("original_currency")}"
+            );
+            table.HasCheckConstraint(
+                "ck_household_expenses_rate",
+                $"rate IS NULL OR ({Checks.Rate("rate")})"
+            );
+            table.HasCheckConstraint(
+                "ck_household_expenses_rate_status",
+                $"rate_status IS NULL OR {Checks.In("rate_status", Checks.RateStatuses)}"
+            );
+            table.HasCheckConstraint(
+                "ck_household_expenses_foreign",
+                "(original_amount IS NULL) = (original_currency IS NULL) AND (original_currency IS NULL) = (rate IS NULL) AND (rate IS NULL) = (rate_status IS NULL)"
+            );
+            table.HasCheckConstraint(
+                "ck_household_expenses_rate_date",
+                "(rate_date IS NULL) = (rate_status IS NULL OR rate_status = 'edited')"
+            );
         });
         builder.HasKey(expense => expense.Id);
         builder.HasOne<Household>().WithMany().HasForeignKey(expense => expense.HouseholdId);

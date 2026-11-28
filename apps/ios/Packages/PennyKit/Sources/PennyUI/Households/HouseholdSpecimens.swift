@@ -119,7 +119,7 @@ struct PreviewHouseholds: HouseholdService {
         throw APIError.conflict(message: "Settle all monthly balances before archiving.")
     }
     func createTrip(
-        name: String, currency: Currency, startDate: CalendarDate, endDate: CalendarDate, timezoneOffsetMinutes: Int
+        name: String, currency: String, startDate: CalendarDate, endDate: CalendarDate, timezoneOffsetMinutes: Int
     ) async throws -> WireHousehold {
         throw APIError.offline
     }

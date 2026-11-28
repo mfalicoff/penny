@@ -309,11 +309,12 @@ describe("shared trips", { timeout: 20_000 }, () => {
     const form = await dialog("New trip");
     await fillTrip(user, form, "Coast", "2026-11-01", "2026-11-03");
     await user.click(within(form).getByRole("switch", { name: "Share with others" }));
-    // The card's PEOPLE group: you as the organizer, inviting after saving; the currency is locked.
+    // The card's PEOPLE group: you as the organizer, inviting after saving; the currency defaults to yours (MAZ-151 phase 2).
     expect(within(form).getByText("Organizer")).toBeInTheDocument();
     expect(within(form).getByText("Invite with a code")).toBeInTheDocument();
-    expect(within(form).getByText("CAD")).toBeInTheDocument();
-    await user.click(within(form).getByRole("button", { name: "Create shared trip" }));
+    expect(within(form).getByRole("button", { name: "Currency: CAD, Canadian dollar" })).toBeInTheDocument();
+    expect(within(form).getByText(/New trip expenses start in Canadian dollars, and payments are suggested in Canadian dollars\./)).toBeInTheDocument();
+    await user.click(within(form).getByRole("button", { name: "Create trip" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Coast" })).toBeInTheDocument();
     const id = server.state.households[0]?.id ?? "";
     expect(ledgerTrips()).toEqual([]);

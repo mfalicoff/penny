@@ -2967,11 +2967,6 @@
         ],
         "deviations": [
           {
-            "summary": "The test stack runs with exchange-rate fetching off, so the capture shows a typed (Edited) rate instead of the European Central Bank rate and its date; the published-rate states are covered by unit tests only",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
             "summary": "The form keeps its Split row (All mine) between Rate and Receipt, repeat, trip; the card has none",
             "kind": "follow-up",
             "ref": "MAZ-151"
@@ -2997,12 +2992,7 @@
         ],
         "deviations": [
           {
-            "summary": "JPY shows the locale's symbol “JP¥”; the card shows “¥”",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          },
-          {
-            "summary": "Suggested has no trip currency (“Lisbon's currency”): trip currencies are phase 2",
+            "summary": "Captured outside a trip, so Suggested shows the entry's and home currencies; a trip entry adds the trip's currency first (“Lisbon's currency”), built in phase 2 but not captured in that state",
             "kind": "follow-up",
             "ref": "MAZ-151"
           }
@@ -3041,7 +3031,7 @@
         ],
         "deviations": [
           {
-            "summary": "With no published rate on the test stack, the sheet offers “Last used 1.4600 · Use the last rate” instead of the European Central Bank rate and “Use the published rate”",
+            "summary": "Captured while typing a first edit: the sheet is at full height under the keyboard and has no Edited tag yet; the card reopens an edited rate at the medium detent",
             "kind": "follow-up",
             "ref": "MAZ-151"
           }
@@ -3140,53 +3130,41 @@
       "id": "iphone-trip-currencies",
       "view": "shared Lisbon trip with expenses in EUR, USD and CAD, totals in CAD",
       "native": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Expenses are listed oldest first, as on iphone-trip-detail; the card lists them newest first (design decision)",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Design decision: the expenses are listed oldest first, as on web-trip and iphone-trip-detail; this card lists them newest first",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
       "id": "iphone-trip-balances-currency",
       "view": "Lisbon trip balances and suggested payments in euros, each person's own currency under it",
-      "native": {
-        "status": "not-built",
-        "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
-      },
-      "web": {
-        "status": "not-built",
-        "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
-      }
-    },
-    {
-      "id": "iphone-trip-form-currency",
-      "view": "new trip form with its currency, EUR, no longer locked",
-      "native": {
-        "status": "not-built",
-        "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
-      },
-      "web": {
-        "status": "not-built",
-        "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
-      }
-    },
-    {
-      "id": "iphone-currency-rates",
-      "view": "currency settings: home currency CAD, daily ECB rates on, recent currencies",
       "native": {
         "status": "deviates",
         "owner": "MAZ-151",
@@ -3197,10 +3175,68 @@
         ],
         "deviations": [
           {
-            "summary": "The test stack runs with fetching off, so Daily rates shows Off and Your last rates instead of On and Latest rates",
+            "summary": "Balances settle month by month, as Penny does: the month pill stays beside Back and the month with its Settles tag is under the balances, Record paid opens on the month's last day (dimmed before), and the payments' note adds when it opens; the card nets the whole trip (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-151"
           }
+        ]
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-151",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Design decision: balances are the trip's month's (Penny settles a trip month by month), so the bar keeps the month and Balances says each month settles on its own and when payments open; the card shows the whole trip's balances with Record paid on every payment",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-trip-form-currency",
+      "view": "new trip form with its currency, EUR, no longer locked",
+      "native": {
+        "status": "matches",
+        "owner": "MAZ-151",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-151",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A dialog with labelled fields and Cancel / Create trip, not a sheet, as the web's iphone-trip-form (approved there under the web conventions, MAZ-227)",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-currency-rates",
+      "view": "currency settings: home currency CAD, daily ECB rates on, recent currencies",
+      "native": {
+        "status": "matches",
+        "owner": "MAZ-151",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
         ]
       },
       "web": {
@@ -3628,19 +3664,12 @@
       "id": "ipad-add-entry-currency",
       "view": "iPad add entry in euros with the converted amount and the rate",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-151",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The test stack runs with exchange-rate fetching off, so the capture shows a typed (Edited) rate instead of the European Central Bank rate and its date; the published-rate states are covered by unit tests only",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
-          }
         ]
       },
       "web": {
@@ -3671,22 +3700,6 @@
       "id": "ipad-trip-currencies",
       "view": "iPad Lisbon trip with expenses in three currencies, balances and payments in euros",
       "native": {
-        "status": "not-built",
-        "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The app records each entry in one currency today.",
-        "followUp": "MAZ-151"
-      },
-      "web": {
-        "status": "not-built",
-        "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
-      }
-    },
-    {
-      "id": "ipad-settings-currency",
-      "view": "iPad settings with Currency in the detail column: home currency and daily rates",
-      "native": {
         "status": "deviates",
         "owner": "MAZ-151",
         "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
@@ -3696,10 +3709,28 @@
         ],
         "deviations": [
           {
-            "summary": "The test stack runs with fetching off, so Daily rates shows Off and Your last rates instead of On and Latest rates",
+            "summary": "Balances settle month by month, as Penny does: the month pill stays beside Back and the month with its Settles tag is under the balances, Record paid opens on the month's last day (dimmed before), and the payments' note adds when it opens; the card nets the whole trip (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-151"
           }
+        ]
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-151",
+        "note": "Built in phase 2 (a touch tablet shows the trip's totals in your currency, the expenses with both amounts and the suggested payments in the settle currency), but only the desktop and 402px web cards were captured in this change."
+      }
+    },
+    {
+      "id": "ipad-settings-currency",
+      "view": "iPad settings with Currency in the detail column: home currency and daily rates",
+      "native": {
+        "status": "matches",
+        "owner": "MAZ-151",
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
         ]
       },
       "web": {
@@ -5019,10 +5050,25 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Design decision: balances, what each person paid and the suggested payments are the trip's month's (Penny settles a trip month by month), not the whole trip's as on the card; Record paid opens on the month's last day and shows only on payments you're part of",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          },
+          {
+            "summary": "Design decision: the expenses are listed oldest first, as on web-trip and iphone-trip-detail; this card lists them newest first",
+            "kind": "follow-up",
+            "ref": "MAZ-151"
+          }
+        ]
       }
     },
     {
@@ -5035,10 +5081,13 @@
         "followUp": "MAZ-151"
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-151",
-        "note": "Card approved by the owner (MAZ-270, 2026-11-26), not built yet. The web records each entry in one currency today.",
-        "followUp": "MAZ-151"
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {

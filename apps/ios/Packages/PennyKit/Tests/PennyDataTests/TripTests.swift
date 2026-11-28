@@ -92,7 +92,7 @@ struct TripClientTests {
         let transport = StubTransport(status: 201, json: Self.tripJSON)
         let client = try APIFixtures.client(transport: transport)
         let created = try await client.createTrip(
-            name: "  Lisbon ", currency: .cad, startDate: TripFixtures.day("2026-11-12"),
+            name: "  Lisbon ", currency: "CAD", startDate: TripFixtures.day("2026-11-12"),
             endDate: TripFixtures.day("2026-11-19"), timezoneOffsetMinutes: 300)
         #expect(created.trip?.endDate == "2026-11-19")
         #expect(transport.sent[0].httpMethod == "POST")
@@ -119,7 +119,7 @@ struct TripClientTests {
         let client = try APIFixtures.client(transport: transport)
         await #expect(throws: APIError.invalidRequest(.invalidField("endDate"))) {
             _ = try await client.createTrip(
-                name: "Lisbon", currency: .cad, startDate: TripFixtures.day("2026-11-12"),
+                name: "Lisbon", currency: "CAD", startDate: TripFixtures.day("2026-11-12"),
                 endDate: TripFixtures.day("2026-11-11"), timezoneOffsetMinutes: 0)
         }
         await #expect(throws: APIError.invalidRequest(.invalidField("startDate"))) {
@@ -140,7 +140,7 @@ struct TripClientTests {
         let client = try APIFixtures.client(transport: transport)
         await #expect(throws: APIError.malformedResponse) {
             _ = try await client.createTrip(
-                name: "Lisbon", currency: .cad, startDate: TripFixtures.day("2026-11-12"),
+                name: "Lisbon", currency: "CAD", startDate: TripFixtures.day("2026-11-12"),
                 endDate: TripFixtures.day("2026-11-12"), timezoneOffsetMinutes: 0)
         }
     }

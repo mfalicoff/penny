@@ -16,7 +16,7 @@ public protocol HouseholdService: Sendable {
 
     /// Shared trips (MAZ-76): a household with a travel range.
     func createTrip(
-        name: String, currency: Currency, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
+        name: String, currency: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
         timezoneOffsetMinutes: Int
     ) async throws -> WireHousehold
     func updateTrip(id: String, name: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate)
@@ -131,7 +131,7 @@ public struct APIHouseholdService: HouseholdService {
         try await call { try await client.revokeEmailInvite(householdId: householdId, inviteId: inviteId) }
     }
     public func createTrip(
-        name: String, currency: Currency, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
+        name: String, currency: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
         timezoneOffsetMinutes: Int
     ) async throws -> WireHousehold {
         try await call {

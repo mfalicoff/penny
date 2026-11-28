@@ -1,0 +1,833 @@
+{
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
+  "description": "MAZ-151 phase 2: shared expenses in several currencies. A household's (shared trip's) currency is the one its balances and settle-up use; a shared expense paid in another currency stores what was paid, that currency and the rate (household units per unit), with totalCents and splits converted at its date's rate (the personal entry rules, with the household's currency as home: expenses). memberAmounts is a member's view in their home currency: converted from what was paid at the home rate for the expense date, half up (exact when paid in the home currency, the household's own amounts when it is the home currency, null when a rate is needed and none is known); the share keeps its proportion of the total, half up. settleIn shows balances and suggested payments in another currency at one rate: payments are suggested in the household's currency, then each figure converts on its own, half up, keeping its sign. projection is joined into the personal view (ledgerWithHouseholds): a row counts at its home amounts with what was paid when that isn't the home currency, a row in another currency without home amounts for the ledger's currency is left out.",
+  "memberAmounts": [
+    {
+      "name": "euro expense in a euro trip, CAD home",
+      "expense": {
+        "totalCents": 12000
+      },
+      "shareCents": 3000,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": "1.463",
+      "expected": {
+        "totalCents": 17556,
+        "shareCents": 4389
+      }
+    },
+    {
+      "name": "paid in the home currency needs no rate",
+      "expense": {
+        "totalCents": 1526,
+        "originalAmount": 2230,
+        "originalCurrency": "CAD"
+      },
+      "shareCents": 763,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": null,
+      "expected": {
+        "totalCents": 2230,
+        "shareCents": 1115
+      }
+    },
+    {
+      "name": "paid in the home currency ignores a rate",
+      "expense": {
+        "totalCents": 1526,
+        "originalAmount": 2230,
+        "originalCurrency": "CAD"
+      },
+      "shareCents": 763,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": "1.461",
+      "expected": {
+        "totalCents": 2230,
+        "shareCents": 1115
+      }
+    },
+    {
+      "name": "share keeps its proportion, half up",
+      "expense": {
+        "totalCents": 25600
+      },
+      "shareCents": 6400,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": "1.458",
+      "expected": {
+        "totalCents": 37325,
+        "shareCents": 9331
+      }
+    },
+    {
+      "name": "converts from what was paid, not the trip amount",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD"
+      },
+      "shareCents": 14100,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": "1.373",
+      "expected": {
+        "totalCents": 82380,
+        "shareCents": 20595
+      }
+    },
+    {
+      "name": "zero share",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD"
+      },
+      "shareCents": 0,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": "1.373",
+      "expected": {
+        "totalCents": 82380,
+        "shareCents": 0
+      }
+    },
+    {
+      "name": "whole share stays whole",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD"
+      },
+      "shareCents": 56400,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": "1.373",
+      "expected": {
+        "totalCents": 82380,
+        "shareCents": 82380
+      }
+    },
+    {
+      "name": "no rate known",
+      "expense": {
+        "totalCents": 12000
+      },
+      "shareCents": 3000,
+      "householdCurrency": "EUR",
+      "home": "CAD",
+      "rate": null,
+      "expected": null
+    },
+    {
+      "name": "household in the home currency",
+      "expense": {
+        "totalCents": 12000
+      },
+      "shareCents": 3000,
+      "householdCurrency": "EUR",
+      "home": "EUR",
+      "rate": null,
+      "expected": {
+        "totalCents": 12000,
+        "shareCents": 3000
+      }
+    },
+    {
+      "name": "household in the home currency keeps the trip amount",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD"
+      },
+      "shareCents": 14100,
+      "householdCurrency": "EUR",
+      "home": "EUR",
+      "rate": null,
+      "expected": {
+        "totalCents": 56400,
+        "shareCents": 14100
+      }
+    },
+    {
+      "name": "yen home has no minor units",
+      "expense": {
+        "totalCents": 1001
+      },
+      "shareCents": 334,
+      "householdCurrency": "CAD",
+      "home": "JPY",
+      "rate": "109.5",
+      "expected": {
+        "totalCents": 1096,
+        "shareCents": 366
+      }
+    },
+    {
+      "name": "yen trip, dinar home",
+      "expense": {
+        "totalCents": 120000
+      },
+      "shareCents": 40000,
+      "householdCurrency": "JPY",
+      "home": "KWD",
+      "rate": "0.00203",
+      "expected": {
+        "totalCents": 243600,
+        "shareCents": 81200
+      }
+    },
+    {
+      "name": "share above the total",
+      "expense": {
+        "totalCents": 1001
+      },
+      "shareCents": 1002,
+      "householdCurrency": "CAD",
+      "home": "EUR",
+      "rate": "0.68",
+      "error": "A share cannot exceed its total."
+    }
+  ],
+  "settleIn": [
+    {
+      "name": "in the trip's currency",
+      "balances": [
+        {
+          "userId": "jo",
+          "balanceCents": -11500
+        },
+        {
+          "userId": "mira",
+          "balanceCents": -22737
+        },
+        {
+          "userId": "sam",
+          "balanceCents": 32900
+        },
+        {
+          "userId": "you",
+          "balanceCents": 1337
+        }
+      ],
+      "from": "EUR",
+      "to": "EUR",
+      "rate": "1",
+      "expected": {
+        "balances": [
+          {
+            "userId": "jo",
+            "balanceCents": -11500
+          },
+          {
+            "userId": "mira",
+            "balanceCents": -22737
+          },
+          {
+            "userId": "sam",
+            "balanceCents": 32900
+          },
+          {
+            "userId": "you",
+            "balanceCents": 1337
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "mira",
+            "toUserId": "sam",
+            "amountCents": 22737
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "sam",
+            "amountCents": 10163
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "you",
+            "amountCents": 1337
+          }
+        ]
+      }
+    },
+    {
+      "name": "in Canadian dollars at today's rate",
+      "balances": [
+        {
+          "userId": "jo",
+          "balanceCents": -11500
+        },
+        {
+          "userId": "mira",
+          "balanceCents": -22737
+        },
+        {
+          "userId": "sam",
+          "balanceCents": 32900
+        },
+        {
+          "userId": "you",
+          "balanceCents": 1337
+        }
+      ],
+      "from": "EUR",
+      "to": "CAD",
+      "rate": "1.463",
+      "expected": {
+        "balances": [
+          {
+            "userId": "jo",
+            "balanceCents": -16825
+          },
+          {
+            "userId": "mira",
+            "balanceCents": -33264
+          },
+          {
+            "userId": "sam",
+            "balanceCents": 48133
+          },
+          {
+            "userId": "you",
+            "balanceCents": 1956
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "mira",
+            "toUserId": "sam",
+            "amountCents": 33264
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "sam",
+            "amountCents": 14868
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "you",
+            "amountCents": 1956
+          }
+        ]
+      }
+    },
+    {
+      "name": "in US dollars",
+      "balances": [
+        {
+          "userId": "jo",
+          "balanceCents": -11500
+        },
+        {
+          "userId": "mira",
+          "balanceCents": -22737
+        },
+        {
+          "userId": "sam",
+          "balanceCents": 32900
+        },
+        {
+          "userId": "you",
+          "balanceCents": 1337
+        }
+      ],
+      "from": "EUR",
+      "to": "USD",
+      "rate": "1.0631",
+      "expected": {
+        "balances": [
+          {
+            "userId": "jo",
+            "balanceCents": -12226
+          },
+          {
+            "userId": "mira",
+            "balanceCents": -24172
+          },
+          {
+            "userId": "sam",
+            "balanceCents": 34976
+          },
+          {
+            "userId": "you",
+            "balanceCents": 1421
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "mira",
+            "toUserId": "sam",
+            "amountCents": 24172
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "sam",
+            "amountCents": 10804
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "you",
+            "amountCents": 1421
+          }
+        ]
+      }
+    },
+    {
+      "name": "in yen, no minor units",
+      "balances": [
+        {
+          "userId": "jo",
+          "balanceCents": -11500
+        },
+        {
+          "userId": "mira",
+          "balanceCents": -22737
+        },
+        {
+          "userId": "sam",
+          "balanceCents": 32900
+        },
+        {
+          "userId": "you",
+          "balanceCents": 1337
+        }
+      ],
+      "from": "EUR",
+      "to": "JPY",
+      "rate": "161.23",
+      "expected": {
+        "balances": [
+          {
+            "userId": "jo",
+            "balanceCents": -18541
+          },
+          {
+            "userId": "mira",
+            "balanceCents": -36659
+          },
+          {
+            "userId": "sam",
+            "balanceCents": 53045
+          },
+          {
+            "userId": "you",
+            "balanceCents": 2156
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "mira",
+            "toUserId": "sam",
+            "amountCents": 36659
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "sam",
+            "amountCents": 16386
+          },
+          {
+            "fromUserId": "jo",
+            "toUserId": "you",
+            "amountCents": 2156
+          }
+        ]
+      }
+    },
+    {
+      "name": "each figure rounds on its own",
+      "balances": [
+        {
+          "userId": "a",
+          "balanceCents": -5
+        },
+        {
+          "userId": "b",
+          "balanceCents": -5
+        },
+        {
+          "userId": "c",
+          "balanceCents": 10
+        }
+      ],
+      "from": "EUR",
+      "to": "CAD",
+      "rate": "1.5",
+      "expected": {
+        "balances": [
+          {
+            "userId": "a",
+            "balanceCents": -8
+          },
+          {
+            "userId": "b",
+            "balanceCents": -8
+          },
+          {
+            "userId": "c",
+            "balanceCents": 15
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "a",
+            "toUserId": "c",
+            "amountCents": 8
+          },
+          {
+            "fromUserId": "b",
+            "toUserId": "c",
+            "amountCents": 8
+          }
+        ]
+      }
+    },
+    {
+      "name": "balances that don't net to zero",
+      "balances": [
+        {
+          "userId": "a",
+          "balanceCents": -5
+        },
+        {
+          "userId": "b",
+          "balanceCents": 6
+        }
+      ],
+      "from": "EUR",
+      "to": "CAD",
+      "rate": "1.5",
+      "error": "Household balances must net to zero."
+    }
+  ],
+  "expenses": [
+    {
+      "name": "paid in the trip's currency",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 12000
+      },
+      "problem": null
+    },
+    {
+      "name": "paid in US dollars",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD",
+        "rate": "0.94",
+        "rateStatus": "published",
+        "rateDate": "2026-10-02"
+      },
+      "problem": null
+    },
+    {
+      "name": "total that doesn't match the conversion",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 56401,
+        "originalAmount": 60000,
+        "originalCurrency": "USD",
+        "rate": "0.94",
+        "rateStatus": "published",
+        "rateDate": "2026-10-02"
+      },
+      "problem": "Invalid converted amount"
+    },
+    {
+      "name": "paid in the trip's own currency",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 60000,
+        "originalAmount": 60000,
+        "originalCurrency": "EUR",
+        "rate": "1",
+        "rateStatus": "published",
+        "rateDate": "2026-10-02"
+      },
+      "problem": "Invalid original currency"
+    },
+    {
+      "name": "edited rate",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD",
+        "rate": "0.94",
+        "rateStatus": "edited"
+      },
+      "problem": null
+    },
+    {
+      "name": "published rate without its date",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD",
+        "rate": "0.94",
+        "rateStatus": "published"
+      },
+      "problem": "Invalid exchange rate"
+    },
+    {
+      "name": "original amount without a rate",
+      "householdCurrency": "EUR",
+      "expense": {
+        "totalCents": 56400,
+        "originalAmount": 60000,
+        "originalCurrency": "USD"
+      },
+      "problem": "Invalid original amount"
+    },
+    {
+      "name": "yen trip with a dollar expense",
+      "householdCurrency": "JPY",
+      "expense": {
+        "totalCents": 9674,
+        "originalAmount": 6000,
+        "originalCurrency": "USD",
+        "rate": "161.23",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-26"
+      },
+      "problem": null
+    }
+  ],
+  "projection": {
+    "ledger": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [],
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        }
+      ],
+      "transactions": []
+    },
+    "rows": [
+      {
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "fado",
+        "date": "2026-11-27",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "fado",
+        "totalCents": 12000,
+        "shareCents": 3000,
+        "home": {
+          "currency": "CAD",
+          "totalCents": 17556,
+          "shareCents": 4389,
+          "rate": "1.463",
+          "rateStatus": "provisional",
+          "rateDate": "2026-11-26"
+        }
+      },
+      {
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "insurance",
+        "date": "2026-11-03",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "insurance",
+        "totalCents": 1526,
+        "shareCents": 763,
+        "originalAmount": 2230,
+        "originalCurrency": "CAD",
+        "rate": "0.6843",
+        "rateStatus": "published",
+        "rateDate": "2026-11-03",
+        "home": {
+          "currency": "CAD",
+          "totalCents": 2230,
+          "shareCents": 1115
+        }
+      },
+      {
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "flights",
+        "date": "2026-10-02",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "flights",
+        "totalCents": 56400,
+        "shareCents": 14100,
+        "originalAmount": 60000,
+        "originalCurrency": "USD",
+        "rate": "0.94",
+        "rateStatus": "published",
+        "rateDate": "2026-10-02",
+        "home": {
+          "currency": "CAD",
+          "totalCents": 82380,
+          "shareCents": 20595,
+          "rate": "1.373",
+          "rateStatus": "published",
+          "rateDate": "2026-10-02"
+        }
+      },
+      {
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "no-rate",
+        "date": "2026-11-03",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "no-rate",
+        "totalCents": 5000,
+        "shareCents": 2500
+      },
+      {
+        "householdId": "lisbon",
+        "householdName": "Lisbon",
+        "householdCurrency": "EUR",
+        "title": "other-home",
+        "date": "2026-11-03",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "other-home",
+        "totalCents": 5000,
+        "shareCents": 2500,
+        "home": {
+          "currency": "USD",
+          "totalCents": 5316,
+          "shareCents": 2658,
+          "rate": "1.0631",
+          "rateStatus": "published",
+          "rateDate": "2026-11-03"
+        }
+      },
+      {
+        "householdId": "maison",
+        "householdName": "Maison",
+        "householdCurrency": "CAD",
+        "title": "maison-tapas",
+        "date": "2026-11-03",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "maison-tapas",
+        "totalCents": 12420,
+        "shareCents": 6210,
+        "originalAmount": 8500,
+        "originalCurrency": "EUR",
+        "rate": "1.4612",
+        "rateStatus": "published",
+        "rateDate": "2026-11-03"
+      },
+      {
+        "householdId": "maison",
+        "householdName": "Maison",
+        "householdCurrency": "CAD",
+        "title": "maison-hydro",
+        "date": "2026-11-03",
+        "category": {
+          "name": "Travel",
+          "icon": "airplane-outline",
+          "color": "#5B7DB1"
+        },
+        "note": "",
+        "payerUserId": "sam",
+        "id": "maison-hydro",
+        "totalCents": 9000,
+        "shareCents": 4500
+      }
+    ],
+    "expected": [
+      {
+        "id": "household:lisbon:fado",
+        "total": 17556,
+        "share": 4389,
+        "originalAmount": 12000,
+        "originalCurrency": "EUR",
+        "rate": "1.463",
+        "rateStatus": "provisional",
+        "rateDate": "2026-11-26"
+      },
+      {
+        "id": "household:lisbon:insurance",
+        "total": 2230,
+        "share": 1115
+      },
+      {
+        "id": "household:lisbon:flights",
+        "total": 82380,
+        "share": 20595,
+        "originalAmount": 60000,
+        "originalCurrency": "USD",
+        "rate": "1.373",
+        "rateStatus": "published",
+        "rateDate": "2026-10-02"
+      },
+      {
+        "id": "household:maison:maison-tapas",
+        "total": 12420,
+        "share": 6210,
+        "originalAmount": 8500,
+        "originalCurrency": "EUR",
+        "rate": "1.4612",
+        "rateStatus": "published",
+        "rateDate": "2026-11-03"
+      },
+      {
+        "id": "household:maison:maison-hydro",
+        "total": 9000,
+        "share": 4500
+      }
+    ]
+  }
+}

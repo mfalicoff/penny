@@ -9,7 +9,7 @@ import { z } from "zod";
 import { cents, nextOccurrence, personalShare, type Ledger } from "../../src/domain/ledger.ts";
 import { mergeLedger } from "../../src/domain/merge.ts";
 import { recurringSuggestions, suggestionKey } from "../../src/domain/suggestions.ts";
-import { calculateHouseholdSplits } from "../../src/domain/households.ts";
+import { calculateHouseholdSplits, memberAmounts, settleIn, sharedExpenseCurrencyProblem } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 import {
   convertAmount, crossRate, currencies, entryAmounts, homeCurrencies, normalizeRate, parseAmount, publishedRateDate, reconvertEntry,
@@ -280,6 +280,45 @@ test("currency fixtures match the currency list, conversion, cross rates and the
     assert.deepEqual(JSON.parse(JSON.stringify(reconvertEntry(item.entry as never, item.home, item.next))), item.expected, JSON.stringify(item));
   for (const item of golden.ledgers)
     assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: item.ledger }).success, item.valid, item.name);
+});
+
+const SharedCurrency = z.strictObject({
+  generator: z.string(),
+  description: z.string(),
+  memberAmounts: z.array(z.strictObject({
+    name: z.string(), expense: z.strictObject({ totalCents: z.number().int(), originalAmount: z.number().int().optional(), originalCurrency: z.string().optional() }),
+    shareCents: z.number().int(), householdCurrency: z.string(), home: z.string(), rate: rateText.nullable(),
+    expected: z.strictObject({ totalCents: z.number().int(), shareCents: z.number().int() }).nullable().optional(), error: z.string().optional(),
+  })).min(8),
+  settleIn: z.array(z.strictObject({
+    name: z.string(), balances: z.array(z.strictObject({ userId: z.string(), balanceCents: z.number().int() })), from: z.string(), to: z.string(), rate: rateText,
+    expected: z.strictObject({
+      balances: z.array(z.strictObject({ userId: z.string(), balanceCents: z.number().int() })),
+      suggestions: z.array(z.strictObject({ fromUserId: z.string(), toUserId: z.string(), amountCents: z.number().int().positive() })),
+    }).optional(),
+    error: z.string().optional(),
+  })).min(4),
+  expenses: z.array(z.strictObject({ name: z.string(), householdCurrency: z.string(), expense: z.record(z.string(), z.unknown()), problem: z.string().nullable() })).min(5),
+  projection: z.strictObject({ ledger: z.record(z.string(), z.unknown()), rows: z.array(z.record(z.string(), z.unknown())).min(3), expected: z.array(z.record(z.string(), z.unknown())).min(3) }),
+});
+
+test("shared currency fixtures match member amounts, settle-up and the personal view (MAZ-151 phase 2)", () => {
+  const golden = parse(SharedCurrency, "shared-currency.json");
+  for (const item of golden.memberAmounts) {
+    const run = () => memberAmounts(item.expense, item.shareCents, item.householdCurrency, item.home, item.rate);
+    if (item.error !== undefined) assert.throws(run, { message: item.error }, item.name);
+    else assert.deepEqual(run(), item.expected, item.name);
+  }
+  for (const item of golden.settleIn) {
+    const run = () => settleIn(item.balances, item.from, item.to, item.rate);
+    if (item.error !== undefined) assert.throws(run, { message: item.error }, item.name);
+    else assert.deepEqual(run(), item.expected, item.name);
+  }
+  for (const item of golden.expenses)
+    assert.equal(sharedExpenseCurrencyProblem(item.expense as { totalCents: number }, item.householdCurrency), item.problem, item.name);
+  const view = ledgerWithHouseholds(golden.projection.ledger as Ledger, golden.projection.rows as ProjectedExpense[]);
+  const keys = ["id", "total", "share", "originalAmount", "originalCurrency", "rate", "rateStatus", "rateDate"];
+  assert.deepEqual(view.transactions.map((entry) => Object.fromEntries(Object.entries(entry).filter(([key]) => keys.includes(key)))), golden.projection.expected);
 });
 
 test("money fixtures match the amount parser, personal shares and ledger bounds", () => {

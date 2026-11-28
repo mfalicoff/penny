@@ -126,7 +126,10 @@ interface CandidateBase {
   title: string;
   kind: Kind;
   date: string;
-  /** The entry's total, in its own currency's cents. */
+  /**
+   * What was paid, as its receipt shows it: the amount in the currency it was paid in (MAZ-151), else
+   * the entry's total in its own currency's minor units.
+   */
   totalCents: number;
   currency: string | undefined;
   category: { name: string; icon: string; color: string } | null;
@@ -146,8 +149,8 @@ export function personalCandidates(ledger: Pick<Ledger, "transactions" | "catego
       title: entry.title,
       kind: entry.kind,
       date: entry.date,
-      totalCents: entry.total,
-      currency: ledger.currency,
+      totalCents: entry.originalAmount ?? entry.total,
+      currency: entry.originalCurrency ?? ledger.currency,
       category: category ? { name: category.name, icon: category.icon, color: category.color } : null,
       receipt: entry.receipt ? { id: entry.receipt.id, name: entry.receipt.name } : null,
     };
@@ -170,8 +173,8 @@ export function sharedCandidates(rows: readonly ProjectedExpense[], memberOf: Re
       title: row.title,
       kind: "expense" as const,
       date: row.date,
-      totalCents: row.totalCents,
-      currency: row.householdCurrency,
+      totalCents: row.originalAmount ?? row.totalCents,
+      currency: row.originalCurrency ?? row.householdCurrency,
       category: row.category,
       receipt: row.receipt ? { id: row.receipt.id, name: row.receipt.name } : row.receiptId ? { id: row.receiptId, name: "Receipt" } : null,
     }));

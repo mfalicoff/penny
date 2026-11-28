@@ -8,6 +8,9 @@ namespace Penny.Backend.Application.Households;
 // The shared expense view (contract schema `Expense`), also the audit payload of
 // expense events. Instants are Unix milliseconds. `AccountId` is the payer's private
 // account: present only when the viewer is the payer, never in audit.
+// Contract 2.6.0: what was paid when it was paid in another currency than the
+// household's, and `Home`, the viewer's amounts in their own currency (set by
+// HomeAmounts after the read; null here).
 public sealed record ExpenseView(
     string Id,
     string HouseholdId,
@@ -30,7 +33,14 @@ public sealed record ExpenseView(
     long CreatedAt,
     string UpdatedBy,
     long UpdatedAt,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? OriginalAmount,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? OriginalCurrency,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Rate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateStatus,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateDate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] MemberHomeView? Home
 )
 {
     public static ExpenseView From(StoredExpense expense, string viewerId) =>
@@ -66,14 +76,22 @@ public sealed record ExpenseView(
             expense.CreatedAt.ToUnixTimeMilliseconds(),
             expense.UpdatedBy,
             expense.UpdatedAt.ToUnixTimeMilliseconds(),
-            expense.RecurringId
+            expense.RecurringId,
+            expense.Foreign?.OriginalAmount,
+            expense.Foreign?.OriginalCurrency,
+            expense.Foreign?.Rate,
+            expense.Foreign?.RateStatus,
+            expense.Foreign?.RateDate is { } rateDate ? LedgerDates.Write(rateDate) : null,
+            null
         );
 
-    // Audit payloads drop the payer's account.
+    // Audit payloads drop the payer's account and the viewer's home amounts (computed on
+    // read); they keep what was paid in another currency.
     public ExpenseView ForAudit() =>
         this with
         {
             AccountId = null,
+            Home = null,
             Receipt = Receipt is null ? null : Receipt with { Name = null },
         };
 }

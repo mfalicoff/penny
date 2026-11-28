@@ -11,10 +11,15 @@ struct SharedTripContext {
     let household: WireHousehold
     let range: TripRange
     let expenses: SharedTripExpenses?
-    /// Your expenses on personal trips linked to this one, when they are in the trip's currency.
+    /// Your expenses on personal trips linked to this one (in your ledger's currency).
     let privateEntries: [LedgerEntry]
     let ledger: Ledger?
     let totals: SharedTripTotals?
+    /// Your home (ledger) currency: the totals' currency (MAZ-151 phase 2).
+    let home: String
+    /// The currencies the trip's expenses were paid in, for the chip; empty when the trip and all
+    /// its expenses are in your currency.
+    let currencies: [String]
 
     @MainActor
     init?(model: HouseholdModel, shell: ShellModel) {
@@ -24,18 +29,29 @@ struct SharedTripContext {
         expenses = shell.trips.expenses(for: model.id)
         let ledger = shell.workspace.load.ledger
         self.ledger = ledger
-        // Private expenses are in the ledger currency; a trip in another one can't add them up.
-        let personal =
-            ledger.map { $0.currency.rawValue == household.currency ? $0.privateExpenses(linkedTo: model.id) : [] }
-            ?? []
+        let home = shell.currency
+        self.home = home
+        // Contract 2.6.0: a trip in another currency counts each shared expense at your home
+        // amounts, so your private expenses (in your currency) add up with them.
+        let personal = ledger?.privateExpenses(linkedTo: model.id) ?? []
         privateEntries = personal
         // Totals only from a list that was read: during a first read, or after it failed, the
         // empty list isn't the trip's, so the stats show a placeholder rather than $0.00.
         let meId = model.people.meId
         totals = expenses?.loadedExpenses.map {
-            SharedTripTotals(expenses: $0, meId: meId, personal: personal, range: range)
+            SharedTripTotals(
+                expenses: $0, meId: meId, personal: personal, range: range, householdCurrency: household.currency,
+                home: home)
         }
+        let loaded = expenses?.loadedExpenses ?? []
+        currencies =
+            SettleView.isMultiCurrency(
+                householdCurrency: household.currency, home: home, members: model.people.members, expenses: loaded)
+            ? SharedTripCurrencies.list(loaded, householdCurrency: household.currency, home: home) : []
     }
+
+    /// The trip shows amounts in more than one currency.
+    var isMultiCurrency: Bool { household.currency != home || currencies.count > 1 }
 }
 
 /// A shared trip's hero (`iphone-trip-detail`, `ipad-trip`; MAZ-249): its name, short dates and
@@ -85,21 +101,32 @@ struct SharedTripHero: View {
                     .padding(.top, 10)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(
-                        "Trip total, \(context.totals.map { MoneyFormat.amount($0.tripTotal, currency: model.currency) } ?? "loading")"
+                        "Trip total, \(context.totals.map { MoneyFormat.amount($0.tripTotal, currency: context.home) } ?? "loading")"
                     )
                     .accessibilityIdentifier("tripPage.total")
                 HStack(spacing: 4) {
                     Text("trip total · your share").foregroundStyle(PennyColor.secondaryLabel)
-                    Text(context.totals.map { MoneyFormat.amount($0.yourSpending, currency: model.currency) } ?? "…")
+                    Text(context.totals.map { MoneyFormat.amount($0.yourSpending, currency: context.home) } ?? "…")
                         .fontWeight(.semibold).monospacedDigit()
                 }
                 .font(.subheadline)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("tripPage.yourSpending")
             }
+            // `iphone-trip-currencies`, `ipad-trip-currencies`: the currencies the expenses were paid
+            // in, each counted in yours at its date's rate; it opens the Exchange rates.
+            if context.isMultiCurrency, !context.currencies.isEmpty {
+                SharedTripCurrencyChip(codes: context.currencies) { showsRates = true }
+                    .padding(.top, regular ? 14 : 10)
+            }
         }
         .frame(maxWidth: .infinity, alignment: regular ? .leading : .center)
+        .sheet(isPresented: $showsRates) {
+            SharedTripRatesSheet(context: context, model: model).environment(shell)
+        }
     }
+
+    @State private var showsRates = false
 
     /// "Nov 12–19 · 4 people" on iPhone; "Nov 12–19, 2026 · shared with 3 people" on iPad.
     private func dateLine(regular: Bool) -> String {
@@ -113,7 +140,7 @@ struct SharedTripHero: View {
 
     @ViewBuilder
     private func amount(_ cents: Int64?) -> some View {
-        Text(cents.map { MoneyFormat.amount($0, currency: model.currency) } ?? "…")
+        Text(cents.map { MoneyFormat.amount($0, currency: context.home) } ?? "…")
             .modifier(HeroAmountFont())
             .foregroundStyle(cents == nil ? PennyColor.secondaryLabel : PennyColor.label)
             .lineLimit(1)
@@ -124,7 +151,7 @@ struct SharedTripHero: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             if let cents {
-                MoneyText(cents, meaning: .neutral, currency: model.currency, style: .largeTitle.weight(.bold))
+                MoneyText(cents, meaning: .neutral, currency: context.home, style: .largeTitle.weight(.bold))
             } else {
                 Text("…").font(.largeTitle.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
             }
@@ -210,7 +237,9 @@ struct SharedTripExpenseSections: View {
 
     private func sharedRow(_ expense: WireSharedExpense) -> some View {
         NavigationLink(value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)) {
-            SharedTripExpenseRow(expense: expense, people: model.people, currency: model.currency)
+            SharedTripExpenseRow(
+                expense: expense, people: model.people, currency: model.currency,
+                home: context.isMultiCurrency ? context.home : nil)
         }
         .cardRow()
         .accessibilityIdentifier("household.expense.\(expense.id)")
@@ -230,11 +259,15 @@ struct SharedTripExpenseSections: View {
 
 /// A shared trip expense (`iphone-trip-detail`, `ipad-trip`): the category tile, the title,
 /// "Oct 2 · Sam paid · split 4 ways" (or "you paid"), then the total over your part of it
-/// ("$206.00 yours").
+/// ("$206.00 yours"). In a trip with several currencies (`iphone-trip-currencies`, MAZ-151 phase
+/// 2) the amount paid leads, in its own currency, with your currency's amount under it.
 struct SharedTripExpenseRow: View {
     let expense: WireSharedExpense
     let people: HouseholdPeople
     let currency: String
+    /// Your home currency when the trip shows several currencies; nil for a trip in yours alone.
+    var home: String?
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         HStack(spacing: 12) {
@@ -242,15 +275,24 @@ struct SharedTripExpenseRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.title).font(.callout.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
-                Text(Self.detail(expense, people: people)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                Text(Self.detail(expense, people: people, short: home != nil && sizeClass != .regular)).font(.footnote)
+                    .foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
-                MoneyText(expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
-                Text(yours).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+            if let home {
+                let amounts = expense.amounts(householdCurrency: currency, home: home, meId: people.meId)
+                // Paid in your currency: the amount alone. Without home amounts: your part of it.
+                SharedPaidAmount(amounts: amounts, fallback: amounts.homeTotal == nil ? yours : nil)
+                    .accessibilityIdentifier("tripPage.amount.\(expense.id)")
+            } else {
+                VStack(alignment: .trailing, spacing: 2) {
+                    MoneyText(
+                        expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
+                    Text(yours).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                }
+                .fixedSize()
             }
-            .fixedSize()
         }
         .accessibilityElement(children: .combine)
     }
@@ -262,14 +304,15 @@ struct SharedTripExpenseRow: View {
 
     /// "Oct 2 · Sam paid · split 4 ways", "Oct 8 · you paid", or "Nov 3 · Mira paid" when only
     /// one person shares it.
-    static func detail(_ expense: WireSharedExpense, people: HouseholdPeople) -> String {
+    /// `short`: "4 ways", as `iphone-trip-currencies` writes it beside two amounts.
+    static func detail(_ expense: WireSharedExpense, people: HouseholdPeople, short: Bool = false) -> String {
         let ways = expense.splits.filter { $0.amountCents > 0 }.count
         let payer: String
         if expense.payerUserId == people.meId {
             payer = "you paid"
         } else {
             let name = people.name(expense.payerUserId)
-            payer = ways > 1 ? "\(name) paid · split \(ways) ways" : "\(name) paid"
+            payer = ways > 1 ? "\(name) paid · \(short ? "" : "split ")\(ways) ways" : "\(name) paid"
         }
         return "\(HouseholdText.day(expense.date)) · \(payer)"
     }
@@ -294,7 +337,7 @@ struct SharedTripShareByCategory: View {
                         // `ipad-trip`: each category's part of your share as a bar in its color.
                         ShareBar(
                             fraction: total > 0 ? Double(item.cents) / Double(total) : 0, color: item.category.tint)
-                        MoneyText(item.cents, meaning: .neutral, currency: model.currency)
+                        MoneyText(item.cents, meaning: .neutral, currency: context.home)
                     }
                     .frame(minHeight: Metrics.minTouchTarget)
                     .accessibilityElement(children: .combine)
@@ -305,13 +348,15 @@ struct SharedTripShareByCategory: View {
         }
     }
 
-    /// Your share of each category, largest first: shared expenses by their category, private
+    /// Your share of each category in your currency, largest first: shared expenses by their
+    /// category (at their home amounts in a trip in another currency, MAZ-151 phase 2), private
     /// expenses by the ledger's.
     private var shareByCategory: [(name: String, category: WireSharedCategory, cents: Int64)] {
         var totals: [String: (category: WireSharedCategory, cents: Int64)] = [:]
         let meId = model.people.meId
         for expense in context.expenses?.loadedExpenses ?? [] {
-            let share = expense.share(of: meId)
+            let share =
+                expense.amounts(householdCurrency: model.currency, home: context.home, meId: meId).homeShare ?? 0
             guard share > 0 else { continue }
             totals[expense.category.name, default: (expense.category, 0)].cents += share
         }

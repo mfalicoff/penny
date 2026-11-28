@@ -642,7 +642,7 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
-    public async Task whenActiveHouseholdUsesOtherCurrency_PutLedger_ShouldRejectCurrency()
+    public async Task whenActiveHouseholdUsesOtherCurrency_PutLedger_ShouldSaveTheLedgerCurrency()
     {
         var token = await RegisterAsync("owner@example.test");
         var userId = await UserIdAsync("owner@example.test");
@@ -650,8 +650,13 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
         await AddHouseholdAsync("household-old", userId, "EUR", archived: true, left: false);
         await AddHouseholdAsync("household-left", userId, "GBP", archived: false, left: true);
 
+        // Ledger check 3 is gone (contract 2.6.0): members keep their ledgers in their own
+        // currency, whatever their households use.
         var snapshot = await GetAsync(token);
-        await ShouldFailAsync(token, snapshot, LedgerService.CurrencyMismatch);
+        snapshot["ledger"]!["currency"] = "GBP";
+        using (var british = await PutAsync(token, snapshot))
+            british.StatusCode.ShouldBe(HttpStatusCode.OK);
+        snapshot = await GetAsync(token);
         snapshot["ledger"]!["currency"] = "USD";
         using var saved = await PutAsync(token, snapshot);
         saved.StatusCode.ShouldBe(HttpStatusCode.OK);

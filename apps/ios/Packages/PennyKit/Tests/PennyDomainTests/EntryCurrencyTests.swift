@@ -83,4 +83,21 @@ struct EntryCurrencyTests {
         let changed = try draft.build(categories: Self.categories, editing: entry, home: .cad) { "x" }.entry
         #expect(changed.total == 13_151 && changed.originalAmount == 9_000)
     }
+
+    @Test("whenAPersonalTripHasACurrency_StartOnTrip_ShouldOpenTheEntryInIt")
+    func tripCurrency() {
+        let trip = Trip(
+            id: "lisbon", name: "Lisbon", startDate: .day("2026-11-12"), endDate: .day("2026-11-19"), currency: "EUR")
+        let ledger = Ledger(currency: .cad, trips: [trip], categories: Self.categories)
+        var editor = EntryEditor(new: .expense, today: .day("2026-11-13"), ledger: ledger)
+        editor.start(onTrip: "lisbon", ledger: ledger)
+        #expect(editor.draft.currency == "EUR" && editor.draft.tripId == "lisbon")
+        #expect(!editor.isDirty, "opening on the trip is not a change")
+        var home = trip
+        home.currency = "CAD"
+        let homeLedger = Ledger(currency: .cad, trips: [home], categories: Self.categories)
+        var plain = EntryEditor(new: .expense, today: .day("2026-11-13"), ledger: homeLedger)
+        plain.start(onTrip: "lisbon", ledger: homeLedger)
+        #expect(plain.draft.currency == nil, "the home currency is no foreign currency")
+    }
 }

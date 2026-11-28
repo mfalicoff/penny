@@ -2488,3 +2488,59 @@ a.row:hover {
   box-shadow: none;
   padding: 6px 0;
 }
+
+/* ---------- "Settle in EUR ⌄" (MAZ-151 phase 2, `iphone-trip-balances-currency`, `web-trip-currencies`) ---------- */
+.settle-menu {
+  position: relative;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.settle-menu__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pk-tint-text);
+  font: 600 0.8125rem var(--pk-font);
+  cursor: pointer;
+}
+
+.settle-menu__button:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.shared-group__head .settle-menu__button {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+@media (pointer: coarse) {
+  .settle-menu__button {
+    min-height: 44px;
+  }
+}
+
+.settle-menu__item b {
+  min-width: 3ch;
+}
+
+.settle-menu__aside {
+  margin-inline-start: auto;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.settle-menu__item[aria-current="true"] .settle-menu__aside + .icon,
+.settle-menu__item[aria-current="true"] > .icon:last-child {
+  color: var(--pk-tint-text);
+}
+
+.settle-note {
+  margin-top: 4px;
+}

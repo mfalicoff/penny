@@ -1,6 +1,6 @@
 # Exchange rates
 
-Contract 2.4.0 (MAZ-151). An entry may be paid in another currency than the ledger's home currency ([entries in several currencies](ledger.md#entries-in-several-currencies)). To suggest the rate, the API caches the European Central Bank's daily euro foreign exchange reference rates and answers `GET /api/rates`. This page is for people who run a Penny server.
+Contract 2.4.0 (MAZ-151). An entry may be paid in another currency than the ledger's home currency ([entries in several currencies](ledger.md#entries-in-several-currencies)). To suggest the rate, the API caches the European Central Bank's daily euro foreign exchange reference rates and answers `GET /api/rates`. Since contract 2.6.0 (MAZ-151 phase 2) the server also uses the cache to show each member a shared expense in their own currency (`home` on shared expenses and projection rows, [shared expenses](shared-expenses.md#several-currencies)), with the same publication and cross-rate rules as `GET /api/rates`. This page is for people who run a Penny server.
 
 ## What the server fetches
 
@@ -37,7 +37,7 @@ The server only downloads the two public ECB files above. It sends the ECB no ac
 ExchangeRates__Enabled=false
 ```
 
-Nothing is fetched and `GET /api/rates` answers `enabled: false`, `source: null`, `rateDate: null`, `latestDate: null`, `provisional: false` and no rates; the cached rows stay and are used again when it is turned back on. The apps then show "Turned off on this server" in Settings › Currency, ask the person to type the rate for an entry in another currency (suggesting the last one they used for that currency), and keep Save disabled until there is one. Entries keep the rate they were saved with.
+Nothing is fetched and `GET /api/rates` answers `enabled: false`, `source: null`, `rateDate: null`, `latestDate: null`, `provisional: false` and no rates; the cached rows stay and are used again when it is turned back on. The apps then show "Turned off on this server" in Settings › Currency, ask the person to type the rate for an entry in another currency (suggesting the last one they used for that currency), and keep Save disabled until there is one. Entries keep the rate they were saved with. Shared expenses lose their `home` amounts, except those paid in the member's own currency, which need no rate.
 
 | Setting | Default | |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ Nothing is fetched and `GET /api/rates` answers `enabled: false`, `source: null`
 | `ExchangeRates__HistoryUrl` | the ECB's `eurofxref-hist.zip` | A mirror of the full history ZIP (same format) |
 | `ExchangeRates__RecentUrl` | the ECB's `eurofxref-hist-90d.xml` | A mirror of the 90-day XML (same format) |
 
-The full-stack test environment (`scripts/test-env`) runs with `ExchangeRates__Enabled=false`, and the .NET tests never fetch (`ExchangeRates__Worker=false`; they seed the cache or use a fake source).
+The full-stack test environment (`scripts/test-env`) runs with `ExchangeRates__Enabled=false`, or with synthetic cached rates and no fetching with `penny-env up --rates` ([test environment](test-environment.md#exchange-rates)), and the .NET tests never fetch (`ExchangeRates__Worker=false`; they seed the cache or use a fake source).
 
 ## GET /api/rates
 

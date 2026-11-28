@@ -1406,3 +1406,28 @@
 .wbtn--primary.wbtn--unready {
   opacity: 0.45;
 }
+
+/* The trip form's Currency row (`web-trip-form-currency`): "EUR Euro ⌄" in the date pills' style. */
+.currency-chip--named {
+  gap: 6px;
+  border-radius: 8px;
+  background: var(--pk-surface-2);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label);
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+
+.currency-chip--named .currency-chip__code {
+  font-weight: 700;
+}
+
+.trip-form__currency-menu {
+  margin-top: 0;
+}
+
+.trip-form__currency-menu .currency-menu {
+  right: 0;
+  left: auto;
+  transform: none;
+}

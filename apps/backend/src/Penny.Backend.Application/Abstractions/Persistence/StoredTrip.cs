@@ -5,5 +5,6 @@ public sealed record StoredTrip(
     string Name,
     DateOnly StartDate,
     DateOnly EndDate,
-    string? SharedHouseholdId
+    string? SharedHouseholdId,
+    string? Currency = null
 );

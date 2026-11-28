@@ -160,13 +160,16 @@ struct SharedProjectionTests {
                         try Self.answer(recorded: [
                             Self.row("bad-date", date: "2026-11-31", total: 100, share: 50),
                             Self.row("other-currency", date: "2026-11-02", total: 100, share: 50, currency: "JPY"),
+                            Self.row("unknown-currency", date: "2026-11-02", total: 100, share: 50, currency: "XXX"),
                             Self.row("no-currency", date: "2026-11-02", total: 100, share: 50, currency: nil),
                         ]))
                 ]
             ]))
         await model.refresh(Self.november)
-        #expect(model.shares(currency: .eur).recorded.map(\.id) == ["no-currency"])
-        #expect(model.shares(currency: .eur).recorded.first?.currency == .eur, "a missing currency is the ledger's")
+        // Any ISO 4217 household currency is read (contract 2.6.0); `LedgerReport` leaves a row in
+        // another currency out unless it has home amounts. An unknown code is unreadable.
+        #expect(model.shares(currency: .eur).recorded.map(\.id) == ["other-currency", "no-currency"])
+        #expect(model.shares(currency: .eur).recorded.last?.currency == "EUR", "a missing currency is the ledger's")
     }
 
     @Test("whenThereIsNoService_SharedProjectionModel_ShouldStayIdleWithNoRows")

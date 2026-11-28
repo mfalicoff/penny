@@ -13,6 +13,7 @@ import type { IconName } from "../../design/Icon";
 import { categoryTint } from "../../design/categoryTint";
 import { categoryIcon } from "../entries/model";
 import { shiftMonth } from "../households/model";
+import { homeAmountsOf } from "../households/sharedCurrency";
 
 /**
  * Home and Insights reporting (MAZ-92). Every number comes from the shared domain
@@ -68,7 +69,8 @@ export const isSharedEntry = (entry: Transaction): entry is SharedEntry => "hous
 /**
  * The person's ledger with their shares of shared expenses added: recorded shares (`rows`) and
  * the month's shared previews (`scheduled`, flagged `scheduled: true`). Rows in another
- * currency than the ledger's, or whose currency isn't known, are left out, as in Activity.
+ * currency than the ledger's count at your home amounts (MAZ-151 phase 2); without them, or
+ * when the ledger currency isn't known, they are left out, as in Activity.
  */
 export function ledgerWithShared(ledger: Ledger, rows: readonly SharedRow[], scheduled: readonly SharedRow[]): Ledger {
   if (!rows.length && !scheduled.length) return ledger;
@@ -76,7 +78,10 @@ export function ledgerWithShared(ledger: Ledger, rows: readonly SharedRow[], sch
   const known = new Set(categories.map((category) => category.id));
   const transactions: Transaction[] = [...ledger.transactions];
   const add = (row: SharedRow, preview: boolean) => {
-    if (row.householdCurrency !== ledger.currency) return;
+    // MAZ-151 phase 2: a row from a household in another currency counts at your home amounts,
+    // with what was paid so lists show both; without home amounts (no rate known) it's left out.
+    const amounts = homeAmountsOf(row, ledger.currency);
+    if (!amounts) return;
     // Counted under the person's expense category of the same name, as the domain's
     // `ledgerWithHouseholds` does; a shared category with no match keeps its own row.
     const categoryId = sharedCategoryId(ledger.categories, row.category);
@@ -94,8 +99,7 @@ export function ledgerWithShared(ledger: Ledger, rows: readonly SharedRow[], sch
       kind: "expense",
       title: row.title,
       date: row.date,
-      total: row.totalCents,
-      share: row.shareCents,
+      ...amounts,
       categoryId,
       note: row.note,
       accountId: row.accountId,

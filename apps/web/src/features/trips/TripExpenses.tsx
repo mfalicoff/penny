@@ -11,7 +11,9 @@ import type { HouseholdView } from "../households/context";
 import { describeLoadError } from "../households/errors";
 import { ExpenseLink, type GroupSearch } from "../households/links";
 import { shareOf, shortDate } from "../households/model";
-import { expenseCount, paidByCell, paidWords } from "./model";
+import { expenseCount, paidByCell, paidWords, splitCount } from "./model";
+import { formatMinor } from "../entries/currency";
+import { homeAmountsOf, paidOf } from "../households/sharedCurrency";
 
 interface Props {
   view: HouseholdView;
@@ -32,6 +34,14 @@ interface Props {
    * total, your share), then Only you, with your private expenses and what they count in.
    */
   tables?: boolean;
+  /**
+   * MAZ-151 phase 2 (`web-trip-currencies`, `iphone-trip-currencies`): your home currency, when the
+   * trip has expenses in several currencies. Rows then lead with what was paid, with your home amount
+   * under it (desktop: Amount, In CAD and Your share columns).
+   */
+  home?: string | null;
+  /** Today, for the rows' "Today". */
+  today?: string;
 }
 
 /**
@@ -39,7 +49,8 @@ interface Props {
  * tile, the title, "Oct 2 · Sam paid · split 4 ways", the total and your part ("$206.00 yours").
  * The whole trip is listed, oldest first, whatever the month; balances still settle month by month.
  */
-export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPrivate, combined, tables }: Props) {
+export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPrivate, combined, tables, home = null, today }: Props) {
+  const currencies = home ? { home, today } : null;
   if (expenses.isPending) return <LoadingState label="Loading expenses…" />;
   if (!expenses.data) {
     return (
@@ -62,7 +73,7 @@ export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPriva
     if (!shared.length && !privateRows.length) return empty;
     return (
       <div className="page trip-tables">
-        {shared.length ? <SharedTable view={view} expenses={shared} search={search} /> : null}
+        {shared.length ? currencies ? <CurrencyTable view={view} expenses={shared} search={search} home={currencies.home} today={currencies.today} /> : <SharedTable view={view} expenses={shared} search={search} /> : null}
         {ledger && privateRows.length ? <PrivateTable entries={privateRows} ledger={ledger} onOpen={onOpenPrivate} /> : null}
       </div>
     );
@@ -76,7 +87,7 @@ export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPriva
         <ul className="trip-expenses__rows" aria-label="Trip expenses">
           {shared.map((expense) => (
             <li key={expense.id}>
-              <SharedRow expense={expense} view={view} search={search} />
+              <SharedRow expense={expense} view={view} search={search} currencies={currencies} />
             </li>
           ))}
           {ledger
@@ -102,7 +113,7 @@ export function TripExpenses({ view, expenses, mine, ledger, search, onOpenPriva
           <ul className="shared-group__rows" aria-label="Shared expenses">
             {shared.map((expense) => (
               <li key={expense.id}>
-                <SharedRow expense={expense} view={view} search={search} />
+                <SharedRow expense={expense} view={view} search={search} currencies={currencies} />
               </li>
             ))}
           </ul>
@@ -238,9 +249,10 @@ function PrivateTable({ entries, ledger, onOpen }: { entries: Transaction[]; led
   );
 }
 
-function SharedRow({ expense, view, search }: { expense: SharedExpense; view: HouseholdView; search: GroupSearch }) {
+function SharedRow({ expense, view, search, currencies }: { expense: SharedExpense; view: HouseholdView; search: GroupSearch; currencies: { home: string; today?: string | undefined } | null }) {
   const me = view.who.meId;
   const yours = shareOf(expense, me);
+  if (currencies) return <CurrencyRow expense={expense} view={view} search={search} home={currencies.home} today={currencies.today} />;
   return (
     <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="row trip-expense-row">
       <span className="category-dot" style={tileStyle(expense.category)} aria-hidden="true">
@@ -293,3 +305,151 @@ function PrivateRow({ entry, ledger, inline, onOpen }: { entry: Transaction; led
     </button>
   );
 }
+
+/** A trip row's date: "Today" for today's expense, as the currency cards write it, else "Oct 2". */
+const rowDate = (date: string, today: string | undefined) => (date === today ? "Today" : shortDate(date));
+
+/**
+ * One shared expense's amounts for the currency cards: what was paid ("€120.00", "US$600.00",
+ * "$22.30" in your own currency), and your home total and share. `home` is null when the
+ * expense has no home amounts yet (no rate known).
+ */
+function amountsOf(expense: SharedExpense, view: HouseholdView, home: string) {
+  const paid = paidOf(expense, view.currency);
+  const shareCents = shareOf(expense, view.who.meId);
+  const amounts = homeAmountsOf({ ...expense, householdCurrency: view.currency, shareCents }, home);
+  return {
+    paid: formatMinor(paid.amount, paid.currency, home),
+    /** Paid in your home currency: the home amount is exact, so it isn't repeated. */
+    exact: paid.currency === home,
+    total: amounts ? formatMinor(amounts.total, home, home) : null,
+    share: amounts ? amounts.share : null,
+    provisional: amounts?.rateStatus === "provisional" || (paid.currency !== home && expense.home?.rateStatus === "provisional"),
+  };
+}
+
+/**
+ * `web-trip-currencies`' Shared with everyone: the expense and its date, who paid, what was paid
+ * (Amount), your home total (In CAD; "provisional" under it, "—" when it was paid in your
+ * currency) and your share.
+ */
+function CurrencyTable({ view, expenses, search, home, today }: { view: HouseholdView; expenses: SharedExpense[]; search: GroupSearch; home: string; today: string | undefined }) {
+  const me = view.who.meId;
+  return (
+    <section className="card expense-table trip-table trip-table--currencies" aria-labelledby="trip-shared-heading">
+      <div className="trip-table__head">
+        <h2 id="trip-shared-heading">Shared with everyone</h2>
+        <span>{expenseCount(expenses.length)}</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Expense</th>
+            <th scope="col">Paid by</th>
+            <th scope="col" className="num">
+              Amount
+            </th>
+            <th scope="col" className="num">
+              In {home}
+            </th>
+            <th scope="col" className="num">
+              Your share
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {expenses.map((expense) => {
+            const amounts = amountsOf(expense, view, home);
+            return (
+              <tr key={expense.id}>
+                <th scope="row">
+                  <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="expense-table__title">
+                    <span className="category-dot" style={tileStyle(expense.category)} aria-hidden="true">
+                      <Icon name={categoryIcon(expense.category.icon)} size={18} />
+                    </span>
+                    <span className="trip-table__name">
+                      <span>{expense.title}</span>
+                      <time dateTime={expense.date}>{rowDate(expense.date, today)}</time>
+                    </span>
+                  </ExpenseLink>
+                </th>
+                <td className="muted">{paidByCell(expense, me, view.who.name(expense.payerUserId))}</td>
+                <td className="num">
+                  <b className="pk-num">{amounts.paid}</b>
+                </td>
+                <td className="num">
+                  {amounts.exact ? (
+                    <>
+                      <span aria-hidden="true" className="muted">
+                        —
+                      </span>
+                      <span className="visually-hidden">Paid in {home}</span>
+                    </>
+                  ) : amounts.total ? (
+                    <span className="trip-table__home">
+                      <span className="pk-num">{amounts.total}</span>
+                      {amounts.provisional ? <small className="trip-table__provisional">provisional</small> : null}
+                    </span>
+                  ) : (
+                    <span className="muted">No rate yet</span>
+                  )}
+                </td>
+                <td className="num pk-num">
+                  {amounts.share !== null && amounts.share > 0 ? (
+                    formatMinor(amounts.share, home, home)
+                  ) : amounts.share === null ? (
+                    <span className="muted">—</span>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">—</span>
+                      <span className="visually-hidden">Not part of your share</span>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/**
+ * `iphone-trip-currencies`' row: what was paid leads ("€120.00"), your home amount under it
+ * ("$373.25"; "≈ $175.56" in amber, with the word for screen readers, when the rate is
+ * provisional; nothing when it was paid in your currency).
+ */
+function CurrencyRow({ expense, view, search, home, today }: { expense: SharedExpense; view: HouseholdView; search: GroupSearch; home: string; today: string | undefined }) {
+  const me = view.who.meId;
+  const amounts = amountsOf(expense, view, home);
+  const ways = splitCount(expense);
+  const who = me !== undefined && expense.payerUserId === me ? "you paid" : `${view.who.name(expense.payerUserId)} paid`;
+  return (
+    <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="row trip-expense-row">
+      <span className="category-dot" style={tileStyle(expense.category)} aria-hidden="true">
+        <Icon name={categoryIcon(expense.category.icon)} size={18} />
+      </span>
+      <span className="row__main">
+        <span className="row__title">{expense.title}</span>
+        <span className="row__meta">
+          <time dateTime={expense.date}>{rowDate(expense.date, today)}</time> · {who}
+          {ways > 1 ? ` · ${String(ways)} ways` : ""}
+        </span>
+      </span>
+      <span className="row__end">
+        <span className="pk-num money">{amounts.paid}</span>
+        {amounts.exact ? null : amounts.total ? (
+          <span className={amounts.provisional ? "row__meta trip-expense-row__home trip-expense-row__home--provisional pk-num" : "row__meta trip-expense-row__home pk-num"}>
+            {amounts.provisional ? "≈ " : ""}
+            {amounts.total}
+            {amounts.provisional ? <span className="visually-hidden"> at a provisional rate</span> : null}
+          </span>
+        ) : (
+          <span className="row__meta">No rate yet</span>
+        )}
+      </span>
+    </ExpenseLink>
+  );
+}
+

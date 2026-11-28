@@ -9,7 +9,8 @@ public sealed record TripResponse(
     string StartDate,
     string EndDate,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        string? SharedHouseholdId
+        string? SharedHouseholdId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Currency
 )
 {
     public static TripResponse From(Trip trip) =>
@@ -18,6 +19,7 @@ public sealed record TripResponse(
             trip.Name,
             LedgerDates.Write(trip.StartDate),
             LedgerDates.Write(trip.EndDate),
-            trip.SharedHouseholdId
+            trip.SharedHouseholdId,
+            trip.Currency
         );
 }

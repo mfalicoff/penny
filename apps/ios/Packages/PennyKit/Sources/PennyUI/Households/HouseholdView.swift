@@ -97,6 +97,10 @@ struct HouseholdPage: View {
     @State private var width: Double = 0
     /// The expense beside the list on a wide iPad (`ipad-shared`); the first one until another is tapped.
     @State private var selectedExpenseID: String?
+    /// Settle in (MAZ-151 phase 2): the currency balances and payments show in; nil is the household's.
+    @State private var settleCurrency: String?
+    /// Today's rates from the household's currency into its members' and the Settle in choice.
+    @State private var todayRates = TodayRates()
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var selectedExpense: WireSharedExpense? {
@@ -268,6 +272,11 @@ struct HouseholdPage: View {
                 await shell.refreshShared()
                 await refreshTrip()
             }
+        }
+        // MAZ-151 phase 2: today's rates for "≈ their own currency" and Settle in.
+        .task(id: rateTargets) {
+            await todayRates.load(
+                from: model.currency, targets: rateTargets, today: shell.today, model: shell.rates)
         }
         // A schedule opened from Recurring: its form, once the rules have been read.
         .onChange(of: "\(model.requestedRuleID ?? "")|\(model.rules.count)", initial: true) { openRequestedRule() }
@@ -444,7 +453,14 @@ struct HouseholdPage: View {
 
     @ViewBuilder
     private func sideColumn(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
-        if let trip {
+        if let trip, isMultiCurrency {
+            // `ipad-trip-currencies`: Balances in the trip's currency with Settle in, the month's
+            // payments, then the Exchange rates.
+            tripCurrencyBalancesPanel
+            overdueSections
+            SharedTripRatesSection(
+                context: trip, model: model, source: todayRates.source ?? shell.rates.latest[shell.currency]?.source)
+        } else if let trip {
             // `ipad-trip`: People beside the hero, each with this month's balance, then Your
             // share by category. The month's payments to record follow.
             tripPeopleSection
@@ -490,7 +506,7 @@ struct HouseholdPage: View {
     @ViewBuilder
     private func header(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         Section {
-            if let trip {
+            if let trip, isTwoColumn || section == .expenses || !isMultiCurrency {
                 // A trip's balances settle by month under Balances, so its page leads with the
                 // trip, as on the card. Trip expense is in the … menu on iPhone (the card relies
                 // on Add entry) and the toolbar's copper capsule on iPad.
@@ -750,6 +766,204 @@ struct HouseholdPage: View {
     /// `iphone-shared-balances`: each member's balance under the month and its tag, the month's
     /// suggested payments, then each overdue month with its own payments to record.
     @ViewBuilder private var balancesSection: some View {
+        if isMultiCurrency {
+            currencyBalancesSection
+            currencySuggestionsSection
+            overdueSections
+        } else {
+            monthBalancesSection
+        }
+    }
+
+    // MARK: Several currencies (MAZ-151 phase 2)
+
+    /// The household shows its currencies: it isn't in your currency, a member keeps another one,
+    /// or an expense was paid in another one (`iphone-trip-balances-currency`).
+    private var isMultiCurrency: Bool {
+        guard model.household != nil else { return false }
+        let expenses = (trip?.expenses?.loadedExpenses ?? []) + model.expenses
+        return SettleView.isMultiCurrency(
+            householdCurrency: model.currency, home: shell.currency, members: model.people.members,
+            expenses: expenses)
+    }
+
+    private var settleOptions: [String] {
+        SettleView.options(householdCurrency: model.currency, members: model.people.members)
+    }
+
+    /// The currencies today's rates are read for: Settle in's options and each member's own.
+    private var rateTargets: [String] {
+        guard isMultiCurrency else { return [] }
+        let own = model.people.members.compactMap(\.currency)
+        return Array(Set(settleOptions + own + [shell.currency])).sorted()
+    }
+
+    private var shownCurrency: String {
+        guard let settleCurrency, settleOptions.contains(settleCurrency) else { return model.currency }
+        return settleCurrency
+    }
+
+    /// The month's balances and payments in the Settle in currency; the household's own figures
+    /// while today's rate isn't known.
+    private func settleView(_ recap: WireMonthRecap) -> SettleView {
+        let shown = shownCurrency
+        if shown != model.currency, let rate = todayRates.rates[shown],
+            let converted = SettleView(recap: recap, from: model.currency, to: shown, rate: rate)
+        {
+            return converted
+        }
+        return SettleView(recap: recap, currency: model.currency)
+    }
+
+    private var settleBinding: Binding<String> {
+        Binding(get: { shownCurrency }, set: { settleCurrency = $0 })
+    }
+
+    /// "≈ US$349.76": a member's balance in their own currency at today's rate, when it isn't the
+    /// one shown.
+    private func ownCurrency(_ userId: String, balance: Int64, shown: String) -> String? {
+        guard balance != 0, let own = model.people.member(userId)?.currency, own != shown,
+            let converted = todayRates.convert(balance, from: model.currency, to: own)
+        else { return nil }
+        return TripCurrencyText.approximately(abs(converted), code: own, home: shell.currency)
+    }
+
+    /// `iphone-trip-balances-currency`: "Balances in euros" with Settle in, each member's balance
+    /// in that currency with their own under it. Balances still settle month by month.
+    @ViewBuilder private var currencyBalancesSection: some View {
+        let recap = model.recap
+        let view = recap.map(settleView)
+        Section {
+            ForEach(recap?.balances ?? [], id: \.userId) { balance in
+                let shown = view?.balances[balance.userId] ?? balance.balanceCents
+                BalanceRow(
+                    balance: balance, people: model.people, expenses: model.expenses, currency: model.currency,
+                    shownCents: shown, shownCurrency: view?.currency ?? model.currency,
+                    own: ownCurrency(
+                        balance.userId, balance: balance.balanceCents, shown: view?.currency ?? model.currency)
+                )
+                .accessibilityIdentifier("household.balanceRow.\(balance.userId)")
+            }
+            if recap?.balances.isEmpty ?? true {
+                Text("Nobody shared anything this month.").font(.subheadline)
+                    .foregroundStyle(PennyColor.secondaryLabel)
+            }
+        } header: {
+            HStack(spacing: 8) {
+                Text(TripCurrencyText.balancesTitle(view?.currency ?? shownCurrency)).cardSectionHeader()
+                    .accessibilityIdentifier("household.balancesTitle")
+                Spacer(minLength: 8)
+                if settleOptions.count > 1 { SettleInMenu(options: settleOptions, selection: settleBinding) }
+            }
+        } footer: {
+            HStack(spacing: 8) {
+                Text(HouseholdText.shortMonth(model.month)).accessibilityLabel(HouseholdText.month(model.month))
+                settlesTag(recap, month: model.month)
+            }
+        }
+    }
+
+    /// The month's suggested payments in the Settle in currency, each recording the household's
+    /// amount, with how the currencies work.
+    @ViewBuilder private var currencySuggestionsSection: some View {
+        if let recap = model.recap, !recap.suggestions.isEmpty {
+            let view = settleView(recap)
+            Section {
+                ForEach(view.payments, id: \.self) { payment in
+                    SuggestionRow(
+                        transfer: WireTransfer(
+                            fromUserId: payment.transfer.fromUserId, toUserId: payment.transfer.toUserId,
+                            amountCents: payment.shownCents),
+                        people: model.people, currency: view.currency, canRecord: canRecord(payment.transfer),
+                        isOpen: isOpen
+                    ) {
+                        self.payment = .monthly(payment.transfer, month: model.month)
+                    }
+                    .accessibilityIdentifier(
+                        "household.suggestion.\(payment.transfer.fromUserId)-\(payment.transfer.toUserId)")
+                }
+            } header: {
+                Text("Suggested payments").cardSectionHeader()
+            } footer: {
+                currencyNote(shown: view.currency)
+            }
+        } else if model.recap != nil {
+            Section {
+                Text("Everyone is settled for \(HouseholdText.shortMonth(model.month)).")
+                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    .accessibilityIdentifier("household.monthlyNote")
+            } footer: {
+                currencyNote(shown: shownCurrency)
+            }
+        }
+    }
+
+    /// The card's note under the payments, and when Record paid opens.
+    private func currencyNote(shown: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                Text(
+                    TripCurrencyText.balancesNote(model.currency)
+                        + (shown == model.currency
+                            ? "" : " " + TripCurrencyText.settleNote(trip: model.currency, shown: shown)))
+            } icon: {
+                Image(systemName: "banknote")
+            }
+            .accessibilityIdentifier("household.currencyNote")
+            if !isOpen { monthlyNote }
+        }
+    }
+
+    /// `ipad-trip-currencies`: "Balances in euros" with Settle in, everyone on the trip with this
+    /// month's balance and their own currency under it, then the month's payments to record.
+    @ViewBuilder private var tripCurrencyBalancesPanel: some View {
+        let recap = model.recap
+        let view = recap.map(settleView)
+        let shown = view?.currency ?? shownCurrency
+        Section {
+            HStack(spacing: 8) {
+                Text(TripCurrencyText.balancesTitle(shown)).font(.headline)
+                    .accessibilityIdentifier("household.balancesTitle")
+                Spacer(minLength: 8)
+                if settleOptions.count > 1 { SettleInMenu(options: settleOptions, selection: settleBinding) }
+            }
+            .listRowSeparator(.hidden)
+            ForEach(model.people.current) { member in
+                let cents = recap?.balances.first { $0.userId == member.userId }?.balanceCents ?? 0
+                HStack(spacing: 12) {
+                    Monogram(face: model.people.face(member.userId), size: 30)
+                    Text(model.people.name(member.userId)).font(.body).lineLimit(2)
+                    Spacer(minLength: 8)
+                    MemberBalance(
+                        cents: view?.balances[member.userId] ?? cents, currency: shown,
+                        own: ownCurrency(member.userId, balance: cents, shown: shown))
+                }
+                .frame(minHeight: Metrics.minTouchTarget)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("household.member.\(member.userId)")
+            }
+            ForEach(view?.payments ?? [], id: \.self) { payment in
+                SuggestionRow(
+                    transfer: WireTransfer(
+                        fromUserId: payment.transfer.fromUserId, toUserId: payment.transfer.toUserId,
+                        amountCents: payment.shownCents),
+                    people: model.people, currency: shown, canRecord: canRecord(payment.transfer), isOpen: isOpen
+                ) {
+                    self.payment = .monthly(payment.transfer, month: model.month)
+                }
+                .accessibilityIdentifier(
+                    "household.suggestion.\(payment.transfer.fromUserId)-\(payment.transfer.toUserId)")
+            }
+        } footer: {
+            // `ipad-trip-currencies`: the Exchange rates panel explains the rates; only when Record
+            // paid opens is said here.
+            if !isOpen { monthlyNote }
+        }
+    }
+
+    // MARK: Balances in one currency
+
+    @ViewBuilder private var monthBalancesSection: some View {
         let recap = model.recap
         Section {
             ForEach(recap?.balances ?? [], id: \.userId) { balance in
@@ -1086,8 +1300,15 @@ struct SharedExpenseRow: View {
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
-                MoneyText(
-                    expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
+                if let code = expense.originalCurrency, let paid = expense.originalAmount {
+                    // MAZ-151 phase 2: paid in another currency, the amount paid leads.
+                    Text(CurrencyText.amount(paid, code: code, home: currency))
+                        .font(.callout.weight(.semibold)).monospacedDigit().foregroundStyle(PennyColor.label)
+                        .accessibilityIdentifier("household.expense.paid.\(expense.id)")
+                } else {
+                    MoneyText(
+                        expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
+                }
                 Text(viewerLine).font(.footnote).foregroundStyle(viewerColor)
             }
             .fixedSize()
@@ -1140,6 +1361,10 @@ private struct BalanceRow: View {
     let people: HouseholdPeople
     let expenses: [WireSharedExpense]
     let currency: String
+    /// Settle in (MAZ-151 phase 2): the balance in the currency shown, and the member's own.
+    var shownCents: Int64?
+    var shownCurrency: String?
+    var own: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -1149,7 +1374,8 @@ private struct BalanceRow: View {
                 Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             }
             Spacer(minLength: 8)
-            MemberBalance(cents: balance.balanceCents, currency: currency)
+            MemberBalance(
+                cents: shownCents ?? balance.balanceCents, currency: shownCurrency ?? currency, own: own)
         }
         .frame(minHeight: Metrics.minTouchTarget)
         .accessibilityElement(children: .combine)
@@ -1157,9 +1383,12 @@ private struct BalanceRow: View {
 
     private var detail: String {
         let paid = expenses.filter { $0.payerUserId == balance.userId }.reduce(Int64(0)) { $0 + $1.totalCents }
+        let paidText = "Paid \(MoneyFormat.amount(paid, currency: currency))"
+        // Only your own row adds your share, as on iphone-shared-balances and
+        // iphone-trip-balances-currency.
+        guard balance.userId == people.meId else { return paidText }
         let share = expenses.reduce(Int64(0)) { $0 + $1.share(of: balance.userId) }
-        return
-            "Paid \(MoneyFormat.amount(paid, currency: currency)) · share \(MoneyFormat.amount(share, currency: currency))"
+        return "\(paidText) · share \(MoneyFormat.amount(share, currency: currency))"
     }
 }
 
@@ -1168,6 +1397,8 @@ private struct BalanceRow: View {
 private struct MemberBalance: View {
     let cents: Int64
     let currency: String
+    /// "≈ US$349.76": the balance in the member's own currency, in place of "gets back" or "owes".
+    var own: String?
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 1) {
@@ -1177,12 +1408,14 @@ private struct MemberBalance: View {
                 Text((cents > 0 ? "+" : MoneyFormat.minus) + MoneyFormat.amount(abs(cents), currency: currency))
                     .font(.body.weight(.semibold).monospacedDigit())
                     .foregroundStyle(cents > 0 ? PennyColor.income : PennyColor.label)
-                Text(cents > 0 ? "gets back" : "owes").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                Text(own ?? (cents > 0 ? "gets back" : "owes")).font(.footnote).monospacedDigit()
+                    .foregroundStyle(PennyColor.secondaryLabel)
             }
         }
         .fixedSize()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(HouseholdText.memberBalance(cents, currency: currency))
+        .accessibilityLabel(
+            HouseholdText.memberBalance(cents, currency: currency) + (own.map { ", \($0) in their currency" } ?? ""))
     }
 }
 

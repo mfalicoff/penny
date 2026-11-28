@@ -12,7 +12,11 @@ namespace Penny.Backend.Application.Households;
 // writer takes), re-checks access, recomputes the month's suggestions under the lock
 // and writes the reimbursement, its audit row and push outbox rows before commit, so
 // a repeated or concurrent submission can never settle a month twice.
-public sealed class SettlementService(ISharedExpenseRepository expenses, TimeProvider clock)
+public sealed class SettlementService(
+    ISharedExpenseRepository expenses,
+    HomeAmounts homes,
+    TimeProvider clock
+)
 {
     public const string MonthNotFound = "Month not found.";
     public const string SameMember = "Choose two different members.";
@@ -28,7 +32,7 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
     // archiving. A former member sees months up to the one they left in, only the
     // expenses they have a share in, and reimbursements recorded before they left or
     // involving them; balances, suggestions and overdue months use the same rows.
-    public Task<MonthRecapView> MonthAsync(
+    public async Task<MonthRecapView> MonthAsync(
         string householdId,
         string userId,
         string month,
@@ -36,7 +40,7 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
     )
     {
         var now = clock.GetUtcNow();
-        return expenses.ReadAsync(
+        var (recap, currencies) = await expenses.ReadAsync(
             async store =>
             {
                 var membership = await SharedExpenseService.HistoricalMemberAsync(
@@ -83,18 +87,32 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
                         && (leftMonth is null || string.CompareOrdinal(other, leftMonth) <= 0)
                     )
                     .ToList();
-                return new MonthRecapView(
-                    month,
-                    visible,
-                    reimbursements,
-                    balances,
-                    suggestions,
-                    MonthlySettlement.IsOverdue(month, currentMonth, suggestions.Count > 0),
-                    overdueMonths
+                return (
+                    new MonthRecapView(
+                        month,
+                        visible,
+                        reimbursements,
+                        balances,
+                        suggestions,
+                        MonthlySettlement.IsOverdue(month, currentMonth, suggestions.Count > 0),
+                        overdueMonths
+                    ),
+                    await SharedExpenseService.CurrenciesAsync(store, householdId, userId)
                 );
             },
             cancellationToken
         );
+        // The month's expenses in the viewer's home currency too (contract 2.6.0).
+        return recap with
+        {
+            Expenses = await homes.ExpensesAsync(
+                recap.Expenses,
+                currencies.Household,
+                currencies.Home,
+                userId,
+                cancellationToken
+            ),
+        };
     }
 
     // POST /api/households/{id}/months/{month}/reimbursements: one of the two members

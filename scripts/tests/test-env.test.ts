@@ -13,6 +13,7 @@ import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
 import { redirectUrisFor, selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
 import { integer, trustCertificate, writeCertificate } from "../../scripts/test-env/tls.mjs";
 import { apiSmtpEnvironment, startSmtpSink } from "../../scripts/test-env/smtp-sink.mjs";
+import { baseRates, businessDays, moved, rateCurrencies, ratesSql, syntheticRates } from "../../scripts/test-env/rates.mjs";
 
 test("run ids are restricted before they name containers and databases", () => {
   for (const id of ["r1a2b3c4d5", "ci42"]) assert.ok(validRunId(id));
@@ -232,4 +233,34 @@ test("--oidc-providers lists Apple and Google before the server's own single sig
   assert.equal(brands.Oidc__Providers__google__Issuer, google.issuer);
   assert.throws(() => oidcEnvironment(sso, [{ id: "sso", label: "SSO", icon: "sso", order: 1, settings: google }]));
   assert.throws(() => oidcEnvironment(sso, [{ id: "Bad Id", label: "X", icon: "sso", order: 1, settings: google }]));
+});
+
+test("--rates fills the cache with deterministic synthetic quotes for the last 60 days' business days (MAZ-151)", () => {
+  const today = new Date("2026-11-27T15:00:00Z"); // a Friday
+  const days = businessDays(today);
+  assert.equal(days.at(-1), "2026-11-27");
+  assert.equal(days[0], "2026-09-29");
+  assert.equal(days.length, 44);
+  for (const day of days) assert.ok(![0, 6].includes(new Date(`${day}T00:00:00Z`).getUTCDay()), day);
+  for (const currency of ["USD", "CAD", "GBP", "JPY", "CHF", "AUD", "MXN"]) assert.ok(rateCurrencies.includes(currency), currency);
+  assert.ok(!rateCurrencies.includes("EUR"));
+
+  const rows = syntheticRates({ today });
+  assert.equal(rows.length, days.length * rateCurrencies.length);
+  assert.deepEqual(syntheticRates({ today }), rows);
+  // Canonical decimals within ±1.5% of each level, and they move from day to day.
+  for (const row of rows) {
+    assert.match(row.perEuro, /^(0|[1-9]\d{0,8})(\.\d{0,7}[1-9])?$/);
+    const ratio = Number(row.perEuro) / Number(baseRates[row.currency as keyof typeof baseRates]);
+    assert.ok(ratio > 0.984 && ratio < 1.016, `${row.date} ${row.currency} ${row.perEuro}`);
+  }
+  const usd = rows.filter((row) => row.currency === "USD").map((row) => row.perEuro);
+  assert.ok(new Set(usd).size > 10);
+  assert.equal(moved("162.10", 0), "162.1");
+  assert.equal(moved("1.0825", 150), "1.0987");
+  assert.equal(moved("1.0825", -150), "1.0663");
+
+  const sql = ratesSql(rows.slice(0, 2));
+  assert.match(sql, /^INSERT INTO penny\.exchange_rates \(rate_date, currency, per_euro\) VALUES\n\('2026-09-29','AUD','[\d.]+'\),\n\('2026-09-29','BRL','[\d.]+'\)\nON CONFLICT \(rate_date, currency\) DO NOTHING;\n$/);
+  assert.throws(() => ratesSql([{ date: "2026-09-29", currency: "USD", perEuro: "1'); DROP TABLE x; --" }]));
 });

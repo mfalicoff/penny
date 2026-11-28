@@ -14,7 +14,7 @@
 
 IDs are opaque strings, not necessarily UUIDs. Calendar dates are real `YYYY-MM-DD` in 2000-01-01..2100-12-31, months `YYYY-MM`, timestamps integer Unix milliseconds. Money uses integer cents up to 99,999,999,999; shared percentages use integer basis points. Real dates and cross-field constraints are validated in services as well as schema patterns. Omitted optional fields and null are distinct. C# and Swift serialization never convert dates to zones or use floating-point currency.
 
-`GET /ledger` returns `{revision,ledger}`; `PUT` sends the same whole-ledger unit and increments the matching revision once. 409 does not change data. Writes must be version 4 with every list (`accounts` and `trips` included). Entry kinds/category references, personal-share constraints, receipt ownership, household currency and linked-account deletion rules are enforced. Clients materialize personal recurrence and merge durable pending changes; the server does not. Details: [ledger sync](ledger.md).
+`GET /ledger` returns `{revision,ledger}`; `PUT` sends the same whole-ledger unit and increments the matching revision once. 409 does not change data. Writes must be version 4 with every list (`accounts` and `trips` included). Entry kinds/category references, personal-share constraints, receipt ownership and linked-account deletion rules are enforced (since contract 2.6.0 the ledger currency no longer has to match the member's households). Clients materialize personal recurrence and merge durable pending changes; the server does not. Details: [ledger sync](ledger.md).
 
 Shared expense/rule edits and deletes carry the entity revision; creation begins at zero. Envelopes are lowercase `{household}`, `{expense}`, `{reimbursement}`, `{rule}`. `POST /households/{id}/expenses/{expenseId}/payments` accepts `{fromUserId,revision}` and returns 201 `{expense}` with `payments` and `paymentsClosed`. Optional `targetHouseholdId` moves expenses without changing identity.
 
@@ -80,6 +80,18 @@ Since contract 2.5.0 (MAZ-291) the Inbox holds purchases captured on a device (a
 - A server before contract 2.5.0 answers 404 for these paths; the web Inbox then shows emailed receipts only.
 - Storage: `captured_purchases` (unique `(user_id, idempotency_key)`, the status and outcome kept consistent by a check constraint) and `card_accounts`, both deleted with the account. A capture deletes its owner's done items older than 30 days.
 
+## Shared expenses in several currencies
+
+Since contract 2.6.0 (MAZ-151 phase 2) households and shared trips may use any circulating ISO 4217 currency (`CurrencyCode`), whatever their members' ledger currencies, and a shared expense may be paid in another currency than its household's. Rules: [shared expenses](shared-expenses.md#several-currencies), [households](households.md#several-currencies).
+
+- `HouseholdInput.currency`, `TripInput.currency`, `Household.currency` and `ProjectedExpense.householdCurrency` are any `CurrencyCode` (before: CAD, USD, EUR or GBP).
+- `ExpenseInput`, `ExpenseUpdate`, `Expense` and `ProjectedExpense` carry the optional `originalAmount`, `originalCurrency`, `rate`, `rateStatus` and `rateDate` (the personal entry fields, with the household's currency as home). `totalCents` and the splits stay in the household's currency and `totalCents` must be the conversion. Shared recurring rules refuse them.
+- `Expense.home` and `ProjectedExpense.home` (`MemberHomeAmounts`) are the viewer's total and share in their own ledger currency, computed by the server from the cached rates for the expense's date; present only when the household's currency differs from the viewer's and the amount can be converted.
+- `HouseholdMember.currency` is a current member's ledger currency. A personal ledger `Trip` may carry `currency` (the default for its new entries).
+- The ledger currency no longer has to match the member's households: household create, trip create and join accept any currency, and `PUT /api/ledger` no longer refuses one (`household.currency`, `household.trip_currency` and `ledger.currency_mismatch` are no longer sent).
+- Older clients (before 2.6.0) ignore the new fields: they see household-currency amounts, and skip projection rows from households in another currency than their ledger, the same as today. A client before 2.6.0 that edits a foreign expense drops its foreign fields (the household amounts stay). A server before 2.6.0 ignores the foreign fields of an expense and refuses a ledger trip with `currency` (`400 Invalid ledger data.`), so deploy the API before the clients that send them.
+- Storage: nullable `original_amount`, `original_currency`, `rate`, `rate_status` and `rate_date` on `household_expenses`, nullable `currency` on `ledger_trips`; `households.currency` accepts any three-letter code (`ck_households_currency`). Golden cases: `contracts/fixtures/shared-currency.json`.
+
 ## Error codes
 
 Since contract 2.1.0 (MAZ-187) every error body carries a stable, machine-readable `code` next to the English `error` message, for example `{"error":"Your data changed on another device. Please refresh and try again.","code":"ledger.conflict"}`. The message is unchanged, so clients that read only `error` keep working.
@@ -139,11 +151,11 @@ Messages ending in "…" are shortened here; `<household>` is the household's na
 | `household.creator_cannot_be_removed` | 400 | The creator cannot remove themselves. |
 | `household.creator_cannot_leave` | 409 | The creator cannot leave while other members remain. |
 | `household.creator_only` | 403 | Only the household creator can manage members. |
-| `household.currency` | 400 | Household currency must match your ledger currency. |
+| `household.currency` | 400 | Household currency must match your ledger currency. Not sent since contract 2.6.0 (kept for older servers). |
 | `household.invalid_data` | 400 | Invalid household data. |
 | `household.invalid_invite` | 400 | Invite code is invalid or expired. |
 | `household.not_found` | 404 | Household not found. |
-| `household.trip_currency` | 400 | Trip currency must match your ledger currency. |
+| `household.trip_currency` | 400 | Trip currency must match your ledger currency. Not sent since contract 2.6.0 (kept for older servers). |
 | `household.trip_not_found` | 404 | Trip not found. |
 | `household.unsettled_archive` | 409 | Settle all monthly balances before archiving. |
 | `household.unsettled_exit` | 409 | Settle every monthly balance before leaving. |
@@ -157,7 +169,7 @@ Messages ending in "…" are shortened here; `<household>` is the household's na
 | `invite.not_found` | 404 | Invitation not found. |
 | `invite.too_many` | 429 | Too many invitation emails today. Try again tomorrow, or share a code instead. |
 | `ledger.conflict` | 409 | Your data changed on another device. Please refresh and try again. |
-| `ledger.currency_mismatch` | 400 | Your ledger currency must match your active households. |
+| `ledger.currency_mismatch` | 400 | Your ledger currency must match your active households. Not sent since contract 2.6.0 (kept for older servers). |
 | `ledger.foreign_receipt` | 400 | Receipt does not belong to this account. |
 | `ledger.invalid` | 400 | Invalid ledger data. |
 | `ledger.linked_account` | 400 | Remove household expense links before deleting this payment account. |

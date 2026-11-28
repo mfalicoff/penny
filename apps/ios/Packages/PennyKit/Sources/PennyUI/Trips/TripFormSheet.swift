@@ -14,6 +14,7 @@ struct TripFormSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model: TripFormModel?
     @State private var confirmDelete = false
+    @State private var choosingCurrency = false
     @FocusState private var nameFocused: Bool
 
     let target: TripFormModel.Target
@@ -94,24 +95,12 @@ struct TripFormSheet: View {
                     Text(problem).font(.footnote).foregroundStyle(PennyColor.danger)
                         .accessibilityIdentifier("tripForm.dateProblem")
                 }
-                if model.isNew {
-                    // The ledger's currency: a trip can't choose another one.
-                    LabeledContent {
-                        HStack(spacing: 5) {
-                            Text(currency.rawValue)
-                            Image(systemName: "lock").imageScale(.small)
-                        }
-                        .foregroundStyle(PennyColor.secondaryLabel)
-                    } label: {
-                        TripFormLabel("Currency", systemImage: "banknote")
-                    }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityValue("\(currency.rawValue), can't be changed")
-                }
+                currencyRow(model)
             } header: {
                 Text("When").cardSectionHeader()
             } footer: {
-                Text(TripText.datesNote)
+                Text(TripText.currencyNote(model.currency(home: currency), shared: model.savesShared))
+                    .accessibilityIdentifier("tripForm.currencyNote")
             }
             people(model)
             if case .personal = target {
@@ -140,6 +129,14 @@ struct TripFormSheet: View {
                     .accessibilityIdentifier("tripForm.save")
             }
         }
+        .sheet(isPresented: $choosingCurrency) {
+            CurrencyPickerSheet(
+                selection: model.currency(home: currency), home: currency.rawValue,
+                recent: shell.workspace.load.ledger.map { CurrencyUsage($0).uses.map(\.code) } ?? []
+            ) { code in
+                model.currency = code == currency.rawValue ? nil : code
+            }
+        }
         .confirmationDialog(
             "Delete \(model.draft.trimmedName.isEmpty ? "this trip" : model.draft.trimmedName)?",
             isPresented: $confirmDelete, titleVisibility: .visible
@@ -150,6 +147,48 @@ struct TripFormSheet: View {
             Text("The trip goes away on every device. It has no entries, so nothing else changes.")
         }
         .onAppear { if model.isNew { nameFocused = true } }
+    }
+
+    /// `iphone-trip-form-currency` (MAZ-151 phase 2): the trip's currency ("EUR Euro ›"), which opens
+    /// the currency picker. A shared trip's balances use it, so it can't change once it's shared.
+    @ViewBuilder
+    private func currencyRow(_ model: TripFormModel) -> some View {
+        let code = model.currency(home: currency)
+        let name = Currencies.info(code)?.name ?? ""
+        if model.currencyIsLocked {
+            LabeledContent {
+                HStack(spacing: 5) {
+                    Text(code).fontWeight(.semibold).foregroundStyle(PennyColor.label)
+                    Text(name).foregroundStyle(PennyColor.secondaryLabel).lineLimit(1)
+                    Image(systemName: "lock").imageScale(.small).foregroundStyle(PennyColor.secondaryLabel)
+                }
+            } label: {
+                TripFormLabel("Currency", systemImage: "banknote")
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityValue("\(code), can't be changed")
+            .accessibilityIdentifier("tripForm.currency")
+        } else {
+            Button {
+                choosingCurrency = true
+            } label: {
+                HStack(spacing: 8) {
+                    TripFormLabel("Currency", systemImage: "banknote").foregroundStyle(PennyColor.label)
+                    Spacer(minLength: 8)
+                    Text(code).fontWeight(.semibold).foregroundStyle(PennyColor.label)
+                    Text(name).foregroundStyle(PennyColor.secondaryLabel).lineLimit(1)
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                        .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(model.isSaving)
+            .accessibilityElement(children: .combine)
+            .accessibilityValue("\(code), \(name)")
+            .accessibilityHint("Choose the trip's currency")
+            .accessibilityIdentifier("tripForm.currency")
+        }
     }
 
     @ViewBuilder
@@ -277,7 +316,8 @@ struct ShareTripSheet: View {
                     VStack(alignment: .leading, spacing: 22) {
                         point(
                             "person.badge.plus", "A shared trip with the same name and dates",
-                            "You're the organizer and invite people with a code. It uses \(currency.rawValue).")
+                            "You're the organizer and invite people with a code. It uses \(trip.currency ?? currency.rawValue)."
+                        )
                         point(
                             "lock", privateTitle, "What you added before sharing is shown only to you, under Only you."
                         )

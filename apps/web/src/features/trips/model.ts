@@ -2,6 +2,7 @@ import { validDate, type Ledger, type Transaction, type Trip } from "@domain/led
 import { tripOverview, tripSummaries } from "@domain/selectors/trips.ts";
 import type { Household, SharedExpense } from "../../api/schemas";
 import { localDate, shortDate, shortRange } from "../households/model";
+import { homeAmountsOf } from "../households/sharedCurrency";
 
 /**
  * Trips (MAZ-93). A personal trip lives in the private ledger (offline first, `saveTrip`); a
@@ -155,6 +156,38 @@ export function sharedTripTotals(expenses: readonly SharedExpense[], meId: strin
   const privateShare = personal.reduce((sum, entry) => sum + entry.share, 0);
   const outside = [...expenses.map((expense) => expense.date), ...personal.map((entry) => entry.date)].filter((date) => date < range.startDate || date > range.endDate).length;
   return { tripTotal, sharedShare, privateShare, yourSpending: sharedShare + privateShare, outside };
+}
+
+/**
+ * A shared trip's numbers in your home currency (MAZ-151 phase 2, `web-trip-currencies`,
+ * `iphone-trip-currencies`): each shared expense at your home amounts (`home`, or its own amounts
+ * when the trip is in your currency), plus your private trip expenses, which are already in it.
+ * `missing` counts the expenses with no home amounts yet (no rate known), left out of both.
+ */
+export function homeTripTotals(
+  expenses: readonly SharedExpense[],
+  meId: string | undefined,
+  personal: readonly Transaction[],
+  range: { startDate: string; endDate: string },
+  householdCurrency: string,
+  home: string,
+) {
+  let tripTotal = 0;
+  let sharedShare = 0;
+  let missing = 0;
+  for (const expense of expenses) {
+    const shareCents = meId ? (expense.splits.find((split) => split.userId === meId)?.amountCents ?? 0) : 0;
+    const amounts = homeAmountsOf({ ...expense, householdCurrency, shareCents }, home);
+    if (!amounts) {
+      missing += 1;
+      continue;
+    }
+    tripTotal += amounts.total;
+    sharedShare += amounts.share;
+  }
+  const privateShare = personal.reduce((sum, entry) => sum + entry.share, 0);
+  const outside = [...expenses.map((expense) => expense.date), ...personal.map((entry) => entry.date)].filter((date) => date < range.startDate || date > range.endDate).length;
+  return { tripTotal, sharedShare, privateShare, yourSpending: sharedShare + privateShare, outside, missing };
 }
 
 /** Personal trip expenses dated outside its travel range (they still count toward the trip). */

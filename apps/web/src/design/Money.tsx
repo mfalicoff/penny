@@ -1,3 +1,4 @@
+import { currencyInfo } from "@domain/currency.ts";
 import { cx } from "./controls";
 import { useCountUp } from "./motion";
 
@@ -13,19 +14,27 @@ const MINUS = "\u2212";
  * cards (MAZ-222); screen readers read it as "minus".
  */
 export function formatCents(cents: number, currency?: string, options: { signed?: boolean } = {}): string {
-  return formatter(currency, options.signed).format(cents / 100).replace("-", MINUS);
+  return formatter(currency, options.signed).format(cents / scaleOf(currency)).replace("-", MINUS);
 }
+
+/**
+ * "Cents" are the currency's minor units (MAZ-151 phase 2: a yen trip has none, a dinar has three),
+ * so an amount divides by 10^units; a currency not in the shared list keeps two.
+ */
+const unitsOf = (currency: string | undefined) => (currency ? (currencyInfo(currency)?.minorUnits ?? 2) : 2);
+const scaleOf = (currency: string | undefined) => 10 ** unitsOf(currency);
 
 /** Whole units only ("$1,883"), for compact legends such as Home's Follow your money (`iphone-home`). */
 export function formatWhole(cents: number, currency?: string): string {
-  return formatter(currency, false, 0).format(cents / 100).replace("-", MINUS);
+  return formatter(currency, false, 0).format(cents / scaleOf(currency)).replace("-", MINUS);
 }
 
 function formatter(currency: string | undefined, signed: boolean | undefined, digits?: number): Intl.NumberFormat {
   const format: Intl.NumberFormatOptions = currency
     ? { style: "currency", currency }
     : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
-  if (digits !== undefined) Object.assign(format, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const fraction = digits ?? (currency ? unitsOf(currency) : undefined);
+  if (fraction !== undefined) Object.assign(format, { minimumFractionDigits: fraction, maximumFractionDigits: fraction });
   if (signed) format.signDisplay = "exceptZero";
   return new Intl.NumberFormat("en-CA", format);
 }
@@ -58,7 +67,7 @@ export function HeroMoney({
         <span aria-hidden="true">
           <HeroDigits cents={value} currency={currency} showCents={showCents} />
         </span>
-        <span className="visually-hidden">{formatter(currency, false, showCents ? undefined : 0).format(cents / 100).replace("-", MINUS)}</span>
+        <span className="visually-hidden">{formatter(currency, false, showCents ? undefined : 0).format(cents / scaleOf(currency)).replace("-", MINUS)}</span>
       </span>
     );
   }
@@ -70,7 +79,7 @@ export function HeroMoney({
 }
 
 function HeroDigits({ cents, currency, showCents }: { cents: number; currency: string | undefined; showCents: boolean }) {
-  const parts = formatter(currency, false, showCents ? undefined : 0).formatToParts(cents / 100);
+  const parts = formatter(currency, false, showCents ? undefined : 0).formatToParts(cents / scaleOf(currency));
   const split = parts.findIndex((part) => part.type === "decimal");
   const text = (list: Intl.NumberFormatPart[]) => list.map((part) => (part.type === "minusSign" ? MINUS : part.value)).join("");
   const whole = text(split < 0 ? parts : parts.slice(0, split));

@@ -81,7 +81,7 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
             new { currency = "CAD" },
             new { name = "   ", currency = "CAD" },
             new { name = new string('a', 81), currency = "CAD" },
-            new { name = "Home", currency = "JPY" },
+            new { name = "Home", currency = "ABC" },
             new { name = "Home", currency = "cad" },
             new
             {
@@ -172,25 +172,26 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
             );
         }
 
-        // Currency must match the creator's private ledger.
+        // Any listed currency is accepted whatever the ledger's (contract 2.6.0); a code that
+        // isn't one is invalid data.
         await ExpectErrorAsync(
             HttpMethod.Post,
             "/api/households",
             alex,
             HttpStatusCode.BadRequest,
-            HouseholdService.HouseholdCurrency,
-            new { name = "Home", currency = "USD" }
+            HouseholdService.InvalidData,
+            new { name = "Home", currency = "XXX" }
         );
         await ExpectErrorAsync(
             HttpMethod.Post,
             "/api/households/trips",
             alex,
             HttpStatusCode.BadRequest,
-            HouseholdService.TripCurrency,
+            HouseholdService.InvalidData,
             new
             {
                 name = "Coast",
-                currency = "EUR",
+                currency = "eur",
                 startDate = "2026-11-01",
                 endDate = "2026-11-01",
             }

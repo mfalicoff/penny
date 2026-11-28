@@ -5,6 +5,8 @@ namespace Penny.Backend.Api.Contracts;
 
 // Contract schema `Expense`. Optional fields are omitted
 // when absent; `accountId` is present only for the payer.
+// Contract 2.6.0: what was paid in another currency, and `home`, the viewer's amounts in
+// their own currency.
 public sealed record ExpenseResponse(
     string Id,
     string HouseholdId,
@@ -27,7 +29,15 @@ public sealed record ExpenseResponse(
     long CreatedAt,
     string UpdatedBy,
     long UpdatedAt,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? OriginalAmount,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? OriginalCurrency,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Rate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateStatus,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateDate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        MemberHomeAmountsResponse? Home
 )
 {
     public static ExpenseResponse From(ExpenseView expense) =>
@@ -64,7 +74,13 @@ public sealed record ExpenseResponse(
             expense.CreatedAt,
             expense.UpdatedBy,
             expense.UpdatedAt,
-            expense.RecurringId
+            expense.RecurringId,
+            expense.OriginalAmount,
+            expense.OriginalCurrency,
+            expense.Rate,
+            expense.RateStatus,
+            expense.RateDate,
+            MemberHomeAmountsResponse.From(expense.Home)
         );
 
     public static ReceiptResponse? ReceiptFrom(ExpenseReceiptView? receipt) =>

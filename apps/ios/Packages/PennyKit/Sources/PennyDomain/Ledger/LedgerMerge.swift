@@ -238,6 +238,7 @@ extension Trip: MergeableRecord {
         merger.take(\.startDate)
         merger.take(\.endDate)
         merger.take(\.sharedHouseholdId)
+        merger.take(\.currency)
     }
 }
 

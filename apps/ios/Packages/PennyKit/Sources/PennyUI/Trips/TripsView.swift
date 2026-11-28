@@ -169,7 +169,7 @@ private struct FeaturedTrip: View {
                         Text("Your share so far").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                         if let share = TripShare.yours(household, range: card.range, shell: shell) {
                             MoneyText(
-                                share, meaning: .neutral, currency: household.currency, style: .title2.weight(.bold))
+                                share, meaning: .neutral, currency: shell.currency, style: .title2.weight(.bold))
                         } else {
                             Text("…").font(.title2.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
                                 .accessibilityLabel("Loading")
@@ -198,7 +198,8 @@ private struct FeaturedTrip: View {
 }
 
 /// Your share of a shared trip, as its page counts it: your shares of its shared expenses plus
-/// your private expenses on it (in its currency).
+/// your private expenses on it, in your own currency (MAZ-151 phase 2: a trip in another currency
+/// counts each shared expense at its home amounts).
 @MainActor
 enum TripShare {
     /// Nil until the trip's expenses have been read.
@@ -206,10 +207,11 @@ enum TripShare {
         guard let loaded = shell.trips.expenses(for: household.id)?.loadedExpenses, let meId = shell.households.meId
         else { return nil }
         let ledger = shell.workspace.load.ledger
-        let personal =
-            ledger.map { $0.currency.rawValue == household.currency ? $0.privateExpenses(linkedTo: household.id) : [] }
-            ?? []
-        return SharedTripTotals(expenses: loaded, meId: meId, personal: personal, range: range).yourSpending
+        let personal = ledger?.privateExpenses(linkedTo: household.id) ?? []
+        return SharedTripTotals(
+            expenses: loaded, meId: meId, personal: personal, range: range, householdCurrency: household.currency,
+            home: shell.currency
+        ).yourSpending
     }
 
     /// Reads a shared trip's expenses once, for your share; the trip page reads the same list.
@@ -248,7 +250,7 @@ struct TripRow: View {
                 MoneyText(total, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
             case .shared(let household, _):
                 if let share = TripShare.yours(household, range: card.range, shell: shell) {
-                    MoneyText(share, meaning: .neutral, currency: household.currency, style: .callout.weight(.semibold))
+                    MoneyText(share, meaning: .neutral, currency: shell.currency, style: .callout.weight(.semibold))
                 }
             }
         }

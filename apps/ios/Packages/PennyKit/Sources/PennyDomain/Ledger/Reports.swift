@@ -61,9 +61,10 @@ public struct SharedExpenseShare: Hashable, Sendable {
     /// The expense id, or `ruleId:date` for a scheduled preview.
     public var id: String
     public var householdId: String
-    /// The household's currency. A share in another currency than the ledger is left out of
-    /// every report rather than added across currencies.
-    public var currency: Currency
+    /// The household's currency: any ISO 4217 code (contract 2.6.0). A row in another currency
+    /// than the ledger counts at its `home` amounts, and is left out without them
+    /// (`amounts(home:)`).
+    public var currency: String
     public var title: String
     public var date: CalendarDate
     public var total: Int64
@@ -82,9 +83,31 @@ public struct SharedExpenseShare: Hashable, Sendable {
     /// The payer's email when someone else paid, so the year in review (MAZ-292) counts each
     /// person once whatever their name; never shown. Nil when you paid or the server sent none.
     public var payerEmail: String?
+    /// Contract 2.6.0 (MAZ-151 phase 2): what was paid, when the expense was paid in another
+    /// currency than the household's. `rate` is household units per unit.
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rate: String?
+    public var rateStatus: RateStatus?
+    public var rateDate: CalendarDate?
+    /// The viewer's amounts in their home currency, when it isn't the household's and a rate is
+    /// known (the server's `memberAmounts`).
+    public var home: SharedHomeAmounts?
 
+    /// A household in one of the ledger currencies.
     public init(
         id: String, householdId: String, currency: Currency, title: String, date: CalendarDate, total: Int64,
+        share: Int64, category: Category, note: String = "", householdName: String = "", accountId: String? = nil,
+        recurringId: String? = nil, scheduled: Bool = false, payer: SharedPayer? = nil, payerEmail: String? = nil
+    ) {
+        self.init(
+            id: id, householdId: householdId, currency: currency.rawValue, title: title, date: date, total: total,
+            share: share, category: category, note: note, householdName: householdName, accountId: accountId,
+            recurringId: recurringId, scheduled: scheduled, payer: payer, payerEmail: payerEmail)
+    }
+
+    public init(
+        id: String, householdId: String, currency: String, title: String, date: CalendarDate, total: Int64,
         share: Int64, category: Category, note: String = "", householdName: String = "", accountId: String? = nil,
         recurringId: String? = nil, scheduled: Bool = false, payer: SharedPayer? = nil, payerEmail: String? = nil
     ) {
@@ -103,6 +126,69 @@ public struct SharedExpenseShare: Hashable, Sendable {
         self.scheduled = scheduled
         self.payer = payer
         self.payerEmail = payerEmail
+    }
+}
+
+/// The viewer's amounts of a shared expense in their home currency (contract 2.6.0
+/// `MemberHomeAmounts`). `rate` (home units per unit of what was paid, for the expense's date) is
+/// nil when it was paid in the home currency, so the amounts are exact.
+public struct SharedHomeAmounts: Hashable, Sendable {
+    public var currency: String
+    public var totalCents: Int64
+    public var shareCents: Int64
+    public var rate: String?
+    /// `published` or `provisional`.
+    public var rateStatus: RateStatus?
+    public var rateDate: CalendarDate?
+
+    public init(
+        currency: String, totalCents: Int64, shareCents: Int64, rate: String? = nil, rateStatus: RateStatus? = nil,
+        rateDate: CalendarDate? = nil
+    ) {
+        self.currency = currency
+        self.totalCents = totalCents
+        self.shareCents = shareCents
+        self.rate = rate
+        self.rateStatus = rateStatus
+        self.rateDate = rateDate
+    }
+}
+
+/// A shared row's amounts in the personal view (`sharedAmounts`): home amounts in `total` and
+/// `share`, plus what was paid when that isn't the home currency, so lists show both.
+public struct SharedViewAmounts: Hashable, Sendable {
+    public var total: Int64
+    public var share: Int64
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rate: String?
+    public var rateStatus: RateStatus?
+    public var rateDate: CalendarDate?
+}
+
+extension SharedExpenseShare {
+    /// The reference's `sharedAmounts` (apps/web/src/domain/householdProjection.ts, MAZ-151
+    /// phase 2): a row of a household in the home currency keeps its amounts and what was paid; a
+    /// row in another currency counts at its `home` amounts, with what was paid unless that is the
+    /// home currency. Nil when the household is in another currency and no home amounts for
+    /// `home` came with it.
+    public func amounts(home: String) -> SharedViewAmounts? {
+        if currency == home {
+            guard let originalCurrency, let originalAmount, let rate, let rateStatus else {
+                return SharedViewAmounts(total: total, share: share)
+            }
+            return SharedViewAmounts(
+                total: total, share: share, originalAmount: originalAmount, originalCurrency: originalCurrency,
+                rate: rate, rateStatus: rateStatus, rateDate: rateDate)
+        }
+        guard let converted = self.home, converted.currency == home else { return nil }
+        let paidIn = originalCurrency ?? currency
+        guard paidIn != home, let rate = converted.rate, let status = converted.rateStatus else {
+            return SharedViewAmounts(total: converted.totalCents, share: converted.shareCents)
+        }
+        return SharedViewAmounts(
+            total: converted.totalCents, share: converted.shareCents, originalAmount: originalAmount ?? total,
+            originalCurrency: paidIn, rate: rate, rateStatus: status, rateDate: converted.rateDate)
     }
 }
 
@@ -138,15 +224,21 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     /// Not recorded yet: a preview, never cash.
     public var scheduled: Bool
     /// A personal entry paid in another currency (MAZ-151): the amount in that currency's minor
-    /// units, the currency and how final its rate is. Nil for a home entry and a shared row.
+    /// units, the currency and how final its rate is. A shared row carries what was paid when it
+    /// isn't the viewer's home currency (MAZ-151 phase 2). Nil for a home entry.
     public var originalAmount: Int64?
     public var originalCurrency: String?
     public var rateStatus: RateStatus?
+    /// The rate behind `total` (home units per unit of `originalCurrency`) and its publication.
+    public var rate: String?
+    public var rateDate: CalendarDate?
 
     init(personal entry: LedgerEntry, scheduled: Bool) {
         originalAmount = entry.originalAmount
         originalCurrency = entry.originalCurrency
         rateStatus = entry.rateStatus
+        rate = entry.rate
+        rateDate = entry.rateDate
         id = entry.id
         source = .personal
         kind = entry.kind
@@ -186,9 +278,13 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         payerEmail = item.payerEmail
         recurringId = item.recurringId
         scheduled = item.scheduled
-        originalAmount = nil
-        originalCurrency = nil
-        rateStatus = nil
+        // The household's own amounts; `LedgerReport` puts the viewer's home amounts on the row.
+        let amounts = item.amounts(home: item.currency)
+        originalAmount = amounts?.originalAmount
+        originalCurrency = amounts?.originalCurrency
+        rateStatus = amounts?.rateStatus
+        rate = amounts?.rate
+        rateDate = amounts?.rateDate
     }
 
     /// Income dated after `today` (the person's local date): expected, not recorded (MAZ-136).
@@ -276,7 +372,7 @@ public struct LedgerReport: Sendable {
     ///
     /// Shared amounts come from the wire, so a row outside the ledger's stored bounds (total
     /// 1...`Money.maxCents`, share 0...total: the same bounds the server stores) is left out, as
-    /// is a row in another currency than the ledger.
+    /// is a row in another currency than the ledger that has no home amounts in it.
     ///
     /// - Parameters:
     ///   - shared: recorded shared shares; may repeat rows from several period responses.
@@ -286,9 +382,19 @@ public struct LedgerReport: Sendable {
         var categories = ledger.categories
         var categoryIDs = Set(categories.map(\.id))
         func view(_ item: SharedExpenseShare) -> ReportEntry? {
-            guard item.currency == ledger.currency, Money.isValidAmounts(total: item.total, share: item.share)
+            // A row in another currency counts at the viewer's home amounts, and is left out
+            // without them (MAZ-151 phase 2, `sharedAmounts`).
+            guard let amounts = item.amounts(home: ledger.currency.rawValue),
+                Money.isValidAmounts(total: amounts.total, share: amounts.share)
             else { return nil }
             var entry = ReportEntry(shared: item)
+            entry.total = amounts.total
+            entry.share = amounts.share
+            entry.originalAmount = amounts.originalAmount
+            entry.originalCurrency = amounts.originalCurrency
+            entry.rate = amounts.rate
+            entry.rateStatus = amounts.rateStatus
+            entry.rateDate = amounts.rateDate
             // Counted under the person's expense category of the same name (MAZ-286); a shared
             // category with no match gets its own expense category, added once.
             entry.categoryId = SharedExpenseShare.categoryID(item.category, in: ledger.categories)

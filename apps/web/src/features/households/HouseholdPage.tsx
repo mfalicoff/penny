@@ -26,6 +26,8 @@ import { byWeek, currentMonth, isCurrent, memberName, monthLabel, people } from 
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab, useManageActions } from "./PeopleTab";
 import { RuleDialog } from "./RuleDialog";
+import { useSettleIn } from "./SettleIn";
+import { useLedgerWorkspace } from "../organize/workspace";
 import { usePeriodSlide } from "../../design/motion";
 import type { HouseholdSearch, HouseholdTab } from "./search";
 
@@ -105,6 +107,10 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   const who = people(detail, email);
   const view = householdView(householdId, detail, who, month, archived);
   const manage = useManageActions(view, recap.data);
+  // MAZ-151 phase 2: balances in the household's currency, shown in another at today's rate ("Settle in").
+  const workspace = useLedgerWorkspace();
+  const settleView = useSettleIn({ currency: detail.household.currency, home: workspace.ledger?.currency, members: detail.members, meId: who.meId });
+  const settle = settleView.multi ? settleView : undefined;
   const { household } = detail;
   const current = detail.members.filter(isCurrent);
   const balance = who.meId ? recap.data?.balances.find((row) => row.userId === who.meId)?.balanceCents : undefined;
@@ -287,19 +293,19 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
               <>
                 {glow}
                 {balanceLine("household-head__balance household-owed")}
-                <BalancesTab view={view} recap={recap} compact />
+                <BalancesTab view={view} recap={recap} compact settle={settle} />
                 {expenseDetail}
               </>
             ) : wide ? (
               <>
                 {expenseDetail}
-                <BalancesTab view={view} recap={recap} compact brief={Boolean(expenseDetail)} />
+                <BalancesTab view={view} recap={recap} compact brief={Boolean(expenseDetail)} settle={settle} />
               </>
             ) : undefined
           }
         />
       ) : tab === "balances" ? (
-        <BalancesTab view={view} recap={recap} />
+        <BalancesTab view={view} recap={recap} settle={settle} />
       ) : tab === "people" ? (
         <PeopleTab view={view} recap={recap.data} manage={wide} />
       ) : (

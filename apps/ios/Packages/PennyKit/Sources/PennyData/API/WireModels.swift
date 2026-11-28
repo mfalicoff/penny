@@ -1,4 +1,4 @@
-// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.4.0).
+// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.6.0).
 //
 // These types mirror the JSON exactly and carry no presentation state. Money is integer
 // minor units (cents, Int64), calendar dates stay "YYYY-MM-DD" strings (never Date, so a
@@ -62,13 +62,20 @@ public struct WireTrip: Codable, Equatable, Sendable {
     public var startDate: String
     public var endDate: String
     public var sharedHouseholdId: String?
+    /// Contract 2.6.0 (MAZ-151 phase 2): a personal trip's currency. Omitted when nil, so a ledger
+    /// without it round-trips unchanged.
+    public var currency: String?
 
-    public init(id: String, name: String, startDate: String, endDate: String, sharedHouseholdId: String? = nil) {
+    public init(
+        id: String, name: String, startDate: String, endDate: String, sharedHouseholdId: String? = nil,
+        currency: String? = nil
+    ) {
         self.id = id
         self.name = name
         self.startDate = startDate
         self.endDate = endDate
         self.sharedHouseholdId = sharedHouseholdId
+        self.currency = currency
     }
 }
 
@@ -361,6 +368,41 @@ public struct WireProjectedExpense: Codable, Equatable, Sendable {
     /// on one-off expenses. Previews are matched to recorded rows by household, rule and date.
     public var recurringId: String?
     public var receiptId: String?
+    /// Contract 2.6.0 (MAZ-151 phase 2): what was paid, when the expense was paid in another
+    /// currency than the household's (`rate`: household units per unit). Absent from older servers.
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rate: String?
+    public var rateStatus: String?
+    public var rateDate: String?
+    /// Contract 2.6.0: the viewer's amounts in their home currency, when the household's isn't it
+    /// and a rate is known.
+    public var home: WireMemberHomeAmounts?
+}
+
+/// Contract 2.6.0 `MemberHomeAmounts` (MAZ-151 phase 2): the viewer's amounts of a shared expense
+/// in their home currency. `rate` (home units per unit of what was paid) is absent when it was
+/// paid in the home currency.
+public struct WireMemberHomeAmounts: Codable, Equatable, Sendable {
+    public var currency: String
+    public var totalCents: Int64
+    public var shareCents: Int64
+    public var rate: String?
+    /// `published` or `provisional`.
+    public var rateStatus: String?
+    public var rateDate: String?
+
+    public init(
+        currency: String, totalCents: Int64, shareCents: Int64, rate: String? = nil, rateStatus: String? = nil,
+        rateDate: String? = nil
+    ) {
+        self.currency = currency
+        self.totalCents = totalCents
+        self.shareCents = shareCents
+        self.rate = rate
+        self.rateStatus = rateStatus
+        self.rateDate = rateDate
+    }
 }
 
 /// `GET /api/households/projection`: the caller's recorded shares (`transactions`) and the
