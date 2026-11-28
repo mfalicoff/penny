@@ -3178,11 +3178,6 @@
             "summary": "Balances settle month by month, as Penny does: the month pill stays beside Back and the month with its Settles tag is under the balances, Record paid opens on the month's last day (dimmed before), and the payments' note adds when it opens; the card nets the whole trip (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-151"
-          },
-          {
-            "summary": "Every balance row reads “Paid … · share …”, as on iphone-shared-balances; the card gives the share only on yours",
-            "kind": "follow-up",
-            "ref": "MAZ-151"
           }
         ]
       },
