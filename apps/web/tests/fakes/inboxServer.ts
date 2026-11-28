@@ -78,15 +78,51 @@ export interface SharedFake {
   receipt?: { id: string; name: string; mime: string; uri: string };
 }
 
+/** A captured purchase (MAZ-291, contract 2.5.0) as the server lists it. */
+export interface FakePurchase {
+  id: string;
+  merchant: string;
+  amount: number;
+  currency: string;
+  card: string | null;
+  capturedAt: number;
+  createdAt: number;
+  status: "to_review" | "done";
+  outcome: "added" | "attached" | "discarded" | null;
+  entryId: string | null;
+  householdId: string | null;
+  resolvedAt: number | null;
+}
+
+export const purchase = (n: number, extra: Partial<FakePurchase> = {}): FakePurchase => ({
+  id: hex(1000 + n),
+  merchant: `Shop ${String(n)}`,
+  amount: 1250,
+  currency: "CAD",
+  card: "Visa 0001",
+  capturedAt: localNoon("2026-11-12"),
+  createdAt: localNoon("2026-11-12"),
+  status: "to_review",
+  outcome: null,
+  entryId: null,
+  householdId: null,
+  resolvedAt: null,
+  ...extra,
+});
+
 export function inboxServer(options: {
   ledger?: Partial<Ledger>;
+  /** Captured purchases; without them the server answers 404, as one before contract 2.5.0. */
+  purchases?: FakePurchase[];
+  cards?: { card: string; accountId: string }[];
   enabled?: boolean;
   address?: typeof ADDRESS | null;
   items?: FakeItem[];
   shared?: SharedFake;
   search?: (body: Record<string, unknown>) => object[];
+  rates?: (url: string) => Response;
 } = {}) {
-  const server = ledgerServer(options.ledger ?? {}, options.search ? { search: options.search } : {});
+  const server = ledgerServer(options.ledger ?? {}, { ...(options.search ? { search: options.search } : {}), ...(options.rates ? { rates: options.rates } : {}) });
   const state = {
     enabled: options.enabled ?? true,
     address: options.address === undefined ? { ...ADDRESS } : options.address,
@@ -95,6 +131,9 @@ export function inboxServer(options: {
     sharedConflicts: 0,
     created: 0,
     sendersError: null as string | null,
+    purchases: options.purchases,
+    cards: options.cards ?? [],
+    resolutions: [] as { id: string; body: unknown }[],
   };
   const envelope = () => ({ enabled: state.enabled, domain: state.enabled ? "receipts.example" : null, address: state.address });
 
@@ -167,6 +206,24 @@ export function inboxServer(options: {
         state.items = state.items.filter((candidate) => candidate !== item);
         return reply({ deleted, kept });
       }
+    }
+    if (url.startsWith("/api/purchase-inbox")) {
+      const purchases = state.purchases;
+      if (!purchases) return reply({ error: "Not found." }, 404);
+      if (url === "/api/purchase-inbox/cards") return reply({ cards: state.cards });
+      const list = /^\/api\/purchase-inbox\?status=(to_review|done)/.exec(url);
+      if (list) return reply({ items: purchases.filter((item) => item.status === list[1]).sort((a, b) => b.capturedAt - a.capturedAt), next: null });
+      const action = /^\/api\/purchase-inbox\/([0-9a-f]{32})\/(resolve|reopen)$/.exec(url);
+      const item = action ? purchases.find((candidate) => candidate.id === action[1]) : undefined;
+      if (!action || !item) return reply({ error: "Purchase not found.", code: "purchase_inbox.not_found" }, 404);
+      if (action[2] === "reopen") Object.assign(item, { status: "to_review", outcome: null, entryId: null, householdId: null, resolvedAt: null });
+      else {
+        const body = bodyOf(init) as { outcome: FakePurchase["outcome"]; entryId?: string; householdId?: string };
+        state.resolutions.push({ id: item.id, body });
+        if (item.status === "done" && item.outcome !== body.outcome) return reply({ error: "This purchase was already handled on another device.", code: "purchase_inbox.already_done" }, 409);
+        Object.assign(item, { status: "done", outcome: body.outcome, entryId: body.entryId ?? null, householdId: body.householdId ?? null, resolvedAt: Date.now() });
+      }
+      return reply(item);
     }
     if (url.startsWith("/api/receipts/")) return reply({ error: "Receipt not found." }, 404);
     if (url === "/api/households") return reply({ households: state.shared ? [{ id: "h1", name: "Maison", currency: "CAD", creatorId: "u1", createdAt: 1, memberCount: 2 }] : [] });

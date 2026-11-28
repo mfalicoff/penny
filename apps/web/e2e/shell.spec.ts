@@ -20,6 +20,7 @@ async function mockApi(page: Page, email = "alex@example.test") {
   await page.route("/api/households", (route) => route.fulfill({ json: { households: [] } }));
   await page.route("/api/households/**", (route) => route.fulfill({ status: 404, json: { error: "Household not found." } }));
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
+  await page.route("/api/purchase-inbox?status=to_review", (route) => route.fulfill({ json: { items: [], next: null } }));
   await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
   // Settings › Currency's Exchange rates (MAZ-151).
   await page.route("/api/rates?*", (route) =>

@@ -1070,3 +1070,9 @@
     order: -1;
   }
 }
+
+/* The detail on the title's line (card web-capture-discard): "Purchase discarded Metro · $54.18". */
+.toast-region .pk-toast__inline {
+  color: var(--pk-label-2);
+  font-weight: 500;
+}

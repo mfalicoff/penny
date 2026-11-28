@@ -109,6 +109,14 @@ public static class ErrorCodes
     public const string ProfilePictureNotFound = "profile.picture_not_found";
     public const string ProfileUnreadablePicture = "profile.unreadable_picture";
 
+    public const string PurchaseInboxAlreadyDone = "purchase_inbox.already_done";
+    public const string PurchaseInboxFull = "purchase_inbox.full";
+    public const string PurchaseInboxInvalidCapture = "purchase_inbox.invalid_capture";
+    public const string PurchaseInboxInvalidCards = "purchase_inbox.invalid_cards";
+    public const string PurchaseInboxInvalidFilter = "purchase_inbox.invalid_filter";
+    public const string PurchaseInboxInvalidResolution = "purchase_inbox.invalid_resolution";
+    public const string PurchaseInboxNotFound = "purchase_inbox.not_found";
+
     public const string PushInvalidDevice = "push.invalid_device";
 
     public const string RateLimitAuth = "rate_limit.auth";

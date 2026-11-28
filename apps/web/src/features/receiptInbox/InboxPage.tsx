@@ -1,14 +1,16 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ApiError } from "../../api/client";
-import { discardInboxItem, finishInboxItem, receiptInboxPagesQuery, refreshInbox, type InboxFilter } from "../../api/receiptInbox";
+import { purchaseInboxPagesQuery } from "../../api/purchaseInbox";
+import { discardInboxItem, finishInboxItem, receiptInboxPagesQuery, receiptInboxQuery, refreshInbox, type InboxFilter } from "../../api/receiptInbox";
 import type { ReceiptInboxFile, ReceiptInboxItem } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { Badge, Button, ChoiceGroup } from "../../design/controls";
-import { Icon } from "../../design/Icon";
+import { Icon, TrayIcon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { Banner, EmptyState, ErrorState, LoadingState, useOnline, useToast } from "../../design/states";
+import { useIsDemo } from "../../demo/demo";
 import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { useLedgerWriter } from "../entries/writer";
 import { ReceiptPreviewDialog } from "../receipts/ReceiptPreviewDialog";
@@ -30,29 +32,39 @@ import {
   receivedDay,
   senderName,
 } from "./model";
-import { HOW_TO } from "./ReceiptEmailSettings";
+import { whenText } from "../purchaseInbox/model";
+import { PurchaseSection } from "../purchaseInbox/PurchaseSection";
 import { useAttachingReceipts, useInboxStatus, useInboxSyncRefresh } from "./useInbox";
 
 export interface InboxSearch {
-  status: InboxFilter;
+  status: "to_review" | "done";
   item?: string | undefined;
 }
 
 type Open = { id: string; view: "detail" | "attach" | "new" | "discard" | "done"; file?: ReceiptInboxFile } | null;
 
+const receiptFilter = (status: InboxSearch["status"]): InboxFilter => (status === "to_review" ? "to_attach" : "attached");
+
 /**
- * Receipts to attach (MAZ-184, cards `receipt-inbox` and `receipt-inbox-item`): emailed receipts
- * waiting to be attached, newest first, with a To attach / Attached filter in the URL. Rows are
- * buttons: Enter opens one, Delete offers Discard. Sender, subject and file names are shown as
- * plain text. Nothing is ever attached without the person choosing an entry and pressing Attach.
+ * The Inbox (cards `web-inbox-captured`, `web-inbox-captured-empty`; MAZ-184 and MAZ-291): captured
+ * purchases (Purchases) and emailed receipts waiting to be attached (Emailed receipts), with a To
+ * review / Done filter in the URL. Receipt rows are buttons: Enter opens one, Delete offers Discard.
+ * Sender, subject, merchant and file names are shown as plain text. Nothing is ever added or
+ * attached without the person choosing it.
  */
 export function InboxPage({ search }: { search: InboxSearch }) {
   const email = useAccountEmail();
   const navigate = useNavigate();
   const status = useInboxStatus();
   const online = useOnline();
-  const list = useInfiniteQuery({ ...receiptInboxPagesQuery(email, search.status), enabled: status.enabled });
-  const items = list.data?.pages.flatMap((page) => page.items) ?? [];
+  const demo = useIsDemo();
+  const writer = useLedgerWriter();
+  const list = useInfiniteQuery({ ...receiptInboxPagesQuery(email, receiptFilter(search.status)), enabled: status.enabled });
+  const purchaseList = useInfiniteQuery({ ...purchaseInboxPagesQuery(email, search.status), enabled: !demo });
+  // Receipts waiting to be attached, for "Matches a receipt" (the Done tab shows attached ones).
+  const waiting = useQuery({ ...receiptInboxQuery(email, "to_attach"), enabled: status.enabled });
+  const items = status.enabled ? (list.data?.pages.flatMap((page) => page.items) ?? []) : [];
+  const purchases = purchaseList.data?.pages.flatMap((page) => page.items) ?? [];
   const attaching = useAttachingReceipts();
   const [open, setOpen] = useState<Open>(search.item ? { id: search.item, view: "detail" } : null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -85,79 +97,108 @@ export function InboxPage({ search }: { search: InboxSearch }) {
     if (search.item) void navigate({ to: "/receipts", search: { status: search.status }, replace: true });
   };
 
-  if (status.loaded && !status.enabled) {
-    return (
-      <EmptyState icon="receipt" title="Receipt email isn't available">
-        <p>This Penny server doesn't accept emailed receipts.</p>
-      </EmptyState>
-    );
-  }
+  // A server from before contract 2.5.0 has no captured purchases (404): the Inbox shows receipts only.
+  const purchasesMissing = purchaseList.error instanceof ApiError && purchaseList.error.status === 404;
+  const receiptsLoading = status.enabled && list.isPending;
+  const loading = !status.loaded || receiptsLoading || (!demo && purchaseList.isPending && purchaseList.fetchStatus !== "idle");
+  const failed = (list.isError && !list.data) || (purchaseList.isError && !purchaseList.data && !purchasesMissing);
+  const empty = !loading && !failed && items.length === 0 && purchases.length === 0;
+  const retry = () => {
+    void list.refetch();
+    void purchaseList.refetch();
+  };
+  const failedError = list.error ?? purchaseList.error;
 
   return (
     <div className="inbox">
       <div className="inbox__bar">
-        <ChoiceGroup<InboxFilter>
+        <ChoiceGroup<InboxSearch["status"]>
           legend="Show"
           hideLegend
           name="inbox-filter"
           value={search.status}
           onChange={(value) => void navigate({ to: "/receipts", search: { status: value } })}
           options={[
-            { value: "to_attach", label: "To attach" },
-            { value: "attached", label: "Attached" },
+            { value: "to_review", label: "To review" },
+            { value: "done", label: "Done" },
           ]}
         />
-        {status.settings?.address ? null : (
-          <Link to="/settings/receipt-email" className="wbtn wbtn--quiet">
-            Set up receipt email
-          </Link>
-        )}
       </div>
       {!online ? (
         <p className="note" role="status">
           <Icon name="cloud-offline" size={14} /> {OFFLINE_HINT}
         </p>
       ) : null}
-      {search.status === "attached" ? <p className="note">Attached in the last 30 days. The receipts stay on their entries.</p> : null}
-      {list.isPending && status.enabled ? <LoadingState label="Loading your receipts…" /> : null}
-      {!status.loaded ? <LoadingState label="Loading your receipts…" /> : null}
-      {list.isError && !list.data ? (
-        <ErrorState title="Penny couldn't load your receipts" onRetry={() => void list.refetch()} retrying={list.isFetching}>
-          {list.error instanceof ApiError && list.error.status === 0 ? "Penny can't reach the server." : "Nothing was changed. Try again in a moment."}
+      {search.status === "done" && !empty ? <p className="note">Handled in the last 30 days. Receipts stay on their entries.</p> : null}
+      {loading && !failed ? <LoadingState label="Loading your Inbox…" /> : null}
+      {failed ? (
+        <ErrorState title="Penny couldn't load your Inbox" onRetry={retry} retrying={list.isFetching || purchaseList.isFetching}>
+          {failedError instanceof ApiError && failedError.status === 0 ? "Penny can't reach the server." : "Nothing was changed. Try again in a moment."}
         </ErrorState>
       ) : null}
-      {list.data && items.length === 0 ? (
-        search.status === "to_attach" ? (
-          <EmptyState icon="receipt" title="Nothing to attach">
-            <p>{status.settings?.address ? HOW_TO : "Set up receipt email to send receipts to Penny."}</p>
-          </EmptyState>
+      {empty ? (
+        search.status === "to_review" ? (
+          <div className="inbox-panel inbox-empty">
+            <EmptyState
+              glyph={<TrayIcon size={44} weight={28} />}
+              title="Nothing to review"
+              action={
+                status.enabled ? (
+                  <Link to="/settings/receipt-email" className="wbtn">
+                    Your receipt email address
+                  </Link>
+                ) : undefined
+              }
+            >
+              <p>{status.enabled ? "Purchases captured with Apple Pay on your iPhone and receipts you email to Penny wait here until you add them." : "Purchases captured with Apple Pay on your iPhone wait here until you add them."}</p>
+            </EmptyState>
+          </div>
         ) : (
-          <EmptyState icon="receipt" title="Nothing attached lately">
-            <p>Emails you attach show here for 30 days.</p>
-          </EmptyState>
+          <div className="inbox-panel inbox-empty">
+            <EmptyState glyph={<TrayIcon size={44} weight={28} />} title="Nothing handled lately">
+              <p>Purchases and receipts you handle show here for 30 days.</p>
+            </EmptyState>
+          </div>
         )
       ) : null}
+      <PurchaseSection
+        items={purchases}
+        done={search.status === "done"}
+        receipts={waiting.data?.items ?? []}
+        writer={writer}
+        online={online}
+        hasMore={purchaseList.hasNextPage}
+        loadingMore={purchaseList.isFetchingNextPage}
+        onMore={() => void purchaseList.fetchNextPage()}
+      />
       {items.length ? (
-        <ul ref={listRef} className="inbox-list" aria-label={search.status === "to_attach" ? "Receipts to attach" : "Attached receipts"}>
-          {items.map((item) => (
-            <InboxRow
-              key={item.id}
-              item={item}
-              attaching={item.files.some((file) => !file.linked && attaching.has(file.receiptId))}
-              onOpen={() => {
-                setOpen({ id: item.id, view: "detail" });
-              }}
-              onDiscard={() => {
-                if (online) setOpen({ id: item.id, view: "discard" });
-              }}
-            />
-          ))}
-        </ul>
-      ) : null}
-      {list.hasNextPage ? (
-        <Button busy={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>
-          {list.isFetchingNextPage ? "Loading…" : "Show older"}
-        </Button>
+        <section className="inbox-section" aria-labelledby="inbox-receipts">
+          <div className="inbox-section__head">
+            <h2 id="inbox-receipts" className="inbox-section__title">
+              Emailed receipts
+            </h2>
+          </div>
+          <ul ref={listRef} className="inbox-list inbox-panel" aria-label={search.status === "to_review" ? "Receipts to attach" : "Attached receipts"}>
+            {items.map((item) => (
+              <InboxRow
+                key={item.id}
+                item={item}
+                attaching={item.files.some((file) => !file.linked && attaching.has(file.receiptId))}
+                onOpen={() => {
+                  setOpen({ id: item.id, view: "detail" });
+                }}
+                onDiscard={() => {
+                  if (online) setOpen({ id: item.id, view: "discard" });
+                }}
+              />
+            ))}
+          </ul>
+          {list.hasNextPage ? (
+            <Button busy={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>
+              {list.isFetchingNextPage ? "Loading…" : "Show older"}
+            </Button>
+          ) : null}
+        </section>
       ) : null}
 
       {open && !current && list.data ? (
@@ -190,6 +231,12 @@ export function InboxPage({ search }: { search: InboxSearch }) {
   );
 }
 
+/** "Today, 8:06 AM" or "Nov 6", as the Inbox card dates its emailed receipts. */
+function receivedText(receivedAt: number, day: string): string {
+  const when = whenText(receivedAt);
+  return when.startsWith("Today") || when.startsWith("Yesterday") ? when : dayText(day);
+}
+
 function InboxRow({ item, attaching, onOpen, onDiscard }: { item: ReceiptInboxItem; attaching: boolean; onOpen: () => void; onDiscard: () => void }) {
   const sender = senderName(item.from);
   const day = receivedDay(item.receivedAt);
@@ -209,22 +256,24 @@ function InboxRow({ item, attaching, onOpen, onDiscard }: { item: ReceiptInboxIt
         </span>
         <span className="inbox-row__sender">{sender}</span>
         <span className="inbox-row__date">
-          <time dateTime={day}>{dayText(day)}</time>
+          <time dateTime={day}>{receivedText(item.receivedAt, day)}</time>
         </span>
-        <span className="inbox-row__subject">{item.subject || "(no subject)"}</span>
-        <span className="inbox-row__meta">
-          {filesCount(item.files.length)}
-          {state ? ` · ${state}` : ""}
-          {expiry ? ` · ${expiry}` : ""}
-          {item.senderVerified ? null : (
-            <>
-              {" "}
-              <Badge tone="pending" icon="alert-circle">
-                Sender not verified
-              </Badge>
-            </>
-          )}
+        <span className="inbox-row__subject">
+          {item.subject || "(no subject)"} · {filesCount(item.files.length)}
         </span>
+        {state || expiry || !item.senderVerified ? (
+          <span className="inbox-row__meta">
+            {[state, expiry].filter(Boolean).join(" · ")}
+            {item.senderVerified ? null : (
+              <>
+                {" "}
+                <Badge tone="pending" icon="alert-circle">
+                  Sender not verified
+                </Badge>
+              </>
+            )}
+          </span>
+        ) : null}
       </button>
     </li>
   );

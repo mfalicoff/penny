@@ -326,3 +326,479 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* The Inbox with captured purchases (MAZ-291; cards web-inbox-captured, web-capture-*). */
+
+.navlink__count--inbox {
+  background: var(--pk-tint);
+  color: #fff;
+  font-weight: 700;
+}
+
+.inbox-section {
+  display: grid;
+  gap: 8px;
+  max-width: 880px;
+  min-width: 0;
+}
+
+
+.inbox-section__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+/* Only a head with a button (Add all) needs its height. */
+.inbox-section__head:has(.wbtn) {
+  min-height: 36px;
+}
+
+.inbox-section__title {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.inbox-panel {
+  margin: 0;
+  padding: 6px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  list-style: none;
+}
+
+.inbox-empty {
+  max-width: 880px;
+  padding: 104px 24px 96px;
+}
+
+.inbox-empty .state {
+  max-width: none;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.inbox-panel .inbox-row + .inbox-row,
+.purchase-row + .purchase-row {
+  border-top: 0;
+}
+
+.inbox-panel .inbox-row,
+.purchase-row {
+  position: relative;
+}
+
+.inbox-panel .inbox-row + .inbox-row::before,
+.purchase-row + .purchase-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 14px;
+  left: 64px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.inbox-panel .inbox-row__main {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  column-gap: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.inbox-panel .inbox-row__icon {
+  grid-row: 1 / span 3;
+  width: 36px;
+  height: 36px;
+}
+
+.inbox-panel .inbox-row__subject {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.purchase-list {
+  display: grid;
+}
+
+.purchase-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+}
+
+.purchase-row:hover,
+.purchase-row:focus-within {
+  background: var(--pk-fill);
+}
+
+.purchase-row__main {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+button.purchase-row__main {
+  cursor: pointer;
+}
+
+.purchase-tile {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--tile, var(--pk-c-other));
+  color: #fff;
+}
+
+.purchase-row__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.purchase-row__text b {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.purchase-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.purchase-row__match {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background: var(--pk-tint-soft);
+  color: var(--pk-tint-text);
+  font-size: 0.71875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.purchase-amount {
+  display: grid;
+  justify-items: end;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.purchase-amount small {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Discard and Review: beside the amount on hover or focus, as the card draws them. */
+.purchase-row__actions {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 196px;
+  padding-inline-end: 8px;
+  visibility: hidden;
+}
+
+.purchase-row:hover .purchase-row__actions,
+.purchase-row:focus-within .purchase-row__actions {
+  visibility: visible;
+}
+
+@media (hover: none), (max-width: 719px) {
+  .purchase-row {
+    flex-wrap: wrap;
+  }
+
+  .purchase-row__actions {
+    width: 100%;
+    min-width: 0;
+    padding: 0 14px 10px 64px;
+    visibility: visible;
+  }
+}
+
+/* The purchase sheet (web-capture-add, web-capture-split). */
+
+.purchase-sheet__source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.purchase-sheet__category-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin-top: 16px;
+}
+
+.purchase-sheet__category-head .entry-label {
+  margin: 0;
+}
+
+/* The chips' own legend names the group for assistive technology; the head above shows it. */
+.purchase-sheet__category .entry-chips > legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.purchase-sheet__suggested {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.purchase-sheet__mapped {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.purchase-sheet__mapped b {
+  color: var(--pk-label);
+  font-weight: 600;
+}
+
+.purchase-sheet__mapped small {
+  font-size: 0.75rem;
+}
+
+/* The account stays a real select over the mapped account's two lines. */
+.purchase-sheet__overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.purchase-sheet .entry-row {
+  position: relative;
+}
+
+.purchase-sheet__split--on .entry-row__value,
+.purchase-sheet__split--on .entry-row__select {
+  color: var(--pk-tint-text);
+  font-weight: 600;
+}
+
+.purchase-sheet__shared {
+  margin-top: 16px;
+}
+
+.purchase-sheet__shared .entry-label {
+  margin: 0 0 4px;
+}
+
+/* Looks like the same purchase (web-capture-match). */
+
+.purchase-match__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.purchase-match__head .purchase-sheet__source {
+  margin: 0;
+}
+
+.purchase-match__amount {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.purchase-match__symbol {
+  opacity: 0.35;
+}
+
+.purchase-match__label {
+  margin: 20px 0 8px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.purchase-match__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.purchase-match__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px 16px;
+  border-radius: var(--pk-r-card);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.purchase-match__thumb {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 56px;
+  border-radius: 6px;
+  background: var(--pk-surface-2);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label-3);
+}
+
+.purchase-match__text {
+  display: grid;
+  flex: 1 1 16rem;
+  gap: 2px;
+  min-width: 0;
+}
+
+.purchase-match__text b {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.purchase-match__text > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.purchase-match__text > span .icon {
+  color: var(--pk-tint-text);
+}
+
+.purchase-match__muted {
+  color: var(--pk-label-2);
+  font-weight: 500;
+}
+
+.purchase-match__note {
+  margin: 14px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+/* Add all purchases (web-capture-add-all). */
+
+.purchase-add-all__lead {
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.purchase-add-all__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.purchase-add-all__row,
+.purchase-add-all__total {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  min-height: 56px;
+  border-bottom: 0.5px solid var(--pk-separator);
+}
+
+.purchase-add-all__total {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 44px;
+  border-bottom: 0;
+}
+
+.purchase-add-all__text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.purchase-add-all__text span {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+/* Discard in the purchase dialogs' footers: red text and the trash glyph, no fill (cards web-capture-*). */
+.wbtn--danger-quiet.purchase-discard {
+  background: transparent;
+}
+
+.wbtn--danger-quiet.purchase-discard:hover {
+  background: var(--pk-danger-soft);
+}
+
+.inbox__bar .choices--segmented .choices__options {
+  min-width: 260px;
+}
+
+.inbox__bar .choices--segmented .choice {
+  flex: 1;
+  justify-content: center;
+}
+
+/* The Inbox's empty state draws the tray on its own and the sentence on one line (web-inbox-captured-empty). */
+.inbox-empty .state__icon {
+  background: none;
+  color: var(--pk-label-2);
+}
+
+.inbox-empty .state__icon {
+  width: auto;
+  height: auto;
+}
+
+.inbox-empty .state__body {
+  font-size: 0.9375rem;
+}

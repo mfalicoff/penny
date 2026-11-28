@@ -54,6 +54,12 @@ import {
   receiptInboxFileSchema,
   receiptInboxItemSchema,
   receiptInboxPageSchema,
+  purchaseCaptureSchema,
+  purchaseInboxItemSchema,
+  purchaseInboxPageSchema,
+  purchaseResolutionSchema,
+  cardAccountSchema,
+  cardAccountsSchema,
   receiptSchema,
   searchRequestSchema,
   searchResponseSchema,
@@ -131,6 +137,12 @@ const models: [string, z.ZodType][] = [
   ["ReceiptInboxItem", receiptInboxItemSchema],
   ["ReceiptInboxPage", receiptInboxPageSchema],
   ["ReceiptInboxCleanup", receiptInboxCleanupSchema],
+  ["PurchaseCapture", purchaseCaptureSchema],
+  ["PurchaseInboxItem", purchaseInboxItemSchema],
+  ["PurchaseInboxPage", purchaseInboxPageSchema],
+  ["PurchaseResolution", purchaseResolutionSchema],
+  ["CardAccount", cardAccountSchema],
+  ["CardAccounts", cardAccountsSchema],
 ];
 
 describe("DTO models match contracts/openapi.json", () => {
