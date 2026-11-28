@@ -649,7 +649,7 @@ public sealed class SharedExpenseService(
             },
             cancellationToken
         );
-        // Each row in the viewer's home currency too (contract 2.5.0), after the read.
+        // Each row in the viewer's home currency too (contract 2.6.0), after the read.
         return new(
             await homes.ProjectedAsync(projection.Transactions, home, cancellationToken),
             await homes.ProjectedAsync(projection.Scheduled, home, cancellationToken)
@@ -799,7 +799,7 @@ public sealed class SharedExpenseService(
     }
 
     // An expense paid in another currency than the household's carries the amount paid,
-    // that currency and the rate, and its total is the conversion (contract 2.5.0,
+    // that currency and the rate, and its total is the conversion (contract 2.6.0,
     // `sharedExpenseCurrencyProblem`). Any problem is an invalid body.
     private static void ValidateCurrency(ExpenseInput input, string householdCurrency)
     {
@@ -814,7 +814,7 @@ public sealed class SharedExpenseService(
             );
     }
 
-    // The household's currency and the viewer's home currency, for `Home` (contract 2.5.0).
+    // The household's currency and the viewer's home currency, for `Home` (contract 2.6.0).
     internal static async Task<(string Household, string? Home)> CurrenciesAsync(
         ISharedExpenseTransaction store,
         string householdId,

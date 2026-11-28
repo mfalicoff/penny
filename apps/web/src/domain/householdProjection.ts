@@ -12,7 +12,7 @@ export type ProjectedExpense = {
   // MAZ-275: who paid, as the household sees them, and whether it was you. Optional, so older rows stay valid.
   payer?: ExpensePayer; paidByYou?: boolean;
 } & Partial<ForeignAmount> & {
-  // MAZ-151 phase 2 (contract 2.5.0). `originalAmount`…`rateDate` above: what was paid, when the
+  // MAZ-151 phase 2 (contract 2.6.0). `originalAmount`…`rateDate` above: what was paid, when the
   // expense was paid in another currency than the household's (rate in household units). `home`:
   // the viewer's amounts in their home currency, when it isn't the household's and a rate is known.
   home?: ProjectedHome;

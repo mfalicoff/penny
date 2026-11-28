@@ -6,6 +6,6 @@ public sealed record Trip(
     DateOnly StartDate,
     DateOnly EndDate,
     string? SharedHouseholdId,
-    // A personal trip's currency, the default for its new entries (contract 2.5.0).
+    // A personal trip's currency, the default for its new entries (contract 2.6.0).
     string? Currency = null
 );

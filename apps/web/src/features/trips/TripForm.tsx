@@ -124,7 +124,7 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
       startDate: draft.startDate,
       endDate: draft.endDate,
       ...(original?.sharedHouseholdId ? { sharedHouseholdId: original.sharedHouseholdId } : {}),
-      // Contract 2.5.0: kept only when it isn't the home currency (the default).
+      // Contract 2.6.0: kept only when it isn't the home currency (the default).
       ...(chosen && chosen !== workspace.ledger?.currency ? { currency: chosen } : {}),
     };
     setSaving(true);

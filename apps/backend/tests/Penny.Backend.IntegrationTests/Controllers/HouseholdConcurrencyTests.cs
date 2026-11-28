@@ -196,7 +196,7 @@ public sealed class HouseholdConcurrencyTests(ApiFixture fixture) : HouseholdTes
     [Fact]
     public async Task whenJoinRacesLedgerCurrencyChange_MembershipFlow_ShouldCommitBoth()
     {
-        // Members keep their ledgers in their own currency (contract 2.5.0): a join and a
+        // Members keep their ledgers in their own currency (contract 2.6.0): a join and a
         // ledger currency change no longer exclude each other.
         var (alex, _) = await AccountAsync("alex@example.test");
         var (bea, beaId) = await AccountAsync("bea@example.test");

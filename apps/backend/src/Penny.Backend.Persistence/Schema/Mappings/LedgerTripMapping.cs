@@ -13,7 +13,7 @@ internal sealed class LedgerTripMapping : IEntityTypeConfiguration<LedgerTrip>
             table.HasCheckConstraint("ck_ledger_trips_id", Checks.Length("id", 1, 100));
             table.HasCheckConstraint("ck_ledger_trips_name", Checks.Length("name", 1, 80));
             table.HasCheckConstraint("ck_ledger_trips_dates", "end_date >= start_date");
-            // Contract 2.5.0: a personal trip's currency.
+            // Contract 2.6.0: a personal trip's currency.
             table.HasCheckConstraint(
                 "ck_ledger_trips_currency",
                 $"currency IS NULL OR {Checks.CurrencyCode("currency")}"

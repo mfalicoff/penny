@@ -17,6 +17,6 @@ public sealed record ExpenseInput(
     string? AccountId,
     string? ReceiptId,
     int? TimezoneOffsetMinutes,
-    // Contract 2.5.0: paid in another currency than the household's (null otherwise).
+    // Contract 2.6.0: paid in another currency than the household's (null otherwise).
     ForeignAmount? Foreign = null
 );

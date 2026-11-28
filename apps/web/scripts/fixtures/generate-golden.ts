@@ -277,7 +277,7 @@ function currency() {
     ledgerCase("home currency outside the home list", { ...base }, "transaction", "JPY"),
     ledgerCase("recurring rule in another currency", { ...base, ...eur }, "recurring"),
   ];
-  // Contract 2.5.0: a personal trip may carry its currency.
+  // Contract 2.6.0: a personal trip may carry its currency.
   const tripCase = (name: string, trip: object) => {
     const value = {
       version: 4, currency: "CAD", accounts: [], categories: [{ id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" }],

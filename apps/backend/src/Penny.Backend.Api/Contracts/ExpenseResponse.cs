@@ -5,7 +5,7 @@ namespace Penny.Backend.Api.Contracts;
 
 // Contract schema `Expense`. Optional fields are omitted
 // when absent; `accountId` is present only for the payer.
-// Contract 2.5.0: what was paid in another currency, and `home`, the viewer's amounts in
+// Contract 2.6.0: what was paid in another currency, and `home`, the viewer's amounts in
 // their own currency.
 public sealed record ExpenseResponse(
     string Id,

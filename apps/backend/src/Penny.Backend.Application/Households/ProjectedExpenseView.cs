@@ -11,7 +11,7 @@ namespace Penny.Backend.Application.Households;
 // clients drop a cached preview of the same household, rule and date. `Payer` is who
 // paid, and `PaidByYou` whether that is the viewer (MAZ-275). Shares stay
 // separate from the personal ledger. `AccountId` reaches only the payer.
-// Contract 2.5.0: what was paid in another currency than the household's, and `Home`, the
+// Contract 2.6.0: what was paid in another currency than the household's, and `Home`, the
 // viewer's amounts in their own currency (HomeAmounts; previews too).
 public sealed record ProjectedExpenseView(
     string Id,

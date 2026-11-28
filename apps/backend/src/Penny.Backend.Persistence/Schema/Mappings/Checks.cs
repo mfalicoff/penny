@@ -8,7 +8,7 @@ internal static class Checks
     public const long MaxRevision = 9_007_199_254_740_991;
     public const string Currencies = "('CAD','USD','EUR','GBP')";
 
-    // Any ISO 4217-shaped code; the API checks it against the currency list (contract 2.5.0:
+    // Any ISO 4217-shaped code; the API checks it against the currency list (contract 2.6.0:
     // household, trip and original currencies).
     public static string CurrencyCode(string column) => $"{column} ~ '^[A-Z]{{3}}$'";
 

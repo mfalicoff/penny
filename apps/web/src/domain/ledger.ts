@@ -16,7 +16,7 @@ export const accountTypeIcons: Record<AccountType, string> = {
 export type PaymentAccount = { id: string; name: string; type: AccountType };
 export type Trip = {
   id: string; name: string; startDate: string; endDate: string; sharedHouseholdId?: string;
-  /** Contract 2.5.0 (MAZ-151 phase 2): the default currency of the trip's new entries. */
+  /** Contract 2.6.0 (MAZ-151 phase 2): the default currency of the trip's new entries. */
   currency?: string;
 };
 export type Category = {

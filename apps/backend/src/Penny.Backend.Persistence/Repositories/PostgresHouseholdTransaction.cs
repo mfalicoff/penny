@@ -616,7 +616,7 @@ internal class PostgresHouseholdTransaction(
         ));
 
     // Periods of one household, optionally of one user, with the member's email and profile
-    // and, for an open period, their ledger currency (contract 2.5.0).
+    // and, for an open period, their ledger currency (contract 2.6.0).
     private IQueryable<StoredMember> Periods(string householdId, string? userId) =>
         context
             .HouseholdMemberPeriods.AsNoTracking()

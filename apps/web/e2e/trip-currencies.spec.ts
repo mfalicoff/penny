@@ -119,7 +119,7 @@ async function mockApi(context: BrowserContext): Promise<Server> {
     const request = route.request();
     const url = new URL(request.url());
     const path = url.pathname;
-    if (path === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.5.0-e2e" } });
+    if (path === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.6.0-e2e" } });
     if (path === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
     if (path === "/api/auth/oidc") return route.fulfill({ json: { enabled: false, providers: [] } });
     if (path === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });

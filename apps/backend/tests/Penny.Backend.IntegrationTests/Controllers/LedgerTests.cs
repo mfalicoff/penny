@@ -650,7 +650,7 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
         await AddHouseholdAsync("household-old", userId, "EUR", archived: true, left: false);
         await AddHouseholdAsync("household-left", userId, "GBP", archived: false, left: true);
 
-        // Ledger check 3 is gone (contract 2.5.0): members keep their ledgers in their own
+        // Ledger check 3 is gone (contract 2.6.0): members keep their ledgers in their own
         // currency, whatever their households use.
         var snapshot = await GetAsync(token);
         snapshot["ledger"]!["currency"] = "GBP";

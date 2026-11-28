@@ -943,7 +943,7 @@ function seededDraft(ledger: Ledger, seed: EntrySeed, kind: Kind = "expense"): E
 }
 
 /**
- * A personal trip's currency (contract 2.5.0), the default of its new expenses, or null when it has
+ * A personal trip's currency (contract 2.6.0), the default of its new expenses, or null when it has
  * none or it is the home currency (MAZ-151 phase 2).
  */
 function tripCurrencyOf(ledger: Ledger, tripId: string): string | null {

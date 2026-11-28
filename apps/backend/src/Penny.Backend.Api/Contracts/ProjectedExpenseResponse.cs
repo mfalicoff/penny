@@ -7,7 +7,7 @@ namespace Penny.Backend.Api.Contracts;
 // linked; scheduled rows carry `scheduled: true`. `recurringId` is the shared rule
 // on previews and on recorded occurrences it recorded. `accountId` reaches only
 // the payer. `payer` is who paid and `paidByYou` whether that is the viewer.
-// Contract 2.5.0: what was paid in another currency, and `home`, the viewer's amounts in
+// Contract 2.6.0: what was paid in another currency, and `home`, the viewer's amounts in
 // their own currency.
 public sealed record ProjectedExpenseResponse(
     string Id,

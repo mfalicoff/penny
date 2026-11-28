@@ -3,7 +3,7 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Contracts;
 
-// Contract schema `MemberHomeAmounts` (2.5.0): the viewer's amounts in their home
+// Contract schema `MemberHomeAmounts` (2.6.0): the viewer's amounts in their home
 // currency. `rate`, `rateStatus` and `rateDate` are omitted when it was paid in it.
 public sealed record MemberHomeAmountsResponse(
     string Currency,

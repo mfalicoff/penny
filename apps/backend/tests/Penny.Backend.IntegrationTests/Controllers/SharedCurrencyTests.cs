@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// Shared trips and households in any currency (MAZ-151 phase 2, contract 2.5.0) over real
+// Shared trips and households in any currency (MAZ-151 phase 2, contract 2.6.0) over real
 // HTTP and PostgreSQL: a euro trip created by a CAD-ledger member and joined by a
 // USD-ledger member, expenses paid in US and Canadian dollars, and each member's `home`
 // amounts from a seeded cache of synthetic per-euro quotes (Friday 2026-11-06 and Monday
@@ -401,7 +401,7 @@ public sealed class SharedCurrencyTests(ApiFixture fixture) : SharedRecurrenceTe
             .GetString()
             .ShouldBe("EUR");
 
-        // A personal trip may name its own currency (contract 2.5.0); it round-trips.
+        // A personal trip may name its own currency (contract 2.6.0); it round-trips.
         ledger = await GetLedgerAsync(bea);
         ledger["ledger"]!["trips"] = new JsonArray(
             new JsonObject

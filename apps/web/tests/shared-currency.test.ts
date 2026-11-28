@@ -24,7 +24,7 @@ const fixture = JSON.parse(readFileSync(new URL("../../../contracts/fixtures/sha
 /** A fixture row as the API sends it (the fixture leaves out who paid). */
 const apiRow = (row: Record<string, unknown>): SharedRow => projectedExpenseSchema.parse({ payer: { email: "sam@example.test" }, paidByYou: false, ...row });
 
-describe("API schemas, contract 2.5.0", () => {
+describe("API schemas, contract 2.6.0", () => {
   it("accept a household in any currency, foreign fields and home amounts", () => {
     for (const row of fixture.projection.rows) expect(projectedExpenseSchema.safeParse(apiRow(row)).success).toBe(true);
     expect(projectedExpenseSchema.safeParse({ ...apiRow(fixture.projection.rows[0] ?? {}), householdCurrency: "JPY" }).success).toBe(true);

@@ -8,7 +8,7 @@ namespace Penny.Backend.Application.Households;
 // The shared expense view (contract schema `Expense`), also the audit payload of
 // expense events. Instants are Unix milliseconds. `AccountId` is the payer's private
 // account: present only when the viewer is the payer, never in audit.
-// Contract 2.5.0: what was paid when it was paid in another currency than the
+// Contract 2.6.0: what was paid when it was paid in another currency than the
 // household's, and `Home`, the viewer's amounts in their own currency (set by
 // HomeAmounts after the read; null here).
 public sealed record ExpenseView(

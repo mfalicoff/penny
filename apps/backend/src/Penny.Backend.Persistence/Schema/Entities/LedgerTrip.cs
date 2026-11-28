@@ -9,6 +9,6 @@ public sealed class LedgerTrip
     public DateOnly EndDate { get; set; }
     public string? SharedHouseholdId { get; set; }
 
-    // The trip's currency (contract 2.5.0); null when it has none.
+    // The trip's currency (contract 2.6.0); null when it has none.
     public string? Currency { get; set; }
 }

@@ -2,7 +2,7 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Domain.Households;
 
-// Shared expenses in several currencies (MAZ-151 phase 2, contract 2.5.0), ported from
+// Shared expenses in several currencies (MAZ-151 phase 2, contract 2.6.0), ported from
 // apps/web/src/domain/households.ts; contracts/fixtures/shared-currency.json holds the
 // golden cases (SharedCurrencyFixtureTests). A household's (or shared trip's) currency is
 // the one its balances and settle-up use. A shared expense paid in another currency also

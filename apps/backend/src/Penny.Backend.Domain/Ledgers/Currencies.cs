@@ -235,7 +235,7 @@ public static class Currencies
 
     // `part` of `whole`, carried to `of` (`proportionHalfUp`): part × of / whole, rounded
     // half up, so a share keeps its proportion of a converted total and a whole share stays
-    // whole (MAZ-151 phase 2, contract 2.5.0).
+    // whole (MAZ-151 phase 2, contract 2.6.0).
     public static long ProportionHalfUp(long part, long whole, long of)
     {
         foreach (var value in (ReadOnlySpan<long>)[part, whole, of])

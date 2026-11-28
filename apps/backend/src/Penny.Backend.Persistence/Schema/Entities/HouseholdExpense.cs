@@ -23,7 +23,7 @@ public sealed class HouseholdExpense
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
 
-    // Contract 2.5.0 (MAZ-151 phase 2): an expense paid in another currency than the
+    // Contract 2.6.0 (MAZ-151 phase 2): an expense paid in another currency than the
     // household's; all four or none, plus the publication date unless the rate was edited.
     public long? OriginalAmount { get; set; }
     public string? OriginalCurrency { get; set; }

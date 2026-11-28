@@ -26,7 +26,7 @@ public sealed class HouseholdReaderTests
                 trip: true
             )!
             .Trip.ShouldBe(new TripDates(new(2024, 2, 29), new(2024, 2, 29)));
-        // Any listed currency (contract 2.5.0), whatever the ledger uses.
+        // Any listed currency (contract 2.6.0), whatever the ledger uses.
         HouseholdReader
             .ReadNew(Json("""{"name":"Tokyo","currency":"JPY"}"""), trip: false)!
             .Currency.ShouldBe("JPY");

@@ -29,7 +29,7 @@ internal sealed class HouseholdExpenseMapping : IEntityTypeConfiguration<Househo
             );
             table.HasCheckConstraint("ck_household_expenses_note", Checks.Length("note", 0, 1000));
             table.HasCheckConstraint("ck_household_expenses_revision", Checks.Revision("revision"));
-            // Contract 2.5.0: the foreign-amount columns (the conversion itself is checked by
+            // Contract 2.6.0: the foreign-amount columns (the conversion itself is checked by
             // SharedExpenseService, which knows the household's currency).
             table.HasCheckConstraint(
                 "ck_household_expenses_original_amount",

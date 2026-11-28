@@ -172,7 +172,7 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
             );
         }
 
-        // Any listed currency is accepted whatever the ledger's (contract 2.5.0); a code that
+        // Any listed currency is accepted whatever the ledger's (contract 2.6.0); a code that
         // isn't one is invalid data.
         await ExpectErrorAsync(
             HttpMethod.Post,

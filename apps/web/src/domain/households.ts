@@ -4,7 +4,7 @@ import { convertAmount, foreignAmountProblem, proportionHalfUp, type ForeignAmou
 // Shared records live outside the private Ledger snapshot. All amounts are integers in the
 // household's currency minor units ("cents" for short; a yen trip has none).
 //
-// Several currencies (MAZ-151 phase 2, contract 2.5.0): a household's (or shared trip's) currency is
+// Several currencies (MAZ-151 phase 2, contract 2.6.0): a household's (or shared trip's) currency is
 // the one its balances and settle-up use. A shared expense paid in another currency also carries the
 // amount paid, that currency and the rate used (household units per unit), and its `totalCents` and
 // splits are that amount converted at the expense date's rate, so balances never move later. Each

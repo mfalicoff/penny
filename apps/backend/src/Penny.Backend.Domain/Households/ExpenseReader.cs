@@ -107,14 +107,14 @@ public static partial class ExpenseReader
         }
     }
 
-    // An expense may be paid in another currency than the household's (contract 2.5.0).
+    // An expense may be paid in another currency than the household's (contract 2.6.0).
     private static ExpenseInput Input(Dictionary<string, JsonElement> fields) =>
         Input(fields, "date") with
         {
             Foreign = LedgerReader.ReadForeign(fields),
         };
 
-    // Shared rules stay in the household's currency (contract 2.5.0): any foreign-amount
+    // Shared rules stay in the household's currency (contract 2.6.0): any foreign-amount
     // key is refused rather than ignored.
     private static RecurringInput Recurring(Dictionary<string, JsonElement> fields)
     {

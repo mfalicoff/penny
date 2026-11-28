@@ -6,7 +6,7 @@ using Penny.Backend.Domain.Ledgers;
 namespace Penny.Backend.Application.Households;
 
 // Each member sees a shared expense in their own home currency too (MAZ-151 phase 2,
-// contract 2.5.0, `MemberHomeAmounts`). Computed on read, never stored: the rate is home
+// contract 2.6.0, `MemberHomeAmounts`). Computed on read, never stored: the rate is home
 // units per unit of what was paid (the original currency, or the household's) for the
 // expense's date, from the cached ECB rates with the GET /api/rates rules (the latest
 // publication on or before the date; after the latest publication, the latest,

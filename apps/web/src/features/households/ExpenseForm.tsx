@@ -112,7 +112,7 @@ function allocationInputs(code: string, allocations: readonly Allocation[] | und
 function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategory: string, householdCurrency: string, seed?: EntrySeed, accounts: readonly LedgerAccountChoice[] = []): Draft {
   if (target.kind === "edit") {
     const { expense } = target;
-    // Paid in another currency (contract 2.5.0): the amount is typed in it again, at its own rate.
+    // Paid in another currency (contract 2.6.0): the amount is typed in it again, at its own rate.
     const original = expense.originalAmount !== undefined && expense.originalCurrency && expense.rate && expense.rateStatus ? { amount: expense.originalAmount, code: expense.originalCurrency, rate: expense.rate, status: expense.rateStatus } : null;
     return {
       title: expense.title,
@@ -399,7 +399,7 @@ export function ExpenseFormDialog({
       input: {
         title,
         totalCents: total,
-        // Contract 2.5.0: what was paid, when it isn't the household's currency (expenses only).
+        // Contract 2.6.0: what was paid, when it isn't the household's currency (expenses only).
         ...(foreign && typedAmount !== null && used
           ? { originalAmount: typedAmount, originalCurrency: code, rate: used.rate, rateStatus: used.status, ...(used.rateDate !== undefined && used.status !== "edited" ? { rateDate: used.rateDate } : {}) }
           : {}),

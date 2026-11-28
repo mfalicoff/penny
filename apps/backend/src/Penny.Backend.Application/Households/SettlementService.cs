@@ -102,7 +102,7 @@ public sealed class SettlementService(
             },
             cancellationToken
         );
-        // The month's expenses in the viewer's home currency too (contract 2.5.0).
+        // The month's expenses in the viewer's home currency too (contract 2.6.0).
         return recap with
         {
             Expenses = await homes.ExpensesAsync(

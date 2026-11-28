@@ -289,12 +289,12 @@ public static class LedgerReader
     private static string? OptionalId(Dictionary<string, JsonElement> fields, string name) =>
         fields.TryGetValue(name, out var value) ? Id(value) : null;
 
-    // An optional known currency code (contract 2.5.0: a personal trip's currency).
+    // An optional known currency code (contract 2.6.0: a personal trip's currency).
     private static string? OptionalCurrency(Dictionary<string, JsonElement> fields, string name) =>
         fields.TryGetValue(name, out var value) ? CurrencyCode(value) : null;
 
     // Any listed ISO 4217 code (`isCurrency`), such as a household's or trip's currency
-    // (contract 2.5.0).
+    // (contract 2.6.0).
     internal static string CurrencyCode(JsonElement value)
     {
         var currency = Text(value, 0, int.MaxValue);
@@ -315,7 +315,7 @@ public static class LedgerReader
     // ledger schema: a positive amount, a listed currency code, a canonical rate, a known
     // status and a calendar date. A partial set (or a rate date alone) is invalid; the
     // cross-field rules (currency, date by status, conversion) run with the ledger's
-    // currency in ReadWrite, and for a shared expense (contract 2.5.0) with the
+    // currency in ReadWrite, and for a shared expense (contract 2.6.0) with the
     // household's in SharedExpenseService.
     internal static ForeignAmount? ReadForeign(Dictionary<string, JsonElement> fields)
     {

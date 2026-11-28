@@ -4,7 +4,7 @@ import type { Transaction } from "@domain/ledger.ts";
 import type { MemberHomeAmounts } from "../../api/schemas";
 
 /**
- * Shared expenses in several currencies on the web (MAZ-151 phase 2, contract 2.5.0). Every rule is
+ * Shared expenses in several currencies on the web (MAZ-151 phase 2, contract 2.6.0). Every rule is
  * the shared domain's (`sharedAmounts`, `memberAmounts`, `settleIn`); this file only adapts the API
  * rows to it and words what the screens show.
  */

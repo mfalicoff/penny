@@ -21,7 +21,7 @@ public interface ISharedExpenseTransaction : IHouseholdTransaction
     // sees the expense that links it (ledger check 4).
     Task<bool> LockLedgerAccountAsync(string userId, string accountId);
 
-    // The user's ledger (home) currency, read without a lock (contract 2.5.0: the viewer's
+    // The user's ledger (home) currency, read without a lock (contract 2.6.0: the viewer's
     // amounts in their own currency); null when they have no ledger.
     Task<string?> HomeCurrencyAsync(string userId);
 

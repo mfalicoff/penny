@@ -185,7 +185,7 @@ export const entrySchema = z.object({
 });
 
 /**
- * Contract 2.5.0 (MAZ-151 phase 2): a shared expense paid in another currency than the household's.
+ * Contract 2.6.0 (MAZ-151 phase 2): a shared expense paid in another currency than the household's.
  * `rate` is household units per unit of `originalCurrency`; `totalCents` and splits stay in the
  * household's currency.
  */
@@ -197,7 +197,7 @@ const sharedForeignFields = {
   rateDate: isoDate.optional(),
 };
 
-/** `MemberHomeAmounts` (contract 2.5.0): the viewer's amounts of a shared expense in their home currency. */
+/** `MemberHomeAmounts` (contract 2.6.0): the viewer's amounts of a shared expense in their home currency. */
 export const memberHomeAmountsSchema = z.object({
   currency: currencyCodeSchema,
   totalCents: z.number().int().min(0).max(99_999_999_999),
@@ -292,7 +292,7 @@ export type SearchResponse = z.infer<typeof searchResponseSchema>;
 /* ---------- shared households (server MAZ-56–59, web MAZ-91) ---------- */
 
 const instant = z.number().int();
-// Contract 2.5.0 (MAZ-151 phase 2): any CurrencyCode; before, CAD, USD, EUR or GBP.
+// Contract 2.6.0 (MAZ-151 phase 2): any CurrencyCode; before, CAD, USD, EUR or GBP.
 const householdCurrency = currencyCodeSchema;
 const tzOffset = z.number().int().min(-840).max(720);
 const monthKey = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
@@ -325,7 +325,7 @@ export const householdMemberSchema = z.object({
   avatarUrl: avatarUrl.optional(),
   // MAZ-152: the person deleted their account. Show "Former member", never the placeholder email.
   deleted: z.literal(true).optional(),
-  // Contract 2.5.0 (MAZ-151 phase 2): the member's home (ledger) currency; absent for former members and members with no ledger yet.
+  // Contract 2.6.0 (MAZ-151 phase 2): the member's home (ledger) currency; absent for former members and members with no ledger yet.
   currency: currencyCodeSchema.optional(),
 });
 export type HouseholdMember = z.infer<typeof householdMemberSchema>;

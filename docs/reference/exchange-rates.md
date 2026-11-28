@@ -1,6 +1,6 @@
 # Exchange rates
 
-Contract 2.4.0 (MAZ-151). An entry may be paid in another currency than the ledger's home currency ([entries in several currencies](ledger.md#entries-in-several-currencies)). To suggest the rate, the API caches the European Central Bank's daily euro foreign exchange reference rates and answers `GET /api/rates`. Since contract 2.5.0 (MAZ-151 phase 2) the server also uses the cache to show each member a shared expense in their own currency (`home` on shared expenses and projection rows, [shared expenses](shared-expenses.md#several-currencies)), with the same publication and cross-rate rules as `GET /api/rates`. This page is for people who run a Penny server.
+Contract 2.4.0 (MAZ-151). An entry may be paid in another currency than the ledger's home currency ([entries in several currencies](ledger.md#entries-in-several-currencies)). To suggest the rate, the API caches the European Central Bank's daily euro foreign exchange reference rates and answers `GET /api/rates`. Since contract 2.6.0 (MAZ-151 phase 2) the server also uses the cache to show each member a shared expense in their own currency (`home` on shared expenses and projection rows, [shared expenses](shared-expenses.md#several-currencies)), with the same publication and cross-rate rules as `GET /api/rates`. This page is for people who run a Penny server.
 
 ## What the server fetches
 
