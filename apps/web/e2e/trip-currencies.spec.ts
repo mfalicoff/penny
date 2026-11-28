@@ -246,11 +246,11 @@ test("a trip expense in US dollars is converted to euros at its date's rate and 
   expect(server.posted[0]).toMatchObject({ title: "Tram passes", totalCents: 3762, originalAmount: 4000, originalCurrency: "USD", rate: "0.9406", rateStatus: "provisional", rateDate: "2026-11-06" });
 });
 
-test("a new trip has its currency: a shared one sends it, a personal one keeps it in the ledger", async ({ context, page }) => {
+test("a new shared trip sends its currency", async ({ context, page }) => {
   const server = await mockApi(context);
   await open(page, "/trips");
   await page.getByRole("button", { name: "New trip" }).first().click();
-  let form = page.getByRole("dialog", { name: "New trip" });
+  const form = page.getByRole("dialog", { name: "New trip" });
   await form.getByLabel("Trip name").fill("Coast");
   await form.getByRole("button", { name: /^Currency: CAD/ }).click();
   await form.getByRole("searchbox", { name: "Search currencies" }).fill("EUR");
@@ -260,11 +260,13 @@ test("a new trip has its currency: a shared one sends it, a personal one keeps i
   await expect(form.getByText(/New trip expenses start in euros, and payments are suggested in euros\./)).toBeVisible();
   await form.getByRole("button", { name: "Create trip" }).click();
   await expect.poll(() => server.createdTrips[0]?.["currency"]).toBe("EUR");
-  // A new shared trip opens on its People tab; let that navigation finish first.
-  await page.waitForURL(/\/trips\/coast/);
-  await page.goto("/trips");
+});
+
+test("a new personal trip keeps its currency in the ledger", async ({ context, page }) => {
+  const server = await mockApi(context);
+  await open(page, "/trips");
   await page.getByRole("button", { name: "New trip" }).first().click();
-  form = page.getByRole("dialog", { name: "New trip" });
+  const form = page.getByRole("dialog", { name: "New trip" });
   await form.getByLabel("Trip name").fill("Kyoto");
   await form.getByRole("button", { name: /^Currency: CAD/ }).click();
   await form.getByRole("searchbox", { name: "Search currencies" }).fill("JPY");
