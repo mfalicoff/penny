@@ -50,7 +50,8 @@ final class SmokeJourneyTests: PennyUITestCase {
         try relaunched.waitForEntry(entryID)
         screenshot("activity-after-relaunch")
         try relaunched.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
-        XCTAssertTrue(try relaunched.isSelected(AccessibilityID.Settings.currency("EUR")))
+        // With an entry recorded, the home currency is locked: one row, no longer a choice.
+        try relaunched.wait(for: AccessibilityID.Currencies.home("EUR"))
     }
 
     /// Home → Add expense → Saved → Activity (MAZ-81 "Additional verification").

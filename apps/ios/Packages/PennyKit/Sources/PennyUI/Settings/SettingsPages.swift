@@ -219,7 +219,7 @@ struct CurrencySettingsView: View {
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(.isSelected)
-                        .accessibilityIdentifier("currency.\(ledger.currency.rawValue)")
+                        .accessibilityIdentifier("currencySettings.home.\(ledger.currency.rawValue)")
                     } else {
                         ForEach(CurrencyPolicy.options, id: \.self) { currency in option(currency, ledger: ledger) }
                     }

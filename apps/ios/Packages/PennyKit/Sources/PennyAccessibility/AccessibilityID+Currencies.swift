@@ -47,6 +47,8 @@ extension AccessibilityID {
         public static let latestRates = "currencySettings.latestRates"
         public static let lastRates = "currencySettings.lastRates"
         public static func recent(_ code: String) -> String { "currencySettings.recent.\(code)" }
+        /// The locked home currency row (a ledger with entries): text, not a choice.
+        public static func home(_ code: String) -> String { "currencySettings.home.\(code)" }
 
         static let all =
             Screen.all + [
@@ -56,7 +58,7 @@ extension AccessibilityID {
                 detailNote, dailyRates, latestRates, lastRates,
             ]
         static let prefixes = [
-            "currencyPicker.option.", "currencyRow.original.", "currencySettings.recent.",
+            "currencyPicker.option.", "currencyRow.original.", "currencySettings.recent.", "currencySettings.home.",
         ]
     }
 }
