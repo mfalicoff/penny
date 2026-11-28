@@ -464,6 +464,21 @@ public enum Currencies {
         return nil
     }
 
+    /// `part` of `whole` applied to `value`, rounded half up: part × value / whole (the reference's
+    /// `proportionHalfUp`, MAZ-151 phase 2). The share of a converted total keeps the share's
+    /// proportion of the original total; a whole share stays whole. Throws for a negative amount, a
+    /// zero `whole` or a `part` above it.
+    public static func proportionHalfUp(_ part: Int64, of whole: Int64, applied value: Int64) throws(SharedAmountError)
+        -> Int64
+    {
+        let safe: ClosedRange<Int64> = 0...9_007_199_254_740_991
+        guard safe.contains(part), safe.contains(whole), safe.contains(value) else { throw .notWholeMinorUnits }
+        guard whole > 0, part <= whole else { throw .shareExceedsTotal }
+        if part == whole { return value }
+        let result = divideHalfUp(UInt128(part) * UInt128(value), UInt128(whole))
+        return result > UInt128(Int64.max) ? Int64.max : Int64(result)
+    }
+
     /// `value × part / whole`, half up, exactly (no overflow): a share's proportion carried to
     /// another amount. Zero when `whole` isn't positive.
     public static func proportion(_ part: Int64, of whole: Int64, applied value: Int64) -> Int64 {

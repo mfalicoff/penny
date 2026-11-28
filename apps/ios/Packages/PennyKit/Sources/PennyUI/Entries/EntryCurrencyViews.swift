@@ -202,14 +202,17 @@ struct EntryRateNote: View {
 struct CurrencyPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let selection: String
-    let home: Currency
+    /// The viewer's home currency (or, in a shared form, the household's).
+    let home: String
+    /// The trip's currency, Suggested first: the default for a trip entry (MAZ-151 phase 2).
+    var trip: String? = nil
     let recent: [String]
     let choose: (String) -> Void
     @State private var query = ""
 
     var body: some View {
         let needle = SearchText.normalize(query)
-        let suggested = Self.suggested(selection: selection, home: home)
+        let suggested = Self.suggested(selection: selection, home: home, trip: trip)
         let recents = recent.filter { !suggested.contains($0) }.prefix(4)
         NavigationStack {
             List {
@@ -269,9 +272,11 @@ struct CurrencyPickerSheet: View {
 
     static let letters: [String] = Array(Set(Currencies.all.map { String($0.code.prefix(1)) })).sorted()
 
-    /// The entry's currency (when it isn't home), then the home currency.
-    static func suggested(selection: String, home: Currency) -> [String] {
-        selection == home.rawValue ? [home.rawValue] : [selection, home.rawValue]
+    /// The trip's currency, the entry's (when it isn't home), then the home currency, each once.
+    static func suggested(selection: String, home: String, trip: String? = nil) -> [String] {
+        var codes: [String] = []
+        for code in [trip, selection, home].compactMap(\.self) where !codes.contains(code) { codes.append(code) }
+        return codes
     }
 
     /// Currencies whose code, name or countries contain `needle` (already normalized).
@@ -281,8 +286,20 @@ struct CurrencyPickerSheet: View {
         }
     }
 
+    /// The note on `home` in Suggested.
+    var homeNote = "Your home currency"
+    /// The note on `trip` in Suggested.
+    var tripNote = "This trip's currency"
+
+    /// The picker with `note` on the trip's currency ("Lisbon's currency"), when there is one.
+    func tripNote(_ note: String?) -> Self {
+        var copy = self
+        if let note { copy.tripNote = note }
+        return copy
+    }
+
     private func note(_ code: String) -> String? {
-        code == home.rawValue ? "Your home currency" : decimalsNote(code)
+        code == trip ? tripNote : code == home ? homeNote : decimalsNote(code)
     }
 
     private func decimalsNote(_ code: String) -> String? {
@@ -310,7 +327,7 @@ struct CurrencyPickerSheet: View {
                     }
                 }
                 Spacer(minLength: 8)
-                Text(CurrencyText.symbol(code, home: home.rawValue)).foregroundStyle(PennyColor.secondaryLabel)
+                Text(CurrencyText.pickerSymbol(code, home: home)).foregroundStyle(PennyColor.secondaryLabel)
                 if selected {
                     Image(systemName: "checkmark").font(.body.weight(.semibold)).foregroundStyle(PennyColor.tint)
                         .accessibilityHidden(true)

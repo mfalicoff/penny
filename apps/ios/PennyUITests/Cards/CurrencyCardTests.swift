@@ -14,12 +14,15 @@ extension CardCaptureTests {
 
     @MainActor
     func test_whenSeeded_IphoneEntryCurrency_ShouldBeCaptured() async throws {
+        let rates = try await stack().servesRates()
         try await card(
             "iphone-entry-currency", freshSeedPerAppearance: true,
-            note: "Rates are off on the test stack, so the rate is typed (Edited) instead of the ECB's"
+            note: rates
+                ? "The stack's synthetic published rate (PENNY_STACK_RATES=1)"
+                : "Rates are off on the test stack, so the rate is typed (Edited) instead of the ECB's"
         ) { card in
             try await card.seedCurrencies()
-            try card.draftEuros(rate: "1.4612")
+            try card.draftEuros(rate: rates ? nil : "1.4612")
         }
     }
 
@@ -43,12 +46,15 @@ extension CardCaptureTests {
 
     @MainActor
     func test_whenSeeded_IphoneEntryRateEdited_ShouldBeCaptured() async throws {
+        let rates = try await stack().servesRates()
         try await card(
             "iphone-entry-rate-edited", freshSeedPerAppearance: true,
-            note: "No published rate on the test stack: the sheet offers the last rate used instead"
+            note: rates
+                ? "The stack's synthetic published rate (PENNY_STACK_RATES=1)"
+                : "No published rate on the test stack: the sheet offers the last rate used instead"
         ) { card in
             try await card.seedCurrencies()
-            try card.draftEuros(rate: "1.4612")
+            try card.draftEuros(rate: rates ? nil : "1.4612")
             try card.penny.tap(Currencies.rate)
             try card.penny.wait(for: Currencies.Screen.exchangeRate)
             let field = try card.penny.wait(for: Currencies.rateField)
@@ -97,9 +103,12 @@ extension CardCaptureTests {
 
     @MainActor
     func test_whenSeeded_IphoneCurrencyRates_ShouldBeCaptured() async throws {
+        let rates = try await stack().servesRates()
         try await card(
             "iphone-currency-rates",
-            note: "Rates are off on the test stack: Daily rates reads Off, as on the rates-off card"
+            note: rates
+                ? "The stack's synthetic rates (PENNY_STACK_RATES=1)"
+                : "Rates are off on the test stack: Daily rates reads Off, as on the rates-off card"
         ) { card in
             try await card.seedCurrencies()
             try card.openCurrencySettings()
@@ -108,6 +117,10 @@ extension CardCaptureTests {
 
     @MainActor
     func test_whenSeeded_IphoneCurrencyRatesOff_ShouldBeCaptured() async throws {
+        if try await stack().servesRates() {
+            return try blocked(
+                "iphone-currency-rates-off", note: "Captured on a stack without rates (no PENNY_STACK_RATES)")
+        }
         try await card("iphone-currency-rates-off") { card in
             try await card.seedCurrencies()
             try card.openCurrencySettings()
@@ -118,12 +131,15 @@ extension CardCaptureTests {
 
     @MainActor
     func test_whenSeeded_IpadAddEntryCurrency_ShouldBeCaptured() async throws {
+        let rates = try await stack().servesRates()
         try await card(
             "ipad-add-entry-currency", freshSeedPerAppearance: true,
-            note: "Rates are off on the test stack, so the rate is typed (Edited) instead of the ECB's"
+            note: rates
+                ? "The stack's synthetic published rate (PENNY_STACK_RATES=1)"
+                : "Rates are off on the test stack, so the rate is typed (Edited) instead of the ECB's"
         ) { card in
             try await card.seedCurrencies()
-            try card.draftEuros(rate: "1.4612")
+            try card.draftEuros(rate: rates ? nil : "1.4612")
         }
     }
 
@@ -139,8 +155,12 @@ extension CardCaptureTests {
 
     @MainActor
     func test_whenSeeded_IpadSettingsCurrency_ShouldBeCaptured() async throws {
+        let rates = try await stack().servesRates()
         try await card(
-            "ipad-settings-currency", note: "Rates are off on the test stack: Daily rates reads Off"
+            "ipad-settings-currency",
+            note: rates
+                ? "The stack's synthetic rates (PENNY_STACK_RATES=1)"
+                : "Rates are off on the test stack: Daily rates reads Off"
         ) { card in
             try await card.seedCurrencies()
             try card.openCurrencySettings()
@@ -218,8 +238,15 @@ extension CardContext {
         search.typeText("Euro")
         try penny.tap(Currencies.option("EUR"))
         try penny.waitForAbsence(of: Currencies.Screen.picker)
-        try penny.wait(for: Currencies.rate)
-        guard let rate else { return }
+        let row = try penny.wait(for: Currencies.rate)
+        guard let rate else {
+            // A stack with rates (PENNY_STACK_RATES=1) puts the published rate on: wait for it to land.
+            let deadline = Date().addingTimeInterval(10)
+            while !row.label.contains("="), Date() < deadline {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+            }
+            return
+        }
         try penny.tap(Currencies.rate)
         try penny.wait(for: Currencies.Screen.exchangeRate)
         try penny.type(rate, into: Currencies.rateField)

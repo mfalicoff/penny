@@ -41,7 +41,8 @@ extension Ledger {
             trips.append(
                 Trip(
                     id: trip.id, name: trip.name, startDate: try date(trip.startDate, "trips.startDate"),
-                    endDate: try date(trip.endDate, "trips.endDate"), sharedHouseholdId: trip.sharedHouseholdId))
+                    endDate: try date(trip.endDate, "trips.endDate"), sharedHouseholdId: trip.sharedHouseholdId,
+                    currency: trip.currency))
         }
         let categories = wire.categories.map {
             LedgerCategory(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color, kind: kind($0.kind))
@@ -114,7 +115,7 @@ extension WireLedger {
             trips: ledger.trips.map {
                 WireTrip(
                     id: $0.id, name: $0.name, startDate: $0.startDate.description, endDate: $0.endDate.description,
-                    sharedHouseholdId: $0.sharedHouseholdId)
+                    sharedHouseholdId: $0.sharedHouseholdId, currency: $0.currency)
             },
             transactions: ledger.transactions.map {
                 WireEntry(

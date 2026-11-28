@@ -33,15 +33,15 @@ extension APIClient {
         return (start.description, end.description)
     }
 
-    /// Creates a shared trip in `currency`, which must be the caller's ledger currency (`400 Trip
-    /// currency must match your ledger currency.`). The caller is its creator (the organizer).
+    /// Creates a shared trip in `currency`: any ISO 4217 code since contract 2.5.0 (older servers refuse
+    /// one that isn't the caller's ledger currency). The caller is its creator (the organizer).
     public func createTrip(
-        name: String, currency: Currency, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
+        name: String, currency: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
         timezoneOffsetMinutes: Int
     ) async throws -> WireHousehold {
         let (start, end) = try Self.tripDates(start: startDate, end: endDate)
         let body = TripCreateBody(
-            name: try Self.householdName(name), currency: currency.rawValue, startDate: start, endDate: end,
+            name: try Self.householdName(name), currency: currency, startDate: start, endDate: end,
             timezoneOffsetMinutes: timezoneOffsetMinutes)
         let envelope: TripEnvelope = try await json(.post, "/api/households/trips", body: body)
         guard envelope.household.trip != nil else { throw APIError.malformedResponse }

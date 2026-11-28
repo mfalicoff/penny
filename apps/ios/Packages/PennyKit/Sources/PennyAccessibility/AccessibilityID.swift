@@ -483,6 +483,7 @@ public enum AccessibilityID {
         + Recap.all
         + YearReview.all
         + Currencies.all
+        + SharedCurrencies.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
@@ -495,4 +496,5 @@ public enum AccessibilityID {
         + Recap.prefixes
         + YearReview.prefixes
         + Currencies.prefixes
+        + SharedCurrencies.prefixes
 }

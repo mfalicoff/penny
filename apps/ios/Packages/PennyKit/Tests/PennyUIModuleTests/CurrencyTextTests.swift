@@ -18,6 +18,11 @@ struct CurrencyTextTests {
         #expect(CurrencyText.amount(13_700, code: "JPY", home: "CAD", locale: canada).hasSuffix("13,700"))
         #expect(CurrencyText.symbol("CAD", home: "CAD", locale: canada) == "$")
         #expect(CurrencyText.signed(8_500, code: "EUR", home: "CAD", kind: .expense, locale: canada) == "−€85.00")
+        // The picker draws the narrow symbol, as the card: "¥" for yen.
+        #expect(CurrencyText.pickerSymbol("JPY", home: "CAD", locale: canada) == "¥")
+        #expect(CurrencyText.pickerSymbol("USD", home: "CAD", locale: canada) == "US$")
+        #expect(CurrencyText.pickerSymbol("CAD", home: "CAD", locale: canada) == "$")
+        #expect(CurrencyText.pickerSymbol("EUR", home: "CAD", locale: canada) == "€")
     }
 
     @Test("whenARateIsShown_CurrencyText_ShouldUseAtLeastFourDecimals")

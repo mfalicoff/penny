@@ -328,17 +328,14 @@ extension EntryKind {
 }
 
 extension SharedExpenseShare {
-    /// A shared search result as the caller's share. A household currency the app doesn't
-    /// know leaves the row out; a missing one is the ledger's.
+    /// A shared row as the caller's share. A household currency the app doesn't know leaves the
+    /// row out; a missing one is the ledger's. Contract 2.5.0: what was paid and the viewer's
+    /// home amounts come with it when the server sends them; unreadable ones are dropped, so the
+    /// row then counts as an older server's.
     init?(wire: WireProjectedExpense, currency fallback: Currency) {
         guard let date = PennyDomain.CalendarDate(wire.date) else { return nil }
-        let currency: Currency
-        if let code = wire.householdCurrency {
-            guard let known = Currency(rawValue: code) else { return nil }
-            currency = known
-        } else {
-            currency = fallback
-        }
+        let currency = wire.householdCurrency ?? fallback.rawValue
+        guard Currencies.isCurrency(currency) else { return nil }
         self.init(
             id: wire.id, householdId: wire.householdId, currency: currency, title: wire.title, date: date,
             total: wire.totalCents, share: wire.shareCents,
@@ -346,6 +343,29 @@ extension SharedExpenseShare {
             note: wire.note, householdName: wire.householdName ?? "", accountId: wire.accountId,
             recurringId: wire.recurringId, scheduled: wire.scheduled ?? false, payer: Self.payer(wire),
             payerEmail: wire.paidByYou == true ? nil : wire.payer?.email)
+        let status = wire.rateStatus.flatMap(RateStatus.init(rawValue:))
+        if let amount = wire.originalAmount, let code = wire.originalCurrency, let rate = wire.rate, let status,
+            Currencies.isCurrency(code), Currencies.validRate(rate)
+        {
+            originalAmount = amount
+            originalCurrency = code
+            self.rate = rate
+            rateStatus = status
+            rateDate = wire.rateDate.flatMap(PennyDomain.CalendarDate.init)
+        }
+        home = wire.home.flatMap(Self.home)
+    }
+
+    /// The viewer's home amounts, or nil when a field can't be read.
+    static func home(_ wire: WireMemberHomeAmounts) -> SharedHomeAmounts? {
+        let status = wire.rateStatus.flatMap(RateStatus.init(rawValue:))
+        let date = wire.rateDate.flatMap(PennyDomain.CalendarDate.init)
+        guard Currencies.isCurrency(wire.currency), wire.rateStatus == nil || status != nil,
+            wire.rateDate == nil || date != nil, wire.rate.map(Currencies.validRate) ?? true
+        else { return nil }
+        return SharedHomeAmounts(
+            currency: wire.currency, totalCents: wire.totalCents, shareCents: wire.shareCents, rate: wire.rate,
+            rateStatus: status, rateDate: date)
     }
 
     /// "you" when the viewer paid, else the payer's shown name; nil when the server sent neither.

@@ -223,13 +223,13 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func createTrip(
-        name: String, currency: Currency, startDate: CalendarDate, endDate: CalendarDate, timezoneOffsetMinutes: Int
+        name: String, currency: String, startDate: CalendarDate, endDate: CalendarDate, timezoneOffsetMinutes: Int
     ) async throws -> WireHousehold {
         try await call("createTrip")
         return state.withLock { state in
             state.nextId += 1
             let household = WireHousehold(
-                id: "trip-new-\(state.nextId)", name: name, currency: currency.rawValue, creatorId: Self.me,
+                id: "trip-new-\(state.nextId)", name: name, currency: currency, creatorId: Self.me,
                 createdAt: 1_793_000_000_000, memberCount: 1,
                 trip: WireHouseholdTrip(startDate: startDate.description, endDate: endDate.description))
             state.households.insert(household, at: 0)

@@ -40,16 +40,20 @@ public struct Trip: Hashable, Sendable {
     public var endDate: CalendarDate
     /// Set when the trip is shared with a household. Personal rules never create or change it.
     public var sharedHouseholdId: String?
+    /// A personal trip's currency (contract 2.5.0, MAZ-151 phase 2): the default for its new
+    /// entries. Any ISO 4217 code (`Currencies.all`); nil for none. A shared trip uses its household's.
+    public var currency: String?
 
     public init(
         id: String, name: String, startDate: CalendarDate, endDate: CalendarDate,
-        sharedHouseholdId: String? = nil
+        sharedHouseholdId: String? = nil, currency: String? = nil
     ) {
         self.id = id
         self.name = name
         self.startDate = startDate
         self.endDate = endDate
         self.sharedHouseholdId = sharedHouseholdId
+        self.currency = currency
     }
 }
 

@@ -14,6 +14,21 @@ enum CurrencyText {
         return String(code.prefix(2)) + own
     }
 
+    /// The picker's symbol (`iphone-currency-picker`): the narrow one ("¥" for yen, "€"), prefixed
+    /// when it would read as the home currency's ("US$" next to Canadian dollars).
+    static func pickerSymbol(_ code: String, home: String, locale: Locale = .current) -> String {
+        let own = narrowSymbol(code, locale: locale)
+        guard code != home, own == narrowSymbol(home, locale: locale) else { return own }
+        return String(code.prefix(2)) + own
+    }
+
+    private static func narrowSymbol(_ code: String, locale: Locale) -> String {
+        let text = Decimal(0).formatted(
+            .currency(code: code).presentation(.narrow).locale(locale).precision(.fractionLength(0)))
+        let symbol = text.filter { !$0.isNumber && !$0.isWhitespace }
+        return symbol.isEmpty ? code : symbol
+    }
+
     private static func plainSymbol(_ code: String, locale: Locale) -> String {
         let formatter = NumberFormatter()
         formatter.locale = locale

@@ -55,6 +55,17 @@ public struct SharedExpenseDraft: Equatable, Sendable {
     /// or kept from the edited expense. Expenses only; a rule keeps its own.
     public var receipt: ReceiptReference?
     public var focus: Field?
+    /// The household's currency (MAZ-151 phase 2: any ISO 4217 code): the total, the splits and
+    /// the balances are in it. Nil reads amounts with two decimals.
+    public var currency: String?
+    /// The currency the expense was paid in when it isn't the household's: `amountText` is typed in
+    /// it, and the total is it converted at `rate` (household units per unit), rounded once. Exact
+    /// split amounts stay in the household's currency. Nil: paid in the household's currency.
+    public var paidCurrency: String?
+    public var rate: String?
+    public var rateStatus: RateStatus?
+    /// The publication of a published or provisional rate.
+    public var rateDate: PennyDomain.CalendarDate?
 
     /// What is being edited, nil for a new expense or rule.
     public var original: Original?
@@ -117,16 +128,30 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         original = nil
     }
 
-    /// Editing a recorded expense, with its stored split as typed values.
-    public init(editing expense: WireSharedExpense, viewerId: String?) {
+    /// Editing a recorded expense, with its stored split as typed values. `currency` is the
+    /// household's, for amounts with other than two decimals.
+    public init(editing expense: WireSharedExpense, viewerId: String?, currency: String? = nil) {
         householdId = expense.householdId
-        amountText = Self.amountText(expense.totalCents)
+        self.currency = currency
+        amountText = Self.amountText(expense.totalCents, currency: currency)
+        if let code = expense.originalCurrency, let original = expense.originalAmount, let rate = expense.rate,
+            let status = expense.paidRateStatus, Currencies.isCurrency(code)
+        {
+            // MAZ-151 phase 2: paid in another currency, typed again as it was paid.
+            paidCurrency = code
+            amountText = Self.amountText(original, currency: code)
+            self.rate = rate
+            rateStatus = status
+            rateDate = expense.rateDate.flatMap(PennyDomain.CalendarDate.init)
+        }
         title = expense.title
         date = PennyDomain.CalendarDate(expense.date) ?? .earliest
         payerId = expense.payerUserId
         mode = expense.mode
         exactTexts = Dictionary(
-            uniqueKeysWithValues: expense.splits.map { ($0.userId, Self.amountText($0.amountCents)) })
+            uniqueKeysWithValues: expense.splits.map {
+                ($0.userId, Self.amountText($0.amountCents, currency: currency))
+            })
         percentTexts = [:]
         if expense.mode == .percent {
             // The server keeps the computed shares, not the percentages: start from the shares.
@@ -144,10 +169,11 @@ public struct SharedExpenseDraft: Equatable, Sendable {
             ?? expense.receiptId.map { ReceiptReference(id: $0, name: "Receipt", uri: "", mime: "") }
     }
 
-    /// Editing a shared rule.
-    public init(editing rule: WireSharedRule, viewerId: String?) {
+    /// Editing a shared rule. Rules stay in the household's currency.
+    public init(editing rule: WireSharedRule, viewerId: String?, currency: String? = nil) {
         householdId = rule.householdId
-        amountText = Self.amountText(rule.totalCents)
+        self.currency = currency
+        amountText = Self.amountText(rule.totalCents, currency: currency)
         title = rule.title
         date = PennyDomain.CalendarDate(rule.nextDate) ?? .earliest
         payerId = rule.payerUserId
@@ -155,7 +181,9 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         var exact: [String: String] = [:]
         var percent: [String: String] = [:]
         for allocation in rule.allocations ?? [] {
-            if let cents = allocation.amountCents { exact[allocation.userId] = Self.amountText(cents) }
+            if let cents = allocation.amountCents {
+                exact[allocation.userId] = Self.amountText(cents, currency: currency)
+            }
             if let points = allocation.percentBasisPoints {
                 percent[allocation.userId] = HouseholdSplit.percentText(points)
             }
@@ -175,6 +203,63 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         let fraction = cents % 100
         return "\(cents / 100).\(fraction < 10 ? "0" : "")\(fraction)"
     }
+
+    /// `minor` units of `currency` as typed: "1200" in yen, "12.000" in dinars, "12.00" otherwise.
+    public static func amountText(_ minor: Int64, currency: String?) -> String {
+        let units = currency.flatMap(Currencies.info)?.minorUnits ?? 2
+        guard units != 2 else { return amountText(minor) }
+        guard units > 0 else { return "\(minor)" }
+        var scale: Int64 = 1
+        for _ in 0..<units { scale *= 10 }
+        let fraction = String(minor % scale)
+        return "\(minor / scale).\(String(repeating: "0", count: units - fraction.count))\(fraction)"
+    }
+
+    /// Minor units typed in the household's currency (two decimals without one).
+    func householdCents(_ text: String) -> Int64? {
+        guard let currency, Currencies.isCurrency(currency) else { return try? Money.cents(text) }
+        return try? Currencies.parseAmount(text, currency: currency)
+    }
+
+    // MARK: Paid in another currency (MAZ-151 phase 2)
+
+    /// The household's currency, or nil when it isn't known.
+    public var householdCurrency: String? { currency }
+
+    /// Paid in another currency than the household's.
+    public var isForeign: Bool { paidCurrency != nil }
+
+    /// The amount paid in `paidCurrency`'s minor units, when it is foreign and can be read.
+    public var originalAmount: Int64? {
+        guard let paidCurrency else { return nil }
+        return try? Currencies.parseAmount(amountText, currency: paidCurrency)
+    }
+
+    /// Chooses the currency it was paid in: the household's clears the foreign fields. The amount
+    /// keeps its digits (those beyond the new currency's decimals go) and the rate is looked up
+    /// again. A foreign expense can't repeat (rules stay in the household's currency).
+    public mutating func setPaidCurrency(_ code: String?) {
+        let next = code == currency ? nil : code
+        guard next != paidCurrency else { return }
+        paidCurrency = next
+        let units = (next ?? currency).flatMap(Currencies.info)?.minorUnits ?? 2
+        amountText = AmountInput.fitting(amountText, minorUnits: units)
+        rate = nil
+        rateStatus = nil
+        rateDate = nil
+        if next != nil { repeats = nil }
+    }
+
+    /// Puts a looked-up or typed rate on the draft. A looked-up rate never replaces an edited one.
+    public mutating func applyRate(_ choice: RateChoice) {
+        if choice.status != .edited, rateStatus == .edited { return }
+        rate = choice.rate
+        rateStatus = choice.status
+        rateDate = choice.status == .edited ? nil : choice.date
+    }
+
+    /// The decimals the amount is typed with.
+    public var amountMinorUnits: Int { (paidCurrency ?? currency).flatMap(Currencies.info)?.minorUnits ?? 2 }
 
     // MARK: Participants and preview
 
@@ -200,6 +285,8 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         case percentRemaining(Int64)
         case splitValue(memberId: String)
         case note
+        /// Paid in another currency with no rate yet.
+        case rate
 
         public func message(money: (Int64) -> String) -> String {
             switch self {
@@ -216,14 +303,21 @@ public struct SharedExpenseDraft: Equatable, Sendable {
                 "\(HouseholdSplit.percentText(-left))% too much. Percentages must add up to 100%."
             case .splitValue: "Enter each share as an amount or a percentage."
             case .note: "Keep the note under 1,000 characters."
+            case .rate: "Enter the exchange rate."
             }
         }
     }
 
+    /// The total in the household's currency: typed, or what was paid converted at the rate.
     public var totalCents: Int64? {
-        guard let cents = try? Money.cents(amountText), (1...HouseholdSplit.maxTotal).contains(cents) else {
-            return nil
+        let cents: Int64?
+        if let paidCurrency {
+            guard let original = originalAmount, let rate, let household = currency else { return nil }
+            cents = try? Currencies.convertAmount(original, from: paidCurrency, rate: rate, home: household)
+        } else {
+            cents = householdCents(amountText)
         }
+        guard let cents, (1...HouseholdSplit.maxTotal).contains(cents) else { return nil }
         return cents
     }
 
@@ -245,7 +339,7 @@ public struct SharedExpenseDraft: Equatable, Sendable {
                     amounts[id] = 0
                     continue
                 }
-                guard let cents = try? Money.cents(text) else { return .failure(.splitValue(memberId: id)) }
+                guard let cents = householdCents(text) else { return .failure(.splitValue(memberId: id)) }
                 amounts[id] = cents
             }
             let sum = amounts.values.reduce(0, +)
@@ -280,7 +374,8 @@ public struct SharedExpenseDraft: Equatable, Sendable {
         let ids = participants.map(\.userId).sorted()
         if next == .exact, let total = totalCents, let shares = try? HouseholdSplit.equal(total: total, memberIds: ids)
         {
-            exactTexts = Dictionary(uniqueKeysWithValues: shares.map { ($0.userId, Self.amountText($0.amountCents)) })
+            exactTexts = Dictionary(
+                uniqueKeysWithValues: shares.map { ($0.userId, Self.amountText($0.amountCents, currency: currency)) })
         }
         if next == .percent, !ids.isEmpty {
             let shares = (try? HouseholdSplit.equal(total: HouseholdSplit.wholeBasisPoints, memberIds: ids)) ?? []
@@ -315,6 +410,7 @@ public struct SharedExpenseDraft: Equatable, Sendable {
 
     public func validate(participants: [WireHouseholdMember]) -> Result<Valid, Problem> {
         guard let title = SharedText.required(title, maxLength: 100) else { return .failure(.title) }
+        if isForeign, originalAmount != nil, rate == nil { return .failure(.rate) }
         guard let total = totalCents else { return .failure(.amount) }
         guard note.utf16.count <= 1000 else { return .failure(.note) }
         guard participants.contains(where: { $0.userId == payerId }) else { return .failure(.payer) }
@@ -336,11 +432,20 @@ public struct SharedExpenseDraft: Equatable, Sendable {
     }
 
     public func expenseInput(_ valid: Valid, viewerId: String?, timezoneOffset: Int) -> WireExpenseInput {
-        WireExpenseInput(
+        var input = WireExpenseInput(
             title: valid.title, totalCents: valid.totalCents, date: date.description, payerUserId: payerId,
             splitMode: mode.rawValue, allocations: valid.allocations, category: category, note: note,
             accountId: payerId == viewerId ? accountId : nil, receiptId: receiptId,
             timezoneOffsetMinutes: timezoneOffset, revision: original.map(\.revision))
+        // MAZ-151 phase 2: what was paid, with the rate the total was converted at.
+        if let paidCurrency, let originalAmount, let rate, let rateStatus {
+            input.originalAmount = originalAmount
+            input.originalCurrency = paidCurrency
+            input.rate = rate
+            input.rateStatus = rateStatus.rawValue
+            input.rateDate = rateStatus == .edited ? nil : rateDate?.description
+        }
+        return input
     }
 
     public func ruleInput(_ valid: Valid, viewerId: String?, timezoneOffset: Int) -> WireRuleInput {
@@ -401,6 +506,9 @@ public final class SharedExpenseFormModel {
         draft: SharedExpenseDraft, household: HouseholdModel,
         timezoneOffset: @escaping () -> Int = { LocalTimeZone.offsetMinutes() }
     ) {
+        var draft = draft
+        // MAZ-151 phase 2: amounts are read in the household's currency.
+        if draft.currency == nil, let code = household.household?.currency { draft.currency = code }
         self.draft = draft
         opened = draft
         self.household = household
@@ -525,8 +633,9 @@ public final class SharedExpenseFormModel {
     public func reviewLatest() -> Bool {
         guard let latest else { return false }
         switch latest {
-        case .expense(let expense): draft = SharedExpenseDraft(editing: expense, viewerId: viewerId)
-        case .rule(let rule): draft = SharedExpenseDraft(editing: rule, viewerId: viewerId)
+        case .expense(let expense):
+            draft = SharedExpenseDraft(editing: expense, viewerId: viewerId, currency: draft.currency)
+        case .rule(let rule): draft = SharedExpenseDraft(editing: rule, viewerId: viewerId, currency: draft.currency)
         }
         opened = draft
         isStale = false

@@ -30,6 +30,8 @@ public struct Ledger: Codable, Equatable, Sendable {
         public var startDate: String
         public var endDate: String
         public var sharedHouseholdId: String?
+        /// Contract 2.5.0 (MAZ-151 phase 2): a personal trip's currency.
+        public var currency: String?
     }
 
     /// Money is integer cents.

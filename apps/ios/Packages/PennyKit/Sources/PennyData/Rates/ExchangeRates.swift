@@ -160,10 +160,16 @@ public final class ExchangeRateModel {
 
     /// The rate of `currency` in `home` for an entry dated `date`.
     public func lookup(_ currency: String, home: Currency, date: PennyDomain.CalendarDate) async -> RateLookup {
-        guard currency != home.rawValue else { return .unavailable }
+        await lookup(currency, base: home.rawValue, date: date)
+    }
+
+    /// The rate of `currency` in `base` (any ISO 4217 code: a household's or shared trip's
+    /// currency, MAZ-151 phase 2) for a date.
+    public func lookup(_ currency: String, base: String, date: PennyDomain.CalendarDate) async -> RateLookup {
+        guard currency != base else { return .unavailable }
         if let service {
             do {
-                let answer = try await service.rates(base: home.rawValue, date: date)
+                let answer = try await service.rates(base: base, date: date)
                 remember(answer)
                 guard answer.enabled else { return .off }
                 guard let choice = answer.choice(for: currency) else { return .unavailable }
@@ -175,7 +181,7 @@ public final class ExchangeRateModel {
                 // Offline or failing: the last answer, provisionally.
             }
         }
-        guard let kept = latest[home.rawValue] else { return .unavailable }
+        guard let kept = latest[base] else { return .unavailable }
         guard kept.enabled else { return .off }
         guard let choice = kept.choice(for: currency, offline: true) else { return .unavailable }
         return .found(choice, source: kept.source)

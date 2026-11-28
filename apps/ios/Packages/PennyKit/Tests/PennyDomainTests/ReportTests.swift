@@ -300,10 +300,19 @@ struct ReportTests {
         #expect(after.month(month).recorded.expense == 4800)
         #expect(after.month(month).scheduled.isEmpty)
         #expect(after.month(month).projected == after.month(month).recorded, "the preview is not counted again")
-        // Shared rows in another currency are left out instead of mixing currencies.
+        // Shared rows in another currency are left out instead of mixing currencies, unless the
+        // server sent the viewer's home amounts (MAZ-151 phase 2): then they count at those.
         var euro = internet
-        euro.currency = .eur
+        euro.currency = "EUR"
         #expect(LedgerReport(ledger: ledger, shared: [euro]).month(month).recorded == .zero)
+        euro.home = SharedHomeAmounts(
+            currency: "USD", totalCents: 5_000, shareCents: 2_500, rate: "1.1", rateStatus: .published)
+        #expect(
+            LedgerReport(ledger: ledger, shared: [euro]).month(month).recorded == .zero,
+            "home amounts in another currency")
+        euro.home?.currency = ledger.currency.rawValue
+        #expect(LedgerReport(ledger: ledger, shared: [euro]).month(month).recorded.expense == 2_500)
+        #expect(LedgerReport(ledger: ledger, shared: [euro]).recorded.last?.originalCurrency == "EUR")
         // Shared categories are matched by look and appear once.
         #expect(after.categories.filter { $0.name == "Utilities" }.count == 1)
         #expect(after.month(month).spending.map(\.amount) == [4000, 800])

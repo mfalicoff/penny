@@ -423,12 +423,14 @@ private struct EntryForm: View {
                     editCategories: { editCategories() })
             case .currency:
                 CurrencyPickerSheet(
-                    selection: draft.currency ?? ledger.currency.rawValue, home: ledger.currency,
+                    selection: draft.currency ?? ledger.currency.rawValue, home: ledger.currency.rawValue,
+                    trip: draft.tripId.flatMap(ledger.trip(id:))?.currency,
                     recent: CurrencyUsage(ledger).uses.map(\.code)
                 ) { code in
                     picked += 1
                     chooseCurrency(code, model: model)
                 }
+                .tripNote(draft.tripId.flatMap(ledger.trip(id:)).map { "\($0.name)'s currency" })
             case .rate:
                 ExchangeRateSheet(
                     draft: draft, home: ledger.currency, published: rateState.published, source: rateState.source,
@@ -465,6 +467,13 @@ private struct EntryForm: View {
         // A new date or currency looks the rate up again, unless the person edited it.
         .onChange(of: draft.date) { lookUpRate(model, apply: true) }
         .onChange(of: draft.currency) { lookUpRate(model, apply: true) }
+        // MAZ-151 phase 2: choosing a trip with its own currency starts a new entry in it.
+        .onChange(of: draft.tripId) {
+            guard model.editor.isNew, model.draft.currency == nil,
+                let code = model.draft.tripId.flatMap(ledger.trip(id:))?.currency
+            else { return }
+            chooseCurrency(code, model: model)
+        }
         .onAppear { lookUpRate(model, apply: model.draft.rate == nil) }
         .animation(.snappy, value: draft.rateStatus)
         .animation(.snappy, value: draft.currency)

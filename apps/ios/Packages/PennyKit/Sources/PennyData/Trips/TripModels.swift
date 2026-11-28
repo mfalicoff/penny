@@ -27,8 +27,9 @@ public final class TripDirectory {
     /// False in the demo: no server, so no shared trips.
     public var isAvailable: Bool { households.isAvailable }
 
-    /// Creates an empty shared trip in the ledger currency; the viewer is its organizer.
-    public func createShared(_ draft: TripDraft, currency: Currency) async -> Result<WireHousehold, HouseholdFailure> {
+    /// Creates an empty shared trip in `currency` (any ISO 4217 code, contract 2.5.0: its balances
+    /// and suggested payments use it); the viewer is its organizer.
+    public func createShared(_ draft: TripDraft, currency: String) async -> Result<WireHousehold, HouseholdFailure> {
         guard let service = households.service else {
             return .failure(HouseholdFailure(.offline, HouseholdFailure.offlineMessage))
         }
@@ -84,6 +85,8 @@ public final class TripDirectory {
     /// and dates, then links the personal trip to it with the private `sharedHouseholdId`. The
     /// personal trip's expenses are never sent: they stay in the ledger and show only to the
     /// viewer under Only you. If the link can't be kept, the new (empty) trip is archived again.
+    /// The shared trip takes the personal trip's currency (MAZ-151 phase 2), else `currency`, the
+    /// ledger's.
     public func share(_ trip: Trip, currency: Currency, commit: TripCommit) async -> ShareOutcome {
         guard let service = households.service else {
             return .refused(HouseholdFailure(.offline, HouseholdFailure.offlineMessage))
@@ -94,7 +97,8 @@ public final class TripDirectory {
         let household: WireHousehold
         do {
             household = try await service.createTrip(
-                name: trip.name, currency: currency, startDate: trip.startDate, endDate: trip.endDate,
+                name: trip.name, currency: trip.currency ?? currency.rawValue, startDate: trip.startDate,
+                endDate: trip.endDate,
                 timezoneOffsetMinutes: timezoneOffset())
         } catch {
             return .refused(HouseholdFailure(error))
@@ -205,6 +209,9 @@ public final class TripFormModel {
     }
     /// Share with others (New trip only).
     public var share = false
+    /// The trip's currency (MAZ-151 phase 2): the default for its new expenses and, shared, the
+    /// currency of its balances. Nil is the ledger's. A shared trip's can't change once created.
+    public var currency: String?
     public private(set) var problems: [TripDraft.Field: String] = [:]
     /// Why the last save failed, when it isn't one field's problem.
     public private(set) var failure: String?
@@ -222,14 +229,25 @@ public final class TripFormModel {
         case .personal(let trip):
             draft = TripDraft(trip)
             id = trip.id
+            currency = trip.currency
         case .shared(let household):
             let range = household.tripRange ?? TripRange(start: today, end: today)
             draft = TripDraft(name: household.name, startDate: range.start, endDate: range.end)
             id = household.id
+            currency = household.currency
         }
     }
 
     public var isNew: Bool { target == .new }
+    /// A shared trip keeps the currency it was created in.
+    public var currencyIsLocked: Bool {
+        if case .shared = target { return true }
+        return false
+    }
+
+    /// The currency the trip is in: its own, else `home`.
+    public func currency(home: Currency) -> String { currency ?? home.rawValue }
+
     public var savesShared: Bool {
         switch target {
         case .new: share
@@ -259,7 +277,9 @@ public final class TripFormModel {
         return draft.firstProblem
     }
 
-    /// Saves the draft. Returns what was saved, or nil with `problems` or `failure` set.
+    /// Saves the draft. Returns what was saved, or nil with `problems` or `failure` set. `currency` is
+    /// the ledger's: a new shared trip is created in the chosen currency, else this one; a personal
+    /// trip stores the chosen currency unless it is this one.
     public func save(commit: TripCommit, trips: TripDirectory?, currency: Currency) async -> Saved? {
         guard !isSaving else { return nil }
         failure = nil
@@ -275,7 +295,7 @@ public final class TripFormModel {
             if case .shared(let household) = target {
                 result = await trips.updateShared(id: household.id, draft)
             } else {
-                result = await trips.createShared(draft, currency: currency)
+                result = await trips.createShared(draft, currency: self.currency(home: currency))
             }
             switch result {
             case .success(let household): return .shared(household)
@@ -288,7 +308,8 @@ public final class TripFormModel {
         if case .personal(let trip) = target { original = trip }
         let trip = Trip(
             id: id, name: draft.trimmedName, startDate: draft.startDate, endDate: draft.endDate,
-            sharedHouseholdId: original?.sharedHouseholdId)
+            sharedHouseholdId: original?.sharedHouseholdId,
+            currency: self.currency == currency.rawValue ? nil : self.currency)
         let summary = ChangeSummary(title: original == nil ? "Trip added" : "Trip updated", detail: trip.name)
         guard let refused = await commit(.saveTrip(trip, original: original), summary) else { return .personal(trip) }
         if case .rule(.duplicateTripName) = refused {

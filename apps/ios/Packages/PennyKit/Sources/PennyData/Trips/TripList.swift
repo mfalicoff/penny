@@ -105,13 +105,30 @@ public struct SharedTripTotals: Equatable, Sendable {
     /// Expenses (shared and private) dated outside the travel dates. They still belong to it.
     public let outside: Int
 
+    /// Shared expenses left out of the totals: the trip is in another currency than yours and the
+    /// server had no rate to convert them (MAZ-151 phase 2).
+    public let unconverted: Int
+
     public var yourSpending: Int64 { sharedShare + privateShare }
 
-    /// `personal` must already be in the trip's currency; pass none when it isn't (a total in
-    /// two currencies can't be added up).
-    public init(expenses: [WireSharedExpense], meId: String?, personal: [LedgerEntry], range: TripRange) {
-        tripTotal = expenses.reduce(0) { $0 + $1.totalCents }
-        sharedShare = expenses.reduce(0) { $0 + $1.share(of: meId) }
+    /// The totals in the viewer's `home` currency (MAZ-151 phase 2): a trip in another currency
+    /// counts each shared expense at its home amounts (`WireSharedExpense.home`, each at its date's
+    /// rate), and `personal` (ledger entries) is already in `home`. Without `home`, every amount
+    /// is the trip's own, so `personal` must be in the trip's currency.
+    public init(
+        expenses: [WireSharedExpense], meId: String?, personal: [LedgerEntry], range: TripRange,
+        householdCurrency: String? = nil, home: String? = nil
+    ) {
+        if let householdCurrency, let home, householdCurrency != home {
+            let amounts = expenses.map { $0.amounts(householdCurrency: householdCurrency, home: home, meId: meId) }
+            tripTotal = amounts.reduce(0) { $0 + ($1.homeTotal ?? 0) }
+            sharedShare = amounts.reduce(0) { $0 + ($1.homeShare ?? 0) }
+            unconverted = amounts.filter { $0.homeTotal == nil }.count
+        } else {
+            tripTotal = expenses.reduce(0) { $0 + $1.totalCents }
+            sharedShare = expenses.reduce(0) { $0 + $1.share(of: meId) }
+            unconverted = 0
+        }
         privateShare = personal.reduce(0) { $0 + $1.share }
         let sharedDates = expenses.compactMap { PennyDomain.CalendarDate($0.date) }
         outside = range.outside(sharedDates + personal.map(\.date))

@@ -61,6 +61,9 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
     /// MAZ-152: true when the person deleted their account. Show "Former member", never the
     /// email (a placeholder address) or initials. Their expenses and balances stay.
     public var deleted: Bool?
+    /// Contract 2.5.0 (MAZ-151 phase 2): the member's home (ledger) currency, so a balance can
+    /// also show in it. Absent for former members, members with no ledger yet and older servers.
+    public var currency: String?
 
     public var id: String { userId }
     public var isDeleted: Bool { deleted == true }
@@ -74,7 +77,8 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
         leftAt: Int64? = nil,
         displayName: String? = nil,
         avatarUrl: String? = nil,
-        deleted: Bool? = nil
+        deleted: Bool? = nil,
+        currency: String? = nil
     ) {
         self.userId = userId
         self.email = email
@@ -84,6 +88,7 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
         self.displayName = displayName
         self.avatarUrl = avatarUrl
         self.deleted = deleted
+        self.currency = currency
     }
 }
 
@@ -229,13 +234,26 @@ public struct WireSharedExpense: Codable, Equatable, Sendable, Identifiable {
     public var updatedAt: Int64
     /// The shared rule that recorded it, when one did.
     public var recurringId: String?
+    /// Contract 2.5.0 (MAZ-151 phase 2): what was paid, when it was paid in another currency than
+    /// the household's (`rate`: household units per unit). `totalCents` and the splits stay in the
+    /// household's currency. Absent from older servers.
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rate: String?
+    public var rateStatus: String?
+    public var rateDate: String?
+    /// Contract 2.5.0: the viewer's amounts in their home currency, when the household's isn't it
+    /// and a rate is known.
+    public var home: WireMemberHomeAmounts?
 
     public init(
         id: String, householdId: String, title: String, totalCents: Int64, date: String, payerUserId: String,
         splitMode: String, splits: [WireSplit], payments: [WireExpensePayment] = [], paymentsClosed: Bool = false,
         category: WireSharedCategory, note: String = "", accountId: String? = nil, receiptId: String? = nil,
         receipt: WireReceipt? = nil, revision: Int = 0, createdBy: String, createdAt: Int64, updatedBy: String,
-        updatedAt: Int64, recurringId: String? = nil
+        updatedAt: Int64, recurringId: String? = nil, originalAmount: Int64? = nil,
+        originalCurrency: String? = nil, rate: String? = nil, rateStatus: String? = nil, rateDate: String? = nil,
+        home: WireMemberHomeAmounts? = nil
     ) {
         self.id = id
         self.householdId = householdId
@@ -258,6 +276,12 @@ public struct WireSharedExpense: Codable, Equatable, Sendable, Identifiable {
         self.updatedBy = updatedBy
         self.updatedAt = updatedAt
         self.recurringId = recurringId
+        self.originalAmount = originalAmount
+        self.originalCurrency = originalCurrency
+        self.rate = rate
+        self.rateStatus = rateStatus
+        self.rateDate = rateDate
+        self.home = home
     }
 }
 
@@ -277,11 +301,20 @@ public struct WireExpenseInput: Codable, Equatable, Sendable {
     public var timezoneOffsetMinutes: Int?
     /// Updates only: the revision the edit is based on.
     public var revision: Int?
+    /// Contract 2.5.0 (MAZ-151 phase 2): paid in another currency than the household's. All four
+    /// of amount, currency, rate and status, or none; `totalCents` is the amount converted.
+    public var originalAmount: Int64?
+    public var originalCurrency: String?
+    public var rate: String?
+    public var rateStatus: String?
+    public var rateDate: String?
 
     public init(
         title: String, totalCents: Int64, date: String, payerUserId: String, splitMode: String,
         allocations: [WireAllocation]? = nil, category: WireSharedCategory, note: String = "",
-        accountId: String? = nil, receiptId: String? = nil, timezoneOffsetMinutes: Int? = nil, revision: Int? = nil
+        accountId: String? = nil, receiptId: String? = nil, timezoneOffsetMinutes: Int? = nil, revision: Int? = nil,
+        originalAmount: Int64? = nil, originalCurrency: String? = nil, rate: String? = nil,
+        rateStatus: String? = nil, rateDate: String? = nil
     ) {
         self.title = title
         self.totalCents = totalCents
@@ -295,6 +328,11 @@ public struct WireExpenseInput: Codable, Equatable, Sendable {
         self.receiptId = receiptId
         self.timezoneOffsetMinutes = timezoneOffsetMinutes
         self.revision = revision
+        self.originalAmount = originalAmount
+        self.originalCurrency = originalCurrency
+        self.rate = rate
+        self.rateStatus = rateStatus
+        self.rateDate = rateDate
     }
 }
 

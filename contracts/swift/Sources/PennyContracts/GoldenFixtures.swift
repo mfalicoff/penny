@@ -653,3 +653,131 @@ public struct CurrencyFixture: Codable, Equatable, Sendable {
         public var valid: Bool
     }
 }
+
+/// shared-currency.json (MAZ-151 phase 2, contract 2.5.0): shared trips and households in any
+/// currency: member amounts, settle-in, the shared expense rules and the projection join.
+public struct SharedCurrencyFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    public var memberAmounts: [MemberAmountsCase]
+    public var settleIn: [SettleInCase]
+    public var expenses: [ExpenseCase]
+    public var projection: Projection
+
+    /// What was paid: the total in the household's currency, and the original amount when it
+    /// was paid in another currency.
+    public struct PaidAmount: Codable, Equatable, Sendable {
+        public var totalCents: Int64
+        public var originalAmount: Int64?
+        public var originalCurrency: String?
+    }
+
+    public struct Amounts: Codable, Equatable, Sendable {
+        public var totalCents: Int64
+        public var shareCents: Int64
+    }
+
+    /// `expected` nil (or absent) with no `error`: no rate known, so no home amounts.
+    public struct MemberAmountsCase: Codable, Equatable, Sendable {
+        public var name: String
+        public var expense: PaidAmount
+        public var shareCents: Int64
+        public var householdCurrency: String
+        public var home: String
+        public var rate: String?
+        public var expected: Amounts?
+        public var error: String?
+    }
+
+    public struct Balance: Codable, Equatable, Sendable {
+        public var userId: String
+        public var balanceCents: Int64
+    }
+
+    public struct Suggestion: Codable, Equatable, Sendable {
+        public var fromUserId: String
+        public var toUserId: String
+        public var amountCents: Int64
+    }
+
+    public struct SettleInCase: Codable, Equatable, Sendable {
+        public struct Expected: Codable, Equatable, Sendable {
+            public var balances: [Balance]
+            public var suggestions: [Suggestion]
+        }
+
+        public var name: String
+        public var balances: [Balance]
+        public var from: String
+        public var to: String
+        public var rate: String
+        public var expected: Expected?
+        public var error: String?
+    }
+
+    /// A shared expense's amount fields and the write rules' reason, or nil when valid.
+    public struct ExpenseCase: Codable, Equatable, Sendable {
+        public struct Expense: Codable, Equatable, Sendable {
+            public var totalCents: Int64
+            public var originalAmount: Int64?
+            public var originalCurrency: String?
+            public var rate: String?
+            public var rateStatus: String?
+            public var rateDate: String?
+        }
+
+        public var name: String
+        public var householdCurrency: String
+        public var expense: Expense
+        public var problem: String?
+    }
+
+    /// The viewer's amounts in their home currency (`MemberHomeAmounts`).
+    public struct Home: Codable, Equatable, Sendable {
+        public var currency: String
+        public var totalCents: Int64
+        public var shareCents: Int64
+        public var rate: String?
+        public var rateStatus: String?
+        public var rateDate: String?
+    }
+
+    public struct Row: Codable, Equatable, Sendable {
+        public var householdId: String
+        public var householdName: String
+        public var householdCurrency: String
+        public var title: String
+        public var date: String
+        public var category: SharedCategoriesFixture.SharedCategory
+        public var note: String
+        public var payerUserId: String
+        public var id: String
+        public var totalCents: Int64
+        public var shareCents: Int64
+        public var originalAmount: Int64?
+        public var originalCurrency: String?
+        public var rate: String?
+        public var rateStatus: String?
+        public var rateDate: String?
+        public var home: Home?
+    }
+
+    /// A row of the personal view: its view id, home amounts and what was paid.
+    public struct ViewRow: Codable, Equatable, Sendable {
+        public var id: String
+        public var total: Int64
+        public var share: Int64
+        public var originalAmount: Int64?
+        public var originalCurrency: String?
+        public var rate: String?
+        public var rateStatus: String?
+        public var rateDate: String?
+    }
+
+    /// `ledgerWithHouseholds(ledger, rows)`: the view's transactions, in order.
+    public struct Projection: Codable, Equatable, Sendable {
+        public var ledger: Ledger
+        public var rows: [Row]
+        public var expected: [ViewRow]
+    }
+}

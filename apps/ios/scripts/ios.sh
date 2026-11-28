@@ -611,6 +611,8 @@ cmd_ui_test() {
   [[ "${PENNY_STACK_SMTP:-0}" == 1 ]] && args+=(--smtp)
   # MAZ-129: the server offers crash and performance reports, for the monitoring cards.
   [[ "${PENNY_STACK_TELEMETRY:-0}" == 1 ]] && args+=(--telemetry)
+  # MAZ-151: exchange rates from synthetic per-euro quotes, for the shared trip currency cards.
+  [[ "${PENNY_STACK_RATES:-0}" == 1 ]] && args+=(--rates)
   # MAZ-170: Apple and Google listed before the SSO (local providers), for the provider cards.
   # =brands lists Apple and Google without the SSO (iphone-create-account-providers).
   case "${PENNY_STACK_OIDC_PROVIDERS:-0}" in

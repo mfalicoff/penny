@@ -13,17 +13,33 @@ nonisolated public enum MoneyFormat {
     /// The typographic minus the design uses (U+2212), not a hyphen.
     public static let minus = "\u{2212}"
 
-    /// `cents` in `currency` (ISO code), without a sign: "$48.90".
+    /// The ISO 4217 currencies whose minor unit isn't a hundredth (MAZ-151 phase 2: a household or
+    /// shared trip may use any currency). Kept equal to `Currencies.all` by `CurrencyTextTests`.
+    public static let minorUnitExceptions: [String: Int] = [
+        "BIF": 0, "CLP": 0, "DJF": 0, "GNF": 0, "ISK": 0, "JPY": 0, "KMF": 0, "KRW": 0, "PYG": 0, "RWF": 0,
+        "UGX": 0, "VND": 0, "VUV": 0, "XAF": 0, "XOF": 0, "XPF": 0,
+        "BHD": 3, "IQD": 3, "JOD": 3, "KWD": 3, "LYD": 3, "OMR": 3, "TND": 3,
+    ]
+
+    /// Decimal places of `currency`'s minor unit: 2 unless it is an exception.
+    public static func minorUnits(_ currency: String) -> Int { minorUnitExceptions[currency] ?? 2 }
+
+    private static func value(_ cents: Int64, currency: String) -> Decimal {
+        var scale = Decimal(1)
+        for _ in 0..<minorUnits(currency) { scale *= 10 }
+        return Decimal(cents.magnitude) / scale
+    }
+
+    /// `cents` (minor units) in `currency` (ISO code), without a sign: "$48.90", "¥13,700".
     public static func amount(_ cents: Int64, currency: String, locale: Locale = .current) -> String {
-        let value = Decimal(cents.magnitude) / 100
-        return value.formatted(.currency(code: currency).locale(locale).precision(.fractionLength(2)))
+        value(cents, currency: currency).formatted(
+            .currency(code: currency).locale(locale).precision(.fractionLength(minorUnits(currency))))
     }
 
     /// `cents` rounded to whole units, without a sign: "$1,883" (the cards' compact legends and
     /// the empty Home's "$0"). Use it only where the exact amount is a tap away or zero.
     public static func whole(_ cents: Int64, currency: String, locale: Locale = .current) -> String {
-        let value = Decimal(cents.magnitude) / 100
-        return value.formatted(
+        value(cents, currency: currency).formatted(
             .currency(code: currency).locale(locale).precision(.fractionLength(0)).rounded(
                 rule: .toNearestOrAwayFromZero))
     }

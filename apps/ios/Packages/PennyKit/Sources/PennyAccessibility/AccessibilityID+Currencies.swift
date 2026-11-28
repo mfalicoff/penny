@@ -62,3 +62,57 @@ extension AccessibilityID {
         ]
     }
 }
+
+extension AccessibilityID {
+    /// Shared trips and households in several currencies (MAZ-151 phase 2): the trip form's
+    /// currency row, the trip page's currencies chip, Exchange rates and amounts (ending in an
+    /// expense id or an ISO 4217 code), Balances in a currency with Settle in, a shared expense's
+    /// rate, and the shared expense form's currency, converted amount, Rate row and rate sheet.
+    public enum SharedCurrencies {
+        public enum Screen {
+            public static let tripRates = "screen.tripRates"
+            public static let sharedRate = "screen.sharedRate"
+
+            static let all = [tripRates, sharedRate]
+        }
+
+        // The trip form.
+        public static let tripCurrency = "tripForm.currency"
+        public static let tripCurrencyNote = "tripForm.currencyNote"
+
+        // The trip page.
+        public static let chip = "tripPage.currencies"
+        public static func amount(_ expenseId: String) -> String { "tripPage.amount.\(expenseId)" }
+        public static func rate(_ code: String) -> String { "tripPage.rate.\(code)" }
+        public static let ratesNote = "tripPage.ratesNote"
+        public static let ratesClose = "tripRates.close"
+
+        // Balances.
+        public static let settleIn = "household.settleIn"
+        public static let balancesTitle = "household.balancesTitle"
+        public static let currencyNote = "household.currencyNote"
+        public static func paid(_ expenseId: String) -> String { "household.expense.paid.\(expenseId)" }
+
+        // A shared expense.
+        public static let expenseRate = "sharedExpense.rate"
+
+        // The shared expense form.
+        public static let formCurrency = "sharedForm.currency"
+        public static let formConverted = "sharedForm.converted"
+        public static let formRate = "sharedForm.rate"
+        public static let rateField = "sharedRate.field"
+        public static let rateConverted = "sharedRate.converted"
+        public static let rateError = "sharedRate.error"
+        public static let rateDone = "sharedRate.done"
+        public static let rateClose = "sharedRate.close"
+        public static let usePublished = "sharedRate.usePublished"
+
+        static let all =
+            Screen.all + [
+                tripCurrency, tripCurrencyNote, chip, ratesNote, ratesClose, settleIn, balancesTitle, currencyNote,
+                expenseRate, formCurrency, formConverted, formRate, rateField, rateConverted, rateError, rateDone,
+                rateClose, usePublished,
+            ]
+        static let prefixes = ["tripPage.amount.", "tripPage.rate.", "household.expense.paid."]
+    }
+}

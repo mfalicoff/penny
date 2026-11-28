@@ -23,7 +23,7 @@ enum ContractLedger {
             trips: try (wire.trips ?? []).map {
                 Trip(
                     id: $0.id, name: $0.name, startDate: try date($0.startDate), endDate: try date($0.endDate),
-                    sharedHouseholdId: $0.sharedHouseholdId)
+                    sharedHouseholdId: $0.sharedHouseholdId, currency: $0.currency)
             },
             categories: try wire.categories.map {
                 LedgerCategory(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color, kind: try kind($0.kind))

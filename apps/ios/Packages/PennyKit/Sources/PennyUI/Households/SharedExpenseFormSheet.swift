@@ -74,15 +74,16 @@ struct SharedExpenseFormSheet: View {
             fresh = SharedExpenseDraft(
                 householdId: model.id, payerId: viewerId ?? "", today: Self.defaultDate(model.month, shell.today),
                 category: categories.first.map(WireSharedCategory.init) ?? .other)
+            fresh.currency = model.currency
             if let handoff {
                 // Carried over from the personal form: that wins over an older kept draft.
                 handoff.apply(to: &fresh, ledger: ledger)
                 return (fresh, false)
             }
         case .expense(let expense):
-            fresh = SharedExpenseDraft(editing: expense, viewerId: viewerId)
+            fresh = SharedExpenseDraft(editing: expense, viewerId: viewerId, currency: model.currency)
         case .rule(let rule):
-            fresh = SharedExpenseDraft(editing: rule, viewerId: viewerId)
+            fresh = SharedExpenseDraft(editing: rule, viewerId: viewerId, currency: model.currency)
         }
         if let kept = model.directory?.drafts[fresh.key], kept.original?.revision == fresh.original?.revision {
             return (kept, true)
@@ -105,6 +106,8 @@ private enum SharedFormPage: Hashable {
 /// Sheets stacked over the shared expense form.
 private enum SharedFormOverlay: String, Identifiable {
     case date, split, category, household
+    /// MAZ-151 phase 2: the currency it was paid in, and its rate.
+    case currency, rate
     var id: String { rawValue }
 }
 
@@ -127,6 +130,9 @@ private struct SharedExpenseForm: View {
     @State private var amountActive = true
     /// The receipt upload (MAZ-256), shared with Receipt, repeat, note.
     @State private var upload: ReceiptUploadModel?
+    /// MAZ-151 phase 2: the rate lookup for an expense paid in another currency.
+    @State private var rateState = EntryRateState()
+    @State private var rateLookup = 0
 
     var body: some View {
         NavigationStack {
@@ -167,7 +173,10 @@ private struct SharedExpenseForm: View {
             .background(PennyColor.surface)
             .safeAreaInset(edge: .bottom) {
                 if showsKeypad {
-                    AmountKeypad { key in form.draft.amountText = AmountInput.apply(key, to: form.draft.amountText) }
+                    AmountKeypad { key in
+                        form.draft.amountText = AmountInput.apply(
+                            key, to: form.draft.amountText, minorUnits: form.draft.amountMinorUnits)
+                    }
                 }
             }
             .navigationTitle(title)
@@ -218,6 +227,10 @@ private struct SharedExpenseForm: View {
                             kind: .expense, selection: categoryId(in: ledger), ledger: ledger,
                             editCategories: { self.overlay = nil })
                     }
+                case .currency:
+                    currencyPicker
+                case .rate:
+                    rateSheet
                 case .household:
                     EntryHouseholdSheet(
                         households: scope?.households ?? [], current: model.id,
@@ -262,6 +275,10 @@ private struct SharedExpenseForm: View {
             }
         }
         .onChange(of: focus) { if let focus { form.draft.focus = focus } }
+        // MAZ-151 phase 2: a new date or currency looks the rate up again, unless it was edited.
+        .onChange(of: form.draft.paidCurrency) { lookUpRate(apply: true) }
+        .onChange(of: form.draft.date) { lookUpRate(apply: true) }
+        .task { lookUpRate(apply: form.draft.rate == nil) }
         .onDisappear {
             // Replaced by a link, switched to another household or closed some other way: keep
             // what was typed for this session.
@@ -271,6 +288,154 @@ private struct SharedExpenseForm: View {
     }
 
     private var isNew: Bool { form.draft.original == nil }
+
+    /// The currency picker, the household's (trip's) currency Suggested first, then yours.
+    private var currencyPicker: some View {
+        let recent: [String] = ledger.map { CurrencyUsage($0).uses.map(\.code) } ?? []
+        return CurrencyPickerSheet(
+            selection: form.draft.paidCurrency ?? model.currency, home: shell.currency, trip: model.currency,
+            recent: recent, choose: choosePaidCurrency,
+            tripNote:
+                "\(model.household?.name ?? (model.household?.trip == nil ? "This household" : "This trip"))'s currency"
+        )
+    }
+
+    private func choosePaidCurrency(_ code: String) {
+        withAnimation(.snappy) { form.draft.setPaidCurrency(code) }
+        if form.draft.paidCurrency == nil { rateState = EntryRateState() }
+    }
+
+    private var rateSheet: some View {
+        SharedRateSheet(form: form, household: model.currency, published: rateState.published, apply: applyRate)
+    }
+
+    /// The published rate replaces an edited one; a typed rate is edited.
+    private func applyRate(_ choice: RateChoice) {
+        withAnimation(.snappy) {
+            if choice.status != .edited { form.draft.rateStatus = nil }
+            form.draft.applyRate(choice)
+        }
+    }
+
+    /// Looks up the rate of the currency it was paid in, in the household's, for its date (the
+    /// phase 1 rates client). `apply` puts it on the draft, never over an edited rate.
+    private func lookUpRate(apply: Bool) {
+        guard let code = form.draft.paidCurrency else {
+            rateState.loading = false
+            return
+        }
+        rateLookup += 1
+        let lookup = rateLookup
+        rateState.loading = true
+        let household = model.currency
+        let date = form.draft.date
+        Task {
+            let result = await shell.rates.lookup(code, base: household, date: date)
+            guard lookup == rateLookup, form.draft.paidCurrency == code else { return }
+            rateState.loading = false
+            switch result {
+            case .found(let choice, let source):
+                rateState = EntryRateState(source: source, published: choice)
+                if apply { withAnimation(.snappy) { form.draft.applyRate(choice) } }
+            case .off:
+                rateState = EntryRateState(off: true)
+            case .unavailable:
+                rateState = EntryRateState(unavailable: true)
+            }
+        }
+    }
+
+    /// The currency it was paid in ("EUR ⌄") and, paid in another one, what it comes to in the
+    /// household's ("≈ €564.00 EUR"), as under the entry form's amount.
+    private var currencyLine: some View {
+        let code = form.draft.paidCurrency ?? model.currency
+        let foreign = form.draft.isForeign
+        return HStack(spacing: 10) {
+            Button {
+                focus = nil
+                overlay = .currency
+            } label: {
+                HStack(spacing: 4) {
+                    Text(code).pennyCrossfade(code, duration: .quick)
+                    Image(systemName: "chevron.down").font(.caption2.weight(.bold)).accessibilityHidden(true)
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(foreign ? PennyColor.tintText : PennyColor.secondaryLabel)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(foreign ? PaletteToken.tintSoft.value.color : PennyColor.fill, in: Capsule())
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(locked || form.draft.isEditingRule)
+            .accessibilityLabel("Currency, \(Currencies.info(code)?.name ?? code)")
+            .accessibilityHint("Choose the currency it was paid in")
+            .accessibilityIdentifier("sharedForm.currency")
+            if foreign {
+                Group {
+                    if let total = form.draft.totalCents {
+                        let text = MoneyFormat.amount(total, currency: model.currency)
+                        Text("≈ \(text) \(model.currency)").monospacedDigit()
+                            .accessibilityLabel("About \(text) \(model.currency)")
+                    } else {
+                        Text(form.draft.rate == nil ? "Enter a rate to convert" : "Enter the amount paid")
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .opacity(rateState.loading ? 0.5 : 1)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .accessibilityIdentifier("sharedForm.converted")
+            }
+        }
+    }
+
+    /// Paid in another currency: "1 USD = 0.9400 EUR" over where it comes from, or Enter rate.
+    private var rateRow: some View {
+        let code = form.draft.paidCurrency ?? ""
+        return Button {
+            overlay = .rate
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "arrow.left.arrow.right").foregroundStyle(PennyColor.secondaryLabel)
+                    .frame(width: 20).accessibilityHidden(true)
+                Text("Rate").foregroundStyle(PennyColor.label)
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 1) {
+                    if let rate = form.draft.rate {
+                        Text(CurrencyText.rateLine(code, rate: rate, home: model.currency))
+                            .font(.callout.weight(.semibold)).monospacedDigit().foregroundStyle(PennyColor.label)
+                        switch form.draft.rateStatus {
+                        case .provisional?:
+                            HouseholdTag(text: "Provisional", systemImage: "clock", tone: .pending)
+                        case .edited?:
+                            HouseholdTag(text: "Edited", systemImage: "square.and.pencil", tone: .neutral)
+                        default:
+                            Text(CurrencyText.source(rateState.source, date: form.draft.rateDate))
+                                .font(.caption).foregroundStyle(PennyColor.secondaryLabel)
+                        }
+                    } else {
+                        Text("Enter rate").font(.callout.weight(.semibold)).foregroundStyle(PennyColor.tintText)
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .opacity(rateState.loading ? 0.5 : 1)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                    .foregroundStyle(PennyColor.secondaryLabel).accessibilityHidden(true)
+            }
+            .font(.callout)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 56)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(locked)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Opens the exchange rate")
+        .accessibilityIdentifier("sharedForm.rate")
+    }
 
     private var title: String {
         switch form.draft.original {
@@ -366,7 +531,7 @@ private struct SharedExpenseForm: View {
                     .modifier(HeroAmountFont())
                     .focused($focus, equals: .amount)
                     .disabled(locked)
-                    .accessibilityLabel("Total amount, \(model.currency)")
+                    .accessibilityLabel("Total amount, \(form.draft.paidCurrency ?? model.currency)")
                     .accessibilityIdentifier("sharedForm.amount")
             } else {
                 Button {
@@ -374,15 +539,17 @@ private struct SharedExpenseForm: View {
                     amountActive = true
                 } label: {
                     AmountDisplay(
-                        text: form.draft.amountText, kind: .expense, symbol: AmountDisplay.symbol(model.currency))
+                        text: form.draft.amountText, kind: .expense,
+                        symbol: CurrencyText.symbol(form.draft.paidCurrency ?? model.currency, home: model.currency))
                 }
                 .buttonStyle(.plain)
                 .disabled(locked)
-                .accessibilityLabel("Total amount, \(model.currency)")
+                .accessibilityLabel("Total amount, \(form.draft.paidCurrency ?? model.currency)")
                 .accessibilityValue(form.draft.amountText.isEmpty ? "Empty" : form.draft.amountText)
                 .accessibilityHint("Use the keypad below to type the amount.")
                 .accessibilityIdentifier("sharedForm.amount")
             }
+            currencyLine
         }
         .frame(maxWidth: .infinity)
         // A save the rules refuse shakes the amount, with the error haptic (MAZ-287).
@@ -451,6 +618,10 @@ private struct SharedExpenseForm: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("sharedForm.date")
+            if form.draft.isForeign {
+                divider
+                rateRow
+            }
             if form.draft.payerId == viewerId, let ledger {
                 divider
                 NavigationLink(value: SharedFormPage.account) {
@@ -776,13 +947,19 @@ private struct SharedDetailsPage: View {
                             Text(SharedFormText.frequency(frequency)).tag(RecurrenceFrequency?.some(frequency))
                         }
                     }
+                    // MAZ-151 phase 2: repeating expenses stay in the household's currency.
+                    .disabled(form.draft.isForeign)
                     .accessibilityIdentifier("sharedForm.repeat")
                     if form.draft.isEditingRule {
                         Toggle("Active", isOn: $form.draft.active)
                             .accessibilityIdentifier("sharedForm.active")
                     }
                 } footer: {
-                    if form.draft.isRule {
+                    if form.draft.isForeign {
+                        Text(
+                            "Paid in \(form.draft.paidCurrency ?? ""), it can't repeat: repeating expenses stay in "
+                                + "\(form.draft.currency ?? "the household's currency").")
+                    } else if form.draft.isRule {
                         Text(
                             "A repeating expense is added on each date, split among the members active that day; "
                                 + "when the members change, it's split equally.")
