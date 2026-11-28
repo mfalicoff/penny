@@ -69,6 +69,17 @@ Since contract 2.4.0 (MAZ-151) a personal transaction may carry the amount it wa
 - A client before contract 2.4.0 ignores the fields when it reads the ledger and drops them when it saves; the entry keeps its home `total` and `share`, so every total is unchanged, only the original amount and its rate are lost.
 - Storage: the nullable `original_amount`, `original_currency`, `rate`, `rate_status` and `rate_date` columns of `ledger_entries`; the reference rates in `exchange_rates`. The rules and their golden cases (`contracts/fixtures/currency.json`) are shared by TypeScript, C# and Swift. Search results and the entries CSV (`Original amount`, `Original currency`, `Exchange rate`) carry them too.
 
+## Captured purchases in the Inbox
+
+Since contract 2.5.0 (MAZ-291) the Inbox holds purchases captured on a device (an Apple Pay tap through the Shortcuts Transaction automation) beside emailed receipts. They are private to their owner, need no server setting, and are triaged on any device.
+
+- `postApiPurchaseInbox` stores one capture: `idempotencyKey` (the device's own id for the tap, 1–64 of `A-Z a-z 0-9 . _ : -`), `merchant` (trimmed, 1–100), `amount` (minor units of `currency`, any ISO 4217 code an entry may use), `card` (trimmed, at most 50, or null) and `capturedAt` (Unix milliseconds, from 2020 to a day ahead). 201 with the item; the same key again answers 200 with the stored item and changes nothing, so an offline queue may upload a tap more than once. 409 `purchase_inbox.full` once 1,000 purchases wait in To review.
+- `getApiPurchaseInbox` lists `to_review` (default) or `done` (triaged in the last 30 days), newest capture first, 50 per page with `before`/`next`, like the receipt Inbox.
+- `postApiPurchaseInboxIdResolve` records how a purchase left To review: `added` (a new entry or shared expense) or `attached` (an entry that already existed) with `entryId` and, for a shared expense, `householdId`; or `discarded`. The entry itself is saved first with the normal ledger save or shared expense save; the ids are references for display only. Resolving a done purchase the same way again answers 200; another way is 409 `purchase_inbox.already_done`. `postApiPurchaseInboxIdReopen` moves it back (Undo).
+- `getApiPurchaseInboxCards` and `putApiPurchaseInboxCards` read and replace the card-to-account mapping (at most 50 cards, names unique without case, each to a personal account id). iOS edits it in Settings › Shortcuts; every client reads it to prefill Add.
+- A server before contract 2.5.0 answers 404 for these paths; the web Inbox then shows emailed receipts only.
+- Storage: `captured_purchases` (unique `(user_id, idempotency_key)`, the status and outcome kept consistent by a check constraint) and `card_accounts`, both deleted with the account. A capture deletes its owner's done items older than 30 days.
+
 ## Error codes
 
 Since contract 2.1.0 (MAZ-187) every error body carries a stable, machine-readable `code` next to the English `error` message, for example `{"error":"Your data changed on another device. Please refresh and try again.","code":"ledger.conflict"}`. The message is unchanged, so clients that read only `error` keep working.

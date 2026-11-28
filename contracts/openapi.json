@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny API",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "description": "The HTTP API that the .NET backend serves and the iOS and web apps call. See docs/reference/.",
     "license": {
       "name": "MIT",
@@ -7474,6 +7474,530 @@
           }
         }
       }
+    },
+    "/api/purchase-inbox": {
+      "get": {
+        "summary": "List captured purchases in the Inbox",
+        "description": "Purchases captured on a device (Apple Pay, contract 2.5.0), newest capture first, 50 per page. status=to_review (default) or done (triaged in the last 30 days). Private to their owner. Shown in the same Inbox as emailed receipts.",
+        "operationId": "getApiPurchaseInbox",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "to_review",
+                "done"
+              ]
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseInboxPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "status must be to_review or done.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Capture a purchase to the Inbox",
+        "description": "Stores one captured purchase. The idempotency key is the device's own id for the tap: uploading the same key again returns the stored item with 200 and changes nothing. Done items older than 30 days are deleted on the way. 409 once 1,000 purchases wait in To review.",
+        "operationId": "postApiPurchaseInbox",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseCapture"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "This key was already captured: the stored item, unchanged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseInboxItem"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Captured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseInboxItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid purchase.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Too many purchases are waiting in the Inbox.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-inbox/{id}/resolve": {
+      "post": {
+        "summary": "Record how a captured purchase was triaged",
+        "description": "Moves the purchase from To review to done. Triage saves the entry itself with the normal ledger save or shared expense save first; this records the outcome so every device stops offering the purchase. Resolving a done purchase the same way again returns it; another way is 409.",
+        "operationId": "postApiPurchaseInboxIdResolve",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseResolution"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseInboxItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid resolution.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Purchase not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This purchase was already handled on another device.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-inbox/{id}/reopen": {
+      "post": {
+        "summary": "Move a triaged purchase back to To review",
+        "description": "Undo for a triage: clears the outcome. Idempotent. It doesn't delete an entry that was added; the client undoes that save itself.",
+        "operationId": "postApiPurchaseInboxIdReopen",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseInboxItem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Purchase not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-inbox/cards": {
+      "get": {
+        "summary": "Read the card-to-account mapping",
+        "description": "Which personal account each Wallet card's purchases are added to, by card name. Edited on iOS (Settings › Shortcuts); read by every client to prefill Add.",
+        "operationId": "getApiPurchaseInboxCards",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardAccounts"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Replace the card-to-account mapping",
+        "description": "Replaces the whole list: at most 50 cards, names trimmed, 1–50 characters and unique without case.",
+        "operationId": "putApiPurchaseInboxCards",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardAccounts"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardAccounts"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid card list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7595,6 +8119,13 @@
               "profile.name_managed",
               "profile.picture_not_found",
               "profile.unreadable_picture",
+              "purchase_inbox.already_done",
+              "purchase_inbox.full",
+              "purchase_inbox.invalid_capture",
+              "purchase_inbox.invalid_cards",
+              "purchase_inbox.invalid_filter",
+              "purchase_inbox.invalid_resolution",
+              "purchase_inbox.not_found",
               "push.invalid_device",
               "rate_limit.auth",
               "rate_limit.inbound_mail",
@@ -11064,6 +11595,227 @@
           "provisional",
           "latestDate",
           "rates"
+        ]
+      },
+      "PurchaseCapture": {
+        "type": "object",
+        "description": "A purchase captured on a device (contract 2.5.0). amount is in minor units of currency (any ISO 4217 code an entry may use). merchant is trimmed, 1–100 characters; card is trimmed, at most 50 (empty or null for none). capturedAt is Unix milliseconds, from 2020 to a day ahead of the server's clock.",
+        "additionalProperties": false,
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          },
+          "merchant": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "card": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "capturedAt": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "idempotencyKey",
+          "merchant",
+          "amount",
+          "currency",
+          "capturedAt"
+        ]
+      },
+      "PurchaseInboxItem": {
+        "type": "object",
+        "description": "One captured purchase in its owner's Inbox (contract 2.5.0). merchant and card are plain text: never interpret them as HTML or Markdown. amount is in minor units of currency. Times are Unix milliseconds. outcome, entryId, householdId and resolvedAt are null while status is to_review.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "merchant": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "card": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "to_review",
+              "done"
+            ]
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "added",
+              "attached",
+              "discarded",
+              null
+            ]
+          },
+          "entryId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The personal entry or shared expense the purchase became (added) or joined (attached)."
+          },
+          "householdId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The household or trip of that shared expense; null for a personal entry."
+          },
+          "resolvedAt": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "merchant",
+          "amount",
+          "currency",
+          "card",
+          "capturedAt",
+          "createdAt",
+          "status",
+          "outcome",
+          "entryId",
+          "householdId",
+          "resolvedAt"
+        ]
+      },
+      "PurchaseInboxPage": {
+        "type": "object",
+        "description": "Newest capture first; next is the before value for the following page, or null.",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseInboxItem"
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next"
+        ]
+      },
+      "PurchaseResolution": {
+        "type": "object",
+        "description": "added (a new entry or shared expense) or attached (an entry that already existed) need entryId, and householdId for a shared expense; discarded takes neither. Ids are 1–100 characters.",
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "added",
+              "attached",
+              "discarded"
+            ]
+          },
+          "entryId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "CardAccount": {
+        "type": "object",
+        "description": "A Wallet card name and the personal ledger account its purchases are added to. An account deleted since matches nothing.",
+        "additionalProperties": false,
+        "properties": {
+          "card": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "card",
+          "accountId"
+        ]
+      },
+      "CardAccounts": {
+        "type": "object",
+        "description": "The whole card mapping, by card name.",
+        "additionalProperties": false,
+        "properties": {
+          "cards": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/CardAccount"
+            }
+          }
+        },
+        "required": [
+          "cards"
         ]
       }
     }
