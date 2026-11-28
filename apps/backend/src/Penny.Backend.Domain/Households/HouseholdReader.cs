@@ -17,7 +17,7 @@ public static partial class HouseholdReader
     public static NewHousehold? ReadNew(JsonElement? body, bool trip) =>
         Read(body, fields => new NewHousehold(
             Name(fields),
-            LedgerReader.Choice(LedgerReader.Required(fields, "currency"), LedgerLimits.Currencies),
+            LedgerReader.CurrencyCode(LedgerReader.Required(fields, "currency")),
             Offset(fields),
             trip ? Dates(fields) : null
         ));

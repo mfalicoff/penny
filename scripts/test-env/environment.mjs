@@ -13,6 +13,7 @@
 import { apiEmailEnvironment, emailSettings, startRenderer, startWorker, stopWorker } from "./email.mjs";
 import { trustCertificate, writeCertificate } from "./tls.mjs";
 import { apiSmtpEnvironment } from "./smtp-sink.mjs";
+import { rateCurrencies, ratesSql, syntheticRates } from "./rates.mjs";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -318,7 +319,7 @@ export function oidcEnvironment(oidc, extra = []) {
  * Starts an isolated environment and returns its state. On any failure everything
  * created so far is removed before the error is rethrown.
  * @param {{ runId?: string, host?: string, port?: number, webPort?: number, origins?: string[],
- *   build?: boolean, worker?: boolean, email?: boolean, http?: boolean, telemetry?: boolean,
+ *   build?: boolean, worker?: boolean, email?: boolean, http?: boolean, telemetry?: boolean, rates?: boolean,
  *   tls?: { pem: string, certificate: string, keyPath: string, trustBundle: string },
  *   oidc?: { issuer: string, clientId: string, redirectUris: string[],
  *   certificate: string, allowRegistration?: boolean },
@@ -411,8 +412,10 @@ export async function up(options = {}) {
         // journeys do not depend on it, so it is off unless PENNY_OCR_WORKER=true.
         Ocr__Worker: process.env.PENNY_OCR_WORKER === "true" ? "true" : "false",
         // Reference exchange rates (MAZ-151) come from the ECB over the internet; test runs never
-        // fetch them, so the apps ask for rates as on a server with fetching turned off.
-        ExchangeRates__Enabled: "false",
+        // fetch them. By default the apps ask for rates as on a server with fetching turned off;
+        // --rates serves synthetic rates from the cache instead, with the fetch worker off.
+        ExchangeRates__Enabled: options.rates ? "true" : "false",
+        ...(options.rates ? { ExchangeRates__Worker: "false" } : {}),
         Recurrence__PollSeconds: "2",
         TestControls__Enabled: "true",
         TestControls__Token: state.controlToken,
@@ -444,6 +447,13 @@ export async function up(options = {}) {
       const response = await fetch(`${state.apiUrl}/api/ready`);
       return response.ok;
     }, { timeoutMs: 120_000, what: "the API to become ready" });
+    // --rates (MAZ-151): the migrated cache gets synthetic per-euro quotes for the last 60 days.
+    if (options.rates) {
+      const rows = syntheticRates();
+      runSql(state, secrets, ratesSql(rows));
+      state.rates = { currencies: rateCurrencies.length, from: rows[0].date, to: rows.at(-1).date };
+      writeState(state);
+    }
     if (email) {
       const worker = await startWorker(state, email, { root, freePort, waitFor });
       state.email = { domain: email.domain, rendererUrl: state.email.rendererUrl, workerUrl: worker.url };
@@ -456,6 +466,21 @@ export async function up(options = {}) {
     await down(state.runId, { keepArtifacts: false });
     throw error;
   }
+}
+
+/**
+ * Runs SQL as the disposable cluster's administrator: in the container over its local socket,
+ * natively over loopback TCP. The statement travels on stdin, the password in the environment.
+ */
+function runSql(state, secrets, sql) {
+  if (state.postgres === "native") {
+    run(join(state.postgresBin, "psql"), ["--username", "postgres", "--dbname", state.database, "--set=ON_ERROR_STOP=1", "-q"], {
+      input: sql,
+      env: { ...process.env, PGHOST: "127.0.0.1", PGPORT: String(state.databasePort), PGPASSWORD: secrets.admin },
+    });
+    return;
+  }
+  run(state.cli, ["exec", "--interactive", state.container, "psql", "--username", "postgres", "--dbname", state.database, "--set=ON_ERROR_STOP=1", "-q"], { input: sql });
 }
 
 /** Container mode: the pinned image (the API migrates it on startup). Sets databasePort. */

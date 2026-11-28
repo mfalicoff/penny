@@ -194,11 +194,13 @@ public sealed class HouseholdConcurrencyTests(ApiFixture fixture) : HouseholdTes
     }
 
     [Fact]
-    public async Task whenJoinRacesLedgerCurrencyChange_MembershipFlow_ShouldNeverMixCurrencies()
+    public async Task whenJoinRacesLedgerCurrencyChange_MembershipFlow_ShouldCommitBoth()
     {
+        // Members keep their ledgers in their own currency (contract 2.5.0): a join and a
+        // ledger currency change no longer exclude each other.
         var (alex, _) = await AccountAsync("alex@example.test");
         var (bea, beaId) = await AccountAsync("bea@example.test");
-        for (var round = 0; round < Rounds * 2; round++)
+        for (var round = 0; round < Rounds; round++)
         {
             await Fixture.SqlAsync(
                 $"UPDATE penny.ledgers SET currency = 'CAD' WHERE user_id = '{beaId}'",
@@ -212,26 +214,14 @@ public sealed class HouseholdConcurrencyTests(ApiFixture fixture) : HouseholdTes
                 OutcomeAsync(JoinAsync(bea, code)),
                 OutcomeAsync(PutLedgerAsync(bea, ledger))
             );
-            var (join, save) = (results[0], results[1]);
-            // Exactly one wins: a CAD member, or a USD ledger outside the household.
-            (join.Status == HttpStatusCode.OK).ShouldNotBe(save.Status == HttpStatusCode.OK);
-            if (join.Status == HttpStatusCode.OK)
-                save.Error.ShouldBe(LedgerService.CurrencyMismatch);
-            else
-                join.Error.ShouldBe(HouseholdService.HouseholdCurrency);
-            (
-                await CountAsync(
-                    $"SELECT count(*) FROM penny.household_member_periods p JOIN penny.households h ON h.id = p.household_id JOIN penny.ledgers l ON l.user_id = p.user_id WHERE p.user_id = '{beaId}' AND p.left_at IS NULL AND h.currency <> l.currency"
-                )
-            ).ShouldBe(0L);
-            // Leave the household again so the next round starts unconstrained.
-            if (join.Status == HttpStatusCode.OK)
-                await ExpectAsync(
-                    HttpMethod.Post,
-                    $"/api/households/{home}/leave",
-                    bea,
-                    HttpStatusCode.OK
-                );
+            results[0].Status.ShouldBe(HttpStatusCode.OK);
+            results[1].Status.ShouldBe(HttpStatusCode.OK);
+            await ExpectAsync(
+                HttpMethod.Post,
+                $"/api/households/{home}/leave",
+                bea,
+                HttpStatusCode.OK
+            );
         }
     }
 

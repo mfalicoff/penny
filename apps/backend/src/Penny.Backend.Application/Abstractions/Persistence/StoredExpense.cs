@@ -1,4 +1,5 @@
 using Penny.Backend.Domain.Households;
+using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Abstractions.Persistence;
 
@@ -6,6 +7,7 @@ namespace Penny.Backend.Application.Abstractions.Persistence;
 // member id, individual payments ordered by time then debtor, whether the month has
 // a monthly reimbursement (`PaymentsClosed`), and the receipt's name and MIME when one
 // is linked. `AccountId` is the payer's private account and must only reach the payer.
+// `Foreign` (contract 2.5.0): what was paid when it was paid in another currency.
 public sealed record StoredExpense(
     string Id,
     string HouseholdId,
@@ -26,5 +28,6 @@ public sealed record StoredExpense(
     DateTimeOffset UpdatedAt,
     IReadOnlyList<SplitShare> Splits,
     IReadOnlyList<StoredPayment> Payments,
-    bool PaymentsClosed
+    bool PaymentsClosed,
+    ForeignAmount? Foreign = null
 );

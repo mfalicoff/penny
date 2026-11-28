@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Domain.Households;
+using Penny.Backend.Domain.Ledgers;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Schema;
 using Penny.Backend.Persistence.Schema.Entities;
@@ -42,6 +43,13 @@ internal sealed class PostgresSharedExpenseTransaction(
                     .ToListAsync(Cancellation)
             ).Order(StringComparer.Ordinal),
         ];
+
+    public async Task<string?> HomeCurrencyAsync(string userId) =>
+        await Context
+            .Ledgers.AsNoTracking()
+            .Where(ledger => ledger.UserId == userId)
+            .Select(ledger => ledger.Currency)
+            .FirstOrDefaultAsync(Cancellation);
 
     public async Task<bool> LockLedgerAccountAsync(string userId, string accountId) =>
         await LockLedgerAsync(userId)
@@ -128,6 +136,11 @@ internal sealed class PostgresSharedExpenseTransaction(
                 UpdatedBy = actorId,
                 UpdatedAt = now,
                 RecurringId = record.RecurringId,
+                OriginalAmount = record.Foreign?.OriginalAmount,
+                OriginalCurrency = record.Foreign?.OriginalCurrency,
+                Rate = record.Foreign?.Rate,
+                RateStatus = record.Foreign?.RateStatus,
+                RateDate = record.Foreign?.RateDate,
             }
         );
         AddSplits(expenseId, record.Splits);
@@ -143,6 +156,7 @@ internal sealed class PostgresSharedExpenseTransaction(
         DateTimeOffset now
     )
     {
+        var foreign = record.Foreign;
         var updated = await Live(householdId, expenseId, revision)
             .ExecuteUpdateAsync(
                 set =>
@@ -158,6 +172,11 @@ internal sealed class PostgresSharedExpenseTransaction(
                         .SetProperty(expense => expense.Note, record.Note)
                         .SetProperty(expense => expense.AccountId, record.AccountId)
                         .SetProperty(expense => expense.ReceiptId, record.ReceiptId)
+                        .SetProperty(expense => expense.OriginalAmount, foreign?.OriginalAmount)
+                        .SetProperty(expense => expense.OriginalCurrency, foreign?.OriginalCurrency)
+                        .SetProperty(expense => expense.Rate, foreign?.Rate)
+                        .SetProperty(expense => expense.RateStatus, foreign?.RateStatus)
+                        .SetProperty(expense => expense.RateDate, foreign?.RateDate)
                         .SetProperty(expense => expense.Revision, expense => expense.Revision + 1)
                         .SetProperty(expense => expense.UpdatedBy, actorId)
                         .SetProperty(expense => expense.UpdatedAt, now),
@@ -866,7 +885,16 @@ internal sealed class PostgresSharedExpenseTransaction(
                             payment.CreatedBy
                         )),
                 ],
-                closed.Contains((row.HouseholdId, Month(row.ExpenseDate)))
+                closed.Contains((row.HouseholdId, Month(row.ExpenseDate))),
+                row.OriginalAmount is { } originalAmount
+                    ? new ForeignAmount(
+                        originalAmount,
+                        row.OriginalCurrency!,
+                        row.Rate!,
+                        row.RateStatus!,
+                        row.RateDate
+                    )
+                    : null
             )),
         ];
     }

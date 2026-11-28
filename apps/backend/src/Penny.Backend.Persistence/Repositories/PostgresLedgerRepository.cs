@@ -45,7 +45,8 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                     row.Name,
                     row.StartDate,
                     row.EndDate,
-                    row.SharedHouseholdId
+                    row.SharedHouseholdId,
+                    row.Currency
                 ))
                 .ToListAsync(cancellationToken),
             await context
@@ -173,6 +174,7 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                 StartDate = trip.StartDate,
                 EndDate = trip.EndDate,
                 SharedHouseholdId = trip.SharedHouseholdId,
+                Currency = trip.Currency,
             }),
             row => row.Id,
             cancellationToken
@@ -294,19 +296,6 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
             .OfType<string>()
             .Distinct(StringComparer.Ordinal)
             .ToList();
-        // Active memberships of non-archived households.
-        var currencies = await context
-            .HouseholdMemberPeriods.Where(member =>
-                member.UserId == userId && member.LeftAt == null
-            )
-            .Join(
-                context.Households.Where(household => household.ArchivedAt == null),
-                member => member.HouseholdId,
-                household => household.Id,
-                (_, household) => household.Currency
-            )
-            .Distinct()
-            .ToListAsync(cancellationToken);
         // Household expenses and rules this user paid from a personal account.
         var linkedAccounts = await context
             .HouseholdExpenses.Where(expense =>
@@ -322,7 +311,6 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
             )
             .ToListAsync(cancellationToken);
         return new(
-            currencies.ToHashSet(StringComparer.Ordinal),
             linkedAccounts.ToHashSet(StringComparer.Ordinal),
             receiptIds.Count == 0
                 ? new HashSet<string>(StringComparer.Ordinal)

@@ -26,6 +26,10 @@ public sealed class HouseholdReaderTests
                 trip: true
             )!
             .Trip.ShouldBe(new TripDates(new(2024, 2, 29), new(2024, 2, 29)));
+        // Any listed currency (contract 2.5.0), whatever the ledger uses.
+        HouseholdReader
+            .ReadNew(Json("""{"name":"Tokyo","currency":"JPY"}"""), trip: false)!
+            .Currency.ShouldBe("JPY");
         // A household body ignores trip dates entirely.
         HouseholdReader
             .ReadNew(Json("""{"name":"Home","currency":"GBP","startDate":"nope"}"""), trip: false)!
@@ -37,7 +41,8 @@ public sealed class HouseholdReaderTests
     [InlineData("""{"name":"   ","currency":"CAD"}""")]
     [InlineData("""{"name":null,"currency":"CAD"}""")]
     [InlineData("""{"name":"Home"}""")]
-    [InlineData("""{"name":"Home","currency":"JPY"}""")]
+    [InlineData("""{"name":"Home","currency":"XXX"}""")]
+    [InlineData("""{"name":"Home","currency":"jpy"}""")]
     [InlineData("""{"name":"Home","currency":"CAD","timezoneOffsetMinutes":null}""")]
     [InlineData("""{"name":"Home","currency":"CAD","timezoneOffsetMinutes":"240"}""")]
     [InlineData("""{"name":"Home","currency":"CAD","timezoneOffsetMinutes":-841}""")]

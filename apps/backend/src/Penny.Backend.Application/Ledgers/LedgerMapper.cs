@@ -33,7 +33,8 @@ internal static class LedgerMapper
                     trip.Name,
                     trip.StartDate,
                     trip.EndDate,
-                    trip.SharedHouseholdId
+                    trip.SharedHouseholdId,
+                    trip.Currency
                 )),
             ],
             [
@@ -98,7 +99,8 @@ internal static class LedgerMapper
                     trip.Name,
                     trip.StartDate,
                     trip.EndDate,
-                    trip.SharedHouseholdId
+                    trip.SharedHouseholdId,
+                    trip.Currency
                 )),
             ],
             [

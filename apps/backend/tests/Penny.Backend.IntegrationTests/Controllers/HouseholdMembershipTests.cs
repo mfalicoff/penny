@@ -68,23 +68,6 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
             new { code = "0000000000" }
         );
 
-        // A failed join (currency) leaves the code usable.
-        await Fixture.SqlAsync(
-            "UPDATE penny.ledgers SET currency = 'USD' WHERE user_id = (SELECT id FROM penny.users WHERE email = 'bea@example.test')",
-            Ct
-        );
-        await ExpectErrorAsync(
-            HttpMethod.Post,
-            "/api/households/join",
-            bea,
-            HttpStatusCode.BadRequest,
-            HouseholdService.HouseholdCurrency,
-            new { code }
-        );
-        await Fixture.SqlAsync(
-            "UPDATE penny.ledgers SET currency = 'CAD' WHERE user_id = (SELECT id FROM penny.users WHERE email = 'bea@example.test')",
-            Ct
-        );
         // The creator is already a member: 409, and the code stays usable.
         await ExpectErrorAsync(
             HttpMethod.Post,

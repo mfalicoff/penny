@@ -121,6 +121,8 @@ public static class BackendServices
         builder.Services.AddSingleton<HouseholdService>();
         // Shared expenses show receipt names, so they use the receipt store too.
         builder.Services.AddSingleton<ISharedExpenseRepository, PostgresSharedExpenseRepository>();
+        // Each member's amounts in their own currency, from the cached rates (contract 2.5.0).
+        builder.Services.AddSingleton<HomeAmounts>();
         builder.Services.AddSingleton<SharedExpenseService>();
         builder.Services.AddSingleton<SettlementService>();
         // The full export and account deletion (MAZ-152).

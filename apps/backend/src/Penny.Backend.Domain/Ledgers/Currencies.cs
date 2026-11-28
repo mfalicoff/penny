@@ -233,6 +233,26 @@ public static class Currencies
         return DivideHalfUp(numerator, denominator);
     }
 
+    // `part` of `whole`, carried to `of` (`proportionHalfUp`): part × of / whole, rounded
+    // half up, so a share keeps its proportion of a converted total and a whole share stays
+    // whole (MAZ-151 phase 2, contract 2.5.0).
+    public static long ProportionHalfUp(long part, long whole, long of)
+    {
+        foreach (var value in (ReadOnlySpan<long>)[part, whole, of])
+        {
+            if (value < 0 || value > LedgerLimits.MaxSafeInteger)
+                throw new ArgumentOutOfRangeException(
+                    nameof(part),
+                    "Amounts are whole minor units."
+                );
+        }
+        if (whole == 0 || part > whole)
+            throw new ArgumentException("A share cannot exceed its total.", nameof(part));
+        if (part == whole)
+            return of;
+        return (long)DivideHalfUp(new BigInteger(part) * of, whole);
+    }
+
     // The rate of one unit of `from` in `to` when both are quoted against the same base
     // (units per base; the base itself is "1"), rounded half up to 6 significant digits and
     // at most 8 fraction digits. Null when the result rounds to zero (or is too large to be

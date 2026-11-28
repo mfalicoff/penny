@@ -26,11 +26,6 @@ public interface IHouseholdTransaction
     // household does not exist or is archived.
     Task<bool> LockAsync(string householdId);
 
-    // Locks the user's `ledgers` row (the row PUT /api/ledger compare-and-increments)
-    // and returns its currency, so ledger saves and membership changes that validate
-    // currency serialize. Null when the user has no ledger.
-    Task<string?> LockLedgerCurrencyAsync(string userId);
-
     // The user's latest period in the household, or null if they never joined.
     Task<StoredMember?> MembershipAsync(string householdId, string userId);
 

@@ -10,10 +10,8 @@ internal sealed class HouseholdMapping : IEntityTypeConfiguration<Household>
     {
         builder.ToTable("households", table =>
         {
-            table.HasCheckConstraint(
-                "ck_households_currency",
-                Checks.In("currency", Checks.Currencies)
-            );
+            // Contract 2.5.0: any currency (before, the four ledger currencies).
+            table.HasCheckConstraint("ck_households_currency", Checks.CurrencyCode("currency"));
             // A trip household has both dates; a regular household has neither.
             table.HasCheckConstraint(
                 "ck_households_trip",

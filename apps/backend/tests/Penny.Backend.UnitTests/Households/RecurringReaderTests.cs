@@ -29,6 +29,11 @@ public sealed class RecurringReaderTests
     [InlineData("\"nextDate\":null")]
     [InlineData("\"accountId\":null")]
     [InlineData("\"totalCents\":0")]
+    [InlineData(
+        "\"originalAmount\":6000,\"originalCurrency\":\"USD\",\"rate\":\"20\",\"rateStatus\":\"edited\""
+    )]
+    [InlineData("\"rateStatus\":\"edited\"")]
+    [InlineData("\"originalCurrency\":null")]
     public void whenFieldIsInvalid_ReadRecurring_ShouldReturnNull(string field) =>
         ExpenseReader.ReadRecurring(Parse(Valid.Replace("\"extra\":true", field))).ShouldBeNull();
 

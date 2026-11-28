@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Penny.Backend.Domain.Households;
+using Penny.Backend.Domain.Ledgers;
 using Shouldly;
 using Xunit;
 
@@ -74,6 +75,41 @@ public sealed class ExpenseReaderTests
             .ShouldBe(new PaymentRequest("bea", 1));
         ExpenseReader.ReadPayment(Parse("""{"fromUserId":"","revision":1}""")).ShouldBeNull();
     }
+
+    [Fact]
+    public void whenPaidInAnotherCurrency_ReadInput_ShouldReadTheForeignAmount()
+    {
+        var input = ExpenseReader.ReadInput(
+            Parse(
+                Valid.Replace(
+                    "\"extra\":true",
+                    "\"originalAmount\":6000,\"originalCurrency\":\"USD\",\"rate\":\"1.5\",\"rateStatus\":\"published\",\"rateDate\":\"2026-09-26\""
+                )
+            )
+        )!;
+        input.Foreign.ShouldBe(
+            new ForeignAmount(6000, "USD", "1.5", "published", new DateOnly(2026, 9, 26))
+        );
+        ExpenseReader.ReadInput(Parse(Valid))!.Foreign.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("\"originalAmount\":6000")]
+    [InlineData("\"rateDate\":\"2026-09-26\"")]
+    [InlineData(
+        "\"originalAmount\":6000,\"originalCurrency\":\"usd\",\"rate\":\"1.5\",\"rateStatus\":\"edited\""
+    )]
+    [InlineData(
+        "\"originalAmount\":6000,\"originalCurrency\":\"USD\",\"rate\":\"1.50\",\"rateStatus\":\"edited\""
+    )]
+    [InlineData(
+        "\"originalAmount\":6000,\"originalCurrency\":\"USD\",\"rate\":\"1.5\",\"rateStatus\":\"guessed\""
+    )]
+    [InlineData(
+        "\"originalAmount\":null,\"originalCurrency\":\"USD\",\"rate\":\"1.5\",\"rateStatus\":\"edited\""
+    )]
+    public void whenForeignFieldsAreInvalid_ReadInput_ShouldReturnNull(string field) =>
+        ExpenseReader.ReadInput(Parse(Valid.Replace("\"extra\":true", field))).ShouldBeNull();
 
     [Theory]
     [InlineData("2026-09", true)]

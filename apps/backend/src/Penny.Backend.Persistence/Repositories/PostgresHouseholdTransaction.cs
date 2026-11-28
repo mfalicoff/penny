@@ -88,17 +88,6 @@ internal class PostgresHouseholdTransaction(
                 cancellationToken
             ) == 1;
 
-    public async Task<string?> LockLedgerCurrencyAsync(string userId)
-    {
-        if (!await LockLedgerAsync(userId))
-            return null;
-        return await context
-            .Ledgers.AsNoTracking()
-            .Where(ledger => ledger.UserId == userId)
-            .Select(ledger => ledger.Currency)
-            .SingleAsync(cancellationToken);
-    }
-
     // Locks the user's `ledgers` row until the unit ends; false when there is none.
     protected async Task<bool> LockLedgerAsync(string userId) =>
         await context
@@ -626,7 +615,8 @@ internal class PostgresHouseholdTransaction(
             )
         ));
 
-    // Periods of one household, optionally of one user, with the member's email and profile.
+    // Periods of one household, optionally of one user, with the member's email and profile
+    // and, for an open period, their ledger currency (contract 2.5.0).
     private IQueryable<StoredMember> Periods(string householdId, string? userId) =>
         context
             .HouseholdMemberPeriods.AsNoTracking()
@@ -646,7 +636,13 @@ internal class PostgresHouseholdTransaction(
                         period.LeftAt,
                         user.DisplayName,
                         user.AvatarVersion,
-                        user.DeletedAt != null
+                        user.DeletedAt != null,
+                        period.LeftAt == null
+                            ? context
+                                .Ledgers.Where(ledger => ledger.UserId == period.UserId)
+                                .Select(ledger => ledger.Currency)
+                                .FirstOrDefault()
+                            : null
                     )
             );
 

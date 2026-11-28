@@ -28,18 +28,18 @@ All operations require a session (cookie or bearer). Unknown households, househo
 | `deleteApiHouseholdsIdMembersUserid` | `DELETE /api/households/{id}/members/{userId}` | `200 {ok:true}` | Creator |
 | `postApiHouseholdsIdArchive` | `POST /api/households/{id}/archive` | `200 {ok:true}` | Creator |
 
-`household` is `{id, name, currency, creatorId, createdAt, memberCount, trip?}`: `createdAt` is Unix milliseconds, `memberCount` counts current members, and `trip: {startDate, endDate}` appears only for shared trips. Members are `{userId, email, joinedAt, joinedOn?, leftAt?}`, one per account, from the account's **latest** membership period, ordered by `joinedAt` then `userId`. A former member sees only the members who had joined by the time they left.
+`household` is `{id, name, currency, creatorId, createdAt, memberCount, trip?}`: `createdAt` is Unix milliseconds, `memberCount` counts current members, and `trip: {startDate, endDate}` appears only for shared trips. Members are `{userId, email, joinedAt, joinedOn?, leftAt?, currency?}`, one per account, from the account's **latest** membership period, ordered by `joinedAt` then `userId`. A former member sees only the members who had joined by the time they left. `currency` (contract 2.5.0) is a current member's home (ledger) currency, so clients can show a balance in it too; it is omitted for former members.
 
 ## Validation and errors
 
-Errors use `{error: string}`. Request bodies: unknown keys are ignored, optional fields may be absent but never `null`, numbers must be JavaScript safe integers (`240.0` is 240), names are trimmed with JavaScript whitespace rules and then must be 1–80 UTF-16 units, currencies are `CAD`/`USD`/`EUR`/`GBP`, `timezoneOffsetMinutes` is −840..720, dates are real `YYYY-MM-DD` days from 2000-01-01 to 2100-12-31 and a trip's end is not before its start. Any schema failure is `400 Invalid household data.`; malformed JSON is `400 Invalid JSON.`.
+Errors use `{error: string}`. Request bodies: unknown keys are ignored, optional fields may be absent but never `null`, numbers must be JavaScript safe integers (`240.0` is 240), names are trimmed with JavaScript whitespace rules and then must be 1–80 UTF-16 units, currencies are any listed ISO 4217 code (contract 2.5.0, `isCurrency`; before 2.5.0 `CAD`/`USD`/`EUR`/`GBP`; an unknown or lower-case code is invalid), `timezoneOffsetMinutes` is −840..720, dates are real `YYYY-MM-DD` days from 2000-01-01 to 2100-12-31 and a trip's end is not before its start. Any schema failure is `400 Invalid household data.`; malformed JSON is `400 Invalid JSON.`.
 
 | Operation | Checks in order |
 | --- | --- |
-| Create / create trip | body (`400 Invalid household data.`) → creator's ledger currency equals `currency` (`400 Household currency must match your ledger currency.` / `400 Trip currency must match your ledger currency.`) |
+| Create / create trip | body (`400 Invalid household data.`). Since contract 2.5.0 the currency need not be the creator's ledger currency; servers before 2.5.0 refused it (`400 Household currency must match your ledger currency.` / `400 Trip currency must match your ledger currency.`) |
 | Rename / update trip | current member of an unarchived household (`404 Household not found.`) → creator (`403 Only the household creator can manage members.`) → body (`400`) → trip update on a regular household (`404 Trip not found.`) |
 | Invite / archive | member (`404`) → creator (`403`) → archive only: every month settled (`409 Settle all monthly balances before archiving.`) |
-| Join | body: `code` is 10 hex characters, any case (`400 Invalid household data.`) → code exists and is unexpired (not replaced), household not archived (`400 Invite code is invalid or expired.`) → joiner's ledger currency equals the household's (`400 Household currency must match your ledger currency.`) → not already a current member (`409 You are already a member.`) |
+| Join (any ledger currency since 2.5.0) | body: `code` is 10 hex characters, any case (`400 Invalid household data.`) → code exists and is unexpired (not replaced), household not archived (`400 Invite code is invalid or expired.`) → not already a current member (`409 You are already a member.`) |
 | Leave | current member (`404`) → creator with other current members (`409 The creator cannot leave while other members remain.`) → caller settled in every month (`409 Settle every monthly balance before leaving.`) |
 | Remove | caller is a current member (`404`) → caller is creator (`403`) → target is not the creator (`400 The creator cannot remove themselves.`) → target is a current member (`404`) → target settled (`409 Settle every monthly balance before leaving.`) |
 
@@ -53,7 +53,7 @@ Errors use `{error: string}`. Request bodies: unknown keys are ignored, optional
 - **Creator restrictions.** Only the creator renames, edits trip dates, invites, removes members and archives. The creator cannot remove themselves and cannot leave while other members remain; once alone, the creator may leave, which leaves the household with no members (it is kept, as before).
 - **Settlement.** A member may leave, or be removed, only when their balance is zero in **every** month; months are independent, so a credit in one month never offsets a debt in another. Archiving requires every member to be settled in every month. A month's balance is computed exactly as the month recap: the payer is credited each live (not deleted) expense total, each split debits its member, and every reimbursement in that month (monthly reimbursements and individual expense payments alike) credits the sender and debits the recipient. MAZ-56 reads these rows; MAZ-57 writes expenses, splits and individual payments, MAZ-58 monthly reimbursements ([settlement](settlement.md)).
 - **Former members** keep their history: the household stays in their list until archived, and they can still read its detail and the expenses they have a share in ([MAZ-57](shared-expenses.md)). They can no longer act on it (`404`).
-- **Archive** hides the household from every list, refuses every membership change (`404`), revokes outstanding invites and stops constraining members' ledger currency (ledger check 5 counts only unarchived households). Members can still read the archived household's detail.
+- **Archive** hides the household from every list, refuses every membership change (`404`) and revokes outstanding invites. Members can still read the archived household's detail.
 
 ## Invitations
 
@@ -61,6 +61,12 @@ Errors use `{error: string}`. Request bodies: unknown keys are ignored, optional
 - A code expires 10 minutes after it is issued (`expiresAt` is Unix milliseconds; valid while `expiresAt > now`).
 - A household has one live shared code: issuing a new code deletes the previous one. Emailed invitations keep their own codes.
 - **A code admits any number of accounts** until it expires or is replaced, so one code can be shared with a group. Joining never consumes or marks it (`household_invites.used_at` stays empty). Each account still joins only once: a current member gets `409 You are already a member.`
+
+## Several currencies
+
+Contract 2.5.0 (MAZ-151 phase 2). A household's or shared trip's `currency` is any listed currency and is the one its balances, suggested payments, reimbursements and splits use (integer minor units of it; a yen trip has none). It is fixed at creation. Members keep their personal ledgers in their own currency: the server no longer compares them on create or join, and `PUT /api/ledger` no longer refuses a currency that differs from a household's (ledger check 3 is gone). The error codes `household.currency`, `household.trip_currency` and `ledger.currency_mismatch` stay in the contract for older servers but are not sent.
+
+Each member's home currency is listed with the members (`currency`). Shared expenses may be paid in another currency, and each member sees them in their own: [shared expenses](shared-expenses.md#several-currencies). Monthly settlement is unchanged.
 
 ## Shared trips and personal trip links
 
@@ -75,11 +81,11 @@ The browser (MAZ-93, [web README](../../apps/web/README.md#trips-maz-93)) uses t
 Every mutation runs in one READ COMMITTED transaction in `PostgresHouseholdRepository.WriteAsync`; a failure, cancellation or timeout rolls back everything, including the audit row. Reads (`list`, `detail`) use one REPEATABLE READ snapshot.
 
 - **Household lock first.** Every membership writer (rename, trip, invite, join, leave, remove, archive) first locks the household row, then re-checks membership and creator rights inside the lock. Writers of one household therefore serialize; settlement checks see the committed state the change is based on. Shared-expense writers take the same lock before changing expenses, splits or payments (MAZ-57, see [shared expenses](shared-expenses.md#transactions-locking-and-concurrency); MAZ-58 reimbursements do too, see [settlement](settlement.md#transactions-locking-idempotency-and-recovery)), so the settlement check stays race-free.
-- **Ledger lock second.** Create and join lock the member's `ledgers` row (the row `PUT /api/ledger` compare-and-increments) before comparing currencies, so a concurrent ledger save that changes currency either commits first (the join then fails) or waits and then fails ledger check 5. A member can never end up in a household with a different currency.
+- **No ledger lock.** Before contract 2.5.0, create and join locked the member's `ledgers` row to compare currencies with ledger check 3. Members now keep their ledgers in any currency ([several currencies](#several-currencies)), so membership writers lock only the household and a ledger save never waits for them.
 - **Invite re-check under the lock.** The join reads the invite to find its household, locks the household, then reads the invite again. Issuing a new code and archiving hold the same household lock while they delete invites, so a code replaced or revoked by a concurrent request is rejected (`400 Invite code is invalid or expired.`) and never admits anyone after its replacement commits. Joins of one household serialize on the household lock, so concurrent joins of different accounts with one code each succeed exactly once, and the same account racing itself opens one period (the loser gets `409 You are already a member.`; the partial unique index on open periods is the backstop).
-- Locks are taken with EF `ExecuteUpdate` statements that rewrite a column with its own value; PostgreSQL holds the row lock until commit. This keeps the [raw SQL inventory](postgresql.md#raw-sql-inventory) unchanged, and the lock does not block foreign-key checks of rows that merely reference the household. The order (household, then the user's ledger, then invites and periods) matches the [documented lock order](postgresql.md#concurrency-and-transactions), and ledger saves never lock households, so these writers cannot deadlock with each other or with ledger saves. No request is retried by the server.
+- Locks are taken with EF `ExecuteUpdate` statements that rewrite a column with its own value; PostgreSQL holds the row lock until commit. This keeps the [raw SQL inventory](postgresql.md#raw-sql-inventory) unchanged, and the lock does not block foreign-key checks of rows that merely reference the household. The order (household, then invites and periods) matches the [documented lock order](postgresql.md#concurrency-and-transactions), and ledger saves never lock households, so these writers cannot deadlock with each other or with ledger saves. No request is retried by the server.
 
-Verified with real PostgreSQL: eight accounts using one code at once (each joins exactly once), one account joining twice at once (one open period), join against archive, leave against removal, leave against archive, join against a ledger currency change, and join against invite replacement.
+Verified with real PostgreSQL: eight accounts using one code at once (each joins exactly once), one account joining twice at once (one open period), join against archive, leave against removal, leave against archive, join against a ledger currency change (both commit), and join against invite replacement.
 
 **Search (MAZ-121).** Search evaluates membership periods and splits inside its own query (the household-view rule), so join, leave/removal and archive write nothing for search: access changes exactly when these transactions commit ([search](search.md#implementation-maz-121)).
 
@@ -92,7 +98,7 @@ When the server sends email (MAZ-124, [email delivery](../self-hosting/email.md)
 - `status`: `sending` (queued, or a resend not yet sent), `waiting` (sent, unused, unexpired), `expired`, `joined`, or `failed` (the mail server refused it for good, for example an unknown mailbox).
 - `POST .../email-invites/{inviteId}/resend` queues a new email (`409 They already joined with this invitation.` after a join). `DELETE .../email-invites/{inviteId}` revokes it: its code stops working, an unsent email is not sent, and it leaves the list. Archiving revokes every invitation.
 - Limits: `429 Too many invitation emails today. Try again tomorrow, or share a code instead.` once the creator caused `Email__AccountMessagesPerDay` emails, or the address received `Email__RecipientMessagesPerDay`, in the last 24 hours. Joining keeps its own rate limit.
-- The invitee joins with `POST /api/households/join`, which accepts shared and emailed codes alike, with the same checks (currency, already a member) and the same error for any unusable code.
+- The invitee joins with `POST /api/households/join`, which accepts shared and emailed codes alike, with the same checks (already a member) and the same error for any unusable code.
 
 ## Audit
 

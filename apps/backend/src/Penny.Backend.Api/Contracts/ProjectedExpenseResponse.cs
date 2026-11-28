@@ -7,6 +7,8 @@ namespace Penny.Backend.Api.Contracts;
 // linked; scheduled rows carry `scheduled: true`. `recurringId` is the shared rule
 // on previews and on recorded occurrences it recorded. `accountId` reaches only
 // the payer. `payer` is who paid and `paidByYou` whether that is the viewer.
+// Contract 2.5.0: what was paid in another currency, and `home`, the viewer's amounts in
+// their own currency.
 public sealed record ProjectedExpenseResponse(
     string Id,
     string HouseholdId,
@@ -25,7 +27,15 @@ public sealed record ProjectedExpenseResponse(
         ReceiptResponse? Receipt,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? AccountId,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Scheduled,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] long? OriginalAmount,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? OriginalCurrency,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Rate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateStatus,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateDate,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        MemberHomeAmountsResponse? Home
 )
 {
     public static ProjectedExpenseResponse From(ProjectedExpenseView expense) =>
@@ -46,6 +56,12 @@ public sealed record ProjectedExpenseResponse(
             ExpenseResponse.ReceiptFrom(expense.Receipt),
             expense.AccountId,
             expense.Scheduled,
-            expense.RecurringId
+            expense.RecurringId,
+            expense.OriginalAmount,
+            expense.OriginalCurrency,
+            expense.Rate,
+            expense.RateStatus,
+            expense.RateDate,
+            MemberHomeAmountsResponse.From(expense.Home)
         );
 }

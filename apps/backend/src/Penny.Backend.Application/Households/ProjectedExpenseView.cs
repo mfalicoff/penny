@@ -11,6 +11,8 @@ namespace Penny.Backend.Application.Households;
 // clients drop a cached preview of the same household, rule and date. `Payer` is who
 // paid, and `PaidByYou` whether that is the viewer (MAZ-275). Shares stay
 // separate from the personal ledger. `AccountId` reaches only the payer.
+// Contract 2.5.0: what was paid in another currency than the household's, and `Home`, the
+// viewer's amounts in their own currency (HomeAmounts; previews too).
 public sealed record ProjectedExpenseView(
     string Id,
     string HouseholdId,
@@ -29,7 +31,17 @@ public sealed record ProjectedExpenseView(
         ExpenseReceiptView? Receipt,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? AccountId,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Scheduled,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecurringId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        long? OriginalAmount = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? OriginalCurrency = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Rate = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? RateStatus = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RateDate = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        MemberHomeView? Home = null
 )
 {
     // A recorded expense as `viewerId` sees it, with their share (search results use 0
@@ -62,7 +74,12 @@ public sealed record ProjectedExpenseView(
                 ? expense.AccountId
                 : null,
             null,
-            expense.RecurringId
+            expense.RecurringId,
+            expense.Foreign?.OriginalAmount,
+            expense.Foreign?.OriginalCurrency,
+            expense.Foreign?.Rate,
+            expense.Foreign?.RateStatus,
+            expense.Foreign?.RateDate is { } rateDate ? LedgerDates.Write(rateDate) : null
         );
     }
 }

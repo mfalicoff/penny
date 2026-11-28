@@ -12,8 +12,6 @@ namespace Penny.Backend.Application.Ledgers;
 public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository receipts)
 {
     public const string InvalidLedger = "Invalid ledger data.";
-    public const string CurrencyMismatch =
-        "Your ledger currency must match your active households.";
     public const string LinkedAccount =
         "Remove household expense links before deleting this payment account.";
     public const string ForeignReceipt = "Receipt does not belong to this account.";
@@ -68,12 +66,6 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
     private static void Verify(LedgerWrite write, LedgerWriteState state)
     {
         var ledger = write.Ledger;
-        if (state.HouseholdCurrencies.Any(currency => currency != ledger.Currency))
-            throw new BackendFailure(
-                FailureKind.Invalid,
-                ErrorCodes.LedgerCurrencyMismatch,
-                CurrencyMismatch
-            );
         var accountIds = ledger
             .Accounts.Select(account => account.Id)
             .ToHashSet(StringComparer.Ordinal);

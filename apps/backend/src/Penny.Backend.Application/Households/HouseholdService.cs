@@ -19,8 +19,6 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
     public const string NotFound = "Household not found.";
     public const string TripNotFound = "Trip not found.";
     public const string CreatorOnly = "Only the household creator can manage members.";
-    public const string HouseholdCurrency = "Household currency must match your ledger currency.";
-    public const string TripCurrency = "Trip currency must match your ledger currency.";
     public const string InvalidInvite = "Invite code is invalid or expired.";
     public const string AlreadyMember = "You are already a member.";
     public const string CreatorCannotLeave = "The creator cannot leave while other members remain.";
@@ -70,13 +68,6 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         return await households.WriteAsync(
             async store =>
             {
-                var currency = await LedgerCurrencyAsync(store, userId);
-                if (!string.Equals(currency, input.Currency, StringComparison.Ordinal))
-                    throw new BackendFailure(
-                        FailureKind.Invalid,
-                        trip ? ErrorCodes.HouseholdTripCurrency : ErrorCodes.HouseholdCurrency,
-                        trip ? TripCurrency : HouseholdCurrency
-                    );
                 var householdId = NewId();
                 await store.AddHouseholdAsync(
                     new(householdId, input.Name, input.Currency, userId, now, null, input.Trip, 1)
@@ -327,15 +318,6 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                         ErrorCodes.HouseholdInvalidInvite,
                         InvalidInvite
                     );
-                // The ledger row stays locked, so a concurrent PUT /api/ledger cannot
-                // change currency between this check and the commit (ledger check 3).
-                var currency = await LedgerCurrencyAsync(store, userId);
-                if (!string.Equals(currency, household.Currency, StringComparison.Ordinal))
-                    throw new BackendFailure(
-                        FailureKind.Invalid,
-                        ErrorCodes.HouseholdCurrency,
-                        HouseholdCurrency
-                    );
                 if (await store.MembershipAsync(householdId, userId) is { IsCurrent: true })
                     throw new BackendFailure(
                         FailureKind.Conflict,
@@ -477,14 +459,6 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                 CreatorOnly
             );
     }
-
-    // Every account is created with a ledger; a missing one is a server fault.
-    private static async Task<string> LedgerCurrencyAsync(
-        IHouseholdTransaction store,
-        string userId
-    ) =>
-        await store.LockLedgerCurrencyAsync(userId)
-        ?? throw new InvalidOperationException("Account ledger is missing.");
 
     private static async Task<HouseholdView> ViewAsync(
         IHouseholdTransaction store,

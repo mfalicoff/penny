@@ -89,6 +89,38 @@ public sealed class CurrenciesTests
             .ShouldBe(problem);
     }
 
+    [Theory]
+    [InlineData(763, 1526, 2230, 1115)]
+    [InlineData(1, 3, 1, 0)]
+    [InlineData(1, 2, 1, 1)]
+    [InlineData(0, 56400, 82380, 0)]
+    [InlineData(56400, 56400, 82380, 82380)]
+    [InlineData(
+        9_007_199_254_740_990,
+        9_007_199_254_740_991,
+        9_007_199_254_740_991,
+        9_007_199_254_740_990
+    )]
+    public void whenShareCarried_ProportionHalfUp_ShouldRoundHalfUpAndKeepWholeShares(
+        long part,
+        long whole,
+        long of,
+        long expected
+    )
+    {
+        Currencies.ProportionHalfUp(part, whole, of).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void whenShareExceedsTotal_ProportionHalfUp_ShouldRefuseIt()
+    {
+        Should
+            .Throw<ArgumentException>(() => Currencies.ProportionHalfUp(2, 1, 5))
+            .Message.ShouldStartWith("A share cannot exceed its total.");
+        Should.Throw<ArgumentException>(() => Currencies.ProportionHalfUp(0, 0, 5));
+        Should.Throw<ArgumentException>(() => Currencies.ProportionHalfUp(-1, 1, 5));
+    }
+
     [Fact]
     public void whenCurrencyUnknown_MinorUnits_ShouldRefuseIt()
     {

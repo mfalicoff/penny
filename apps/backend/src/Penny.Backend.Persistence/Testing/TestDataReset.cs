@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql;
 using Penny.Backend.Persistence.Schema;
+using Penny.Backend.Persistence.Schema.Entities;
 
 namespace Penny.Backend.Persistence.Testing;
 
@@ -11,6 +12,9 @@ namespace Penny.Backend.Persistence.Testing;
 // configured test prefix, so a misrouted connection string cannot erase real data.
 // Rows are deleted children-first in foreign-key order from the EF model; the runtime
 // role has DELETE (not TRUNCATE), so no extra privilege is needed.
+// The reference exchange rate cache (`exchange_rates`, MAZ-151) is shared by every user and
+// holds nothing personal, so it is kept: a run started with `penny-env up --rates` keeps
+// its synthetic rates across resets.
 public sealed class TestDataReset(NpgsqlDataSource source)
 {
     public static bool IsTestDatabase(string? database, string prefix) =>
@@ -42,12 +46,12 @@ public sealed class TestDataReset(NpgsqlDataSource source)
         return tables.Count;
     }
 
-    // Dependents before principals; the migration history is kept.
+    // Dependents before principals; the migration history and the rate cache are kept.
     public static IReadOnlyList<string> DeleteOrder(IModel model)
     {
         var tables = model
             .GetEntityTypes()
-            .Where(type => type.GetTableName() is not null)
+            .Where(type => type.GetTableName() is not null && type.ClrType != typeof(ExchangeRate))
             .ToDictionary(type => type.GetTableName()!, StringComparer.Ordinal);
         var ordered = new List<string>();
         var visited = new HashSet<string>(StringComparer.Ordinal);

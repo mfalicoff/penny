@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // One-command full-stack test environments (MAZ-62). See docs/reference/test-environment.md.
 //
-//   node scripts/test-env/penny-env.mjs up [--seed NAME] [--host 0.0.0.0] [--oidc] [--oidc-providers] [--no-build] [--http]
+//   node scripts/test-env/penny-env.mjs up [--seed NAME] [--host 0.0.0.0] [--oidc] [--oidc-providers] [--rates] [--no-build] [--http]
 //   node scripts/test-env/penny-env.mjs run [--seed NAME] [--oidc] -- <command...>
 //   node scripts/test-env/penny-env.mjs status | env | reset | clock <ISO|reset> | user [label]
 //   node scripts/test-env/penny-env.mjs fault '<json rule>' | fault clear
@@ -32,7 +32,7 @@ function parse(argv) {
   for (let index = 0; index < own.length; index++) {
     const item = own[index];
     if (!item.startsWith("--")) positional.push(item);
-    else if (["--no-build", "--all", "--oidc", "--oidc-providers", "--oidc-brands-only", "--keep", "--no-worker", "--email", "--smtp", "--telemetry", "--http"].includes(item)) flags[item.slice(2)] = true;
+    else if (["--no-build", "--all", "--oidc", "--oidc-providers", "--oidc-brands-only", "--keep", "--no-worker", "--email", "--smtp", "--telemetry", "--http", "--rates"].includes(item)) flags[item.slice(2)] = true;
     else flags[item.slice(2)] = own[++index];
   }
   return { verb: positional.shift() ?? "help", positional, flags, command };
@@ -74,6 +74,7 @@ async function start(flags) {
       email: flags.email === true,
       smtp: smtp ? { port: smtp.port } : undefined,
       telemetry: flags.telemetry === true,
+      rates: flags.rates === true,
     });
     if (oidc) await oidc.attach(state);
     for (const { provider } of extraOidc) await provider.attach(state);
@@ -115,6 +116,7 @@ function summary(state) {
     stateFile: `${state.directory}/env.json`,
     oidcIssuer: state.oidc?.issuer,
     oidcCertificate: state.oidc?.certificate,
+    rates: state.rates,
     ...emailSummary(state),
   };
 }
@@ -217,10 +219,11 @@ async function main() {
 function help() {
   return [
     "penny-env: disposable .NET API + PostgreSQL environments for browser and simulator runs.",
-    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--oidc-providers [--oidc-brands-only]] [--email] [--smtp] [--telemetry] [--http] [--no-build] [--no-worker] [--run-id ID]",
+    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--oidc-providers [--oidc-brands-only]] [--email] [--smtp] [--telemetry] [--rates] [--http] [--no-build] [--no-worker] [--run-id ID]",
     "     every run picks free ports and its own id; the API is HTTPS with the run's certificate (--http: plain HTTP)",
     "     --email: emailed receipts end to end: penny-render and the Email Worker (wrangler dev) (MAZ-184)",
     "     --smtp: the API sends email (password resets, invitations) to an SMTP sink in this process (MAZ-124)",
+    "     --rates: exchange rates on, from synthetic per-euro quotes for the last 60 days' business days; nothing is fetched (MAZ-151)",
     "     --telemetry: the API offers the iOS app crash and performance reports (MAZ-129); it forwards them to a closed loopback port, so they are dropped",
     "  mail --to ADDRESS [--subject S] [--attach FILE] [--eml FILE]   send through the Email Worker",
     "  run [up options] [--keep] -- <command...>   start, run, collect artifacts, always tear down",

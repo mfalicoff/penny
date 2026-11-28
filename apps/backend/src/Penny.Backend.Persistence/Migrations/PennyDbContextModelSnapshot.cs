@@ -272,7 +272,7 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.ToTable("households", "penny", t =>
                         {
-                            t.HasCheckConstraint("ck_households_currency", "currency IN ('CAD','USD','EUR','GBP')");
+                            t.HasCheckConstraint("ck_households_currency", "currency ~ '^[A-Z]{3}$'");
 
                             t.HasCheckConstraint("ck_households_trip", "(trip_start IS NULL) = (trip_end IS NULL) AND (trip_end IS NULL OR trip_end >= trip_start)");
                         });
@@ -490,10 +490,33 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("note")
                         .UseCollation("C");
 
+                    b.Property<long?>("OriginalAmount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("original_amount");
+
+                    b.Property<string>("OriginalCurrency")
+                        .HasColumnType("text")
+                        .HasColumnName("original_currency")
+                        .UseCollation("C");
+
                     b.Property<string>("PayerId")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("payer_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("Rate")
+                        .HasColumnType("text")
+                        .HasColumnName("rate")
+                        .UseCollation("C");
+
+                    b.Property<DateOnly?>("RateDate")
+                        .HasColumnType("date")
+                        .HasColumnName("rate_date");
+
+                    b.Property<string>("RateStatus")
+                        .HasColumnType("text")
+                        .HasColumnName("rate_status")
                         .UseCollation("C");
 
                     b.Property<string>("ReceiptId")
@@ -563,7 +586,19 @@ namespace Penny.Backend.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_household_expenses_category_name", "length(category_name) BETWEEN 1 AND 50");
 
+                            t.HasCheckConstraint("ck_household_expenses_foreign", "(original_amount IS NULL) = (original_currency IS NULL) AND (original_currency IS NULL) = (rate IS NULL) AND (rate IS NULL) = (rate_status IS NULL)");
+
                             t.HasCheckConstraint("ck_household_expenses_note", "length(note) BETWEEN 0 AND 1000");
+
+                            t.HasCheckConstraint("ck_household_expenses_original_amount", "original_amount IS NULL OR original_amount BETWEEN 1 AND 99999999999");
+
+                            t.HasCheckConstraint("ck_household_expenses_original_currency", "original_currency IS NULL OR original_currency ~ '^[A-Z]{3}$'");
+
+                            t.HasCheckConstraint("ck_household_expenses_rate", "rate IS NULL OR (rate ~ '^(0|[1-9][0-9]{0,8})([.][0-9]{0,7}[1-9])?$' AND rate ~ '[1-9]')");
+
+                            t.HasCheckConstraint("ck_household_expenses_rate_date", "(rate_date IS NULL) = (rate_status IS NULL OR rate_status = 'edited')");
+
+                            t.HasCheckConstraint("ck_household_expenses_rate_status", "rate_status IS NULL OR rate_status IN ('published','provisional','edited')");
 
                             t.HasCheckConstraint("ck_household_expenses_revision", "revision BETWEEN 0 AND 9007199254740991");
 
@@ -1473,6 +1508,11 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("id")
                         .UseCollation("C");
 
+                    b.Property<string>("Currency")
+                        .HasColumnType("text")
+                        .HasColumnName("currency")
+                        .UseCollation("C");
+
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date")
                         .HasColumnName("end_date");
@@ -1498,6 +1538,8 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.ToTable("ledger_trips", "penny", t =>
                         {
+                            t.HasCheckConstraint("ck_ledger_trips_currency", "currency IS NULL OR currency ~ '^[A-Z]{3}$'");
+
                             t.HasCheckConstraint("ck_ledger_trips_dates", "end_date >= start_date");
 
                             t.HasCheckConstraint("ck_ledger_trips_id", "length(id) BETWEEN 1 AND 100");
