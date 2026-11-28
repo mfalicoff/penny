@@ -31,7 +31,7 @@ struct SharedTripContext {
         self.ledger = ledger
         let home = shell.currency
         self.home = home
-        // Contract 2.5.0: a trip in another currency counts each shared expense at your home
+        // Contract 2.6.0: a trip in another currency counts each shared expense at your home
         // amounts, so your private expenses (in your currency) add up with them.
         let personal = ledger?.privateExpenses(linkedTo: model.id) ?? []
         privateEntries = personal

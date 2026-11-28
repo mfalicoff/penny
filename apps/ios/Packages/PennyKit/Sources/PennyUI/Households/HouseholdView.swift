@@ -1383,9 +1383,12 @@ private struct BalanceRow: View {
 
     private var detail: String {
         let paid = expenses.filter { $0.payerUserId == balance.userId }.reduce(Int64(0)) { $0 + $1.totalCents }
+        let paidText = "Paid \(MoneyFormat.amount(paid, currency: currency))"
+        // Only your own row adds your share, as on iphone-shared-balances and
+        // iphone-trip-balances-currency.
+        guard balance.userId == people.meId else { return paidText }
         let share = expenses.reduce(Int64(0)) { $0 + $1.share(of: balance.userId) }
-        return
-            "Paid \(MoneyFormat.amount(paid, currency: currency)) · share \(MoneyFormat.amount(share, currency: currency))"
+        return "\(paidText) · share \(MoneyFormat.amount(share, currency: currency))"
     }
 }
 

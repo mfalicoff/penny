@@ -4,7 +4,7 @@ import PennyDomain
 import Testing
 
 /// Shared trips and households in any currency on the client side (MAZ-151 phase 2, contract
-/// 2.5.0): wire fields older servers omit, the viewer's amounts, the trip's totals in their
+/// 2.6.0): wire fields older servers omit, the viewer's amounts, the trip's totals in their
 /// currency, Settle in, the shared expense form paid in another currency, and trip currencies.
 /// Fixture ids and `.test` data only.
 @Suite("Shared currencies in the app")

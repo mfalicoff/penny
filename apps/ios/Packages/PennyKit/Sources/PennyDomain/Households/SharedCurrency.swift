@@ -1,4 +1,4 @@
-// Shared trips and households in any currency (MAZ-151 phase 2, contract 2.5.0), ported from
+// Shared trips and households in any currency (MAZ-151 phase 2, contract 2.6.0), ported from
 // apps/web/src/domain/households.ts (`memberAmounts`, `settleIn`, `suggestReimbursements`,
 // `sharedExpenseCurrencyProblem`). Golden cases: contracts/fixtures/shared-currency.json
 // (`SharedCurrencyTests`).

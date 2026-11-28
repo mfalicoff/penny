@@ -14,7 +14,7 @@ public enum LedgerViolation: Hashable, Sendable {
     case invalidAccount(String)
     case invalidTrip(String)
     case invalidTripDates(String)
-    /// A trip currency that isn't a known ISO 4217 code (contract 2.5.0).
+    /// A trip currency that isn't a known ISO 4217 code (contract 2.6.0).
     case invalidTripCurrency(String)
     case invalidAnchorDay(String)
     /// A participant count outside 2...100, or on an entry or rule that is not an expense
@@ -77,7 +77,7 @@ extension Ledger {
             date(trip.endDate, trip.id)
             if trip.endDate < trip.startDate { found.append(.invalidTripDates(trip.id)) }
             if let household = trip.sharedHouseholdId { id(household, "trips") }
-            // Contract 2.5.0: a known ISO 4217 code, upper case.
+            // Contract 2.6.0: a known ISO 4217 code, upper case.
             if let code = trip.currency, !Currencies.isCurrency(code) { found.append(.invalidTripCurrency(trip.id)) }
         }
         for category in categories {

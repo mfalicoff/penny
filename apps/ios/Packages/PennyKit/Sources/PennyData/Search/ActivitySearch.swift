@@ -329,7 +329,7 @@ extension EntryKind {
 
 extension SharedExpenseShare {
     /// A shared row as the caller's share. A household currency the app doesn't know leaves the
-    /// row out; a missing one is the ledger's. Contract 2.5.0: what was paid and the viewer's
+    /// row out; a missing one is the ledger's. Contract 2.6.0: what was paid and the viewer's
     /// home amounts come with it when the server sends them; unreadable ones are dropped, so the
     /// row then counts as an older server's.
     init?(wire: WireProjectedExpense, currency fallback: Currency) {

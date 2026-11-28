@@ -654,7 +654,7 @@ public struct CurrencyFixture: Codable, Equatable, Sendable {
     }
 }
 
-/// shared-currency.json (MAZ-151 phase 2, contract 2.5.0): shared trips and households in any
+/// shared-currency.json (MAZ-151 phase 2, contract 2.6.0): shared trips and households in any
 /// currency: member amounts, settle-in, the shared expense rules and the projection join.
 public struct SharedCurrencyFixture: Codable, Equatable, Sendable {
     public var generator: String

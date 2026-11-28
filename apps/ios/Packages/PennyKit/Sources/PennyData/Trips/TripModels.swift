@@ -27,7 +27,7 @@ public final class TripDirectory {
     /// False in the demo: no server, so no shared trips.
     public var isAvailable: Bool { households.isAvailable }
 
-    /// Creates an empty shared trip in `currency` (any ISO 4217 code, contract 2.5.0: its balances
+    /// Creates an empty shared trip in `currency` (any ISO 4217 code, contract 2.6.0: its balances
     /// and suggested payments use it); the viewer is its organizer.
     public func createShared(_ draft: TripDraft, currency: String) async -> Result<WireHousehold, HouseholdFailure> {
         guard let service = households.service else {

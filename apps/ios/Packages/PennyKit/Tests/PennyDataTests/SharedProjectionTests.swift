@@ -166,7 +166,7 @@ struct SharedProjectionTests {
                 ]
             ]))
         await model.refresh(Self.november)
-        // Any ISO 4217 household currency is read (contract 2.5.0); `LedgerReport` leaves a row in
+        // Any ISO 4217 household currency is read (contract 2.6.0); `LedgerReport` leaves a row in
         // another currency out unless it has home amounts. An unknown code is unreadable.
         #expect(model.shares(currency: .eur).recorded.map(\.id) == ["other-currency", "no-currency"])
         #expect(model.shares(currency: .eur).recorded.last?.currency == "EUR", "a missing currency is the ledger's")

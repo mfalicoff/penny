@@ -33,7 +33,7 @@ extension APIClient {
         return (start.description, end.description)
     }
 
-    /// Creates a shared trip in `currency`: any ISO 4217 code since contract 2.5.0 (older servers refuse
+    /// Creates a shared trip in `currency`: any ISO 4217 code since contract 2.6.0 (older servers refuse
     /// one that isn't the caller's ledger currency). The caller is its creator (the organizer).
     public func createTrip(
         name: String, currency: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,

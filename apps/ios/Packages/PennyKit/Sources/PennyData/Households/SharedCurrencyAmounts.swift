@@ -1,7 +1,7 @@
 public import PennyDomain
 
 // Shared expenses in several currencies on the viewer's screens (MAZ-151 phase 2, contract
-// 2.5.0): what was paid, and the same expense in the viewer's home currency.
+// 2.6.0): what was paid, and the same expense in the viewer's home currency.
 
 /// One shared expense as the viewer reads it: the amount paid in the currency it was paid in, and
 /// its total and the viewer's share in their home currency, when those are known.
@@ -105,7 +105,7 @@ public struct SettleView: Equatable, Sendable {
     }
 
     /// The currencies Settle in offers: the household's, then its current members' home
-    /// currencies (contract 2.5.0 `HouseholdMember.currency`) by code, each once.
+    /// currencies (contract 2.6.0 `HouseholdMember.currency`) by code, each once.
     public static func options(householdCurrency: String, members: [WireHouseholdMember]) -> [String] {
         let others = Set(members.filter(\.isCurrent).compactMap(\.currency).filter(Currencies.isCurrency))
             .subtracting([householdCurrency]).sorted()

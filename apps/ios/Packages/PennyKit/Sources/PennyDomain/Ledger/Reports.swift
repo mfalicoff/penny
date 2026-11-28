@@ -61,7 +61,7 @@ public struct SharedExpenseShare: Hashable, Sendable {
     /// The expense id, or `ruleId:date` for a scheduled preview.
     public var id: String
     public var householdId: String
-    /// The household's currency: any ISO 4217 code (contract 2.5.0). A row in another currency
+    /// The household's currency: any ISO 4217 code (contract 2.6.0). A row in another currency
     /// than the ledger counts at its `home` amounts, and is left out without them
     /// (`amounts(home:)`).
     public var currency: String
@@ -83,7 +83,7 @@ public struct SharedExpenseShare: Hashable, Sendable {
     /// The payer's email when someone else paid, so the year in review (MAZ-292) counts each
     /// person once whatever their name; never shown. Nil when you paid or the server sent none.
     public var payerEmail: String?
-    /// Contract 2.5.0 (MAZ-151 phase 2): what was paid, when the expense was paid in another
+    /// Contract 2.6.0 (MAZ-151 phase 2): what was paid, when the expense was paid in another
     /// currency than the household's. `rate` is household units per unit.
     public var originalAmount: Int64?
     public var originalCurrency: String?
@@ -129,7 +129,7 @@ public struct SharedExpenseShare: Hashable, Sendable {
     }
 }
 
-/// The viewer's amounts of a shared expense in their home currency (contract 2.5.0
+/// The viewer's amounts of a shared expense in their home currency (contract 2.6.0
 /// `MemberHomeAmounts`). `rate` (home units per unit of what was paid, for the expense's date) is
 /// nil when it was paid in the home currency, so the amounts are exact.
 public struct SharedHomeAmounts: Hashable, Sendable {

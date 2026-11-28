@@ -83,7 +83,7 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertTrue(currency.rates.allSatisfy { ($0.rate == nil) != ($0.error == nil) })
         XCTAssertTrue(currency.entryAmounts.allSatisfy { ($0.expected == nil) != ($0.error == nil) })
         XCTAssertTrue(currency.ledgers.contains { $0.valid } && currency.ledgers.contains { !$0.valid })
-        // Contract 2.5.0: personal trips may carry a currency.
+        // Contract 2.6.0: personal trips may carry a currency.
         XCTAssertTrue(currency.ledgers.contains { $0.ledger.trips?.contains { $0.currency != nil } == true })
         let sharedCurrency = try Fixtures.decode(SharedCurrencyFixture.self, from: "shared-currency.json")
         XCTAssertTrue(sharedCurrency.memberAmounts.contains { ($0.expected, $0.error) == (nil, nil) })

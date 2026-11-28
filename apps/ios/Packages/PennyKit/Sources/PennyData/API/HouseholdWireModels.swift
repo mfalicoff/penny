@@ -61,7 +61,7 @@ public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
     /// MAZ-152: true when the person deleted their account. Show "Former member", never the
     /// email (a placeholder address) or initials. Their expenses and balances stay.
     public var deleted: Bool?
-    /// Contract 2.5.0 (MAZ-151 phase 2): the member's home (ledger) currency, so a balance can
+    /// Contract 2.6.0 (MAZ-151 phase 2): the member's home (ledger) currency, so a balance can
     /// also show in it. Absent for former members, members with no ledger yet and older servers.
     public var currency: String?
 
@@ -234,7 +234,7 @@ public struct WireSharedExpense: Codable, Equatable, Sendable, Identifiable {
     public var updatedAt: Int64
     /// The shared rule that recorded it, when one did.
     public var recurringId: String?
-    /// Contract 2.5.0 (MAZ-151 phase 2): what was paid, when it was paid in another currency than
+    /// Contract 2.6.0 (MAZ-151 phase 2): what was paid, when it was paid in another currency than
     /// the household's (`rate`: household units per unit). `totalCents` and the splits stay in the
     /// household's currency. Absent from older servers.
     public var originalAmount: Int64?
@@ -242,7 +242,7 @@ public struct WireSharedExpense: Codable, Equatable, Sendable, Identifiable {
     public var rate: String?
     public var rateStatus: String?
     public var rateDate: String?
-    /// Contract 2.5.0: the viewer's amounts in their home currency, when the household's isn't it
+    /// Contract 2.6.0: the viewer's amounts in their home currency, when the household's isn't it
     /// and a rate is known.
     public var home: WireMemberHomeAmounts?
 
@@ -301,7 +301,7 @@ public struct WireExpenseInput: Codable, Equatable, Sendable {
     public var timezoneOffsetMinutes: Int?
     /// Updates only: the revision the edit is based on.
     public var revision: Int?
-    /// Contract 2.5.0 (MAZ-151 phase 2): paid in another currency than the household's. All four
+    /// Contract 2.6.0 (MAZ-151 phase 2): paid in another currency than the household's. All four
     /// of amount, currency, rate and status, or none; `totalCents` is the amount converted.
     public var originalAmount: Int64?
     public var originalCurrency: String?
