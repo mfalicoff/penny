@@ -260,7 +260,8 @@ test("a new trip has its currency: a shared one sends it, a personal one keeps i
   await expect(form.getByText(/New trip expenses start in euros, and payments are suggested in euros\./)).toBeVisible();
   await form.getByRole("button", { name: "Create trip" }).click();
   await expect.poll(() => server.createdTrips[0]?.["currency"]).toBe("EUR");
-
+  // A new shared trip opens on its People tab; let that navigation finish first.
+  await page.waitForURL(/\/trips\/coast/);
   await page.goto("/trips");
   await page.getByRole("button", { name: "New trip" }).first().click();
   form = page.getByRole("dialog", { name: "New trip" });

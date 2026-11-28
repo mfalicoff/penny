@@ -58,8 +58,8 @@ enum TripCurrencyText {
     }
 
     /// "≈ US$349.76": a balance in a member's own currency, at today's rate.
-    static func approximately(_ minor: Int64, code: String, home: String) -> String {
-        "≈ " + CurrencyText.amount(minor, code: code, home: home)
+    static func approximately(_ minor: Int64, code: String, home: String, locale: Locale = .current) -> String {
+        "≈ " + CurrencyText.amount(minor, code: code, home: home, locale: locale)
     }
 
     /// `ipad-trip-currencies`' Exchange rates panel: "Euro · 2 expenses".

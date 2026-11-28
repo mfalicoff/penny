@@ -29,7 +29,7 @@ struct TripCurrencyTextTests {
                 == "New trip expenses start in euros, and payments are suggested in euros. Any expense can use "
                 + "another currency. Expenses can be dated outside the trip — flights booked in October still count.")
         #expect(TripCurrencyText.formNote("EUR", shared: false).hasPrefix("New trip expenses start in euros. Any"))
-        #expect(TripCurrencyText.approximately(34_976, code: "USD", home: "CAD").hasSuffix("US$349.76"))
+        #expect(TripCurrencyText.approximately(34_976, code: "USD", home: "CAD", locale: canada) == "≈ US$349.76")
     }
 
     @Test("whenACurrencyHasOtherDecimals_MoneyFormat_ShouldMatchTheCurrencyList")
