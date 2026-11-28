@@ -368,7 +368,7 @@ The sample: Max's home currency is CAD, today is Monday, Nov 9, and the shared L
 | **A shared trip in three currencies.** The trip total and your share are in your home currency ($1,394.91, your share $354.30), with "EUR, USD and CAD · each at its date's rate" opening the rates. Expense rows lead with the original amount, the home amount under it | `iphone-trip-currencies`, `ipad-trip-currencies`, `web-trip-currencies` |
 | **Balances and settle-up in one currency.** Balances and suggested payments are in the trip's currency (EUR), chosen with **Settle in EUR**; each person's balance also shows in their own home currency at today's rate (Sam's in US$) | `iphone-trip-balances-currency`, `ipad-trip-currencies`, `web-trip-currencies` |
 | **The trip form's currency row** is no longer locked: the trip's currency is the default for its new expenses and the currency payments are suggested in | `iphone-trip-form-currency`, `web-trip-form-currency` |
-| **Settings › Currency.** The home currency (locked once the ledger has entries), **Exchange rates** (daily ECB rates, the latest date) and recent currencies; with fetching off, "Turned off on this server" and your last rates | `iphone-currency-rates`, `iphone-currency-rates-off`, `ipad-settings-currency`, `web-currency-rates`, `web-currency-rates-off` |
+| **Settings › Currency.** The home currency (locked once the ledger has entries), **Exchange rates** (daily ECB rates, the latest date) and recent currencies; with fetching off, "Turned off on this server" and your last rates | `iphone-currency-rates`, `iphone-currency-rates-off`, `ipad-settings-currency`, `web-currency-rates`, `web-currency-rates-off`; `iphone-currency` and `web-currency` draw the same screen (redrawn 2026-11-27) |
 
 Behavior the cards assume (from MAZ-151 and the owner's 2026-11-26 rules):
 
@@ -382,6 +382,7 @@ Owner decisions (2026-11-26):
 1. **Which amount leads.** As drawn: the home amount first in Recent and Activity, the original first on trip screens and in a trip entry's detail.
 2. **One trip currency.** It's the default for new expenses and also the settle-up currency, switchable on the settle screen (Settle in EUR).
 3. **Rates off.** A rate is required: Penny suggests the last one used, and Save stays disabled until there's one.
+4. **The old Settings › Currency cards (2026-11-27).** Redrawn, not retired: `iphone-currency` and `web-currency` no longer draw the locked list of CAD, USD, EUR and GBP. They draw the screen the apps build, as `iphone-currency-rates` and `web-currency-rates` do: one locked home-currency row, then Exchange rates and Recent currencies, light and dark. Nothing on the page moves beyond what Settings already does, so [motion](motion.md) has no new entry for it.
 
 ## Drafted cards: Apple Pay purchases in the Inbox, and Siri (MAZ-291, 2026-11-27)
 

@@ -48,15 +48,26 @@
         </div>
         <div class="pane">
           <div class="panel sec">
-            <h3>Currency</h3>
-            <div style="font-size:13px;font-weight:600;margin:4px 0 8px;display:flex;align-items:center;gap:6px">Ledger currency<i data-i="lock-closed" style="width:13px;height:13px;color:var(--label-2)"></i></div>
+            <h3>Home currency</h3>
             <div class="fs">
-              <div class="srow"><span class="radio on"></span><span class="code">CAD</span></div>
-              <div class="srow opt"><span class="radio"></span><span class="code">USD</span></div>
-              <div class="srow opt"><span class="radio"></span><span class="code">EUR</span></div>
-              <div class="srow opt"><span class="radio"></span><span class="code">GBP</span></div>
+              <div class="srow"><span class="code">CAD</span><span class="t">Canadian dollar</span><i data-i="lock-closed" style="width:14px;height:14px;color:var(--label-3)"></i></div>
             </div>
-            <div class="lockn"><i data-i="lock-closed"></i><span>Your ledger already has entries in CAD, so the currency can't change. One currency per account keeps your totals consistent. Shared households keep their own currency.</span></div>
+            <div class="lockn"><i data-i="lock-closed"></i><span>Insights, Left to spend, budgets and recaps add up in Canadian dollars. Your home currency is locked once your ledger has entries. Each entry can be in any currency.</span></div>
+          </div>
+          <div class="panel sec">
+            <h3>Exchange rates</h3>
+            <div class="fs">
+              <div class="srow"><span class="t">Daily rates<span>European Central Bank reference rates</span></span><span class="v">On</span></div>
+              <div class="srow"><span class="t">Latest rates</span><span class="v">Fri, Nov 6</span></div>
+            </div>
+            <div class="lockn"><i data-i="cash"></i><span>Each entry in another currency is converted at the rate for its date, and keeps it: later rates never change old totals. On weekends and holidays, the last business day's rate is used. Your server fetches the rates; turning them off is up to whoever runs it.</span></div>
+          </div>
+          <div class="panel sec">
+            <h3>Recent currencies</h3>
+            <div class="fs">
+              <div class="srow"><span class="code">EUR</span><span class="t">Euro</span><span class="v">Used 3 times</span></div>
+              <div class="srow"><span class="code">USD</span><span class="t">US dollar</span><span class="v">Used once</span></div>
+            </div>
           </div>
         </div>
       </div>

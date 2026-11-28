@@ -296,6 +296,8 @@ for (const scheme of ["light", "dark"] as const) {
       await page.reload();
       await expect(page.getByText("European Central Bank reference rates")).toBeVisible();
       await capture(page, "web-currency-rates", scheme);
+      // web-currency draws the same screen (redrawn to the currency and rates card, 2026-11-27).
+      await capture(page, "web-currency", scheme);
 
       await page.goto("/transactions?month=2026-11");
       await results(page).getByRole("row").filter({ hasText: "Cooking class" }).getByRole("button", { name: /^Cooking class/ }).click();
@@ -309,6 +311,14 @@ for (const scheme of ["light", "dark"] as const) {
       await open(page, "/");
       await expect(page.getByText("provisional rate")).toBeVisible();
       await capture(page, "iphone-home-currencies.web", scheme);
+    });
+
+    test("settings currency (phone)", async ({ context, page }) => {
+      await page.setViewportSize({ width: 402, height: 874 });
+      await mockApi(context, { foreign: true });
+      await open(page, "/settings/currency");
+      await expect(page.getByText("European Central Bank reference rates")).toBeVisible();
+      await capture(page, "iphone-currency.web", scheme);
     });
   });
 }

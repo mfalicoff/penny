@@ -650,7 +650,7 @@
     {
       "id": "iphone-currency",
       "source": "docs/design/penny-ios/iphone/currency.html",
-      "sourceSha256": "969ee7970deee83f2c637c8004dc1daf93db5c62d3185d86f5d8f976ed55bc1e",
+      "sourceSha256": "f7726586e5a1f8e01825252cf31b7347bc09103fbfa6e6766a72de9bd94dc404",
       "viewport": {
         "w": 482,
         "h": 954
@@ -659,12 +659,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-currency.light.png",
-          "sha256": "e3090ea7a61c7db16f8831ec8fd6833b962fdf1f765a544d4060bcc129907e07"
+          "sha256": "87c6ff814c7cb18f38169dce7be87371c09d6e0411cd033c39946a6fa034459d"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-currency.dark.png",
-          "sha256": "f60b1b697a17b5622f66ae40ca25b48d1ec54cc0f053706c9591be6de5b0dd2d"
+          "sha256": "bfd7d33600057657ef5d1dbb44c3af7eaa04231b19e8d8cff36b3b285983c0ec"
         }
       ]
     },
@@ -3811,7 +3811,7 @@
     {
       "id": "web-currency",
       "source": "docs/design/penny-ios/web/currency.html",
-      "sourceSha256": "78713625f602cf908a3a798ae3e5ab32102249ed23eb5d645994f14840195ecd",
+      "sourceSha256": "af821c19fb0657a9a1940973f340a657fd61cb105e136aee04b4ef9803690e90",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -3820,12 +3820,12 @@
         {
           "appearance": "light",
           "file": "previews/web-currency.light.png",
-          "sha256": "8da0f12f2a85886fc9bedb8fb2054a624b3f0d4c87489111eaeea671fe54366a"
+          "sha256": "b8a4a863ae8916b64b395d96cd1e6cb0652a432e87a2c9109071473e38679923"
         },
         {
           "appearance": "dark",
           "file": "previews/web-currency.dark.png",
-          "sha256": "2dbca307ad622f0b4749dd0250de7596792e6003b749b85f001fcabb615d25f5"
+          "sha256": "91836c9f9dd2c2c356ed9691e9cb94d46818f9a47c30d1f985f8b89e6a875055"
         }
       ]
     },
