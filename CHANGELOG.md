@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.3.0](https://github.com/mfalicoff/penny/compare/v3.2.0...v3.3.0) (2026-11-28)
+
+
+### Features
+
+* **api:** store and validate the ledger's dismissed suggestions (contract 2.3.0) ([fcc9698](https://github.com/mfalicoff/penny/commit/fcc9698d038d398c3cd918a89e16a3de12b53d9c))
+* **api:** store captured purchases in the Inbox, with triage and the card mapping (contract 2.5.0) ([c49ba4b](https://github.com/mfalicoff/penny/commit/c49ba4b56713d01a0cc89fa6ef2b8eab593ba323))
+* **domain:** add the monthly recap rule and its golden fixture ([5dbad78](https://github.com/mfalicoff/penny/commit/5dbad78d8d3e6812c433ef5e402eff666f5f0b6c))
+* **domain:** suggest schedules for entries that repeat, with dismissals in the ledger ([dabf9fe](https://github.com/mfalicoff/penny/commit/dabf9fe833809c540d93ced694fda7872e92f79f))
+* **ios:** show the monthly recap, its banner and an opt-in recap notification ([92194d6](https://github.com/mfalicoff/penny/commit/92194d60a4302fcc34dab20f3dc4fb94caf19bc9))
+* **ios:** suggest schedules on Recurring, with the shared rule in Swift and dismiss with Undo ([89f8d54](https://github.com/mfalicoff/penny/commit/89f8d54ed2ca58e5b4ef9a0d11bb6d2d7b5a1538))
+* **recap:** add the year in review and its share card on iPhone and the web ([#253](https://github.com/mfalicoff/penny/issues/253)) ([eb07f63](https://github.com/mfalicoff/penny/commit/eb07f63f774d6ab64e2d38de09822200f76b2332))
+* record personal entries in other currencies, with daily exchange rates ([#254](https://github.com/mfalicoff/penny/issues/254)) ([25efcb2](https://github.com/mfalicoff/penny/commit/25efcb255dc34a68b8fd15f4cf7db39319b450a1))
+* **web:** show the monthly recap, its empty state and the recap banner ([2b3aaa9](https://github.com/mfalicoff/penny/commit/2b3aaa956c23fd3e35782132ca7595b36dfed6e8))
+* **web:** suggest schedules on Recurring, with a filled-in form and dismiss with Undo ([a353487](https://github.com/mfalicoff/penny/commit/a353487c6329f5525b50945c05a3cf395fcdd297))
+* **web:** triage captured purchases in the Inbox beside emailed receipts ([f6e1e1c](https://github.com/mfalicoff/penny/commit/f6e1e1ca3abfb284c08ac35d95bb980370dfeed0))
+
+
+### Bug Fixes
+
+* **ios:** give the locked home currency row its own identifier and check it in the smoke journey ([99827b8](https://github.com/mfalicoff/penny/commit/99827b898516d7803fb1598fcd2e746e6eac920c))
+* **recap:** name a missing month the same way on the web and iOS ([4376c70](https://github.com/mfalicoff/penny/commit/4376c705bd43f69411c8d90b2163f0a40aab1b48))
+* **web:** animate the height of inserted Recurring rows only, so later reflows don't overlap rows ([6fbf8b4](https://github.com/mfalicoff/penny/commit/6fbf8b452605794bc5c58c2a3eabfe2a5f15cb7e))
+
 ## [3.2.0](https://github.com/mfalicoff/penny/compare/v3.1.0...v3.2.0) (2026-11-26)
 
 
