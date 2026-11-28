@@ -3,7 +3,7 @@ import { expect, test } from "./test";
 import { syntheticPdf } from "./fixtures/receipts";
 
 // Emailed receipts (MAZ-184) on the production build under the production CSP: from the sidebar's
-// Receipts to attach, open an email, choose its invoice, pick the suggested expense, look at the
+// Inbox, open an email, choose its invoice, pick the suggested expense, look at the
 // confirm step (its thumbnail is painted by pdf.js), attach, then Undo. /api is mocked with the
 // server's rule that a ledger save linking an inbox file moves its item. Synthetic data only.
 
@@ -96,6 +96,8 @@ async function mockApi(context: BrowserContext) {
         },
       });
     }
+    if (pathname === "/api/purchase-inbox/cards") return route.fulfill({ json: { cards: [] } });
+    if (pathname === "/api/purchase-inbox") return route.fulfill({ json: { items: [], next: null } });
     if (pathname === "/api/receipt-inbox") {
       const attached = searchParams.get("status") === "attached";
       const items = (server.item.status === "attached") === attached ? [server.item] : [];
@@ -123,11 +125,11 @@ async function openInbox(page: Page, isMobile: boolean) {
   if (isMobile) {
     // Phones: Home's settings button, then Manage.
     await page.getByRole("link", { name: "Settings", exact: true }).click();
-    await page.getByRole("navigation", { name: "Manage" }).getByRole("link", { name: "Receipts to attach, 1 receipt to attach" }).click();
+    await page.getByRole("navigation", { name: "Manage" }).getByRole("link", { name: /^Inbox\W*1\s*to review$/ }).click();
   } else {
-    await page.getByRole("complementary", { name: "Penny" }).getByRole("link", { name: "Receipts to attach, 1 receipt to attach" }).click();
+    await page.getByRole("complementary", { name: "Penny" }).getByRole("link", { name: /^Inbox\W*1\s*to review$/ }).click();
   }
-  await expect(page.getByRole("heading", { level: 1, name: "Receipts to attach" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
 }
 
 test("attaches an emailed invoice to the suggested expense, then undoes it", async ({ context, page, isMobile }) => {

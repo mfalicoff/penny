@@ -5365,10 +5365,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -5380,10 +5383,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -5395,10 +5401,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -5410,10 +5419,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -5425,10 +5437,20 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "deviates",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "An emailed receipt reads \"same merchant\" instead of \"same amount\": emailed receipts carry no amount, so they match by the merchant's name and time (design decision posted on MAZ-291)",
+            "kind": "follow-up",
+            "ref": "MAZ-291"
+          }
+        ]
       }
     },
     {
@@ -5440,10 +5462,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     },
     {
@@ -5455,10 +5480,13 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "not-built",
+        "status": "matches",
         "owner": "MAZ-291",
-        "note": "Draft card (MAZ-291) for the owner's review. Apple Pay capture and the Inbox triage aren't built yet; they follow per-entry currency (MAZ-151).",
-        "followUp": "MAZ-291"
+        "capture": "1520x980",
+        "appearances": [
+          "light",
+          "dark"
+        ]
       }
     }
   ]

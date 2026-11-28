@@ -26,6 +26,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("/api/households/projection**", (route) => route.fulfill({ json: { transactions: [], scheduled: [] } }));
   // Emailed receipts (MAZ-184) are off on this server; the route still answers 200.
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
+  await page.route("/api/purchase-inbox?status=to_review", (route) => route.fulfill({ json: { items: [], next: null } }));
   // Settings › Server & sync names the sign-in methods.
   await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false, providers: [] } }));
 });
