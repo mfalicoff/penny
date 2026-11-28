@@ -160,6 +160,13 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/export/entries", "get"),
                 // Reference exchange rates (MAZ-151).
                 ("/api/rates", "get"),
+                // Captured purchases in the Inbox (MAZ-291).
+                ("/api/purchase-inbox", "get"),
+                ("/api/purchase-inbox", "post"),
+                ("/api/purchase-inbox/{id}/resolve", "post"),
+                ("/api/purchase-inbox/{id}/reopen", "post"),
+                ("/api/purchase-inbox/cards", "get"),
+                ("/api/purchase-inbox/cards", "put"),
             }
         )
         {
